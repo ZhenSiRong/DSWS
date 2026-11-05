@@ -12,6 +12,7 @@ dependencies = [
     "sqlglot>=25.0",
     "jsonschema>=4.23",
     "cryptography>=50.0.2",
+    "langgraph>=1.0,<2.0",
 ]
 
 [dependency-groups]

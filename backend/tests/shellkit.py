@@ -78,11 +78,21 @@ def path_without_python() -> list[str]:
     """把真实 PATH 里所有"带解释器"的目录剔掉。
 
     剩下的是 dirname / sed / tr / curl 之类照常可用，只少了一个 python。
+
+    POSIX 上 sh / bash / dirname / sed 与 python 常常同住 ``/usr/bin``：
+    整目录剔掉会把脚本赖以启动的 shell 工具一起剔掉，测试还没跑到断言就
+    先报 "sh: not found"。这些测试都会把**假的 python** 放在 PATH 最前面，
+    真实解释器不会抢到候选，所以 POSIX 保留完整 PATH 才是正确的隔离方式。
+    Windows 的 Git Bash 目录布局不同，继续按目录过滤。
     """
+    entries = [
+        entry for entry in os.environ.get("PATH", "").split(os.pathsep) if entry
+    ]
+    if os.name != "nt":
+        return entries
+
     kept: list[str] = []
-    for entry in os.environ.get("PATH", "").split(os.pathsep):
-        if not entry:
-            continue
+    for entry in entries:
         directory = Path(entry)
         has_python = any(
             (directory / candidate).exists()
@@ -127,6 +137,12 @@ def run_in_sh(
     if bin_dir is not None:
         prefix = f'export PATH="{to_shell_path(bin_dir)}:$PATH";'
     tail = " ".join(f'"{argument}"' for argument in (args or []))
+
+    # 临时目录里的脚本常用 write_text 复制出来（模式 644），直接 exec 会
+    # Permission denied。补上执行位，保留脚本自己的 shebang——bash 脚本
+    # 不能被 /bin/sh 解释（`set -o pipefail` 会直接报错）。
+    script.chmod(script.stat().st_mode | 0o111)
+
     result = subprocess.run(
         [
             binary,

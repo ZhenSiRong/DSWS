@@ -10,12 +10,16 @@
 
 from __future__ import annotations
 
+import subprocess
 import sys
+from pathlib import Path
 
 import pytest
 
 from app.recall.catalog import default_catalog
 from app.recall.keywords import extract_keywords
+
+BACKEND = Path(__file__).resolve().parents[2]
 
 
 @pytest.fixture(scope="module")
@@ -109,7 +113,29 @@ def test_extraction_is_deterministic(catalog) -> None:
     ]
 
 
-def test_no_llm_or_segmentation_dependency(catalog) -> None:
-    extract_keywords("华北销售额", catalog)
-    for forbidden in ("jieba", "langchain", "langchain_core", "openai", "anthropic"):
-        assert forbidden not in sys.modules, forbidden
+def test_no_llm_or_segmentation_dependency() -> None:
+    """recall 层自身不引入 LLM / 分词依赖。
+
+    这条必须在**子进程**里查 `sys.modules`：整条测试套件会先 import
+    `app.agent.graph`（它依赖 LangGraph → langchain_core），如果在当前进程
+    里查，看到的是别的模块的依赖，而不是 recall 层的依赖。
+    """
+    script = (
+        "import sys\n"
+        "from app.recall.catalog import default_catalog\n"
+        "from app.recall.keywords import extract_keywords\n"
+        "extract_keywords('华北销售额', default_catalog())\n"
+        "forbidden = [name for name in "
+        "('jieba', 'langchain', 'langchain_core', 'openai', 'anthropic') "
+        "if name in sys.modules]\n"
+        "if forbidden:\n"
+        "    raise SystemExit(f'recall imported LLM dependency: {forbidden}')\n"
+    )
+    result = subprocess.run(
+        [sys.executable, "-c", script],
+        cwd=str(BACKEND),
+        capture_output=True,
+        text=True,
+        timeout=120,
+    )
+    assert result.returncode == 0, result.stderr
