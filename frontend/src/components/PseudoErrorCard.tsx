@@ -23,18 +23,20 @@ interface Props {
 export default function PseudoErrorCard({ text, column }: Props) {
   return (
     <div
-      className="error-card error-card--failure"
+      className="error-card error-card--failure rounded-xl border border-l-4 border-tomato-line border-l-tomato bg-tomato-soft px-4 py-3.5 text-[13px] leading-[1.6] text-error-ink"
       data-pseudo-error="true"
       role="alert"
     >
-      <div className="error-head">
+      <div className="error-head flex items-baseline justify-between gap-3">
         <strong>这一行不是查询结果，是失败信息</strong>
-        <code>后端返回的伪数据行</code>
+        <code className="whitespace-nowrap rounded-md bg-[rgba(178,58,42,0.12)] px-[7px] py-0.5 font-mono text-[11px]">
+          后端返回的伪数据行
+        </code>
       </div>
 
-      <p className="error-message">{text}</p>
+      <p className="error-message mb-0 mt-1.5 whitespace-pre-wrap">{text}</p>
 
-      <p className="error-meta">
+      <p className="error-meta mb-0 mt-1.5 flex flex-wrap items-center gap-x-3.5 gap-y-1.5 text-[12px] opacity-[0.85]">
         <span>列名：{column}</span>
         <span>
           新系统的后端会用一条真正的失败事件取代它；这一屏是前端的兜底。

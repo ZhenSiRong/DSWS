@@ -337,6 +337,38 @@ def build_error(
     )
 
 
+def decorate_error(
+    error: ChannelError,
+    *,
+    step: str,
+    original_sql: str | None = None,
+    corrected_sql: str | None = None,
+    attempts: int | None = None,
+    request_id: str | None = None,
+) -> ChannelError:
+    """给错误补上「原始 SQL / 校正后的 SQL / 重试次数 / 请求 id」。
+
+    这三样是「保留原始 SQL」这条要求的落点：校正之后仍然能看清最初那条
+    SQL 是什么样、模型改成了什么样、试了几次。图节点和编排器共用这一份
+    逻辑，保证两条路径给出的 `detail` 完全一致。
+    """
+    detail = dict(error.detail)
+    if original_sql is not None:
+        detail.setdefault("original_sql", original_sql)
+    if corrected_sql:
+        detail.setdefault("corrected_sql", corrected_sql)
+    if attempts is not None:
+        detail.setdefault("attempts", attempts)
+    if request_id:
+        detail.setdefault("request_id", request_id)
+    return ChannelError(
+        code=error.code,
+        message=error.message,
+        step=error.step or step,
+        detail=detail,
+    )
+
+
 def channel_code_for_refusal(refusal_code: str) -> str:
     """拒答码 → 通道码。
 
