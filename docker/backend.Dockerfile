@@ -9,7 +9,9 @@ FROM ${PYTHON_IMAGE} AS builder
 COPY --from=uv /uv /uvx /bin/
 
 ARG UV_INDEX_URL=https://pypi.org/simple
+ARG UV_HTTP_TIMEOUT=180
 ENV UV_DEFAULT_INDEX=${UV_INDEX_URL} \
+    UV_HTTP_TIMEOUT=${UV_HTTP_TIMEOUT} \
     UV_COMPILE_BYTECODE=1 \
     UV_LINK_MODE=copy
 
