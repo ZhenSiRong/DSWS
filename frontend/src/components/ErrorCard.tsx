@@ -16,6 +16,20 @@ const CLASS_TEXT: Record<ErrorClass, string> = {
   cancelled: "已取消",
 };
 
+/* class 决定长相：红框 / 虚线空态 / 中性取消卡。 */
+const CARD_CLASS: Record<ErrorClass, string> = {
+  failure: "border-tomato-line border-l-tomato bg-tomato-soft text-error-ink",
+  empty:
+    "border-dash border-dashed bg-empty-bg text-ink [border-left:4px_solid_var(--color-brass)]!",
+  cancelled: "border-line border-l-faint bg-cancelled-bg text-ink",
+};
+
+const CODE_BG: Record<ErrorClass, string> = {
+  failure: "bg-[rgba(178,58,42,0.12)]",
+  empty: "bg-[rgba(168,122,32,0.14)]",
+  cancelled: "bg-[rgba(123,115,102,0.14)]",
+};
+
 /**
  * 失败卡片。
  *
@@ -49,20 +63,28 @@ export default function ErrorCard({ error, spec, stepLabel }: Props) {
 
   return (
     <div
-      className={`error-card error-card--${error.class}`}
+      className={`error-card error-card--${error.class} rounded-xl border border-l-4 px-4 py-3.5 text-[13px] leading-[1.6] ${CARD_CLASS[error.class]}`}
       data-error-code={error.code}
       data-error-class={error.class}
       role="alert"
     >
-      <div className="error-head">
+      <div className="error-head flex items-baseline justify-between gap-3">
         <strong>{title}</strong>
-        <code>{error.code}</code>
+        <code
+          className={`whitespace-nowrap rounded-md px-[7px] py-0.5 font-mono text-[11px] ${CODE_BG[error.class]}`}
+        >
+          {error.code}
+        </code>
       </div>
 
-      <p className="error-message">{error.message}</p>
+      <p className="error-message mb-0 mt-1.5 whitespace-pre-wrap">
+        {error.message}
+      </p>
 
-      <p className="error-meta">
-        <span className="error-chip">{CLASS_TEXT[error.class]}</span>
+      <p className="error-meta mb-0 mt-1.5 flex flex-wrap items-center gap-x-3.5 gap-y-1.5 text-[12px] opacity-[0.85]">
+        <span className="error-chip rounded-full border border-current px-2 py-px text-[11px] opacity-75">
+          {CLASS_TEXT[error.class]}
+        </span>
         {error.step && (
           <span>
             失败步骤：{stepLabel ?? error.step}
@@ -70,7 +92,10 @@ export default function ErrorCard({ error, spec, stepLabel }: Props) {
         )}
         {detail.reason_code && (
           <span>
-            原因码：<code className="error-reason">{detail.reason_code}</code>
+            原因码：
+            <code className="error-reason rounded-md bg-[rgba(127,127,127,0.14)] px-1.5 py-px font-mono text-[11px]">
+              {detail.reason_code}
+            </code>
           </span>
         )}
         {typeof detail.attempts === "number" && detail.attempts > 0 && (
@@ -79,16 +104,16 @@ export default function ErrorCard({ error, spec, stepLabel }: Props) {
       </p>
 
       {(detail.original_sql || detail.corrected_sql) && (
-        <details className="error-detail">
-          <summary>SQL 细节</summary>
+        <details className="error-detail mt-2.5 text-[12px]">
+          <summary className="cursor-pointer opacity-80">SQL 细节</summary>
           {detail.original_sql && (
-            <pre>
+            <pre className="mb-0 mt-2 whitespace-pre-wrap break-words rounded-[10px] bg-black/5 px-3 py-2.5 font-mono text-[11px] leading-[1.6]">
               {"原始 SQL\n"}
               {detail.original_sql}
             </pre>
           )}
           {detail.corrected_sql && (
-            <pre>
+            <pre className="mb-0 mt-2 whitespace-pre-wrap break-words rounded-[10px] bg-black/5 px-3 py-2.5 font-mono text-[11px] leading-[1.6]">
               {"校正后 SQL\n"}
               {detail.corrected_sql}
             </pre>
@@ -96,8 +121,12 @@ export default function ErrorCard({ error, spec, stepLabel }: Props) {
         </details>
       )}
 
-      <div className="error-actions">
-        <button type="button" className="ghost-button" onClick={copy}>
+      <div className="error-actions mt-3">
+        <button
+          type="button"
+          className="ghost-button cursor-pointer rounded-lg border border-current bg-transparent px-3 py-[5px] text-[12px] text-current opacity-80 hover:opacity-100"
+          onClick={copy}
+        >
           {copied ? "已复制 ✓" : "复制错误"}
         </button>
       </div>

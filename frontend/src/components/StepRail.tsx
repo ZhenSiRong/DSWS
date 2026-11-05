@@ -22,6 +22,34 @@ function formatDuration(durationMs: number | null | undefined): string {
   return `${(durationMs / 1000).toFixed(2)} s`;
 }
 
+/* 每种状态一套工具类；`.rail-*` 类名保留给连接线与 UI 测试使用。 */
+const MARKER_CLASS: Record<StepVisualStatus, string> = {
+  pending: "border-line bg-panel text-muted",
+  running: "border-brass bg-brass-soft text-brass",
+  success: "border-moss-line bg-moss-soft font-bold text-moss",
+  error: "border-tomato-line bg-tomato-soft font-bold text-tomato",
+  skipped: "border-dashed border-line bg-panel text-faint",
+  cancelled: "border-dashed border-faint bg-panel font-bold text-cancelled-ink",
+};
+
+const LABEL_CLASS: Record<StepVisualStatus, string> = {
+  pending: "",
+  running: "font-semibold",
+  success: "",
+  error: "",
+  skipped: "text-muted",
+  cancelled: "text-muted",
+};
+
+const STATUS_CLASS: Record<StepVisualStatus, string> = {
+  pending: "text-muted",
+  running: "text-muted",
+  success: "text-moss",
+  error: "text-tomato",
+  skipped: "italic text-faint",
+  cancelled: "italic text-cancelled-ink",
+};
+
 /**
  * 竖向导轨。
  *
@@ -32,7 +60,10 @@ function formatDuration(durationMs: number | null | undefined): string {
  */
 export default function StepRail({ steps, states }: Props) {
   return (
-    <ol className="rail" aria-label="执行步骤">
+    <ol
+      className="rail m-0 list-none px-5 pb-5 pt-4"
+      aria-label="执行步骤"
+    >
       {steps.map((step, index) => {
         const state = states[step.id];
         const status: StepVisualStatus = state?.status ?? "pending";
@@ -46,7 +77,9 @@ export default function StepRail({ steps, states }: Props) {
             marker = "×";
             break;
           case "running":
-            marker = <span className="spinner" />;
+            marker = (
+              <span className="spinner inline-block size-3.5 animate-spinner rounded-full border-2 border-current border-r-transparent" />
+            );
             break;
           case "skipped":
             marker = "–";
@@ -59,17 +92,29 @@ export default function StepRail({ steps, states }: Props) {
         }
 
         return (
-          <li key={step.id} className={`rail-item rail-${status}`}>
-            <div className="rail-marker" aria-hidden="true">
+          <li
+            key={step.id}
+            className={`rail-item rail-${status} relative grid grid-cols-[32px_minmax(0,1fr)] gap-3 py-2`}
+          >
+            <div
+              className={`rail-marker relative z-[1] grid size-8 place-items-center rounded-full border-[1.5px] text-[13px] tabular-nums ${MARKER_CLASS[status]}`}
+              aria-hidden="true"
+            >
               {marker}
             </div>
 
-            <div className="rail-body">
-              <span className="rail-label">{step.label}</span>
-              <span className="rail-meta">
-                <span className="rail-status">{STATUS_TEXT[status]}</span>
+            <div className="rail-body flex min-h-8 items-center justify-between gap-2.5">
+              <span className={`rail-label text-sm ${LABEL_CLASS[status]}`}>
+                {step.label}
+              </span>
+              <span className="rail-meta flex items-baseline gap-2 whitespace-nowrap">
+                <span
+                  className={`rail-status text-[11px] ${STATUS_CLASS[status]}`}
+                >
+                  {STATUS_TEXT[status]}
+                </span>
                 {status === "success" && state?.duration_ms != null && (
-                  <span className="rail-duration">
+                  <span className="rail-duration font-mono text-[11px] text-moss">
                     {formatDuration(state.duration_ms)}
                   </span>
                 )}

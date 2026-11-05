@@ -252,83 +252,107 @@ export default function App() {
   const pseudoError = result ? looksLikePseudoError(result) : null;
 
   return (
-    <div className="app">
-      <header className="masthead">
+    <div className="app mx-auto max-w-[1180px] px-6 pb-7 pt-[34px] max-[900px]:px-4 max-[900px]:py-6">
+      <header className="masthead mb-[22px] flex items-end justify-between gap-5 max-[900px]:flex-col max-[900px]:items-start">
         <div>
-          <p className="eyebrow">从零重建 · 教学版</p>
-          <h1>电商问数智能体</h1>
-          <p className="subtitle">
+          <p className="eyebrow mb-1.5 mt-0 text-xs uppercase tracking-[0.18em] text-brass">
+            从零重建 · 教学版
+          </p>
+          <h1 className="m-0 font-serif text-[clamp(30px,4vw,44px)] font-semibold tracking-[0.02em]">
+            电商问数智能体
+          </h1>
+          <p className="subtitle mb-0 mt-2 text-sm text-muted">
             契约先行：类型从契约生成 · 步骤目录唯一源 · 每一种失败都有名字
           </p>
         </div>
-        <div className="badges">
-          <span className="badge badge-stage">S7 契约驱动前端</span>
-          <span className="badge">{steps.length} 步</span>
-          <span className="badge">{conditionalCount} 条件步</span>
-          <span className="badge" data-testid="run-status">
+        <div className="badges flex flex-wrap justify-end gap-2 max-[900px]:justify-start">
+          <span className="badge badge-stage whitespace-nowrap rounded-full border border-brass-line bg-brass-soft px-[11px] py-1.5 text-xs font-semibold text-brass-deep">
+            S7 契约驱动前端
+          </span>
+          <span className="badge whitespace-nowrap rounded-full border border-line bg-panel/70 px-[11px] py-1.5 text-xs text-muted">
+            {steps.length} 步
+          </span>
+          <span className="badge whitespace-nowrap rounded-full border border-line bg-panel/70 px-[11px] py-1.5 text-xs text-muted">
+            {conditionalCount} 条件步
+          </span>
+          <span
+            className="badge whitespace-nowrap rounded-full border border-line bg-panel/70 px-[11px] py-1.5 text-xs text-muted"
+            data-testid="run-status"
+          >
             {RUN_STATUS_TEXT[status]}
           </span>
         </div>
       </header>
 
       {loadError && (
-        <div className="error-card">
+        <div className="rounded-xl border border-tomato-line border-l-4 border-l-tomato bg-tomato-soft px-4 py-3.5 text-[13px] leading-[1.6] text-error-ink">
           <strong>步骤目录加载失败</strong>
-          <p>{loadError}</p>
-          <p className="hint">请确认后端已在 8100 端口启动。</p>
+          <p className="mb-0 mt-1.5">{loadError}</p>
+          <p className="hint mb-0 mt-1.5 text-[12px] text-error-hint">
+            请确认后端已在 8100 端口启动。
+          </p>
         </div>
       )}
 
       {unknownTypes.length > 0 && (
-        <p className="notice" data-testid="unknown-type-notice">
+        <p
+          className="notice mb-3.5 mt-0 rounded-[10px] border border-brass-line bg-brass-soft px-3 py-2.5 text-xs leading-[1.6] text-brass-deep"
+          data-testid="unknown-type-notice"
+        >
           收到契约之外的事件类型（{unknownTypes.join("、")}），已忽略。
           前端不需要升级也能继续用——这是「契约长了一条腿」的正确反应。
         </p>
       )}
 
-      <main className="layout">
-        <aside className="panel rail-panel">
-          <div className="panel-head">
-            <h2>执行链路</h2>
-            <span className="panel-note">来自 /api/steps</span>
+      <main className="layout grid grid-cols-[330px_minmax(0,1fr)] items-start gap-[18px] max-[900px]:grid-cols-1">
+        <aside className="panel rail-panel rounded-panel border border-line bg-panel shadow-panel">
+          <div className="panel-head flex items-baseline justify-between gap-3 px-5 pt-[18px]">
+            <h2 className="m-0 text-[15px] font-bold tracking-[0.08em]">执行链路</h2>
+            <span className="panel-note text-right text-xs text-muted">来自 /api/steps</span>
           </div>
           <StepRail steps={steps} states={states} />
         </aside>
 
-        <section className="panel chat-panel">
-          <div className="panel-head">
-            <h2>问数</h2>
-            <span className="panel-note">
+        <section className="panel chat-panel flex min-h-[620px] flex-col rounded-panel border border-line bg-panel shadow-panel max-[900px]:min-h-[520px]">
+          <div className="panel-head flex items-baseline justify-between gap-3 px-5 pt-[18px]">
+            <h2 className="m-0 text-[15px] font-bold tracking-[0.08em]">问数</h2>
+            <span className="panel-note text-right text-xs text-muted">
               {status === "running" && runningStep
                 ? `正在执行：${runningStep.label}`
                 : RUN_STATUS_TEXT[status]}
             </span>
           </div>
 
-          <div className="chat-body">
+          <div className="chat-body flex flex-1 flex-col gap-4 px-5 pb-2 pt-[18px]">
             {!lastQuery && (
-              <div className="empty-state">
-                <p className="empty-title">类型从契约生成，不从记忆硬编码。</p>
-                <p>
+              <div className="empty-state my-2 rounded-card border border-dashed border-dash p-5 text-sm leading-[1.7] text-muted">
+                <p className="empty-title mb-2.5 mt-0 text-base font-semibold leading-[1.7] text-ink">
+                  类型从契约生成，不从记忆硬编码。
+                </p>
+                <p className="mb-2.5 mt-0">
                   事件的每一个字段都来自
                   <strong>contracts/sse.schema.json</strong>：
                   <strong>改了契约，重新生成，界面跟着变。</strong>
                 </p>
-                <ul>
-                  <li>步骤列表由后端下发，前端零硬编码</li>
-                  <li>每条事件都通过契约校验，未知类型被忽略而不是当成失败</li>
-                  <li>数字就是数字：Decimal 不再变成字符串</li>
+                <ul className="m-0 list-disc pl-[18px]">
+                  <li className="my-1">步骤列表由后端下发，前端零硬编码</li>
+                  <li className="my-1">
+                    每条事件都通过契约校验，未知类型被忽略而不是当成失败
+                  </li>
+                  <li className="my-1">数字就是数字：Decimal 不再变成字符串</li>
                 </ul>
               </div>
             )}
 
             {lastQuery && (
-              <div className="query-bubble">{lastQuery}</div>
+              <div className="query-bubble max-w-[82%] self-end rounded-[14px_14px_4px_14px] bg-ink px-4 py-3 text-sm leading-[1.6] text-bubble-ink">
+                {lastQuery}
+              </div>
             )}
 
             {status === "running" && (
-              <div className="running-hint">
-                <span className="spinner dark" />
+              <div className="running-hint flex items-center gap-2 text-[13px] text-brass">
+                <span className="spinner dark inline-block size-3.5 animate-spinner rounded-full border-2 border-current border-r-transparent" />
                 正在执行…
               </div>
             )}
@@ -360,7 +384,7 @@ export default function App() {
         </section>
       </main>
 
-      <footer className="footer">
+      <footer className="footer mt-[22px] flex flex-wrap justify-between gap-2 border-t border-line/80 pt-3.5 text-xs text-footer">
         <span>rebuild/ · S7</span>
         <span>下一步 S8：性能基线与 P50/P95 预算</span>
       </footer>

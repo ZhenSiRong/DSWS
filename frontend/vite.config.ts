@@ -1,5 +1,6 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import tailwindcss from "@tailwindcss/vite";
 
 /**
  * rebuild 前端独立端口 5273，代理到 rebuild 后端 8100。
@@ -12,7 +13,7 @@ export default defineConfig(() => {
     process.env.VITE_DEV_PROXY_TARGET ?? "http://127.0.0.1:8100";
 
   return {
-    plugins: [react()],
+    plugins: [react(), tailwindcss()],
     server: {
       host: "0.0.0.0",
       port: 5273,
