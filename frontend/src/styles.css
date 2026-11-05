@@ -1,155 +1,107 @@
-:root {
-  --paper: #f4f0e6;
-  --panel: #fffdf8;
-  --ink: #211e19;
-  --muted: #7b7366;
-  --line: #e5ddcd;
-  --brass: #a87a20;
-  --brass-soft: #f5e9ca;
-  --moss: #2e6b4c;
-  --moss-soft: #e4f0e8;
-  --tomato: #b23a2a;
-  --tomato-soft: #f9e6e1;
-  --shadow: 0 18px 50px -30px rgba(40, 32, 18, 0.45);
-}
+@import "tailwindcss";
 
-* {
-  box-sizing: border-box;
-}
+/*
+ * 设计令牌 → Tailwind 主题。
+ *
+ * 颜色/字体/圆角/阴影都从这里生成工具类（bg-paper、text-ink、font-serif、
+ * rounded-panel、shadow-panel ……），组件里不再写颜色字面量。
+ * 名称保持与旧 :root 令牌一一对应，视觉不变。
+ */
+@theme {
+  --color-paper: #f4f0e6;
+  --color-panel: #fffdf8;
+  --color-ink: #211e19;
+  --color-muted: #7b7366;
+  --color-line: #e5ddcd;
+  --color-brass: #a87a20;
+  --color-brass-soft: #f5e9ca;
+  --color-moss: #2e6b4c;
+  --color-moss-soft: #e4f0e8;
+  --color-tomato: #b23a2a;
+  --color-tomato-soft: #f9e6e1;
 
-html,
-body,
-#root {
-  min-height: 100%;
-}
+  /* 旧样式中的派生色：起语义名，避免组件里散落十六进制值。 */
+  --color-brass-line: #dcc48d;
+  --color-brass-deep: #7a5713;
+  --color-moss-line: #bcd8c8;
+  --color-tomato-line: #e7b9b0;
+  --color-faint: #b0a795;
+  --color-dash: #d8cdb8;
+  --color-th-bg: #faf6ec;
+  --color-th-ink: #5f5748;
+  --color-type: #b3a88f;
+  --color-row-line: #f0e9db;
+  --color-row-hover: #fcf8ee;
+  --color-empty-bg: #fdfaf2;
+  --color-note: #8a6a20;
+  --color-error-ink: #6f2418;
+  --color-error-hint: #8a5a4f;
+  --color-stop-hover: #f3d9d2;
+  --color-field: #fffefa;
+  --color-field-disabled: #f6f1e6;
+  --color-bubble-ink: #fdfbf5;
+  --color-footer: #948b7b;
+  --color-cancelled-bg: #f7f3ea;
+  --color-cancelled-ink: #8a8172;
 
-body {
-  margin: 0;
-  color: var(--ink);
-  background:
-    radial-gradient(900px 500px at 12% -10%, #fff9ea 0%, transparent 60%),
-    radial-gradient(800px 480px at 100% 0%, #efe6d2 0%, transparent 55%),
-    var(--paper);
-  font-family:
+  --font-sans:
     -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans SC",
     "PingFang SC", "Microsoft YaHei", sans-serif;
-  -webkit-font-smoothing: antialiased;
+  --font-serif: "Songti SC", "Noto Serif SC", Georgia, serif;
+  --font-mono:
+    ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  /*
+   * 旧样式没有给正文设置 line-height（浏览器默认 normal）。
+   * Tailwind 的字号工具类默认会带上 1.5 倍行高，这里还原，避免整页变高。
+   * 需要特定行高的地方仍用 leading-* 显式覆盖。
+   */
+  --text-xs: 0.75rem;
+  --text-xs--line-height: normal;
+  --text-sm: 0.875rem;
+  --text-sm--line-height: normal;
+  --text-base: 1rem;
+  --text-base--line-height: normal;
+
+  --radius-panel: 18px;
+  --radius-card: 14px;
+  --radius-field: 12px;
+
+  --shadow-panel: 0 18px 50px -30px rgba(40, 32, 18, 0.45);
+
+  --animate-spinner: spinner-spin 0.75s linear infinite;
 }
 
-.app {
-  max-width: 1180px;
-  margin: 0 auto;
-  padding: 34px 24px 28px;
+@keyframes spinner-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
-/* ---------------- header ---------------- */
+@layer base {
+  html,
+  body,
+  #root {
+    min-height: 100%;
+  }
 
-.masthead {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 20px;
-  margin-bottom: 22px;
+  body {
+    margin: 0;
+    color: var(--color-ink);
+    background:
+      radial-gradient(900px 500px at 12% -10%, #fff9ea 0%, transparent 60%),
+      radial-gradient(800px 480px at 100% 0%, #efe6d2 0%, transparent 55%),
+      var(--color-paper);
+    font-family: var(--font-sans);
+    /* 旧样式没有全局 line-height；preflight 会设成 1.5，显式还原。 */
+    line-height: normal;
+    -webkit-font-smoothing: antialiased;
+  }
 }
 
-.eyebrow {
-  margin: 0 0 6px;
-  font-size: 12px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--brass);
-}
+/* ---------------- 工具类表达不了的少量自定义样式 ---------------- */
 
-.masthead h1 {
-  margin: 0;
-  font-family: "Songti SC", "Noto Serif SC", Georgia, serif;
-  font-size: clamp(30px, 4vw, 44px);
-  font-weight: 600;
-  letter-spacing: 0.02em;
-}
-
-.subtitle {
-  margin: 8px 0 0;
-  color: var(--muted);
-  font-size: 14px;
-}
-
-.badges {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  justify-content: flex-end;
-}
-
-.badge {
-  padding: 6px 11px;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  background: rgba(255, 253, 248, 0.7);
-  color: var(--muted);
-  font-size: 12px;
-  white-space: nowrap;
-}
-
-.badge-stage {
-  border-color: #dcc48d;
-  background: var(--brass-soft);
-  color: #7a5713;
-  font-weight: 600;
-}
-
-/* ---------------- layout ---------------- */
-
-.layout {
-  display: grid;
-  grid-template-columns: 330px minmax(0, 1fr);
-  gap: 18px;
-  align-items: start;
-}
-
-.panel {
-  border: 1px solid var(--line);
-  border-radius: 18px;
-  background: var(--panel);
-  box-shadow: var(--shadow);
-}
-
-.panel-head {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 18px 20px 0;
-}
-
-.panel-head h2 {
-  margin: 0;
-  font-size: 15px;
-  letter-spacing: 0.08em;
-}
-
-.panel-note {
-  color: var(--muted);
-  font-size: 12px;
-  text-align: right;
-}
-
-/* ---------------- step rail ---------------- */
-
-.rail {
-  list-style: none;
-  margin: 0;
-  padding: 16px 20px 20px;
-}
-
-.rail-item {
-  position: relative;
-  display: grid;
-  grid-template-columns: 32px minmax(0, 1fr);
-  gap: 12px;
-  padding: 8px 0;
-}
-
+/* 步骤导轨的连接线：需要 ::before 伪元素，并按状态改色。 */
 .rail-item:not(:last-child)::before {
   content: "";
   position: absolute;
@@ -157,601 +109,14 @@ body {
   top: 40px;
   bottom: -4px;
   width: 2px;
-  background: var(--line);
+  background: var(--color-line);
 }
 
 .rail-item.rail-success:not(:last-child)::before {
-  background: #bcd8c8;
+  background: var(--color-moss-line);
 }
 
-.rail-marker {
-  position: relative;
-  z-index: 1;
-  display: grid;
-  place-items: center;
-  width: 32px;
-  height: 32px;
-  border: 1.5px solid var(--line);
-  border-radius: 50%;
-  background: var(--panel);
-  color: var(--muted);
-  font-size: 13px;
-  font-variant-numeric: tabular-nums;
-}
-
-.rail-body {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  min-height: 32px;
-}
-
-.rail-label {
-  font-size: 14px;
-}
-
-.rail-meta {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-  white-space: nowrap;
-}
-
-.rail-status {
-  color: var(--muted);
-  font-size: 11px;
-}
-
-.rail-duration {
-  color: var(--moss);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  font-size: 11px;
-}
-
-.rail-running .rail-marker {
-  border-color: var(--brass);
-  background: var(--brass-soft);
-  color: var(--brass);
-}
-
-.rail-running .rail-label {
-  font-weight: 600;
-}
-
-.rail-success .rail-marker {
-  border-color: #bcd8c8;
-  background: var(--moss-soft);
-  color: var(--moss);
-  font-weight: 700;
-}
-
-.rail-success .rail-status {
-  color: var(--moss);
-}
-
-.rail-error .rail-marker {
-  border-color: #e7b9b0;
-  background: var(--tomato-soft);
-  color: var(--tomato);
-  font-weight: 700;
-}
-
-.rail-error .rail-status {
-  color: var(--tomato);
-}
-
-.rail-skipped .rail-marker {
-  border-style: dashed;
-  color: #b0a795;
-}
-
-.rail-skipped .rail-label {
-  color: var(--muted);
-}
-
-.rail-skipped .rail-status {
-  color: #b0a795;
-  font-style: italic;
-}
-
-/* ---------------- chat ---------------- */
-
-.chat-panel {
-  display: flex;
-  flex-direction: column;
-  min-height: 620px;
-}
-
-.chat-body {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  gap: 16px;
-  padding: 18px 20px 8px;
-}
-
-.empty-state {
-  margin: 8px 0;
-  padding: 20px;
-  border: 1px dashed #d8cdb8;
-  border-radius: 14px;
-  color: var(--muted);
-  font-size: 14px;
-  line-height: 1.7;
-}
-
-.empty-state p {
-  margin: 0 0 10px;
-}
-
-.empty-title {
-  color: var(--ink);
-  font-size: 16px;
-  font-weight: 600;
-}
-
-.empty-state ul {
-  margin: 0;
-  padding-left: 18px;
-}
-
-.empty-state li {
-  margin: 4px 0;
-}
-
-.query-bubble {
-  align-self: flex-end;
-  max-width: 82%;
-  padding: 12px 16px;
-  border-radius: 14px 14px 4px 14px;
-  background: var(--ink);
-  color: #fdfbf5;
-  font-size: 14px;
-  line-height: 1.6;
-}
-
-.running-hint {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--brass);
-  font-size: 13px;
-}
-
-/* ---------------- result table ---------------- */
-
-.table-wrap {
-  overflow-x: auto;
-  border: 1px solid var(--line);
-  border-radius: 14px;
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 14px;
-}
-
-thead th {
-  padding: 11px 14px;
-  border-bottom: 1px solid var(--line);
-  background: #faf6ec;
-  color: #5f5748;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  text-align: left;
-  white-space: nowrap;
-}
-
-.col-type {
-  margin-left: 6px;
-  color: #b3a88f;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  font-size: 10px;
-  font-weight: 400;
-}
-
-tbody td {
-  padding: 10px 14px;
-  border-bottom: 1px solid #f0e9db;
-  font-variant-numeric: tabular-nums;
-}
-
-tbody tr:last-child td {
-  border-bottom: 0;
-}
-
-tbody tr:hover td {
-  background: #fcf8ee;
-}
-
-.align-right {
-  text-align: right;
-}
-
-.cell-null {
-  color: #b0a795;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  font-size: 12px;
-  font-style: italic;
-}
-
-.result-empty {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 18px;
-  border: 1px dashed #d8cdb8;
-  border-radius: 14px;
-  background: #fdfaf2;
-  color: var(--muted);
-  font-size: 13px;
-}
-
-.result-empty strong {
-  color: var(--ink);
-}
-
-/* ---------------- 结果块（S7）---------------- */
-
-.result-block {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.result-note {
-  margin: 0;
-  padding: 9px 12px;
-  border: 1px dashed #d8cdb8;
-  border-radius: 10px;
-  background: #fdfaf2;
-  color: #8a6a20;
-  font-size: 12px;
-  line-height: 1.6;
-}
-
-.result-actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 10px;
-  color: var(--muted);
-}
-
-.result-hint {
-  font-size: 11px;
-  opacity: 0.8;
-}
-
-/* 整列都是 NULL：列头弱化 + 一个「无数据」标记。 */
-.col-all-null {
-  color: #b0a795;
-}
-
-.col-flag {
-  margin-left: 6px;
-  padding: 1px 6px;
-  border: 1px solid currentColor;
-  border-radius: 999px;
-  font-size: 10px;
-  font-weight: 400;
-  letter-spacing: 0;
-  opacity: 0.75;
-}
-
-.col-flag--warn {
-  color: var(--tomato);
-  opacity: 1;
-}
-
-/* 字符串形式的数字：等宽 + 下划虚线，提醒它不是数字。 */
-.cell-numeric-string {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  text-decoration: underline dotted;
-  text-underline-offset: 3px;
-}
-
-.notice {
-  margin: 0 0 14px;
-  padding: 9px 12px;
-  border: 1px solid #dcc48d;
-  border-radius: 10px;
-  background: var(--brass-soft);
-  color: #7a5713;
-  font-size: 12px;
-  line-height: 1.6;
-}
-
-/* ---------------- errors ---------------- */
-
-.error-card {
-  padding: 14px 16px;
-  border: 1px solid #e7b9b0;
-  border-left: 4px solid var(--tomato);
-  border-radius: 12px;
-  background: var(--tomato-soft);
-  color: #6f2418;
-  font-size: 13px;
-  line-height: 1.6;
-}
-
-.error-card p {
-  margin: 6px 0 0;
-}
-
-.error-head {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.error-head code {
-  padding: 2px 7px;
-  border-radius: 6px;
-  background: rgba(178, 58, 42, 0.12);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  font-size: 11px;
-  white-space: nowrap;
-}
-
-.hint {
-  color: #8a5a4f;
-  font-size: 12px;
-}
-
-/* ---------------- 失败卡片的三种长相 ----------------
- *
- * class 决定长相，**不是**码决定：
- *   failure    红框（真失败）
- *   empty      虚线空态（合法但没有数据，不标红）
- *   cancelled  中性卡（用户自己停的，不算失败）
- */
-
-.error-card--empty {
-  border-style: dashed;
-  border-color: #d8cdb8;
-  border-left: 4px solid var(--brass);
-  background: #fdfaf2;
-  color: var(--ink);
-}
-
-.error-card--empty .error-head code {
-  background: rgba(168, 122, 32, 0.14);
-}
-
-.error-card--cancelled {
-  border-color: var(--line);
-  border-left: 4px solid #b0a795;
-  background: #f7f3ea;
-  color: var(--ink);
-}
-
-.error-card--cancelled .error-head code {
-  background: rgba(123, 115, 102, 0.14);
-}
-
-.error-message {
-  margin: 8px 0 0;
-  white-space: pre-wrap;
-}
-
-.error-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px 14px;
-  align-items: center;
-  margin: 10px 0 0;
-  color: inherit;
-  font-size: 12px;
-  opacity: 0.85;
-}
-
-.error-chip {
-  padding: 1px 8px;
-  border: 1px solid currentColor;
-  border-radius: 999px;
-  font-size: 11px;
-  opacity: 0.75;
-}
-
-.error-reason {
-  padding: 1px 6px;
-  border-radius: 6px;
-  background: rgba(127, 127, 127, 0.14);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  font-size: 11px;
-}
-
-.error-detail {
-  margin-top: 10px;
-  font-size: 12px;
-}
-
-.error-detail summary {
-  cursor: pointer;
-  opacity: 0.8;
-}
-
-.error-detail pre {
-  margin: 8px 0 0;
-  padding: 10px 12px;
-  border-radius: 10px;
-  background: rgba(0, 0, 0, 0.05);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  font-size: 11px;
-  line-height: 1.6;
-  white-space: pre-wrap;
-  word-break: break-word;
-}
-
-.error-actions {
-  margin-top: 12px;
-}
-
-.ghost-button {
-  padding: 5px 12px;
-  border: 1px solid currentColor;
-  border-radius: 8px;
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  font-size: 12px;
-  cursor: pointer;
-  opacity: 0.8;
-}
-
-.ghost-button:hover {
-  opacity: 1;
-}
-
-.stop-button {
-  padding: 12px 20px;
-  border: 1px solid #e7b9b0;
-  border-radius: 12px;
-  background: var(--tomato-soft);
-  color: var(--tomato);
-  font: inherit;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.stop-button:hover {
-  background: #f3d9d2;
-}
-
-/* 取消态的步骤：既不是完成，也不是失败。 */
-.rail-cancelled .rail-marker {
-  border-style: dashed;
-  border-color: #b0a795;
-  color: #8a8172;
-  font-weight: 700;
-}
-
-.rail-cancelled .rail-label {
-  color: var(--muted);
-}
-
-.rail-cancelled .rail-status {
-  color: #8a8172;
-  font-style: italic;
-}
-
-/* ---------------- composer ---------------- */
-
-.composer {
-  display: flex;
-  gap: 10px;
-  align-items: flex-end;
-  padding: 14px 20px 20px;
-}
-
-.composer textarea {
-  flex: 1;
-  min-height: 56px;
-  max-height: 160px;
-  padding: 12px 14px;
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  background: #fffefa;
-  color: var(--ink);
-  font: inherit;
-  font-size: 14px;
-  line-height: 1.5;
-  resize: vertical;
-  outline: none;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
-}
-
-.composer textarea:focus {
-  border-color: #d8bd7e;
-  box-shadow: 0 0 0 3px rgba(168, 122, 32, 0.14);
-}
-
-.composer textarea:disabled {
-  background: #f6f1e6;
-  color: var(--muted);
-}
-
-.composer button {
-  height: 44px;
-  padding: 0 22px;
-  border: 0;
-  border-radius: 12px;
-  background: var(--ink);
-  color: #fdfbf5;
-  font: inherit;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: transform 0.12s ease, opacity 0.15s ease;
-}
-
-.composer button:hover:not(:disabled) {
-  transform: translateY(-1px);
-}
-
-.composer button:disabled {
-  cursor: not-allowed;
-  opacity: 0.45;
-}
-
-/* ---------------- misc ---------------- */
-
-.spinner {
-  display: inline-block;
-  width: 14px;
-  height: 14px;
-  border: 2px solid currentColor;
-  border-right-color: transparent;
-  border-radius: 50%;
-  animation: spin 0.75s linear infinite;
-}
-
-.spinner.dark {
-  color: var(--brass);
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.footer {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  gap: 8px;
-  margin-top: 22px;
-  padding-top: 14px;
-  border-top: 1px solid rgba(229, 221, 205, 0.8);
-  color: #948b7b;
-  font-size: 12px;
-}
-
-@media (max-width: 900px) {
-  .app {
-    padding: 24px 16px;
-  }
-
-  .masthead {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-
-  .badges {
-    justify-content: flex-start;
-  }
-
-  .layout {
-    grid-template-columns: 1fr;
-  }
-
-  .chat-panel {
-    min-height: 520px;
-  }
+/* 表格行 hover 需要命中 td，工具类只能落在 tr 上。 */
+.table-wrap tbody tr:hover td {
+  background: var(--color-row-hover);
 }

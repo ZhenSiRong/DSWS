@@ -1,0 +1,422 @@
+{
+  "viewport": {
+    "width": 1920,
+    "height": 1080
+  },
+  "document": {
+    "scrollWidth": 1920,
+    "scrollHeight": 1080
+  },
+  "boxes": {
+    ".app": {
+      "x": 370,
+      "y": 0,
+      "width": 1180,
+      "height": 906
+    },
+    ".masthead": {
+      "x": 394,
+      "y": 34,
+      "width": 1132,
+      "height": 115
+    },
+    ".layout": {
+      "x": 394,
+      "y": 171,
+      "width": 1132,
+      "height": 653
+    },
+    ".rail-panel": {
+      "x": 394,
+      "y": 171,
+      "width": 330,
+      "height": 653
+    },
+    ".chat-panel": {
+      "x": 742,
+      "y": 171,
+      "width": 784,
+      "height": 620
+    },
+    ".panel-head": {
+      "x": 395,
+      "y": 172,
+      "width": 328,
+      "height": 39
+    },
+    ".rail-item": {
+      "x": 415,
+      "y": 227,
+      "width": 288,
+      "height": 48
+    },
+    ".rail-marker": {
+      "x": 415,
+      "y": 235,
+      "width": 32,
+      "height": 32
+    },
+    ".badge": {
+      "x": 1219.28,
+      "y": 118,
+      "width": 113.3,
+      "height": 31
+    },
+    ".composer": {
+      "x": 743,
+      "y": 688,
+      "width": 782,
+      "height": 102
+    },
+    ".composer textarea": {
+      "x": 763,
+      "y": 702,
+      "width": 660,
+      "height": 68
+    },
+    ".composer button[type=submit], .composer button": {
+      "x": 1433,
+      "y": 726,
+      "width": 72,
+      "height": 44
+    },
+    ".footer": {
+      "x": 394,
+      "y": 846,
+      "width": 1132,
+      "height": 32
+    },
+    ".query-bubble": null,
+    ".table-wrap": null,
+    ".result-actions": null,
+    ".error-card": null,
+    ".result-empty": null,
+    ".empty-state": {
+      "x": 763,
+      "y": 237,
+      "width": 742,
+      "height": 196.38
+    },
+    ".masthead h1": {
+      "x": 394,
+      "y": 57,
+      "width": 432.55,
+      "height": 64
+    },
+    ".subtitle": {
+      "x": 394,
+      "y": 129,
+      "width": 432.55,
+      "height": 20
+    },
+    ".panel-head h2": {
+      "x": 415,
+      "y": 190,
+      "width": 64.81,
+      "height": 21
+    },
+    ".panel-note": {
+      "x": 620,
+      "y": 193,
+      "width": 83,
+      "height": 17
+    },
+    ".rail-label": {
+      "x": 459,
+      "y": 241,
+      "width": 70,
+      "height": 20
+    },
+    ".rail-status": {
+      "x": 681,
+      "y": 243,
+      "width": 22,
+      "height": 16
+    },
+    ".rail-duration": null,
+    ".empty-title": {
+      "x": 784,
+      "y": 258,
+      "width": 700,
+      "height": 27.19
+    },
+    ".result-note": null,
+    ".table-wrap thead th": null,
+    ".table-wrap tbody td": null
+  },
+  "styles": {
+    ".app": {
+      "fontFamily": "-apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Noto Sans SC\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif",
+      "fontSize": "16px",
+      "fontWeight": "400",
+      "lineHeight": "normal",
+      "letterSpacing": "normal",
+      "color": "rgb(33, 30, 25)",
+      "backgroundColor": "rgba(0, 0, 0, 0)",
+      "borderRadius": "0px",
+      "padding": "34px 24px 28px",
+      "margin": "0px 370px",
+      "textAlign": "start"
+    },
+    ".masthead": {
+      "fontFamily": "-apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Noto Sans SC\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif",
+      "fontSize": "16px",
+      "fontWeight": "400",
+      "lineHeight": "normal",
+      "letterSpacing": "normal",
+      "color": "rgb(33, 30, 25)",
+      "backgroundColor": "rgba(0, 0, 0, 0)",
+      "borderRadius": "0px",
+      "padding": "0px",
+      "margin": "0px 0px 22px",
+      "textAlign": "start"
+    },
+    ".layout": {
+      "fontFamily": "-apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Noto Sans SC\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif",
+      "fontSize": "16px",
+      "fontWeight": "400",
+      "lineHeight": "normal",
+      "letterSpacing": "normal",
+      "color": "rgb(33, 30, 25)",
+      "backgroundColor": "rgba(0, 0, 0, 0)",
+      "borderRadius": "0px",
+      "padding": "0px",
+      "margin": "0px",
+      "textAlign": "start"
+    },
+    ".rail-panel": {
+      "fontFamily": "-apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Noto Sans SC\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif",
+      "fontSize": "16px",
+      "fontWeight": "400",
+      "lineHeight": "normal",
+      "letterSpacing": "normal",
+      "color": "rgb(33, 30, 25)",
+      "backgroundColor": "rgb(255, 253, 248)",
+      "borderRadius": "18px",
+      "padding": "0px",
+      "margin": "0px",
+      "textAlign": "start"
+    },
+    ".chat-panel": {
+      "fontFamily": "-apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Noto Sans SC\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif",
+      "fontSize": "16px",
+      "fontWeight": "400",
+      "lineHeight": "normal",
+      "letterSpacing": "normal",
+      "color": "rgb(33, 30, 25)",
+      "backgroundColor": "rgb(255, 253, 248)",
+      "borderRadius": "18px",
+      "padding": "0px",
+      "margin": "0px",
+      "textAlign": "start"
+    },
+    ".panel-head": {
+      "fontFamily": "-apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Noto Sans SC\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif",
+      "fontSize": "16px",
+      "fontWeight": "400",
+      "lineHeight": "normal",
+      "letterSpacing": "normal",
+      "color": "rgb(33, 30, 25)",
+      "backgroundColor": "rgba(0, 0, 0, 0)",
+      "borderRadius": "0px",
+      "padding": "18px 20px 0px",
+      "margin": "0px",
+      "textAlign": "start"
+    },
+    ".rail-item": {
+      "fontFamily": "-apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Noto Sans SC\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif",
+      "fontSize": "16px",
+      "fontWeight": "400",
+      "lineHeight": "normal",
+      "letterSpacing": "normal",
+      "color": "rgb(33, 30, 25)",
+      "backgroundColor": "rgba(0, 0, 0, 0)",
+      "borderRadius": "0px",
+      "padding": "8px 0px",
+      "margin": "0px",
+      "textAlign": "start"
+    },
+    ".rail-marker": {
+      "fontFamily": "-apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Noto Sans SC\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif",
+      "fontSize": "13px",
+      "fontWeight": "400",
+      "lineHeight": "normal",
+      "letterSpacing": "normal",
+      "color": "rgb(123, 115, 102)",
+      "backgroundColor": "rgb(255, 253, 248)",
+      "borderRadius": "50%",
+      "padding": "0px",
+      "margin": "0px",
+      "textAlign": "start"
+    },
+    ".badge": {
+      "fontFamily": "-apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Noto Sans SC\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif",
+      "fontSize": "12px",
+      "fontWeight": "600",
+      "lineHeight": "normal",
+      "letterSpacing": "normal",
+      "color": "rgb(122, 87, 19)",
+      "backgroundColor": "rgb(245, 233, 202)",
+      "borderRadius": "999px",
+      "padding": "6px 11px",
+      "margin": "0px",
+      "textAlign": "start"
+    },
+    ".composer": {
+      "fontFamily": "-apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Noto Sans SC\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif",
+      "fontSize": "16px",
+      "fontWeight": "400",
+      "lineHeight": "normal",
+      "letterSpacing": "normal",
+      "color": "rgb(33, 30, 25)",
+      "backgroundColor": "rgba(0, 0, 0, 0)",
+      "borderRadius": "0px",
+      "padding": "14px 20px 20px",
+      "margin": "0px",
+      "textAlign": "start"
+    },
+    ".composer textarea": {
+      "fontFamily": "-apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Noto Sans SC\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif",
+      "fontSize": "14px",
+      "fontWeight": "400",
+      "lineHeight": "21px",
+      "letterSpacing": "normal",
+      "color": "rgb(33, 30, 25)",
+      "backgroundColor": "rgb(255, 254, 250)",
+      "borderRadius": "12px",
+      "padding": "12px 14px",
+      "margin": "0px",
+      "textAlign": "start"
+    },
+    ".composer button[type=submit], .composer button": {
+      "fontFamily": "-apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Noto Sans SC\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif",
+      "fontSize": "14px",
+      "fontWeight": "600",
+      "lineHeight": "normal",
+      "letterSpacing": "normal",
+      "color": "rgb(253, 251, 245)",
+      "backgroundColor": "rgb(33, 30, 25)",
+      "borderRadius": "12px",
+      "padding": "0px 22px",
+      "margin": "0px",
+      "textAlign": "center"
+    },
+    ".footer": {
+      "fontFamily": "-apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Noto Sans SC\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif",
+      "fontSize": "12px",
+      "fontWeight": "400",
+      "lineHeight": "normal",
+      "letterSpacing": "normal",
+      "color": "rgb(148, 139, 123)",
+      "backgroundColor": "rgba(0, 0, 0, 0)",
+      "borderRadius": "0px",
+      "padding": "14px 0px 0px",
+      "margin": "22px 0px 0px",
+      "textAlign": "start"
+    },
+    ".empty-state": {
+      "fontFamily": "-apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Noto Sans SC\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif",
+      "fontSize": "14px",
+      "fontWeight": "400",
+      "lineHeight": "23.8px",
+      "letterSpacing": "normal",
+      "color": "rgb(123, 115, 102)",
+      "backgroundColor": "rgba(0, 0, 0, 0)",
+      "borderRadius": "14px",
+      "padding": "20px",
+      "margin": "8px 0px",
+      "textAlign": "start"
+    },
+    ".masthead h1": {
+      "fontFamily": "\"Songti SC\", \"Noto Serif SC\", Georgia, serif",
+      "fontSize": "44px",
+      "fontWeight": "600",
+      "lineHeight": "normal",
+      "letterSpacing": "0.88px",
+      "color": "rgb(33, 30, 25)",
+      "backgroundColor": "rgba(0, 0, 0, 0)",
+      "borderRadius": "0px",
+      "padding": "0px",
+      "margin": "0px",
+      "textAlign": "start"
+    },
+    ".subtitle": {
+      "fontFamily": "-apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Noto Sans SC\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif",
+      "fontSize": "14px",
+      "fontWeight": "400",
+      "lineHeight": "normal",
+      "letterSpacing": "normal",
+      "color": "rgb(123, 115, 102)",
+      "backgroundColor": "rgba(0, 0, 0, 0)",
+      "borderRadius": "0px",
+      "padding": "0px",
+      "margin": "8px 0px 0px",
+      "textAlign": "start"
+    },
+    ".panel-head h2": {
+      "fontFamily": "-apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Noto Sans SC\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif",
+      "fontSize": "15px",
+      "fontWeight": "700",
+      "lineHeight": "normal",
+      "letterSpacing": "1.2px",
+      "color": "rgb(33, 30, 25)",
+      "backgroundColor": "rgba(0, 0, 0, 0)",
+      "borderRadius": "0px",
+      "padding": "0px",
+      "margin": "0px",
+      "textAlign": "start"
+    },
+    ".panel-note": {
+      "fontFamily": "-apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Noto Sans SC\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif",
+      "fontSize": "12px",
+      "fontWeight": "400",
+      "lineHeight": "normal",
+      "letterSpacing": "normal",
+      "color": "rgb(123, 115, 102)",
+      "backgroundColor": "rgba(0, 0, 0, 0)",
+      "borderRadius": "0px",
+      "padding": "0px",
+      "margin": "0px",
+      "textAlign": "right"
+    },
+    ".rail-label": {
+      "fontFamily": "-apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Noto Sans SC\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif",
+      "fontSize": "14px",
+      "fontWeight": "400",
+      "lineHeight": "normal",
+      "letterSpacing": "normal",
+      "color": "rgb(33, 30, 25)",
+      "backgroundColor": "rgba(0, 0, 0, 0)",
+      "borderRadius": "0px",
+      "padding": "0px",
+      "margin": "0px",
+      "textAlign": "start"
+    },
+    ".rail-status": {
+      "fontFamily": "-apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Noto Sans SC\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif",
+      "fontSize": "11px",
+      "fontWeight": "400",
+      "lineHeight": "normal",
+      "letterSpacing": "normal",
+      "color": "rgb(123, 115, 102)",
+      "backgroundColor": "rgba(0, 0, 0, 0)",
+      "borderRadius": "0px",
+      "padding": "0px",
+      "margin": "0px",
+      "textAlign": "start"
+    },
+    ".empty-title": {
+      "fontFamily": "-apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Noto Sans SC\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif",
+      "fontSize": "16px",
+      "fontWeight": "600",
+      "lineHeight": "27.2px",
+      "letterSpacing": "normal",
+      "color": "rgb(33, 30, 25)",
+      "backgroundColor": "rgba(0, 0, 0, 0)",
+      "borderRadius": "0px",
+      "padding": "0px",
+      "margin": "0px 0px 10px",
+      "textAlign": "start"
+    }
+  }
+}
