@@ -12,13 +12,15 @@ ARG UV_INDEX_URL=https://pypi.org/simple
 ARG UV_HTTP_TIMEOUT=180
 ENV UV_DEFAULT_INDEX=${UV_INDEX_URL} \
     UV_HTTP_TIMEOUT=${UV_HTTP_TIMEOUT} \
-    UV_COMPILE_BYTECODE=1 \
+    UV_NO_CACHE=1 \
+    UV_COMPILE_BYTECODE=0 \
     UV_LINK_MODE=copy
 
 WORKDIR /app/backend
 COPY backend/pyproject.toml backend/uv.lock ./
-RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --frozen --no-dev --no-install-project
+# 不用 BuildKit cache mount：该服务器上 overlay + cache mount 组合会让 uv
+# 解包阶段卡死在 futex（CPU 0%、无网络连接）。直接写容器层即可。
+RUN uv sync --frozen --no-dev --no-install-project
 
 COPY backend/app ./app
 
