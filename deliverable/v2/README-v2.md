@@ -152,6 +152,8 @@ frontend build: ✓ built
 
 ## 演示视频
 
+![v2 演示预览](screenshots/v2-demo-preview.gif)
+
 `deliverable/v2/DSWS-v2-original-ui-demo.mp4`（46.27s，1920×1080 / 30fps，H.264，1.7 MB）。
 
 - 录制方式：Playwright 驱动系统 Chrome 操作 `http://8.155.135.97:5051`，真实 SSE，无回放、无 mock；录制于 2026-11-06（界面切换 + 2SQL 修复之后）。
@@ -195,6 +197,7 @@ deliverable/v2/
 │   ├── nginx.conf                       # /api 反代 + SSE 不缓冲
 │   └── Dockerfile.original              # 静态 dist + nginx
 ├── screenshots/
+│   ├── v2-demo-preview.gif              # GitHub README 预览（13.1s / 960x540）
 │   ├── v2-idle-1920x1080.png            # 原版界面首屏
 │   ├── v2-query-result-1920x1080.png    # GMV 问数 5 行结果
 │   ├── v2-product-ranking-result-1920x1080.png  # 商品级排名结果

@@ -8,6 +8,16 @@
 - S7 设计记录：[`docs/S7-HANDOFF.md`](docs/S7-HANDOFF.md)
 - 路线图：`../shopkeeper-agent/docs/REBUILD-ROADMAP.md`
 
+## 演示
+
+![v2 演示：原版界面 + LangGraph 12 节点 + 真实问数](deliverable/v2/screenshots/v2-demo-preview.gif)
+
+完整视频（46s，含 GMV 问数、商品级排名、UNION 策略拒绝）：
+[`DSWS-v2-original-ui-demo.mp4`](deliverable/v2/DSWS-v2-original-ui-demo.mp4)
+
+> GitHub README 不支持内联 `<video>`；这里用 GIF 做页面预览，完整 MP4 通过链接打开。
+> v2 的部署、验证与证据见 [`deliverable/v2/README-v2.md`](deliverable/v2/README-v2.md)。
+
 ## 当前进度
 
 | 阶段 | 产出 | 验收 |
