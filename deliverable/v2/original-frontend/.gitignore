@@ -1,0 +1,5 @@
+# 前端项目忽略规则
+# node_modules 不入库；dist 作为部署产物随交付保留（Dockerfile.original 直接 COPY）。
+node_modules/
+*.tsbuildinfo
+.env

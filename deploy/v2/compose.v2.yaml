@@ -2,7 +2,9 @@
 #
 # 与旧实例的区别：
 #   - backend 用 LangGraph StateGraph 执行 12 节点（见 backend/app/agent/graph.py）
-#   - frontend 用 Tailwind v4 构建（见 frontend/package.json）
+#   - frontend 用原版 shopkeeper-agent 界面（React 19 + Tailwind 3），
+#     只加了一层 SSE 展示适配：步骤 id → 中文节点名、{columns,rows} → 表格行。
+#     原教学重建版前端（dsws-v2/frontend:local）已卸下，镜像保留可回滚。
 #
 # 复用旧实例的 MySQL / Elasticsearch / Qdrant（数据与只读账号已由旧实例的
 # init 服务准备好），只新建 backend / frontend 两个容器，因此：
@@ -64,14 +66,10 @@ services:
       start_period: 10s
 
   frontend:
-    image: dsws-v2/frontend:local
+    image: dsws-v2/frontend-original:local
     build:
-      context: .
-      dockerfile: docker/frontend.Dockerfile
-      args:
-        NODE_IMAGE: ${NODE_IMAGE:?}
-        NGINX_IMAGE: ${NGINX_IMAGE:?}
-        NPM_REGISTRY: ${NPM_REGISTRY:-https://registry.npmjs.org}
+      context: ./original-frontend
+      dockerfile: Dockerfile.original
     restart: unless-stopped
     ports:
       - "${FRONTEND_BIND:-0.0.0.0}:${FRONTEND_HOST_PORT:-5051}:80"

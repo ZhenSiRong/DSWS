@@ -1,0 +1,7 @@
+# 原版 shopkeeper-agent 界面：静态 dist + v2 的 SSE 反代配置
+FROM nginx:1.27-alpine
+
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY dist /usr/share/nginx/html
+
+EXPOSE 80

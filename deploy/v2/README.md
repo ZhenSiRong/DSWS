@@ -1,11 +1,11 @@
-# DSWS v2 实例部署（LangGraph + Tailwind）
+# DSWS v2 实例部署（LangGraph + 原版界面）
 
 ## 目标
 
 在旧实例（`shopkeeper-rebuild`，前端 `:5050`）之外，再起一套 **v2**：
 
 - 后端：LangGraph `StateGraph` 执行 12 节点（`backend/app/agent/graph.py`）
-- 前端：Tailwind v4（`frontend/package.json`）
+- 前端：原版 `shopkeeper-agent` 界面（React 19 + Tailwind 3.4），只加 SSE 展示适配
 - 复用旧实例的 MySQL / Elasticsearch / Qdrant（数据与只读账号已就绪）
 - 对外入口：`http://<host>:5051`，后端只绑 `127.0.0.1:8101`
 
@@ -16,6 +16,7 @@
 | v2 前端 | `http://8.155.135.97:5051`（`0.0.0.0:5051->80/tcp`） |
 | v2 后端 | `127.0.0.1:8101->8100/tcp` |
 | 容器 | `dsws-v2-frontend-1`、`dsws-v2-backend-1`，均 healthy |
+| 前端镜像 | `dsws-v2/frontend-original:local`（旧重建镜像 `dsws-v2/frontend:local` 保留可回滚） |
 | 旧实例 | `http://8.155.135.97:5050`，未重启、仍 healthy |
 | 云端目录 | `/opt/dsws-v2/repo`（源码 + `compose.v2.yaml` + `.env`） |
 | 构建日志 | `/opt/dsws-v2/build.log` |
@@ -24,10 +25,17 @@
 
 ```
 /opt/dsws-v2/repo/
-├── backend/ frontend/ contracts/ fixtures/ docker/
+├── backend/ contracts/ fixtures/ docker/
+├── original-frontend/   # 原版界面：dist/ + nginx.conf + Dockerfile.original
+├── frontend/            # 旧教学重建版源码（compose 已不引用，保留备查）
 ├── compose.v2.yaml
-└── .env            # 从 /opt/dsws/repo/.env 复制，改两个端口
+└── .env                 # 从 /opt/dsws/repo/.env 复制，改两个端口
 ```
+
+> 前端构建上下文是 `./original-frontend`：在本地 `deliverable/v2/original-frontend/`
+> 执行 `npm run build`，把 `dist/`、`nginx.conf`、`Dockerfile.original`、`.dockerignore`
+> 上传到 `/opt/dsws-v2/repo/original-frontend/`。`Dockerfile.original` 只做
+> 「nginx + 静态 dist」，不在云端跑 npm。
 
 ## 部署
 
@@ -37,9 +45,10 @@ cd <v2-worktree>
 cp /path/to/DSWS-design/deploy/v2/compose.v2.yaml ./compose.v2.yaml
 
 # 1) 打包并上传（避免 tar over ssh 在弱网下 gzip 截断）
+#    original-frontend/dist 是构建产物，必须一起上传，不要 exclude
 tar czf /tmp/opencode/dsws-v2.tgz \
-  --exclude='*/.venv' --exclude='*/node_modules' --exclude='*/__pycache__' --exclude='*/dist' \
-  backend frontend contracts fixtures docker compose.v2.yaml
+  --exclude='*/.venv' --exclude='*/node_modules' --exclude='*/__pycache__' \
+  backend original-frontend contracts fixtures docker compose.v2.yaml
 scp -P 2222 -i design/_阿里云10.15.pem /tmp/opencode/dsws-v2.tgz \
   root@8.155.135.97:/opt/dsws-v2.tgz
 ssh -p 2222 -i design/_阿里云10.15.pem root@8.155.135.97 '
@@ -101,7 +110,8 @@ curl -sN -X POST http://8.155.135.97:5051/api/query \
 ```
 
 - 12 个步骤事件齐全、以 `result` 收尾 → LangGraph 链路真实执行
-- 页面样式与旧实例一致，且 `dist` CSS 含 Tailwind 工具类 → Tailwind 生效
+- 页面标题为 `电商问数 | Shopkeeper Agent`，正文不含「教学版」「从零重建」→ 原版界面生效
+- 容器镜像为 `dsws-v2/frontend-original:local`，`/healthz` 返回 `ok` → 前端健康
 - 旧实例 `:5050` 不受影响（两套容器、两套端口、共享基础设施）
 
 本次实测结果与证据见 `deliverable/v2/README-v2.md`；v1/v2 三项差距对照见
