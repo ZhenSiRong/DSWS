@@ -307,6 +307,102 @@ def test_correction_fixes_the_sql_and_reruns() -> None:
     assert _states(events)[CORRECT_STEP] == "success"
 
 
+#: 「各省 GMV 排名」缺 ORDER BY —— 静态校验的可重试错误。
+MISSING_ORDER_BY_SQL = (
+    "SELECT dim_region.province AS `省份`, "
+    "SUM(fact_order.order_amount) AS `销售额` "
+    "FROM fact_order "
+    "JOIN dim_region ON fact_order.region_id = dim_region.region_id "
+    "GROUP BY dim_region.province"
+)
+
+#: 补上 ORDER BY 之后的合法 SQL。
+FIXED_ORDER_BY_SQL = MISSING_ORDER_BY_SQL + " ORDER BY `销售额` DESC"
+
+
+def test_guard_error_is_corrected_and_revalidated() -> None:
+    """可重试的 guard 错误 → correct_sql=success → 重新过 guard + policy。
+
+    与「语法错误」那条不同，这里第一次失败是**静态校验**给出的
+    `SQL_MISSING_ORDER_BY`：校正器必须真的把 SQL 改到能过校验，而不是
+    被当成「模型说的就算」。
+    """
+    executor = FakeExecutor(
+        columns=("省份", "销售额"),
+        rows=({"省份": "广东省", "销售额": 30000.0},),
+    )
+    events = _run(
+        AgentRunner(
+            query="各省 GMV 排名",
+            generator=FakeGenerator({"sql": MISSING_ORDER_BY_SQL}),
+            corrector=FixtureCorrector({"sql": FIXED_ORDER_BY_SQL}),
+            executor=executor,
+        )
+    )
+
+    assert _terminal(events)["type"] == "result"
+    assert executor.seen == [FIXED_ORDER_BY_SQL]
+    statuses = [
+        event["status"]
+        for event in _progress(events)
+        if event["step"] == VALIDATE_STEP
+    ]
+    assert statuses == ["running", "error", "running", "success"]
+    assert _states(events)[CORRECT_STEP] == "success"
+
+
+def test_guard_error_correction_still_faces_the_policy() -> None:
+    """guard 错误触发的校正，重新校验时 policy 也要真的跑一遍。"""
+    # 常量投影 → guard 的可重试错误；校正结果换成能过 guard 的 UNION SQL，
+    # 它必须被 policy 拦下——证明重新校验不是只跑 guard。
+    constant_sql = (
+        "SELECT dim_region.region_name AS `地区`, 1 AS `常量`, "
+        "SUM(fact_order.order_amount) AS `销售额` "
+        "FROM fact_order "
+        "JOIN dim_region ON fact_order.region_id = dim_region.region_id "
+        "GROUP BY dim_region.region_name"
+    )
+    executor = FakeExecutor()
+    events = _run(
+        AgentRunner(
+            query=QUERY,
+            generator=FakeGenerator({"sql": constant_sql}),
+            corrector=FixtureCorrector({"sql": UNION_SQL}),
+            executor=executor,
+        )
+    )
+
+    terminal = _terminal(events)
+    assert terminal["code"] == "SQL_REJECTED"
+    assert terminal["detail"]["reason_code"] == "SQL_FORBIDDEN_CONSTRUCT"
+    assert executor.seen == [], "被策略拒绝的校正结果绝不能进数据库"
+
+
+def test_correction_failure_reason_is_visible_in_the_error_detail() -> None:
+    """校正失败的原因必须出现在 SSE 的 error.detail 里，而不是只有红叉。"""
+    events = _run(
+        AgentRunner(
+            query=QUERY,
+            generator=FakeGenerator({"sql": BROKEN_SQL}),
+            corrector=FixtureCorrector(
+                {
+                    "refusal": {
+                        "code": "UNKNOWN_COLUMN",
+                        "reason": "可用字段里没有可替换的列。",
+                    }
+                }
+            ),
+            executor=FakeExecutor(),
+        )
+    )
+
+    terminal = _terminal(events)
+    assert terminal["code"] == "SQL_SYNTAX"
+    reason = terminal["detail"]["reason"]
+    assert "校正被拒答" in reason
+    assert "可用字段里没有可替换的列" in reason
+
+
 def test_correction_happens_at_most_once() -> None:
     """校正器一直给坏 SQL，闭环也只试一次。"""
 

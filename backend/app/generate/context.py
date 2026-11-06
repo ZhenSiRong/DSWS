@@ -27,7 +27,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 
-from app.recall.catalog import Catalog, default_catalog
+from app.recall.catalog import Catalog, ColumnSpec, TableSpec, default_catalog
 from app.recall.keywords import extract_keywords, term_matches
 from app.recall.models import RecallState
 from app.generate.intent import has_ranking_intent, is_time_series_dimension
@@ -42,9 +42,14 @@ from app.generate.models import (
 # 单字别名只在语义非常明确时参与匹配（与 S3 的规则保持一致）。
 _SAFE_SINGLE_CHAR_ALIASES = {"省", "年", "月", "日", "天"}
 
-# 排名问题里出现这些词时，用户问的是「商品/产品」这个实体本身，
-# 而不是某个已声明的维度列（品类、品牌……）。
-_PRODUCT_ENTITY_TERMS = ("商品", "产品")
+# 实体词面从契约推导：维表主键与名称列的别名去掉「ID / 名称」这类后缀，
+# 就是用户在问题里称呼这个实体的词（商品ID→商品、客户名称→客户）。
+# 只硬编码「商品/产品」会漏掉客户、地区这些同类问题。
+_ENTITY_ALIAS_SUFFIXES = ("ID", "id", "name", "编号", "名称", "名")
+
+# 问题按实体粒度提问的信号：实体词前有「各/每/按/哪些」，或实体词落在
+# 句末（「…的商品」问的就是商品本身）。
+_ENTITY_GRAIN_MARKERS = ("各", "每", "每个", "按", "哪些", "哪个", "什么")
 
 
 def _compact(text: str) -> str:
@@ -55,9 +60,78 @@ def _value_in_query(value: str, query: str) -> bool:
     return _compact(value) in _compact(query)
 
 
-def _mentions_product_entity(query: str) -> bool:
+def _strip_entity_suffix(alias: str) -> str:
+    """「商品ID / 商品名称 / product_id」→「商品 / product」。"""
+    text = str(alias).strip()
+    for suffix in _ENTITY_ALIAS_SUFFIXES:
+        if len(text) > len(suffix) and text.endswith(suffix):
+            return text[: -len(suffix)].strip().rstrip("_")
+    return text
+
+
+def _entity_name_column(cat: Catalog, table: TableSpec) -> ColumnSpec | None:
+    """维表的「名称列」：开放取值的文本列优先，其次 `*_name` 维度列。"""
+    for column_id in table.column_ids:
+        column = cat.column(column_id)
+        if (
+            column is not None
+            and column.role == "dimension"
+            and column.value_domain.get("kind") == "open"
+        ):
+            return column
+    for column_id in table.column_ids:
+        column = cat.column(column_id)
+        if (
+            column is not None
+            and column.role == "dimension"
+            and column.name.endswith("_name")
+        ):
+            return column
+    return None
+
+
+def _entity_terms(cat: Catalog, table: TableSpec) -> tuple[str, ...]:
+    """一张维表的实体词（主键别名 + 名称列别名去后缀）。"""
+    column_ids: list[str] = []
+    if table.primary_key:
+        column_ids.append(f"{table.name}.{table.primary_key}")
+    name_column = _entity_name_column(cat, table)
+    if name_column is not None:
+        column_ids.append(name_column.id)
+
+    terms: list[str] = []
+    for column_id in column_ids:
+        column = cat.column(column_id)
+        if column is None:
+            continue
+        for surface in (column.name, *column.aliases):
+            term = _strip_entity_suffix(surface)
+            if len(term) >= 2 and term not in terms:
+                terms.append(term)
+    return tuple(terms)
+
+
+def _asks_for_entity_grain(query: str, terms: tuple[str, ...]) -> bool:
+    """问题是否按「实体」这一粒度提问。
+
+    「女性客户 GMV」里的「客户」只是指标的修饰语，不是分组粒度；不加这层
+    判断，一个过滤型问题会被误扩成按客户明细分组。
+    """
     compact = _compact(query)
-    return any(term in compact for term in _PRODUCT_ENTITY_TERMS)
+    matched = [term for term in terms if term and term in compact]
+    if not matched:
+        return False
+    if has_ranking_intent(query):
+        return True
+    for term in matched:
+        start = 0
+        while (index := compact.find(term, start)) >= 0:
+            before = compact[:index]
+            after = compact[index + len(term):]
+            if not after or before.endswith(_ENTITY_GRAIN_MARKERS):
+                return True
+            start = index + 1
+    return False
 
 
 def _matched_surface(surfaces: tuple[str, ...], query: str) -> str | None:
@@ -239,6 +313,37 @@ class OfflineContextBuilder:
         core.update(self.dimension_columns)
         self.core_column_ids = core
 
+    def _add_entity_grain_columns(self, cat: Catalog) -> None:
+        """按问题里的实体词补维表名称列。
+
+        只补名称列，外键交给后面的 FK 逻辑补「事实表外键 + 维表主键」这一
+        对——不把整张维表塞进上下文，guard 对「上下文之外的表/列」依然有效。
+        已经有该维表字段进上下文时（品类、品牌、省份……）不重复补名称列。
+        """
+        if self.fact_table is None:
+            return
+        fact_spec = cat.table(self.fact_table)
+        joinable = {
+            str(item["references"]).split(".", 1)[0]
+            for item in (fact_spec.foreign_keys if fact_spec else ())
+        }
+        matched_tables = {
+            cat.table_of_column(column_id) for column_id in self.core_column_ids
+        }
+        for table_name, table_spec in cat.tables.items():
+            if table_spec.role != "dim" or table_name not in joinable:
+                continue
+            if table_name in matched_tables:
+                continue
+            name_column = _entity_name_column(cat, table_spec)
+            if name_column is None:
+                continue
+            if not _asks_for_entity_grain(
+                self.query, _entity_terms(cat, table_spec)
+            ):
+                continue
+            self.core_column_ids.add(name_column.id)
+
     def _phase_filter_table(self) -> None:
         """裁出要用的表、字段与外键。"""
         cat = self.catalog
@@ -278,22 +383,20 @@ class OfflineContextBuilder:
                 value_domain=spec.value_domain,
             )
 
-        # 「卖得最好」这类排名问题往往不带指标名。没有指标、也没有命中
-        # 任何维度时，问题里的「商品/产品」问的是实体本身，而不是某个
-        # 已声明的维度列。此时补上商品维表的名称列，否则生成器只能按
-        # `product_id` 分组，把「哪个商品卖得最好」答成 `P001`。
+        # 排名问题往往不带指标名。没有命中任何指标时，「卖得最好」需要一个
+        # 可排序的度量；把事实表的度量列补进上下文（只补 measure，见下）。
         implicit_ranking = (
             self.fact_table is not None
             and not self.metric_candidates
             and has_ranking_intent(self.query)
         )
-        if (
-            implicit_ranking
-            and not self.dimension_columns
-            and _mentions_product_entity(self.query)
-            and cat.column("dim_product.product_name") is not None
-        ):
-            self.core_column_ids.add("dim_product.product_name")
+
+        # 实体粒度补齐与「有没有命中指标」无关：只要问题按某个维表的实体
+        # 粒度提问、而该维表还没有任何字段进上下文，就补它的名称列。
+        # 否则「销售额最高的前5个商品」只剩 date_id/order_amount，生成器
+        # 只能写 product_id，校验器报 SQL_UNKNOWN_COLUMN，校正器也没有
+        # 合法字段可换。
+        self._add_entity_grain_columns(cat)
 
         for column_id in sorted(self.core_column_ids):
             add_column(column_id)
