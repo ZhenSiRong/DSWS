@@ -30,7 +30,7 @@ from datetime import datetime
 from app.recall.catalog import Catalog, default_catalog
 from app.recall.keywords import extract_keywords, term_matches
 from app.recall.models import RecallState
-from app.generate.intent import is_time_series_dimension
+from app.generate.intent import has_ranking_intent, is_time_series_dimension
 from app.generate.models import (
     ColumnLite,
     GenerateContext,
@@ -274,6 +274,25 @@ class OfflineContextBuilder:
             table_name = cat.table_of_column(column_id)
             if table_name:
                 add_table(table_name)
+
+        # 排名问题必须有可排序的度量。像「哪个商品品类卖得最好」这种问法，
+        # 「卖得最好」不是契约里的指标别名，`recall_metric` 什么也匹配不到，
+        # 核心字段里就不会有任何 measure。此时若只按核心字段裁剪，上下文里
+        # 只剩维度和外键，生成器只能猜一个列名（猜对也会被 guard 判成
+        # SQL_UNKNOWN_COLUMN），校正器也没有可用的度量可改——v2 的
+        # correct_sql 就是这样被拒答的。
+        #
+        # 因此：排名意图 + 没命中任何指标时，把事实表的度量列补进上下文。
+        # 只补 measure（不补整张宽表），维表裁剪仍然保留，guard 对维表
+        # 的「上下文之外的表不许查」依然有效。
+        if self.fact_table and not self.metric_candidates and has_ranking_intent(
+            self.query
+        ):
+            fact_spec = cat.table(self.fact_table)
+            if fact_spec is not None:
+                for measure in fact_spec.measures:
+                    add_column(f"{self.fact_table}.{measure['column']}")
+                add_table(self.fact_table)
 
         # JOIN 需要的键：只拉**真正用到的维表**对应的那一对外键。
         #

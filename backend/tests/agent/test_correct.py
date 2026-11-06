@@ -51,6 +51,17 @@ def test_prompt_renders_with_the_slots(context) -> None:
     assert "炸了" in rendered
 
 
+def test_prompt_exposes_allowed_columns(context) -> None:
+    """校正器必须看得到可用字段，否则只能凭猜改列名。
+
+    v2 的「哪个商品品类卖得最好」就是因为校正提示词没有字段列表，
+    模型只能拒答（它不知道 order_quantity 到底在不在契约里）。
+    """
+    slots = build_correct_slots(context, UNKNOWN_COLUMN_SQL, "列不存在")
+    rendered = render_prompt("correct_sql", slots)
+    assert "fact_order.order_amount" in rendered
+
+
 def test_correct_sql_prompt_is_runtime_enabled() -> None:
     """S6 起 `correct_sql` 真正进入运行时——它是闭环的一半。"""
     assert get_prompt("correct_sql").runtime is True

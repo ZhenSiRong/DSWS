@@ -37,7 +37,12 @@ from app.agent.errors import ChannelError, ErrorTable, load_error_table
 from app.generate.models import GenerateContext
 from app.generate.output_schema import validate_payload
 from app.generate.prompts import render_prompt
-from app.generate.provider import dump_context, metric_infos, table_infos
+from app.generate.provider import (
+    column_infos,
+    dump_context,
+    metric_infos,
+    table_infos,
+)
 
 
 @dataclass(frozen=True)
@@ -135,6 +140,7 @@ def build_correct_slots(
         "sql": sql,
         "error": error,
         "table_infos": dump_context(table_infos(context)),
+        "column_infos": dump_context(column_infos(context)),
         "metric_infos": dump_context(metric_infos(context)),
         "date_info": dump_context(dict(context.date_info)),
         "db_info": dump_context(dict(context.db_info)),

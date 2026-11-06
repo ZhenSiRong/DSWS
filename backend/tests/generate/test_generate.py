@@ -75,6 +75,40 @@ def test_context_contains_only_contract_tables_and_columns() -> None:
         assert column.id in catalog.columns
 
 
+def test_implicit_ranking_question_exposes_fact_measures() -> None:
+    """「哪个商品品类卖得最好」没命中指标，排名仍要有可排序的度量。
+
+    「卖得最好」不是契约里的指标别名，`recall_metric` 匹配不到任何指标。
+    如果只按核心字段裁剪，上下文里只剩维度和外键，生成器只能猜列名，
+    猜对了也会被 guard 判成 `SQL_UNKNOWN_COLUMN`，校正器同样无解。
+    """
+    context = build_offline_context("哪个商品品类卖得最好")
+    columns = {column.id for column in context.columns}
+    assert "fact_order.order_quantity" in columns
+    assert "fact_order.order_amount" in columns
+    # 只补 measure，不把事实表整张宽表塞进来。
+    assert "fact_order.customer_id" not in columns
+    assert "fact_order.region_id" not in columns
+
+
+def test_implicit_ranking_measure_passes_guard() -> None:
+    """补进来的度量必须能通过静态校验，否则补了也白补。"""
+    from app.generate.guard import check_sql
+
+    query = "哪个商品品类卖得最好"
+    context = build_offline_context(query)
+    sql = (
+        "SELECT dim_product.category AS 商品品类, "
+        "SUM(fact_order.order_quantity) AS 销量 "
+        "FROM fact_order "
+        "JOIN dim_product ON fact_order.product_id = dim_product.product_id "
+        "GROUP BY dim_product.category "
+        "ORDER BY 销量 DESC LIMIT 1"
+    )
+    report = check_sql(sql, context, query)
+    assert report.ok, [violation.to_dict() for violation in report.violations]
+
+
 # ---------------------------------------------------------------------------
 # 确定性
 # ---------------------------------------------------------------------------

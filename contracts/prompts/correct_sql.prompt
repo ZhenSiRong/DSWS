@@ -9,6 +9,7 @@ slots:
   - sql
   - error
   - table_infos
+  - column_infos
   - metric_infos
   - date_info
   - db_info
@@ -27,6 +28,9 @@ hard_rules:
 【上下文信息】
 可用数据表信息如下：
 {table_infos}
+
+可用字段信息如下（只能使用这里列出的表与字段）：
+{column_infos}
 
 可参考的指标信息如下：
 {metric_infos}
