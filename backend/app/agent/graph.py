@@ -339,9 +339,20 @@ def _correct_node(deps: AgentGraphDeps):
             _emit(_progress(CORRECT_STEP, "success", elapsed))
         else:
             _emit(_progress(CORRECT_STEP, "error", elapsed))
+            failure = proposal.error or state["failure"]  # type: ignore[assignment]
+            if proposal.note:
+                # 校正失败的原因（被拒答 / 崩溃 / 产物不合契约）必须能被
+                # 看到，否则 SSE 上只有一块红色 correct_sql。`reason` 是
+                # sse.schema.json 里已有的 detail 字段，不改契约。
+                failure = ChannelError(
+                    code=failure.code,
+                    message=failure.message,
+                    step=failure.step,
+                    detail={**failure.detail, "reason": proposal.note},
+                )
             raise GraphHalt(
                 decorate_error(
-                    proposal.error or state["failure"],  # type: ignore[arg-type]
+                    failure,
                     step=VALIDATE_STEP,
                     original_sql=state.get("original_sql"),
                     corrected_sql=state.get("corrected_sql"),

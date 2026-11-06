@@ -49,6 +49,22 @@ def test_generated_sql_passes_every_rule(query: str) -> None:
     assert result.guard.violations == ()
 
 
+def test_product_name_with_join_passes_when_context_has_the_dimension() -> None:
+    """上下文补齐商品维度后，按商品名称分组的 SQL 必须能过静态校验。"""
+    query = "查询销售额最高的前5个商品"
+    context = build_offline_context(query)
+    sql = (
+        "SELECT dim_product.product_name AS `商品名称`, "
+        "SUM(fact_order.order_amount) AS `销售额` "
+        "FROM fact_order "
+        "JOIN dim_product ON fact_order.product_id = dim_product.product_id "
+        "GROUP BY dim_product.product_name "
+        "ORDER BY `销售额` DESC LIMIT 5"
+    )
+    report = check_sql(sql, context, query)
+    assert report.ok, [violation.to_dict() for violation in report.violations]
+
+
 def test_order_by_on_alias_is_not_treated_as_unknown_column() -> None:
     """`ORDER BY \\`销量\\`` 会被 sqlglot 解析成 Column，不能误判成未知列。"""
     result = generate("各品类销量")

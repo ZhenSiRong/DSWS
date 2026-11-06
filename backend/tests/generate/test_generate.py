@@ -109,6 +109,88 @@ def test_implicit_ranking_measure_passes_guard() -> None:
     assert report.ok, [violation.to_dict() for violation in report.violations]
 
 
+@pytest.mark.parametrize(
+    "query",
+    [
+        "查询销售额最高的前5个商品",
+        "查询销售额大于平均销售额的商品",
+    ],
+)
+def test_metric_question_by_product_exposes_product_dimension(query: str) -> None:
+    """命中指标不能挡住实体粒度补齐。
+
+    v2 里「销售额最高的前5个商品」命中了 GMV，旧逻辑因此跳过商品实体
+    判断，上下文只剩 `date_id` / `order_amount`；生成器只能写
+    `product_id`，静态校验报 SQL_UNKNOWN_COLUMN，校正器也没有合法字段可换。
+    """
+    context = build_offline_context(query)
+    assert {column.id for column in context.columns} == {
+        "dim_product.product_name",
+        "dim_product.product_id",
+        "fact_order.product_id",
+        "fact_order.order_amount",
+        "fact_order.date_id",
+    }
+    assert context.table_names() == {"fact_order", "dim_product"}
+
+
+def test_product_category_question_does_not_add_product_name() -> None:
+    """已经有商品维度的查询（品类/品牌）不该再多补 product_name。"""
+    context = build_offline_context("统计2025年3月各商品品类的销量和销售额")
+    columns = {column.id for column in context.columns}
+    assert "dim_product.category" in columns
+    assert "dim_product.product_name" not in columns
+    # 必要的 JOIN 键仍然在（品类维度的外键那一对）。
+    assert "fact_order.product_id" in columns
+    assert "dim_product.product_id" in columns
+
+
+@pytest.mark.parametrize(
+    ("query", "dimension", "foreign_key"),
+    [
+        (
+            "查询销售额最高的前5个客户",
+            "dim_customer.customer_name",
+            "fact_order.customer_id",
+        ),
+        ("销售额最高的省份", "dim_region.province", "fact_order.region_id"),
+        ("销售额最高的商品品类", "dim_product.category", "fact_order.product_id"),
+    ],
+)
+def test_entity_grain_questions_expose_dimension_and_join_key(
+    query: str, dimension: str, foreign_key: str
+) -> None:
+    """商品之外，客户/省份/品类也要有可分组维度与 JOIN 键。"""
+    context = build_offline_context(query)
+    columns = {column.id for column in context.columns}
+    assert dimension in columns
+    assert foreign_key in columns
+    assert "fact_order.order_amount" in columns
+
+    result = generate(query)
+    assert result.ok, result.refusal
+    assert result.guard.ok
+
+
+def test_entity_name_is_not_added_when_entity_is_only_a_modifier() -> None:
+    """「女性客户 GMV」里的客户是修饰语，不是分组粒度。"""
+    context = build_offline_context("女性客户 GMV")
+    assert "dim_customer.customer_name" not in {
+        column.id for column in context.columns
+    }
+
+
+@pytest.mark.parametrize(
+    "query",
+    ["各城市销售额", "退货率最高的商品", "利润最高的商品"],
+)
+def test_entity_grain_fix_does_not_weaken_refusals(query: str) -> None:
+    """补维度不能把契约里不存在的概念放进来。"""
+    result = generate(query)
+    assert not result.ok
+    assert result.refusal.code == "UNSUPPORTED_INTENT"
+
+
 def test_product_level_ranking_question_exposes_product_name() -> None:
     """「哪个商品卖得最好」要按商品名称回答，而不是只回一个 product_id。
 

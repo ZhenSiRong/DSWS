@@ -62,6 +62,16 @@ def test_prompt_exposes_allowed_columns(context) -> None:
     assert "fact_order.order_amount" in rendered
 
 
+def test_prompt_requires_a_legal_equivalent_instead_of_refusing(context) -> None:
+    """静态校验报未知列/表时，有等价字段就必须替换，不能只因为原名未知拒答。"""
+    slots = build_correct_slots(context, UNKNOWN_COLUMN_SQL, "列不存在")
+    rendered = render_prompt("correct_sql", slots)
+    assert "SQL_UNKNOWN_COLUMN" in rendered
+    assert "SQL_UNKNOWN_TABLE" in rendered
+    assert "语义等价" in rendered
+    assert "不得仅因为原名不在上下文里就拒答" in rendered
+
+
 def test_correct_sql_prompt_is_runtime_enabled() -> None:
     """S6 起 `correct_sql` 真正进入运行时——它是闭环的一半。"""
     assert get_prompt("correct_sql").runtime is True
@@ -160,3 +170,90 @@ def test_llm_corrector_reuses_the_generator_interface(context) -> None:
     payload = corrector.correct(context, "PROMPT", BROKEN_SQL, "炸了")
     assert payload == {"sql": GOOD_SQL}
     assert calls == ["PROMPT"]
+
+
+# ---------------------------------------------------------------------------
+# 商品级问数的校正闭环
+# ---------------------------------------------------------------------------
+
+PRODUCT_QUERY = "查询销售额最高的前5个商品"
+
+#: 引用了上下文里不存在的商品编码列。
+PRODUCT_UNKNOWN_COLUMN_SQL = (
+    "SELECT dim_product.product_code AS `商品编码`, "
+    "SUM(fact_order.order_amount) AS `销售额` "
+    "FROM fact_order "
+    "JOIN dim_product ON fact_order.product_id = dim_product.product_id "
+    "GROUP BY dim_product.product_code "
+    "ORDER BY `销售额` DESC LIMIT 5"
+)
+
+#: 用上下文里的合法列替换后的 SQL。
+PRODUCT_FIXED_SQL = (
+    "SELECT dim_product.product_name AS `商品名称`, "
+    "SUM(fact_order.order_amount) AS `销售额` "
+    "FROM fact_order "
+    "JOIN dim_product ON fact_order.product_id = dim_product.product_id "
+    "GROUP BY dim_product.product_name "
+    "ORDER BY `销售额` DESC LIMIT 5"
+)
+
+
+def test_product_unknown_column_is_corrected_and_revalidated() -> None:
+    """上下文有合法替代字段时，校正结果必须能重新过校验。"""
+    from app.agent.validate import validate_sql
+    from app.generate.context import build_offline_context
+
+    context = build_offline_context(PRODUCT_QUERY)
+    assert "dim_product.product_name" in {
+        column.id for column in context.columns
+    }
+
+    error = validate_sql(PRODUCT_UNKNOWN_COLUMN_SQL, context, PRODUCT_QUERY)
+    assert error is not None
+    assert error.code == "SQL_UNKNOWN_COLUMN"
+
+    proposal = propose_correction(
+        context,
+        PRODUCT_UNKNOWN_COLUMN_SQL,
+        error,
+        corrector=FixtureCorrector({"sql": PRODUCT_FIXED_SQL}),
+    )
+    assert proposal.ok is True
+    # 编排器在 validate_sql 步骤重跑 guard + policy；这里直接证明闭环。
+    assert validate_sql(proposal.sql or "", context, PRODUCT_QUERY) is None
+
+
+def test_refusal_without_a_legal_alternative_keeps_the_original_error(context) -> None:
+    """上下文里没有可替换的字段时，拒答不能掩盖原始错误。"""
+    from app.agent.validate import validate_sql
+
+    broken = (
+        "SELECT dim_product.product_name AS `商品名称`, "
+        "SUM(fact_order.order_amount) AS `销售额` "
+        "FROM fact_order "
+        "JOIN dim_product ON fact_order.product_id = dim_product.product_id "
+        "GROUP BY dim_product.product_name "
+        "ORDER BY `销售额` DESC LIMIT 5"
+    )
+    error = validate_sql(broken, context, "华北销售额")
+    assert error is not None
+    assert error.code == "SQL_UNKNOWN_TABLE"
+
+    proposal = propose_correction(
+        context,
+        broken,
+        error,
+        corrector=FixtureCorrector(
+            {
+                "refusal": {
+                    "code": "UNKNOWN_TABLE",
+                    "reason": "可用表里没有 dim_product，无法补 JOIN。",
+                }
+            }
+        ),
+    )
+    assert proposal.ok is False
+    assert proposal.error is error
+    assert "UNKNOWN_TABLE" in proposal.note
+    assert "无法补 JOIN" in proposal.note
