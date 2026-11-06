@@ -103,7 +103,7 @@ error SQL_UNKNOWN_COLUMN: 列 fact_order.order_quantity 不在契约上下文里
 
 这证明 **LangGraph 条件边在真实环境确实被走到**：校验失败 → 进入 `correct_sql`。但本次真实 LLM 的纠正没有成功（`correct_sql` 自身报错，最终错误仍是 `SQL_UNKNOWN_COLUMN`，`attempts: 0`），与 v1 的差距一致，**当时不宣称「纠正成功」已复现**。修复见下一节。原始 SSE：`evidence/v2-correct-path.sse`。
 
-### 校正失败根因与修复（2026-11-06）
+### 校正失败根因与修复（2026-11-06，两次）
 
 **现象**：`哪个商品品类卖得最好` 在 `validate_sql` 报 `SQL_UNKNOWN_COLUMN`，`correct_sql` 也没有成功。
 
@@ -125,10 +125,27 @@ error SQL_UNKNOWN_COLUMN: 列 fact_order.order_quantity 不在契约上下文里
 - 商品级问法**也直接成功**：`哪个商品卖得最好` → `商品名称 / 销售数量`，结果 `蒙牛纯牛奶 250ml*12 / 183`，`correct_sql skipped`。原始 SSE：`evidence/v2-product-ranking.sse`。
 - 校正成功态**已复现（故障注入）**：`generate_sql` 故意返回拼错列名的 SQL → `validate_sql error` → `correct_sql success 1841.9ms`（真实 LLM）→ `validate_sql success` → `run_sql success` → `result`（`休闲零食 / 298`，真实 MySQL）。原始 SSE：`evidence/v2-correct-success.sse`。这条证据的 `generate_sql` 是故障注入，`correct_sql` 与 `run_sql` 都是真实的；不把它说成「自然问题稳定触发的失败」。
 
+### 第二次修复：实体粒度补齐与指标命中解耦（`ac4985e`）
+
+**剩余问题**：第一次修复只覆盖了「没有命中指标」的排名问题。像 `查询销售额最高的前5个商品` 这种命中了「销售额」指标的问题，`context.py` 的 `implicit_ranking = fact_table and not metric_candidates and has_ranking_intent` 为 False，于是不再补商品维度；上下文只剩 `fact_order.date_id` / `fact_order.order_amount`。生成器只能写 `product_id`，`validate_sql` 报 `SQL_UNKNOWN_COLUMN`，校正器看到的 `column_infos` 里也没有 `product_id`/`product_name`，只能拒答。
+
+**修复**：
+
+- `backend/app/generate/context.py`：把「实体粒度补齐」与 `metric_candidates` 解耦。实体词从契约推导（维表主键 + 名称列别名去掉 `ID`/`名称`/`name` 等后缀），覆盖商品、客户、地区等；只在问题确实按该实体粒度提问时补名称列，只补名称列，FK 仍只补命中实体那一对，避免把整张维表塞进上下文。
+- `contracts/prompts/correct_sql.prompt`：明确 `SQL_UNKNOWN_COLUMN` / `SQL_UNKNOWN_TABLE` 且存在语义等价字段时，必须替换或补 JOIN，不得仅因原名未知拒答；安全边界不变，校正结果仍重新过 guard + policy。
+- `backend/app/agent/graph.py`：把 `proposal.note` 写入 `error.detail.reason`，这样 `correct_sql error` 不再只有一块红叉，而能看到「校正被拒答 / 崩溃 / 产物不合契约」的原因。
+
+**线上验证（2026-11-06，真实 LLM + MySQL）**：
+
+- `查询销售额最高的前5个商品`：`generate_sql success → validate_sql success → correct_sql skipped → run_sql success`，结果 5 行（P001 iPhone 15 Pro / 71992 等）。原始 SSE：`evidence/v2-product-ranking-metric.sse`。
+- `查询销售额大于平均销售额的商品`（第 1 次）：`generate_sql success → validate_sql error → correct_sql success → validate_sql success → run_sql success`，结果 5 行。**这是一次自然问数触发的校正成功，不是故障注入**。原始 SSE：`evidence/v2-natural-correct-success.sse`。
+- 同题第 2 次：`correct_sql skipped`，直接成功；说明是否触发校正取决于模型是否生成可重试错误，但触发后能修好。
+- 回归：品类题不额外补 `product_name`；客户/省份排名正常；利润/退货/城市仍 `LLM_REFUSAL UNSUPPORTED_INTENT`，没有为了补维度而放宽边界。完整输出见 `evidence/verification.log`。
+
 ### 自动化测试
 
 ```text
-backend:  792 passed, 30 skipped（另有 3 个既有文档新鲜度测试失败：工作区未提交的 docs/SCHEMA-CONTRACT.md 措辞修改，与本次修复无关）
+backend:  812 passed, 30 skipped, 0 failed（干净 worktree；主工作区未提交的 docs/SCHEMA-CONTRACT.md 会另带 3 个文档新鲜度失败，与本次修复无关）
 frontend: 40 tests passed
 frontend build: ✓ built
 ```
@@ -148,7 +165,7 @@ frontend build: ✓ built
 
 ## 已知差距（不粉饰）
 
-1. **纠正成功态已复现（故障注入），自然问数未稳定触发**：原问题「哪个商品品类卖得最好」的根因已修复，现在直接成功（`correct_sql skipped`）。`correct_sql` 的成功态用「故障注入拼错列名 → 真实 LLM 校正 → 真实 MySQL 执行」复现，见 `evidence/v2-correct-success.sse`；这不是自然问数稳定触发的失败，不把它说成自然问数样本。
+1. **纠正成功态已复现（自然问数 + 故障注入）**：原问题「哪个商品品类卖得最好」的根因已修复，现在直接成功（`correct_sql skipped`）。自然问数 `查询销售额大于平均销售额的商品` 已触发一次 `validate_sql error → correct_sql success → validate_sql success → run_sql success`，见 `evidence/v2-natural-correct-success.sse`；同题另一次运行直接成功，说明是否触发取决于模型是否生成可重试错误，不能保证每次复现。故障注入样本 `evidence/v2-correct-success.sse` 仍保留，用于稳定回归校正通道本身。
 2. **v2 的 `uv.lock` 是云端镜像改写版**：为了在服务器上避开 `files.pythonhosted.org` 的慢速下载，云端 `/opt/dsws-v2/repo/backend/uv.lock` 用腾讯云 PyPI 镜像重新生成（版本与仓库锁文件完全一致，只改写下载 URL）。仓库内 `uv.lock` 仍保持 pypi.org 原始来源，保证可移植性。
 3. **构建对国内网络做了适配**：`UV_IMAGE` 使用 `ghcr.m.daocloud.io/astral-sh/uv:0.8.22`；Dockerfile 去掉了 BuildKit cache mount 并设置 `UV_NO_CACHE=1`，规避该服务器上 uv 解包阶段卡死的问题。这些改动不影响运行时功能。
 4. **商品级排名的口径随 LLM 运行而变**：同一问题「哪个商品卖得最好」在两次真实运行中分别按销售额（iPhone 15 Pro / 71992）和销售件数（蒙牛纯牛奶 250ml*12 / 183）排序，两次都直接成功。视频与存档 SSE 不是同一次运行，这是模型生成 SQL 的随机性，不是链路不稳定。
@@ -187,7 +204,10 @@ deliverable/v2/
     ├── verification.log                 # 容器/健康/LangGraph/界面切换/步骤状态
     ├── v2-query.sse                     # 成功路径原始 SSE（修复前）
     ├── v2-correct-path.sse              # 条件边失败路径原始 SSE（修复前）
-    ├── v2-fixed-query.sse               # 修复后原问题直接成功
-    ├── v2-product-ranking.sse           # 修复后商品级问法直接成功
-    └── v2-correct-success.sse           # 修复后校正成功（故障注入 + 真实 LLM/MySQL）
+    ├── v2-fixed-query.sse               # 第一次修复后原问题直接成功
+    ├── v2-product-ranking.sse           # 第一次修复后商品级问法直接成功
+    ├── v2-correct-success.sse           # 校正成功（故障注入 + 真实 LLM/MySQL）
+    ├── v2-product-ranking-metric.sse    # 第二次修复后「销售额最高的前5个商品」直接成功
+    ├── v2-natural-correct-success.sse   # 第二次修复后自然问数触发校正成功
+    └── v2-category-after-fix.sse        # 第二次修复后品类题未误加商品维度
 ```

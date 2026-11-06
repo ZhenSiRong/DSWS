@@ -10,4 +10,4 @@
 
 - **v2 成片**：`deliverable/v2/DSWS-v2-original-ui-demo.mp4`（46.27s，1920×1080 / 30fps）。录的是 `http://8.155.135.97:5051` 的原版界面：GMV 问数（12 节点全部 running→success，5 行真实数据）、商品级排名（`correct_sql skipped`，直接成功）、UNION 策略拒绝（`SQL_REJECTED`，错误码完整展示）。
 - **v2 对照**：`deliverable/v2/README-v2.md`（部署与验证）、`deliverable/v2/PRD-差异补齐.md`（v1/v2 三项差距）、`deliverable/v2/annotations.yaml`（逐段标注）。
-- **v2 差距**：LangGraph 12 节点**已补齐**；前端已换回原版 `shopkeeper-agent` 界面（React 19 + Tailwind 3.4），页面不再出现「教学版」「从零重建」；`correct_sql` 的失败根因已修复（上下文补 measure + 校正提示词补 `column_infos`），原问题现在直接成功；校正成功态用故障注入 + 真实 LLM/MySQL 复现，见 `deliverable/v2/evidence/v2-correct-success.sse`。
+- **v2 差距**：LangGraph 12 节点**已补齐**；前端已换回原版 `shopkeeper-agent` 界面（React 19 + Tailwind 3.4），页面不再出现「教学版」「从零重建」；`correct_sql` 的失败根因已修复两次（第一次补 measure + `column_infos`；第二次把实体粒度补齐与指标命中解耦，并让校正在 `SQL_UNKNOWN_COLUMN/TABLE` 有合法替代时替换/补 JOIN）。自然问数 `查询销售额大于平均销售额的商品` 已触发 `validate_sql error → correct_sql success → validate_sql success`，见 `deliverable/v2/evidence/v2-natural-correct-success.sse`；故障注入样本仍保留用于稳定回归。

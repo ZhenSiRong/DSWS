@@ -67,3 +67,27 @@ screenshots/v2-idle-1920x1080.png
 screenshots/v2-query-result-1920x1080.png
 screenshots/v2-product-ranking-result-1920x1080.png
 screenshots/v2-union-rejected-1920x1080.png
+
+Fri Nov  6 11:12:00 CST 2026
+=== correct_sql natural-language fix (design/atlas ac4985e) ===
+backend image: dsws-v2/backend:local (rebuilt), healthy
+Q: 查询销售额最高的前5个商品
+steps: generate_sql success -> validate_sql success -> correct_sql skipped -> run_sql success
+result: 5 rows (P001 iPhone 15 Pro 71992 / P002 Galaxy S24 Ultra 56994 / ...)
+evidence: evidence/v2-product-ranking-metric.sse
+Q: 查询销售额大于平均销售额的商品 (run 1)
+steps: generate_sql success -> validate_sql error -> correct_sql success -> validate_sql success -> run_sql success
+result: 5 rows (P001 iPhone 15 Pro 71992 ...)
+evidence: evidence/v2-natural-correct-success.sse
+Q: 查询销售额大于平均销售额的商品 (run 2)
+steps: generate_sql success -> validate_sql success -> correct_sql skipped -> run_sql success
+result: 5 rows (product_id / ...); LLM 口径与 run 1 不同，但不再拒答
+Q: 统计2025年3月各商品品类的销量和销售额
+steps: generate_sql success -> validate_sql success -> correct_sql skipped -> run_sql success
+result: 商品品类 / 销量 / 销售额; 未额外加入 product_name
+evidence: evidence/v2-category-after-fix.sse
+Q: 查询销售额最高的前5个客户 / 查询销售额最高的前5个省份
+steps: correct_sql skipped -> run_sql success
+result: 客户ID / 省份 两个查询均正常
+negative: 查询利润最高的商品 / 查询退货率最高的商品 / 查询城市销售额排名
+result: LLM_REFUSAL UNSUPPORTED_INTENT, correct_sql skipped（没有为了补维度而放宽边界）
