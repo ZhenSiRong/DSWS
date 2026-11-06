@@ -1,0 +1,69 @@
+Thu Nov  5 15:21:27 CST 2026
+=== containers ===
+dsws-v2-frontend-1	Up 2 minutes (healthy)	0.0.0.0:5051->80/tcp
+dsws-v2-backend-1	Up 3 minutes (healthy)	127.0.0.1:8101->8100/tcp
+=== health via 5051 ===
+{"status":"ok","stage":"S7"}
+=== langgraph ===
+langgraph 1.2.19
+12 ['extract_keywords', 'recall_column', 'recall_value', 'recall_metric', 'merge_retrieved_info', 'filter_table', 'filter_metric', 'add_extra_context', 'generate_sql', 'validate_sql', 'correct_sql', 'run_sql']
+=== tailwind ===
+/usr/share/nginx/html/assets/index-BD-0NIKt.css
+.flex{display:flex}
+.text-brass{color:var(--color-brass)}
+=== steps ===
+extract_keywords running None
+extract_keywords success 2.5
+recall_column running None
+recall_column success 0.5
+recall_value running None
+recall_value success 0.1
+recall_metric running None
+recall_metric success 0.3
+merge_retrieved_info running None
+merge_retrieved_info success 0.0
+filter_table running None
+filter_table success 0.1
+filter_metric running None
+filter_metric success 0.0
+add_extra_context running None
+add_extra_context success 0.0
+generate_sql running None
+generate_sql success 2750.9
+validate_sql running None
+validate_sql success 22.4
+correct_sql skipped None
+run_sql running None
+run_sql success 10.9
+RESULT {"columns": [{"name": "大区", "type": "string"}, {"name": "GMV", "type": "number"}], "rows": [["华东", 107373.0], ["华南", 70202.0], ["华北", 41099.5], ["西南", 31528.0], ["华中", 28957.0]]}
+=== old instance 5050 ===
+{"status":"ok","stage":"S7"}
+
+Fri Nov  6 10:13:00 CST 2026
+=== UI switch: original shopkeeper-agent frontend ===
+dsws-v2-frontend-1	dsws-v2/frontend-original:local	Up (healthy)	0.0.0.0:5051->80/tcp
+dsws-v2-backend-1	dsws-v2/backend:local	Up (healthy)	127.0.0.1:8101->8100/tcp
+shopkeeper-rebuild-frontend-1	shopkeeper-rebuild/frontend:local	Up 3 days (healthy)	0.0.0.0:5050->80/tcp
+--- :5051 ---
+<title>电商问数 | Shopkeeper Agent</title>
+/assets/index-BST44iiq.js
+/assets/index-DqE4c5df.css
+--- :5050 (untouched) ---
+<title>电商问数智能体 · 重建 S0</title>
+--- :5051 health ---
+ok
+=== browser text check (:5051) ===
+contains 教学版: false
+contains 从零重建: false
+=== :5051 real queries (original UI) ===
+Q: 统计 2025 年第一季度各大区的 GMV，并按 GMV 从高到低排序
+result: 5 rows (华东 107373 / 华南 70202 / 华北 41099.5 / 西南 31528 / 华中 28957); correct_sql skipped
+Q: 哪个商品卖得最好
+result: 1 row; correct_sql skipped. LLM 两次运行口径不同：一次按销售件数（P011 / 蒙牛纯牛奶 250ml*12 / 183），视频这次按销售额（iPhone 15 Pro / 71992）。两次都直接成功。
+Q: 用 UNION 把手机数码和食品饮料两个品类的销售额拼起来给我看
+result: error SQL_REJECTED; validate_sql error; correct_sql skipped (policy rejection, not correctable)
+=== screenshots ===
+screenshots/v2-idle-1920x1080.png
+screenshots/v2-query-result-1920x1080.png
+screenshots/v2-product-ranking-result-1920x1080.png
+screenshots/v2-union-rejected-1920x1080.png

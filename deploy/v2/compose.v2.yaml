@@ -1,0 +1,93 @@
+# DSWS v2 实例：在旧实例（shopkeeper-rebuild，前端 5050）之外再起一套
+#
+# 与旧实例的区别：
+#   - backend 用 LangGraph StateGraph 执行 12 节点（见 backend/app/agent/graph.py）
+#   - frontend 用原版 shopkeeper-agent 界面（React 19 + Tailwind 3），
+#     只加了一层 SSE 展示适配：步骤 id → 中文节点名、{columns,rows} → 表格行。
+#     原教学重建版前端（dsws-v2/frontend:local）已卸下，镜像保留可回滚。
+#
+# 复用旧实例的 MySQL / Elasticsearch / Qdrant（数据与只读账号已由旧实例的
+# init 服务准备好），只新建 backend / frontend 两个容器，因此：
+#   - backend 同时接入本项目默认网络（供 frontend 解析 `backend`）和旧实例网络
+#     `shopkeeper-rebuild_default`（供解析 mysql / elasticsearch / qdrant）
+#   - frontend 只接本项目默认网络，避免 `backend` 在旧网络里解析到旧容器
+#
+# 用法（在云端 /opt/dsws-v2/repo 下）：
+#   docker compose -f compose.v2.yaml up -d --build
+#
+name: dsws-v2
+
+x-backend-build: &backend-build
+  context: .
+  dockerfile: docker/backend.Dockerfile
+  args:
+    PYTHON_IMAGE: ${PYTHON_IMAGE:?}
+    UV_IMAGE: ${UV_IMAGE:?}
+    UV_INDEX_URL: ${UV_INDEX_URL:-https://pypi.org/simple}
+
+services:
+  backend:
+    image: dsws-v2/backend:local
+    build: *backend-build
+    restart: unless-stopped
+    command:
+      - uvicorn
+      - app.main:app
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8100"
+      - --workers
+      - "1"
+    environment:
+      - REBUILD_MYSQL_HOST=mysql
+      - REBUILD_MYSQL_PORT=3306
+      - REBUILD_DW_RO_PASSWORD=${REBUILD_DW_RO_PASSWORD:?}
+      - REBUILD_ES_URL=http://elasticsearch:9200
+      - REBUILD_QDRANT_URL=http://qdrant:6333
+      - REBUILD_LLM_BASE_URL=${REBUILD_LLM_BASE_URL:-}
+      - REBUILD_LLM_API_KEY=${REBUILD_LLM_API_KEY:-}
+      - REBUILD_LLM_MODEL=${REBUILD_LLM_MODEL:-}
+      - REBUILD_LLM_TIMEOUT=${REBUILD_LLM_TIMEOUT:-30}
+    ports:
+      - "127.0.0.1:${BACKEND_HOST_PORT:-8101}:8100"
+    networks:
+      default: {}
+      infra: {}
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - import urllib.request; urllib.request.urlopen('http://127.0.0.1:8100/api/health', timeout=3)
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+
+  frontend:
+    image: dsws-v2/frontend-original:local
+    build:
+      context: ./original-frontend
+      dockerfile: Dockerfile.original
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_BIND:-0.0.0.0}:${FRONTEND_HOST_PORT:-5051}:80"
+    networks:
+      default: {}
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - wget -qO- http://127.0.0.1/healthz >/dev/null
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 5s
+
+networks:
+  infra:
+    external: true
+    name: shopkeeper-rebuild_default

@@ -1,360 +1,44 @@
 # 电商问数智能体 · 从零重建（教学版）
 
-> 这个目录不是旧系统的重构，而是**按契约从零搭的第二套实现**。
-> 旧系统（`../shopkeeper-agent` + `../shopkeeper-agent-frontend`）冻结为 `legacy`，作为**反例库**。
+> 按契约从零搭的第二套实现。旧系统（`../shopkeeper-agent` + `../shopkeeper-agent-frontend`）
+> 冻结为 `legacy`，只作反例库与负向夹具来源。
 
-路线图见 `../shopkeeper-agent/docs/REBUILD-ROADMAP.md`。
-
-从零搭建/验收手册见 [`docs/SETUP-FROM-SCRATCH.md`](docs/SETUP-FROM-SCRATCH.md)。
-
----
+- 从零搭建 / 排障 / 环境变量：[`docs/SETUP-FROM-SCRATCH.md`](docs/SETUP-FROM-SCRATCH.md)
+- Docker 部署：[`docs/DOCKER-DEPLOY.md`](docs/DOCKER-DEPLOY.md)
+- S7 设计记录：[`docs/S7-HANDOFF.md`](docs/S7-HANDOFF.md)
+- 路线图：`../shopkeeper-agent/docs/REBUILD-ROADMAP.md`
 
 ## 当前进度
 
-| 阶段 | 状态 | 验收 |
+| 阶段 | 产出 | 验收 |
 |---|---|---|
-| **S0 骨架** | ✅ 完成 | `make stage0` |
-| **S1 Schema 契约** | ✅ 完成 | `make stage1` |
-| **S2 元知识构建** | ✅ 完成 | `make stage2` |
-| **S3 检索** | ✅ 完成 | `make stage3` |
-| S4 生成 SQL | ⬜ 待做 | `make stage4` |
-| S5 安全边界 | ⬜ 待做 | `make stage5` |
-| S6 失败通道 | ⬜ 待做 | `make stage6` |
-| S7 前端收口 | ⬜ 待做 | `make stage7` |
-| S8 性能 | ⬜ 待做 | `make stage8` |
-
----
-
-## S0 做了什么
-
-**一句话**：不接 LLM、不接数据库、不接检索，只把「一次问数」的契约跑通。
-
-三件产物：
-
-1. **`contracts/steps.yaml`** —— 12 个步骤的唯一事实源。
-   前端启动时从 `GET /api/steps` 拉取，**渲染层零硬编码**。
-   `correct_sql` 标了 `conditional: true`，后端显式发 `skipped`，前端显示「未触发」。
-
-2. **`contracts/sse.schema.json`** —— 只允许三种事件：
-   - `progress { step, status, duration_ms }`
-   - `result { columns, rows }`
-   - `error { code, message, step }`
-   后端 schema + 前端运行时类型守卫**双重拒绝**：未知 type / status / step 一律报错（旧系统是静默忽略）。
-
-3. **假 SSE 流** —— 严格按契约发 24 帧：11 个非条件步 ×（running + success）+ 1 个条件步 skipped + 1 个 result。
-
-**刻意没做**：真实 SQL、LLM、检索、数据库。这些从 S1 开始一层层接。
-
-### 评审修复（S0）
-
-| 问题 | 修复 |
-|---|---|
-| `duration_ms` 没进 required，success 缺失也能过 | schema 加 `required` + `if/then/else`；5 条参数化测试 |
-| 前端 `as AgentEvent` 是纯断言，未知事件渲染空红框 | `parseAgentEvent` 运行时类型守卫；未知 type/status/step 抛 `UNKNOWN_EVENT` / `UNKNOWN_STEP` |
-| 失败/静默结束后 running 永久转圈 | error / `STREAM_INCOMPLETE` / 网络错误三处统一收敛为 error |
-| SSE 解析不支持 CRLF、多行 data、尾帧 | `SseParser` 重写；Vitest 8 条用例 |
-| UI 冒烟用 `text=华北` 命中的是提问气泡 | 对照 `/api/steps` 校验顺序/文案；断言 skipped 身份、结果值、零错误卡；自起临时端口 |
-| OpenAPI 把 SSE 声明成 `application/json` | 显式声明 `text/event-stream` |
-
----
-
-## S1 做了什么
-
-**一句话**：把「表结构」变成可校验的契约，并让旧系统的三处口径矛盾**持续变红**。
-
-DDL 只能说明「有哪些列」，说不清三件事：
-
-| DDL 表达不了 | 契约字段 | 本项目的例子 |
-|---|---|---|
-| 一行代表什么 | `grain` | `fact_order` 一行一单；`dim_region` 只到省，**没有 city 列** |
-| 度量怎么算 | `measures` | `order_quantity` 是件数，**不是订单数**；`order_amount` 是整单金额，**不是单价** |
-| 数据可用到哪 | `value_domain` | `date_id ∈ [20250101, 20250331]`；品牌枚举 15 个 |
-
-四件产物：
-
-1. **`contracts/schema.contract.yaml`** —— 5 张表 / 24 列的语义契约。
-   每列声明 `role`、`value_domain`、`aliases`；每表声明 `grain`、`foreign_keys`、`measures`；
-   每个指标声明 `formula`、`relevant_columns`、`expected_value`。
-2. **`backend/app/schema_contract.py`** —— 检查器。
-   解析 DDL → 装入内存 SQLite → 校验结构、外键、值域、指标公式与真实值；
-   同时把旧系统夹具当作**负向用例**，必须检出 8 个已知缺陷。
-   > 路线图写的交付物是 `docs/schema_contract.py`；实际放在 `backend/app/`，
-   > 这样 pytest 可以直接 import，CLI 仍是 `python -m app.schema_contract`。
-3. **`docs/SCHEMA-CONTRACT.md`** —— 由契约自动生成的人读版，`--check` 会检查它是否过期。
-4. **`fixtures/`** —— 冻结的 `dw.sql`（115 单真实数据）、旧 `meta_config.yaml`、旧功能清单。
-   负向夹具是**冻结副本**，所以单独 clone `rebuild/` 也能自洽运行。
-
-### 指标口径（唯一事实源）
-
-| 指标 | 公式 | 值 |
-|---|---|---:|
-| GMV | `SUM(order_amount)` | 279159.5 |
-| AOV | `SUM(order_amount) / COUNT(DISTINCT order_id)` | **2427.47** |
-| 订单量 | `COUNT(DISTINCT order_id)` | 115 |
-| 销量 | `SUM(order_quantity)` | 622 |
-| 平均件单价 | `SUM(order_amount) / SUM(order_quantity)` | 448.81 |
-| 平均每单件数 | `SUM(order_quantity) / COUNT(DISTINCT order_id)` | 5.41 |
-
-同一个 AOV 在旧系统里能算出三种结果：
-
-| 算法 | 值 | 它其实是什么 |
-|---|---:|---|
-| `SUM(amount) / COUNT(DISTINCT order_id)` | **2427.47** | ✅ AOV |
-| `SUM(amount) / SUM(quantity)` | 448.81 | ❌ 平均件单价 |
-| `SUM(quantity) / COUNT(DISTINCT order_id)` | 5.41 | ❌ 平均每单件数 |
-
-### 红 / 绿演示
-
-```bash
-cd backend
-
-# 当前冻结夹具：预期红（退出码 1）；按契约修复后同一命令退出码 0
-uv run python -m app.schema_contract --check-legacy
-# RED: 旧系统夹具检出 14 条问题
-#   AOV_THREE_WAY / AOV_COLUMN_MISMATCH / AOV_ALIAS_MISMATCH
-#   CITY_GRAIN_UNDECLARED / ORDER_COUNT_UNDEFINED / ALIAS_COLLISION
-#   FEATURE_LIST_TABLE_DRIFT / FEATURE_LIST_ROW_DRIFT
-
-# 新契约：必须绿（退出码 0）
-uv run python -m app.schema_contract --check
-# PASS: 5 张表 / 24 列 / 115 行 / GMV=279159.5 / 销量=622
-# PASS: 旧系统 14 条问题 / 8 个代码（预期红）
-# PASS: docs/SCHEMA-CONTRACT.md 与契约一致
-```
-
-`--check` 不是「忽略旧系统」，而是把「旧系统必须红」当成断言：
-少一个代码，或者旧夹具意外变绿，`make stage1` 就失败。
-
-### 为什么 S1 仍然不装 MySQL
-
-`fixtures/dw.sql` 直接装进内存 `sqlite3`：不需要 MySQL、Docker、`sudo`，也不需要 LLM。
-检查器本身只依赖标准库 + PyYAML；首次 `make install` 仍需联网装依赖，之后即可离线复现。
-
----
-
-## S2 做了什么
-
-**一句话**：把 S1 的契约变成三份可检索的元知识，并用 `build_manifest` 证明
-「同一次构建可以重复执行，第二次零写入」。
-
-> 输入不是旧系统的 `conf/meta_config.yaml`（那是 S1 的负向夹具），而是
-> `contracts/schema.contract.yaml`。旧配置只用来证明检查器会红；S2 不再把
-> 一份自相矛盾的 YAML 当事实源。
-
-### 三个存储，目标名全部隔离
-
-| 存储 | rebuild 目标 | 内容 | 本次计数 |
-|---|---|---|---:|
-| Meta MySQL | `meta_rebuild` | 表/列/指标/列指标关系 + manifest | 5 / 24 / 6 / 9 |
-| Elasticsearch | `value_index_rebuild` | 字段真实取值 → `column_id` | 76 docs |
-| Qdrant | `column_info_rebuild` | 字段名/描述/别名向量 + payload | 98 points |
-| Qdrant | `metric_info_rebuild` | 指标名/描述/别名向量 + payload | 22 points |
-
-旧系统的 `meta` / `value_index` / `column_info_collection` / `metric_info_collection`
-完全不动。`--fresh` 只删除 rebuild 自己的库、索引和 collection。
-
-> ES 比旧系统多 1 条：契约把 `dim_date.year` 声明为 `enum`，S2 按策略同步了
-> `year=2025`；旧系统没有同步它。这是有意的差异，不是漂移。
->
-> Meta 的 `examples` 是**排序后的前 10 条**（显式截断策略），不是完整值域；
-> 完整可检索值在 ES。S3 不能把 `examples` 当完整值域用。
-
-### 产物：`build_manifest`
-
-每次成功构建写一行：
-
-| 字段 | 作用 |
-|---|---|
-| `manifest_version` | manifest 格式版本（当前 1） |
-| `build_id` / `built_at` | 这次构建的身份与时间 |
-| `config_hash` | 契约语义 + 目标名 + embedding + 值域摘要的 SHA-256 |
-| `contract_version` | 契约版本 |
-| `embedding_provider` / `embedding_dim` | 向量来源与维度 |
-| `meta_*` / `es_values` / `qdrant_*` | 各存储计数 |
-| `targets_json` | 这次构建到底写了哪几个目标 |
-| `status` / `error` | 成功或失败；失败也留痕 |
-
-### 幂等不是「upsert 一下」
-
-构建流程是：
-
-1. 先校验 S1 契约，生成计划；任何存储都没碰。
-2. 非 `--fresh` 时先读最新 manifest。
-3. 如果 `config_hash`、`contract_version` 一致，且三存储实际计数与 manifest 完全一致
-   → 直接 `NOOP: 0 writes`，连 `CREATE TABLE IF NOT EXISTS` 都不执行。
-4. 只有需要修复/重建时才写；写之前重建 ES 索引和 Qdrant collection，避免旧值残留。
-5. 最后写 manifest；manifest 是「这次构建成功」的唯一凭据。
-
-另外，ES 文档 id 和 Qdrant point id 都是确定性的：
-
-- ES：`dim_region.province.广东省`
-- Qdrant：`uuid5(kind, object_id, text)`
-
-即使走到写入路径，重复执行也不会产生重复文档/重复 point。
-
-### 为什么 S2 用哈希向量
-
-旧栈的 `embedding` 容器依赖 1.3GB 的 `bge-large-zh-v1.5` 权重；当前机器权重缺失，
-容器一直 restarting。S2 的目标是验证「构建 + 三存储 + manifest + 幂等」，
-不应该被模型下载卡住。
-
-所以默认实现是 `hash-ngram-v1`：
-
-- 中文按单字 + 相邻双字，英文/数字按 token 切；
-- BLAKE2b 稳定哈希到 256 维，符号位决定加减，最后 L2 归一化；
-- 同一文本在任何进程/机器上得到同一向量，不依赖网络/GPU。
-
-它**不是语义模型**，召回质量有限。S3 先用 ES 关键词召回 + 哈希向量跑通链路；
-之后要换真实 bge，只需实现同一个 `EmbeddingProvider` 接口并 `--fresh` 重建。
-
-### 命令
-
-```bash
-# 前置：旧系统的 MySQL / ES / Qdrant 已在跑（S2 只写 *_rebuild 目标）
-make stage2
-
-# 或者逐步看
-cd backend
-uv run python -m app.build_meta_knowledge --dry-run          # 只算计划，0 写入
-uv run python -m app.build_meta_knowledge --fresh            # 删 rebuild 目标后全量构建
-uv run python -m app.build_meta_knowledge --verify           # 只读对账
-uv run python -m app.build_meta_knowledge --assert-idempotent # 第二次必须 noop
-```
-
-`--verify` 会检查：
-
-- manifest 存在、`status=success`、`config_hash` / `contract_version` / `targets` 一致；
-- Meta 4 个计数、ES count、两个 Qdrant count 全部等于 manifest；
-- ES `value.analyzer` 存在且与 manifest 一致；
-- 两个 Qdrant collection 的向量维度等于配置；
-- 至少一个 ES 值文档、一个 column point、一个 metric point 的内容/ payload 正确。
-
-### 环境变量
-
-默认值面向本机教学环境；换环境时覆盖：
-
-| 变量 | 默认 |
-|---|---|
-| `REBUILD_MYSQL_HOST` / `REBUILD_MYSQL_PORT` | `127.0.0.1` / `3306` |
-| `REBUILD_MYSQL_USER` / `REBUILD_MYSQL_PASSWORD` | `didilili` / `dili123` |
-| `REBUILD_MYSQL_ROOT_USER` / `REBUILD_MYSQL_ROOT_PASSWORD` | `root` / `dili123`（仅建库/授权用） |
-| `REBUILD_META_DB` | `meta_rebuild` |
-| `REBUILD_ES_URL` / `REBUILD_ES_INDEX` | `http://127.0.0.1:9200` / `value_index_rebuild` |
-| `REBUILD_QDRANT_URL` | `http://127.0.0.1:6333` |
-| `REBUILD_COLUMN_COLLECTION` / `REBUILD_METRIC_COLLECTION` | `column_info_rebuild` / `metric_info_rebuild` |
-| `REBUILD_VECTOR_SIZE` | `256` |
-| `REBUILD_EMBEDDING_PROVIDER` | `hash-ngram-v1` |
-| `REBUILD_MAX_VALUE_DOCS` | `1000` |
-
-### 本次测试
-
-- S0：19 条
-- S1：40 条
-- S2：16 条（计划计数、同步策略、examples 截断、确定性 ID/hash、坏契约拒绝、dry-run 等）
-- S2 完成时合计：**75 条**；现在 `make stage2` 会收集全部 113 条
-  （其中 23 条 S3 真实存储集成测试默认跳过）。
-
----
-
-## S3 做了什么
-
-**一句话**：不接 LLM，先用**确定性关键词 + 三存储批量召回**，把问题收窄成
-「表 / 字段 / 指标 / 真实值 / 额外上下文」，并输出一份可逐字节复现的 YAML。
-
-```
-query
-  -> extract_keywords
-  -> recall_column / recall_value / recall_metric   （批量，一次往返）
-  -> merge_retrieved_info                           （一次 Meta 快照）
-  -> filter_table -> filter_metric                  （确定性裁剪）
-  -> add_extra_context                              （日期 / 季度 / 数据集 / MySQL 版本）
-  -> RecallState -> stable YAML
-```
-
-### 关键词不是「分词一下」
-
-没有 jieba、没有 LLM，只有三层确定性规则：
-
-1. **契约词典**：表名、列名、列别名、指标 name/label/alias、契约声明的枚举值。
-   「销售额 → order_amount」这类映射由 `schema.contract.yaml` 给出，不靠模型猜。
-2. **日期模式**：`2025 年 1 月`、`2025Q1`、`2025-01`、`20250101` 等正则识别，
-   同时产生 `dim_date.year / month / quarter` 的提示。
-3. **完整 query 兜底**：契约里没有的客户名/商品名，原文仍会进入检索。
-
-单字别名（如 `省`）只作为字段提示，不直接当 ES 关键词；ES 兜底查询用
-完整短语（走索引 analyzer）+ 确定性中文 2-gram（2-gram 固定 `analyzer: keyword`），
-避免 IK 把 `省`、`1` 这类单字放大成噪声。
-
-### 往返次数是硬约束，不是「尽量批量」
-
-每道题只允许：
-
-| 请求 | 次数 | 说明 |
-|---|---:|---|
-| ES `_msearch` | 1（重试时最多 2） | 所有关键词一次多查询 |
-| Qdrant column `search/batch` | 1 | 一个批次搜完整列 collection |
-| Qdrant metric `search/batch` | 1 | 一个批次搜完整指标 collection |
-| Meta MySQL | 5 条 SQL | 4 张表 + `SELECT VERSION()`，同一连接 |
-
-黄金集测试会断言这些计数，防止以后悄悄退化成逐候选 N+1。
-
-### 候选合并与过滤
-
-- Qdrant 多关键词结果按 payload `id` 去重，取最高向量分；
-- 再用契约 name/alias/value 做**词法补偿分**——hash 向量只认字面重叠，
-  没有这层补偿，同义改写会漏召；
-- 最终字段保留线：词法分 ≥ `0.5`，或向量分 ≥ `0.72`，或命中真实值；
-- `filter_table` 保留有直接证据的表，以及 join 路径上的主外键；
-- `filter_metric` 只保留有词法证据的指标，再按 `relevant_columns` 补依赖列，
-  最后重新裁掉不需要的 join 键；
-- 所有输出按契约顺序或 `(-score, id)` 排序，不依赖 `set` 迭代顺序。
-
-### YAML 是给 LLM 的上下文，不是调试 dump
-
-- 契约字段全部保留：表级 `grain / measures`，列级 `name / type / role / description /
-  aliases / value_domain`，指标级 `formula / expected_value / relevant_columns /
-  rejected_values`；根节点还保留完整 `dataset`；
-- Meta 的 `examples` 是 S2 截断后的前 10 条，因此每个字段显式写
-  `examples_truncated: true` / `examples_limit: 10`，根节点再重复一次
-  `examples_policy`；
-- 完整命中值放在 `matched_values`，不把 examples 伪装成全集；
-- `retrieval` 段记录往返次数、候选数、过滤前后计数，方便定位召回退化；
-- CLI 的 YAML 只走 stdout，统计只走 stderr；渲染本身逐字节稳定，
-  `current_date / weekday / quarter` 来自运行日，跨天会变，需要固定日期时可注入 `now`。
-
-### 黄金集
-
-`backend/tests/recall/golden.yaml` 固定 20 道题，覆盖单表/多表、指标、
-真实值过滤、日期、季度、join 键与「无指标」问法。每题断言：
-
-- 期望的表 / 字段 / 指标 / 真实值全部命中；
-- 输出规模有上限、precision 有下限（防止「全召回」蒙混过关）；
-- ES / Qdrant / Meta 往返次数符合上表。
-
-当前 **20/20 通过**；集成测试默认跳过，只有 `REBUILD_INTEGRATION=1` 才连真实服务。
-
-### 命令
-
-```bash
-make stage3
-
-# 或者逐步看
-cd backend
-REBUILD_INTEGRATION=1 uv run pytest -q tests/recall   # 38 条：黄金集 + 往返 + 契约字段 + 单测
-uv run python -m app.scripts.recall "华北销售额"        # stdout YAML / stderr 统计
-```
-
-### 本次测试
-
-- S3：38 条（20 题黄金集、关键词、YAML、契约字段保真、额外上下文、往返次数、精度上限）
-- 合计：**113 条**；`make stage3` 会跑 S2 对账 + 全部后端测试。
+| **S0 骨架** | 12 步 SSE 契约 + 前端协议守卫 | `make stage0` / `make stage0-ui` |
+| **S1 Schema 契约** | 5 表 / 24 列 / 6 指标；DDL 与真实值校验 | `make stage1` |
+| **S2 元知识** | MySQL / ES / Qdrant 三份可检索元知识 + manifest 对账 + 幂等 | `make stage2` |
+| **S3 检索** | 20 题黄金集；ES 1 次 `_msearch`、Qdrant 2 次批量、Meta 5 条 SQL | `make stage3` |
+| **S4 生成 SQL** | 7 槽位提示词 + 确定性生成器 + AST 静态校验 | `make stage4` |
+| **S5 安全边界** | 36 条注入语料全拒 + 11 条正常查询零误杀 + 只读账号 | `make stage5` / `make stage5-live` |
+| **S6 失败通道** | 16 个错误码 / 6 类失败 / 校正闭环 / 取消 | `make stage6` / `make stage6-ui` |
+| **S7 前端收口** | 契约生成物 + 14 条 SSE 夹具 + 13 条 F 缺陷闭环 | `make stage7` / `make stage7-ui` |
+| **S8 性能** | 待做 | — |
+
+当前验收数据：后端 **782 passed / 31 skipped**，前端 **40 passed**，SSE 夹具 **14 条**，
+`tsc --noEmit` 零错误。
+
+验收前置：`stage2` / `stage3` 需要三存储；`stage4`–`stage7` 完全离线（不需要 MySQL、LLM 或 API key）；
+`stage0-ui` / `stage6-ui` / `stage7-ui` 需要 Chrome 或 Edge。
 
 ---
 
 ## 快速开始
 
+前置：Python ≥ 3.12、uv、Node.js LTS + npm、GNU Make；Docker（S2/S3 与容器部署）。
+Windows 先执行 `chcp 65001`，否则控制台 GBK 可能打断 make 的中文输出。
+
+### 本地开发
+
 ```bash
-cd code/rebuild
+make install          # uv sync --frozen + npm ci
 
 # 终端 1
 make dev-backend      # http://127.0.0.1:8100
@@ -363,86 +47,210 @@ make dev-backend      # http://127.0.0.1:8100
 make dev-frontend     # http://127.0.0.1:5273
 ```
 
-打开 http://127.0.0.1:5273 ，输入任意问题，看步骤条依次点亮。
+健康检查：`curl http://127.0.0.1:8100/api/health` → `{"status":"ok","stage":"S7"}`。
 
-### 验收
+S2 / S3 需要先启动三存储（S0 / S1 / S4–S7 不需要）：
 
 ```bash
-make install          # 首次（uv sync --frozen + npm ci）
-make stage0           # S0：后端契约测试 + 前端协议单测 + 构建（不需要浏览器）
-make stage0-ui        # 可选：真实 Chrome 冒烟（自起临时端口 8101/5274，跑完清理）
-make stage1           # S1：契约绿 + 负向夹具红 + 后端 S0/S1 测试（不需要 MySQL/Docker）
-make stage2           # S2：dry-run + --fresh + --verify + 幂等（需要 MySQL/ES/Qdrant）
-make stage3           # S3：S2 对账 + 20 题黄金集 + CLI YAML + 全部后端测试
+make docker-env
+docker compose up -d mysql elasticsearch qdrant
+source scripts/export-docker-env.sh   # 导出 Compose 随机密码；不跨终端保留
 ```
 
-> `make stage2` 的前置是旧系统 docker compose 里的 MySQL / ES / Qdrant 已启动；
-> 它只操作 `*_rebuild` 目标，不会删旧系统的数据卷。当前 embedding 容器坏了也没关系，
-> S2 默认用确定性哈希向量。
+### Docker 一键部署（推荐）
 
----
-
-## 目录
-
-```
-rebuild/
-├── contracts/              # 契约（前后端唯一事实源）
-│   ├── steps.yaml          # 12 个步骤 + conditional 标记
-│   ├── sse.schema.json     # 三种 SSE 事件
-│   └── schema.contract.yaml # S1：5 表 / 24 列 / 6 指标的语义契约
-├── fixtures/               # S1 冻结数据与负向夹具（不依赖旧项目）
-│   ├── dw.sql              # 物理 DDL + 115 单真实数据
-│   └── legacy/             # 旧 meta_config.yaml + 功能清单（必须红）
-├── docs/
-│   ├── SCHEMA-CONTRACT.md  # 由契约自动生成（--write-doc）
-│   └── screenshots/
-├── backend/
-│   ├── app/main.py         # S0 假流 + /api/steps
-│   ├── app/schema_contract.py # S1 检查器 + 文档生成器 + CLI
-│   ├── app/build_meta_knowledge.py # S2 CLI
-│   ├── app/build/          # S2 计划/embedding/三存储/manifest
-│   ├── app/recall/         # S3 关键词/批量召回/合并过滤/YAML
-│   ├── app/scripts/recall.py # S3 CLI（stdout YAML + stderr 统计）
-│   └── tests/              # S0 19 + S1 40 + S2 16 + S3 38 = 113 条
-│       └── recall/         # 20 题黄金集 + 关键词/渲染/往返测试
-├── frontend/
-│   ├── src/App.tsx
-│   ├── src/lib/api.ts                # 运行时类型守卫 + SSE 解析器
-│   ├── src/lib/sse.test.ts           # Vitest 协议单测（18 条）
-│   ├── src/components/StepRail.tsx   # 竖向导轨（响应式）
-│   └── tests/s0_smoke.mjs            # 无头 Chrome 冒烟
-├── scripts/stage0-ui.sh    # 自起临时端口跑冒烟，跑完清理
-└── Makefile
+```bash
+make docker-env       # 生成 .env（随机密码；已存在则跳过）
+make docker-up        # docker compose up -d --build
+curl http://127.0.0.1:8080/api/health
+make docker-smoke     # 8 步验收，输出 DOCKER SMOKE PASS
 ```
 
----
+| 服务 | 镜像 | 端口 | 职责 |
+|---|---|---|---|
+| `mysql` | `mysql:8.0` | `127.0.0.1:3306` | 首次启动自动执行 `fixtures/dw.sql` |
+| `elasticsearch` | `8.15.3` | `127.0.0.1:9200` | 元知识 + 检索 |
+| `qdrant` | `v1.12.4` | `127.0.0.1:6333` | 向量元知识 |
+| `init` | 与 backend 同镜像 | 无 | 一次性：等依赖健康 → 开通只读账号 → 校验/重建 S2 元知识 |
+| `backend` | `shopkeeper-rebuild/backend:local` | `127.0.0.1:8100` | FastAPI + SSE |
+| `frontend` | `shopkeeper-rebuild/frontend:local` | `0.0.0.0:8080` | nginx；唯一对外入口，`/api/` 反代 backend |
 
-## 为什么 S0 不装数据库
+> `FRONTEND_BIND` 默认 `0.0.0.0`（要给别的机器访问）；只在本机用时改成 `127.0.0.1`。
+> 其余端口只绑定 `127.0.0.1`，不对外暴露。
 
-审计（`../shopkeeper-agent/docs/audit-*.md`）把 30+ 条缺陷收敛到三个根因，第一条是：
+构建方式：
 
-> **契约只写在提示词、YAML 和文档里，没有一行代码强制它。**
+- **backend**：多阶段（uv 装依赖 → `python:3.12-slim`），非 root（uid 10001）；
+  运行镜像只带虚拟环境、`backend/app`、`contracts`、`fixtures`（不含测试）；uvicorn 单 worker。
+- **frontend**：`node:20-alpine` 构建 → `nginx:1.27-alpine` 托管 `dist`；
+  `/api/` 关闭缓冲，保证 SSE 实时到达。
+- **init**：`init` 非零退出会阻止 backend 启动（`service_completed_successfully`）；
+  同一份元知识第二次构建必须 `NOOP: 0 writes`。
+- 构建源与镜像地址由 `.env` 覆盖（`NPM_REGISTRY` / `UV_INDEX_URL` / `*_IMAGE`）。
 
-如果先装数据库、再写检索、最后对前端，这个根因会被固化进每一层。
-所以第一个可运行的系统先钉死契约，后面的阶段只能「填实现」，不能改契约。
+常用命令：
 
----
+```bash
+make docker-up        # 构建并启动全部服务
+make docker-down      # 停止并移除容器（保留数据卷）
+make docker-logs      # 跟踪日志
+make docker-smoke     # 完整验收：健康、步骤数、真实查询、nginx 缓冲、只读账号、S2 对账、init 幂等
+make docker-reset     # 停容器 + 删数据卷（需输入 yes，不可恢复）；之后用 make docker-up 重建
 
-## 与旧系统的端口隔离
+docker compose up -d backend          # 只改了 .env（例如换 API Key）
+docker compose up -d --build backend  # 改了后端源码
+```
 
-| | 旧栈 | rebuild |
-|---|---|---|
-| 后端 | 8000 | **8100** |
-| 前端 | 5173 | **5273** |
+> `docker compose restart` **不会**读取新的环境变量；改 `.env` 必须 `up -d`。
+> 不要执行 `docker compose down -v`（会删数据卷）；需要重建用 `make docker-reset`。
 
-两套可以同时跑，方便并排对比（差分验收）。
+### LLM 接入（可选）
 
----
+默认使用**确定性生成器**（离线、可复现）。下面三个变量同时非空时，切换为
+OpenAI 兼容端点：
 
-## S0 截图
-
-| 初始态 | 执行完成 |
+| 变量 | 说明 |
 |---|---|
-| ![初始态](docs/screenshots/s0-initial.png) | ![执行完成](docs/screenshots/s0-result.png) |
+| `REBUILD_LLM_BASE_URL` | 端点根地址，生成器自动拼 `/chat/completions` |
+| `REBUILD_LLM_API_KEY` | API Key |
+| `REBUILD_LLM_MODEL` | 模型名 |
+| `REBUILD_LLM_TIMEOUT` | 超时秒数，默认 30 |
 
-左：12 步全部「等待」。右：11 步绿色勾 + 耗时，`校正SQL` 显示「未触发」，结果表 4 行。
+示例（DeepSeek 兼容端点）：
+
+```dotenv
+REBUILD_LLM_BASE_URL=https://api.deepseek.com
+REBUILD_LLM_MODEL=deepseek-flash
+REBUILD_LLM_API_KEY=sk-...
+```
+
+```bash
+docker compose up -d backend   # 重建容器才会读取新环境变量
+
+# 确认生成器已切换（不打印 Key）
+docker compose exec backend python -c \
+  "from app.generate.provider import HttpLlmGenerator; g=HttpLlmGenerator.from_env(); print(g.model, g.base_url)"
+```
+
+- 模型产出的 SQL **仍要过同一套静态校验与安全策略**，不合格降级为拒答。
+- 只有配置了 LLM 才会启用 `correct_sql`；否则该步骤显示「未触发」。
+- 模型超时 / 非 2xx / 返回非 JSON → 落到既有错误码，流仍以 `result` 或 `error` 收尾。
+
+---
+
+## 重要源码
+
+```text
+rebuild/
+├── compose.yaml                # 五服务 + 一次性 init
+├── Makefile                    # 阶段验收 + Docker 命令
+├── docker/                     # backend / frontend Dockerfile、nginx.conf
+├── contracts/                  # 唯一事实源：步骤/SSE/Schema/策略/错误码/提示词
+├── fixtures/                   # dw.sql、注入语料、失败场景、SSE 夹具
+├── backend/
+│   ├── app/main.py             # 应用工厂 + HTTP/SSE 入口
+│   ├── app/schema_contract.py  # S1 契约检查器 + 文档生成
+│   ├── app/build/              # S2 三存储构建 / embedding / manifest
+│   ├── app/recall/             # S3 关键词、批量召回、过滤、YAML
+│   ├── app/generate/           # S4 上下文、提示词、生成器、静态校验
+│   ├── app/security/           # S5 策略、执行器、只读账号
+│   ├── app/agent/              # S6 错误码、校正、编排、取消 + 值归一化
+│   ├── app/scripts/            # 阶段 CLI + docker_init + 契约生成/录制
+│   └── tests/                  # S0–S7 后端测试
+├── frontend/
+│   ├── src/generated/          # ★ 机器生成，不要手改
+│   ├── src/lib/                # SSE 解析、JSON Schema、结果表语义
+│   ├── src/components/         # StepRail / ErrorCard / PseudoErrorCard
+│   └── tests/                  # 无头浏览器 + SSE 回放服务器
+├── scripts/                    # docker-smoke / docker-reset / *-ui 验收脚本
+└── docs/                       # 搭建手册、Schema 文档、部署与交接文档
+```
+
+HTTP 接口：`GET /api/health`、`GET /api/steps`、`GET /api/errors`、
+`POST /api/query`（SSE）、`POST /api/cancel`。
+
+---
+
+## 核心设计（精简）
+
+### 1. 契约是唯一事实源
+
+| 文件 | 内容 |
+|---|---|
+| `contracts/steps.yaml` | 12 个步骤；`correct_sql` 标为 `conditional` |
+| `contracts/sse.schema.json` | 三种事件：`progress` / `result` / `error` |
+| `contracts/schema.contract.yaml` | 5 表 / 24 列 / 6 指标的语义契约 |
+| `contracts/sql.output.schema.json` | 只允许 `sql` 或 `refusal` 两种形状 |
+| `contracts/sql.policy.yaml` | 行数上限、超时、禁词、只读账号 |
+| `contracts/errors.yaml` | 16 个错误码 / 3 类失败 / 校正策略 |
+| `contracts/prompts/` | 7 个提示词；frontmatter 的 `slots` 是唯一声明 |
+
+后端与前端都从契约派生：步骤目录与错误码由 API 下发，前端事件类型由
+`contracts_gen` 生成。
+
+### 2. 问数流水线
+
+```
+问题
+  -> 上下文 8 阶段（契约离线裁剪；可选 S3 召回）
+  -> generate_sql（确定性生成器 / LLM）
+  -> validate_sql（AST 静态校验 + AST 安全策略）
+  -> [correct_sql]（仅可重试错误；最多 1 次；改完重新校验）
+  -> run_sql（只读账号 + 超时）
+  -> result / error（流一定以其中之一收尾）
+```
+
+### 3. 失败有名字，且长得不一样
+
+`class` 决定界面，不是错误码决定：
+
+| `class` | 界面 | 步骤条 |
+|---|---|---|
+| `failure` | 红框 + 错误码 + 可复制详情 | 失败步骤红叉 |
+| `empty` | 虚线空态卡；`[]` 是合法语义，不标红 | 执行步骤保持绿色 |
+| `cancelled` | 中性卡 | 正在跑的步骤标「已取消」 |
+
+### 4. 安全边界
+
+SQL 在**连库之前**过六道检查：可执行注释/词法禁词 → 单语句 → 只读 →
+集合运算/危险函数 → 契约派生的表列白名单 → 去注释 + 自动 LIMIT。
+执行的是策略**重新序列化后的那条 SQL**；数据库账号 `dw_reader` 只有 `SELECT`，
+并叠加 `max_execution_time` 与「不许多语句」。
+
+### 5. 类型保真
+
+`DECIMAL("10")` → `10`，`DECIMAL("10.5")` → `10.5`，`DATE` → ISO 字符串且列类型仍是
+`date`；未知类型直接抛错变成 `INTERNAL_ERROR`。SSE 序列化刻意不传 `default=str`。
+
+---
+
+## 数据与存储
+
+- `fixtures/dw.sql` 是**演示数据集**（合成数据，非生产数据）：`fact_order` 115 行、
+  `dim_customer` 20、`dim_product` 15、`dim_region` 6、`dim_date` 90。
+  Compose 首次初始化时灌入真实 MySQL，查询由只读账号真实执行并聚合。
+- S2 只写 `meta_rebuild` / `value_index_rebuild` / `column_info_rebuild` /
+  `metric_info_rebuild`，不碰旧系统的库与索引；embedding 默认确定性
+  `hash-ngram-v1`，不依赖模型下载。
+- 生产问数上下文由 `OfflineContextBuilder`（契约离线裁剪）生成；S3 的 ES/Qdrant
+  召回只在 `stage3` 与集成测试中使用，不在线上问数主链路。
+- 换真实数据 = 替换 `fixtures/dw.sql` + 同步 `contracts/schema.contract.yaml`，
+  再重建 S2，属于数据建模改造而非配置项。
+
+---
+
+## 必须知道的约束
+
+1. **契约先行**：改契约后重新生成前端类型
+   `cd backend && uv run python -m app.scripts.contracts_gen`；`--check` 防止生成物过期。
+2. **生成物不要手改**：`frontend/src/generated/` 是机器产物。
+3. **只动 `*_rebuild` 目标**：S2/S3 不修改旧系统的库、索引与 collection；
+   删除本项目数据卷只能用 `make docker-reset`（需输入 yes）。
+4. **`.env` 不入库**：`make docker-env` 生成随机密码；改了 `.env` 要 `docker compose up -d`，
+   `restart` 不生效。
+5. **S2/S3 前置**：三存储已启动；ES 自动回退 `standard` analyzer，S2 默认哈希向量。
+6. **S5 实战需要 MySQL**：`REBUILD_DW_RO_PASSWORD` 由环境提供，不在仓库里。
+7. **浏览器验收需要 Chrome / Edge**：`playwright-core` 不自带浏览器。
+8. **端口隔离**：后端 8100 / 前端 5273；临时验收 8101/5274（S0）、8102/5275（S6）、
+   8103/5276（S7），可与旧系统 8000/5173 同时运行。
+9. **排障**：先看 [`docs/SETUP-FROM-SCRATCH.md`](docs/SETUP-FROM-SCRATCH.md) 的常见故障表。

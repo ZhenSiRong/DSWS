@@ -1,0 +1,54 @@
+data: {"type": "progress", "step": "extract_keywords", "status": "running", "duration_ms": null}
+
+data: {"type": "progress", "step": "extract_keywords", "status": "success", "duration_ms": 2.2}
+
+data: {"type": "progress", "step": "recall_column", "status": "running", "duration_ms": null}
+
+data: {"type": "progress", "step": "recall_column", "status": "success", "duration_ms": 0.2}
+
+data: {"type": "progress", "step": "recall_value", "status": "running", "duration_ms": null}
+
+data: {"type": "progress", "step": "recall_value", "status": "success", "duration_ms": 0.1}
+
+data: {"type": "progress", "step": "recall_metric", "status": "running", "duration_ms": null}
+
+data: {"type": "progress", "step": "recall_metric", "status": "success", "duration_ms": 0.1}
+
+data: {"type": "progress", "step": "merge_retrieved_info", "status": "running", "duration_ms": null}
+
+data: {"type": "progress", "step": "merge_retrieved_info", "status": "success", "duration_ms": 0.0}
+
+data: {"type": "progress", "step": "filter_table", "status": "running", "duration_ms": null}
+
+data: {"type": "progress", "step": "filter_table", "status": "success", "duration_ms": 0.1}
+
+data: {"type": "progress", "step": "filter_metric", "status": "running", "duration_ms": null}
+
+data: {"type": "progress", "step": "filter_metric", "status": "success", "duration_ms": 0.0}
+
+data: {"type": "progress", "step": "add_extra_context", "status": "running", "duration_ms": null}
+
+data: {"type": "progress", "step": "add_extra_context", "status": "success", "duration_ms": 0.0}
+
+data: {"type": "progress", "step": "generate_sql", "status": "running", "duration_ms": null}
+
+data: {"type": "progress", "step": "generate_sql", "status": "success", "duration_ms": 6.9}
+
+data: {"type": "progress", "step": "validate_sql", "status": "running", "duration_ms": null}
+
+data: {"type": "progress", "step": "validate_sql", "status": "error", "duration_ms": 18.3}
+
+data: {"type": "progress", "step": "correct_sql", "status": "running", "duration_ms": null}
+
+data: {"type": "progress", "step": "correct_sql", "status": "success", "duration_ms": 1841.9}
+
+data: {"type": "progress", "step": "validate_sql", "status": "running", "duration_ms": null}
+
+data: {"type": "progress", "step": "validate_sql", "status": "success", "duration_ms": 2.6}
+
+data: {"type": "progress", "step": "run_sql", "status": "running", "duration_ms": null}
+
+data: {"type": "progress", "step": "run_sql", "status": "success", "duration_ms": 9.9}
+
+data: {"type": "result", "data": {"columns": [{"name": "商品品类", "type": "string"}, {"name": "销量", "type": "number"}], "rows": [["休闲零食", 298]]}}
+

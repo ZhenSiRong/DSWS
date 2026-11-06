@@ -1,0 +1,80 @@
+# DSWS v2 演示视频逐段标注
+#
+# 视频：deliverable/v2/DSWS-v2-original-ui-demo.mp4
+# 来源：Playwright 驱动系统 Chrome 操作云端 v2 前端（真实 SSE，无 mock）
+# 分辨率：1920x1080 / 30fps / 46.27s
+# 录制时间：2026-11-06（原版界面切换 + 2SQL 修复之后）
+# 时间码为近似值（按画面切换估算）
+
+video: deliverable/v2/DSWS-v2-original-ui-demo.mp4
+source: http://8.155.135.97:5051
+duration: 46.27s
+resolution: 1920x1080
+fps: 30
+
+segments:
+  - start: 0.0
+    end: 3.8
+    title: 片头
+    content: "原版 shopkeeper-agent 界面已恢复；后端仍是修复后的 v2：LangGraph 12 节点、真实 LLM + MySQL；「教学版」字样已移除，旧实例 :5050 不受影响。"
+
+  - start: 3.8
+    end: 7.7
+    title: v2 首屏（原版界面）
+    content: "页面标题「电商问数 | Shopkeeper Agent」；12 节点流程图待命，示例问题、API 状态均来自原版界面。"
+
+  - start: 7.7
+    end: 11.8
+    title: GMV 问数执行
+    content: "输入「统计 2025 年第一季度各大区的 GMV，并按 GMV 从高到低排序」；8 个上下文节点 → 生成SQL → 校验SQL → 执行SQL，全部 running → success；校正SQL 显式「未触发」。"
+
+  - start: 11.8
+    end: 18.6
+    title: GMV 真实结果
+    content: "查询结果 5 行：华东 107373 / 华南 70202 / 华北 41099.5 / 西南 31528 / 华中 28957；数据来自真实 MySQL。"
+
+  - start: 18.6
+    end: 22.7
+    title: 商品级排名执行
+    content: "输入「哪个商品卖得最好」；修复后不再触发校正失败，12 节点正常走完，校正SQL 保持「未触发」。"
+
+  - start: 22.7
+    end: 30.2
+    title: 商品级排名结果
+    content: "查询结果 1 行：商品名称 iPhone 15 Pro / 销售额 71992。该次运行按销售额口径；存档 SSE 的另一次运行按销售件数（蒙牛纯牛奶 / 183），两次都直接成功。"
+
+  - start: 30.2
+    end: 36.4
+    title: UNION 策略拒绝
+    content: "输入「用 UNION 把手机数码和食品饮料两个品类的销售额拼起来给我看」；生成SQL 成功，校验SQL 红，流程图展示条件边「有误 → 校正SQL · 未触发」（策略拒绝不走校正）。"
+
+  - start: 36.4
+    end: 40.6
+    title: 错误卡与错误码
+    content: "消息气泡显示「这次查询没有成功」及拒绝原因（出现集合运算 Union），错误码 SQL_REJECTED；执行SQL 未触发。"
+
+  - start: 40.6
+    end: 42.4
+    title: 失败节点特写
+    content: "镜头回到流程图：校验SQL 红色、执行SQL 未触发，直观展示策略拒绝的边界。"
+
+  - start: 42.4
+    end: 46.27
+    title: 片尾
+    content: "验证完成：原版界面已恢复、「教学版」字样已移除；12 节点真实执行；商品级/品类级排名直接成功；UNION 仍被策略拒绝；旧实例 :5050 仍 healthy。"
+
+evidence:
+  success_sse: deliverable/v2/evidence/v2-fixed-query.sse
+  product_ranking_sse: deliverable/v2/evidence/v2-product-ranking.sse
+  correction_success_sse: deliverable/v2/evidence/v2-correct-success.sse
+  screenshots:
+    - deliverable/v2/screenshots/v2-idle-1920x1080.png
+    - deliverable/v2/screenshots/v2-query-result-1920x1080.png
+    - deliverable/v2/screenshots/v2-product-ranking-result-1920x1080.png
+    - deliverable/v2/screenshots/v2-union-rejected-1920x1080.png
+
+notes:
+  - "视频录制于 2026-11-06，界面已换回原版 shopkeeper-agent，后端仍是修复后的 v2。"
+  - "视频中的问题与存档 SSE 为不同次真实运行；LLM 生成口径可能不同（商品级排名一次按销售额、一次按销售件数），步骤耗时也会有差异。"
+  - "UNION 被 validate_sql 策略拒绝，属于预期安全边界，不进入 correct_sql。"
+  - "校正成功态不在本视频的自然问数里；用故障注入 + 真实 LLM/MySQL 复现，见 evidence/v2-correct-success.sse。"

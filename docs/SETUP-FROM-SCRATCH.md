@@ -1,8 +1,8 @@
-# 从零搭建 rebuild（S0–S3 已验证版）
+# 从零搭建 rebuild（S0–S7 已验证版）
 
-> **适用范围**：这份手册只覆盖当前已经实现的 **S0 骨架、S1 Schema 契约、S2 元知识构建、S3 检索**。
-> **代码快照**：`tag s3` 指向 S3 核心实现提交 `93f61c9`（2026-10-25）；本手册是 tag 之后的文档提交，位于 `main`。
-> **不包含**：S4 生成 SQL、S5 安全、S6 失败通道、S7 前端收口、S8 性能。
+> **适用范围**：这份手册只覆盖当前已经实现的 **S0 骨架、S1 Schema 契约、S2 元知识构建、S3 检索、S4 生成 SQL、S5 安全边界、S6 失败通道、S7 前端收口**。
+> **代码快照**：`tag s3` 指向 S3 核心实现提交 `93f61c9`（2026-10-25）；S4–S7 与本手册位于 `main`。
+> **不包含**：S8 性能。
 >
 > 这份手册刻意把三件事分开写：
 >
@@ -27,19 +27,53 @@ make install
 make stage0
 make stage1
 
-# 4) 启动 MySQL / ES / Qdrant（只启动这三个）
-cd ../shopkeeper-agent/docker
+# 4) 启动 MySQL / ES / Qdrant（只启动这三个；首次需 make docker-env）
+make docker-env
 docker compose up -d mysql elasticsearch qdrant
-cd ../../rebuild
+
+# Compose 密码是随机生成的；宿主 CLI 不会自动读 .env
+source scripts/export-docker-env.sh
 
 # 5) 构建元知识，再跑检索
 make stage2
 make stage3
+
+# 6) S4：生成 SQL（不需要三存储）
+make stage4
+
+# 7) S5：安全边界（不需要三存储）
+make stage5
+
+# 8) S6：失败通道（不需要三存储，也不需要 LLM）
+make stage6
+
+# 9) S7：前端收口（不需要三存储、LLM、浏览器）
+make stage7
 ```
 
-如果上面的命令全部打印 `PASS`，说明 S0–S3 的代码级验收通过。
+如果上面的命令全部打印 `PASS`，说明 S0–S7 的代码级验收通过。
+浏览器部分单独跑：`make stage0-ui` / `make stage6-ui` / `make stage7-ui`（需要 Chrome / Edge）。
 
-> ⚠️ 但“S3 通过”不等于“前端已经能真实问数”。当前 `/api/query` 仍是 S0 的假 SSE，S3 只通过 CLI 调用。详见第 7 节。
+> 不想在本机装 Python / Node，也可以走全量 Docker 部署，见 2.12 节。
+
+> S4 单独拿出来也能跑：它只到「生成 + 静态校验」，上下文由契约离线裁剪，
+> **不需要 MySQL / ES / Qdrant，也不需要 API key 或网络**。
+>
+> S5 的门禁也一样不需要数据库：安全策略只依赖契约与 sqlglot。
+> 只有只读账号的开通 / 验证与两屏对比需要 MySQL（`make stage5-live`）。
+>
+> S6 的门禁**既不需要数据库也不需要 LLM**：6 类失败由
+> `fixtures/failures/scenarios.yaml` 驱动，只替换模型与数据库两个外部依赖，
+> 校验、策略、校正、事件全是真代码。浏览器验收 `make stage6-ui` 需要 Chrome / Edge。
+>
+> S7 的门禁同样**不需要数据库、LLM 或浏览器**：它校验生成物新鲜度、重录并比对
+> SSE 夹具，再跑前端协议单测与构建。浏览器验收 `make stage7-ui` 用夹具回放代替
+> 真后端，需要 Chrome / Edge。
+
+> ⚠️ 但“S3 通过”不等于“前端已经能真实问数”。`/api/query` 从 S6 起跑的是**真的**
+> 流水线（上下文 → 生成 → 校验 → 校正 → 执行），但真实召回（S3）与真实数据库
+> 还没接上去——没有 MySQL 时它会以一条诚实的 `INTERNAL_ERROR` 收尾，而不是编一份假数据。
+> 详见第 2.11 节与第 7 节。
 
 ---
 
@@ -51,39 +85,42 @@ make stage3
 
 | 软件 | 本机版本 | 说明 |
 |---|---|---|
-| Python | 3.14.8（uv venv） | `backend/pyproject.toml` 要求 `>=3.12`；系统 `python3` 为 3.12.3 |
-| uv | 0.13.1 | 用来安装/运行后端 |
+| Python | 3.14.7（uv venv） | `backend/pyproject.toml` 要求 `>=3.12` |
+| uv | 0.12.17 | 用来安装/运行后端 |
 | Node.js | 24.21.0 | 前端 Vite 6 + React 19；建议用当前 LTS |
 | npm | 11.19.0 | 与 Node 一起安装 |
-| Docker Engine | 29.1.3 | 三存储用 |
-| Docker Compose | 2.40.3 | 使用 `docker compose`（v2） |
-| Chrome | 已安装 | 只有可选的 `make stage0-ui` 需要 |
+| Docker Engine | 29.8.0 | 三存储用 |
+| Docker Compose | 5.5.1 | 使用 `docker compose`（v2） |
+| Chrome / Edge | 本机只有 Edge | `make stageN-ui` 需要；`playwright-core` 不自带浏览器，Edge 也行 |
+| GNU Make | 4.4.1（Windows 便携版）/ 4.x（Linux） | 所有 `make stageN` 验收命令都靠它 |
 
 > ℹ️ 这些是“本机验证版本”，不是严格的最低版本。Python 最低按 `pyproject.toml` 是 3.12；Node 建议不要用过老的版本。
 
 ### 1.2 代码目录
 
-当前 `rebuild/` 是一个**独立 git 仓库**，但**没有配置 remote**：
+当前 `rebuild/` 是一个**独立 git 仓库**，并且**已经配置了 remote**：
 
 ```bash
 cd code/rebuild
 git remote -v
-# 输出为空
+# origin  https://github.com/LucianZoraZephyr/DSWS.git (fetch)
+# origin  https://github.com/LucianZoraZephyr/DSWS.git (push)
 ```
 
-所以不要照抄“`git clone <repo>`”就以为能拿到全部依赖。你需要保证至少有两块：
+所以 `git clone` 能拿到全部内容。但**旧系统 `shopkeeper-agent/` 不在这个仓库里**，
+只靠 clone 仍然缺一块：
 
 ```text
 A020-电商问数智能体实战教程fixed/
 ├── code/
-│   ├── rebuild/                  # S0–S3 的实现
+│   ├── rebuild/                  # S0–S7 的实现 + Docker Compose 部署
 │   └── shopkeeper-agent/
-│       └── docker/               # S2/S3 需要的 MySQL/ES/Qdrant compose
+│       └── docker/               # 旧系统的 compose（只读参考，S2/S3 不再使用）
 ```
 
-- **只复制 `rebuild/`**：S0/S1 可以跑；S2/S3 需要你另外提供兼容的三存储。
-- **复制整个 `fixed/`**：按本手册最省事。
-- `shopkeeper-agent/` 是旧系统，**只读参考/负向夹具/compose 来源**，不要修改它。
+- **只复制 `rebuild/`**：S0/S1 可以跑；S2/S3 需要 Docker，用仓库根 `compose.yaml` 只启动三存储。
+- **复制整个 `fixed/`**：也可以，但 rebuild 已自带部署所需的 `compose.yaml`。
+- `shopkeeper-agent/` 是旧系统，**只读参考/负向夹具来源**，不要修改它；S2/S3 不再使用它的 compose。
 - `rebuild/fixtures/legacy/` 是冻结的旧配置副本，S1 用它证明“旧系统必须红”；不需要旧系统源码也能跑 S1。
 
 ### 1.3 端口
@@ -94,9 +131,12 @@ A020-电商问数智能体实战教程fixed/
 | `9200` | Elasticsearch | compose 里的 `elasticsearch` |
 | `6333` | Qdrant REST | compose 里的 `qdrant` |
 | `6334` | Qdrant gRPC | 当前代码不用 |
-| `8100` | rebuild 后端 | `make dev-backend` |
+| `8100` | rebuild 后端 | `make dev-backend`；**容器后端也映射这个端口**，两者不要同时跑 |
+| `8080` | rebuild 前端（Docker 全量部署的对外入口） | `make docker-up`；与 `make dev-frontend` 的 5273 互不冲突 |
 | `5273` | rebuild 前端 | `make dev-frontend` |
 | `8101` / `5274` | 可选 UI 冒烟临时端口 | `make stage0-ui` |
+| `8102` / `5275` | S6 浏览器验收临时端口 | `make stage6-ui` |
+| `8103` / `5276` | S7 浏览器验收临时端口（回放服务器 / 前端） | `make stage7-ui` |
 | `8000` / `5173` | 旧系统 API / Web | **不要为了 S0–S3 启动** |
 | `5601` | Kibana | 不需要 |
 | `8081` | 旧 embedding 容器 | **不需要**，S2/S3 默认用哈希向量 |
@@ -193,25 +233,62 @@ S1 PASS
 S2 和 S3 需要 **MySQL + Elasticsearch + Qdrant**。S3 不需要 LLM，也不需要旧的 embedding 容器。
 
 ```bash
-cd ../shopkeeper-agent/docker
-
-# 只启动这三个，不要 up 全部
+# 在仓库根目录执行
+make docker-env
 docker compose up -d mysql elasticsearch qdrant
+
+# Compose 密码是随机生成的；宿主 CLI 不会自动读 .env
+source scripts/export-docker-env.sh
 ```
 
-如果 `3306 / 9200 / 6333` 已经由旧系统 compose 启动，直接探活即可，不要重复 `up`。
+`make docker-env` 生成的 Compose 密码是随机的，宿主 CLI 不会自动读 `.env`；
+上面的 helper 把它们导出为 `REBUILD_*` 变量（成功时不打印任何内容）。
 
-首次启动可能比较久，并且需要网络（拉镜像/构建自定义 ES 镜像）：
+`.env` 已经存在时 `make docker-env` **不会覆盖**它——生成器默认不覆盖，
+免得把正在用的密码换掉、连不上库。要重新生成或换密码，看
+[`DOCKER-DEPLOY.md`](DOCKER-DEPLOY.md) 第 4 节。
 
-- `elasticsearch` 会构建一个带 IK 分词插件的自定义镜像；
+#### `source` 之后，shell 和 Compose 读到的必须是同一个值
+
+`docker compose` 解析 `${VAR}` 的顺序是**先看当前 shell 里已 export 的环境变量，
+再看 `.env` 文件**——没 export 的 shell 变量 Compose 根本看不见。helper 只读
+`.env`，所以两边取法不一致时，容器和宿主 CLI 就会拿到不同的密码——两边都
+"没写错"，宿主 CLI 却只收到一句 `Access denied`。helper 的取值规则：
+
+| 情况 | 取值 | 说明 |
+|---|---|---|
+| `.env` 有值 | `.env` 的值 | `.env` 是这份部署的事实源 |
+| `.env` 有值，shell 里**已 export** 的值不一样 | `.env` 的值 + stderr 告警 | 告警**只报变量名，不报值** |
+| `.env` 有值，shell 里定义了但**没 export** | `.env` 的值 + stderr 告警 | Compose 看不见没 export 的值，告警里会点名这件事 |
+| `.env` 里是空值，shell 里非空 | shell 的值 | 空值不能把用户自己 export 的值抹掉 |
+| 端口（`MYSQL_HOST_PORT` 等） | 已 export 的 shell 值 → `.env` → 默认值 | 和 Compose 的 `${VAR:-default}` 一致 |
+
+helper export 的是 `REBUILD_*`（宿主 CLI 用的那些）。`MYSQL_PASSWORD` /
+`MYSQL_ROOT_PASSWORD` 这两个 Compose 插值用的名字，它**刻意不 export**：
+export 出去的话，shell 里那份快照会一直挡住 `.env` 里的新值——用户轮换了
+密码之后，容器还在用旧密码，宿主 CLI 用的是新密码，两边对不上，症状只有
+一句 `Access denied`。不 export，Compose 下次读 `.env` 时读到的就是新值；
+helper 这边也已经按 Compose 的顺序（已 export 的 shell 值优先、再 `.env`）
+取好了同一个字符串。
+
+> **改了 `.env` 要重新 `source` 一次**：脚本导出的是 `.env` 的一份快照，
+> shell 里那份旧值会挡住 Compose 读到新的 `.env`。
+
+如果 `3306 / 9200 / 6333` 已经有服务在跑，直接探活即可，不要重复 `up`；
+不要用旧系统的 compose。
+
+首次启动需要网络（拉取镜像）：
+
+- Elasticsearch 使用官方 8.15.3 镜像，不含 IK；S2 会自动回退 `standard` analyzer；
 - MySQL / ES 有 healthcheck；
-- Qdrant 没有 healthcheck，需要自己用 HTTP 探活。
+- Qdrant 没有 healthcheck，全量 Docker 部署时 `init` 会自己轮询 `/collections`。
 
 等待就绪：
 
 ```bash
 # MySQL
-docker compose exec mysql mysqladmin ping -h 127.0.0.1 -uroot -pdili123
+docker compose exec mysql sh -c \
+  'mysqladmin ping -h 127.0.0.1 -uroot -p"$MYSQL_ROOT_PASSWORD"'
 
 # Elasticsearch
 curl -fsS http://127.0.0.1:9200/_cluster/health
@@ -220,41 +297,30 @@ curl -fsS http://127.0.0.1:9200/_cluster/health
 curl -fsS http://127.0.0.1:6333/collections
 ```
 
-三个都返回成功后再回 `rebuild`：
+三个都返回成功后再继续（仍在仓库根目录）：
 
 ```bash
-cd ../../rebuild
+# 仍在仓库根目录
 ```
 
 #### 重要：不要启动全部服务
 
-```bash
-# ❌ 不要这样
-docker compose up -d
-```
+`compose.yaml` 里的 `backend` / `frontend` 是 rebuild 自己的服务；如果只是给
+本机 S2/S3 准备存储，按上面的命令只启动三个。不要用旧系统的 compose。
 
-原因：
-
-- `embedding` 容器需要 1.3GB 的 bge 权重，当前环境可能一直 restarting；
-- `api` / `web` 是旧系统的 8000 / 5173，不是 rebuild；
-- `kibana` 对 S2/S3 没用；
-- S2/S3 默认用 `hash-ngram-v1` 哈希向量，不需要 `embedding`。
+S2/S3 默认用 `hash-ngram-v1` 哈希向量，不需要 embedding 容器。
 
 #### 重要：不要 `down -v`
 
-```bash
-# ❌ 不要为了“重置 rebuild”执行
-docker compose down -v
-```
-
-`down -v` 会删 compose 的 MySQL/ES/Qdrant 数据卷，旧系统数据也会一起没。
-默认配置下，S2 的 `--fresh` 只删 **rebuild 自己的目标**，不会删数据卷；两者不是一回事。
-如果把目标名覆盖成旧系统目标，`--fresh` 仍会删旧数据，见第 4 节。
+仓库根 `compose.yaml` 的数据卷只属于 rebuild。`make docker-down` 保留数据卷；
+`make docker-reset` 会要求输入 `yes`，然后才删除 rebuild 的 MySQL/ES/Qdrant
+数据卷（容器和网络也一起没了）。任何时候都不要在旧系统目录执行
+`docker compose down -v`。
 
 > ⚠️ **未在本 shell 验证**：当前审计账户没有 Docker socket 权限，`docker ps` 报
-> `permission denied ... /var/run/docker.sock`。上面的 compose 命令是按
-> `code/shopkeeper-agent/docker/docker-compose.yaml` 静态整理；本机的 S2/S3 是针对
-> **已经运行的三存储**验证的，不是本轮从零 `docker compose up` 验证的。
+> `permission denied ... /var/run/docker.sock`。上面的 compose 命令对应仓库根的
+> `compose.yaml`；本机的 S2/S3 是针对**已经运行的三存储**验证的，不是本轮从零
+> `docker compose up` 验证的。
 >
 > 如果你遇到同样的权限错误，需要用有 Docker 权限的账号，或把当前用户加入
 > `docker` 组后重新登录：
@@ -270,6 +336,8 @@ docker compose down -v
 ### 2.5 S2：构建元知识
 
 ```bash
+# 新终端里先导出 Compose 凭据；同一终端已 source 可跳过
+source scripts/export-docker-env.sh
 make stage2
 ```
 
@@ -312,6 +380,7 @@ S2 PASS
 真正的零写入断言是：
 
 ```bash
+source scripts/export-docker-env.sh
 cd backend
 uv run python -m app.build_meta_knowledge --assert-idempotent
 # 期望：NOOP: 0 writes
@@ -344,6 +413,8 @@ Meta 里的 `examples` 是**排序后的前 10 条**，不是完整值域：
 前置：S2 已成功构建，三存储可访问。
 
 ```bash
+# 新终端里先导出 Compose 凭据；同一终端已 source 可跳过
+source scripts/export-docker-env.sh
 make stage3
 ```
 
@@ -374,6 +445,7 @@ S3 PASS
 #### 手动看 S3 的 YAML
 
 ```bash
+source scripts/export-docker-env.sh
 cd backend
 uv run python -m app.scripts.recall "华北销售额"
 ```
@@ -435,9 +507,237 @@ examples_policy: ...
 > 同一 `RecallState` 的 YAML 渲染本身是稳定的。需要固定日期时，代码里可以给
 > `recall(..., now=...)` 注入时间；CLI 目前不暴露这个参数。
 
-### 2.7 启动开发服务（可选）
+### 2.7 S4：生成 SQL（不需要三存储）
 
-只有想看 S0 的假 SSE / 步骤条时才需要。
+```bash
+cd "<你的目录>/A020-电商问数智能体实战教程fixed/code/rebuild"
+make stage4
+```
+
+`make stage4` 做三件事：
+
+1. **10 题基线**：`python -m app.scripts.generate --baseline`，打印
+   「问题 / SQL / 判定」表格。8 题取自 S3 黄金集，2 题是越界题。
+2. **生成层测试**：提示词契约（槽位双向校验、缺槽报错）、sqlglot 静态校验
+   （每个违规码都有能复现它的负例）、生成与拒答路径、契约/提示词/代码三方对齐。
+3. **全量后端测试**。
+
+单独看基线表格：
+
+```bash
+make baseline
+```
+
+单题：
+
+```bash
+cd backend
+uv run python -m app.scripts.generate "华北销售额"   # stdout YAML / stderr 统计
+```
+
+S4 的输出只有两种形状：`{"sql": "..."}` 或
+`{"refusal": {"code": "...", "reason": "..."}}`。静态校验不通过的 SQL 不会以
+`sql` 的形态返回，一律降级成带违规码的拒答。
+
+> **要接真实 LLM 时**：设置 `REBUILD_LLM_BASE_URL` / `REBUILD_LLM_API_KEY` /
+> `REBUILD_LLM_MODEL` 后用 `HttpLlmGenerator`。它产出的 SQL 一样要过静态校验——
+> 换成真模型不会放宽任何一条硬规则。默认路径是确定性生成器，不需要任何配置。
+
+### 2.8 S5：安全边界（不需要三存储）
+
+```bash
+cd "<你的目录>/A020-电商问数智能体实战教程fixed/code/rebuild"
+make stage5
+```
+
+`make stage5` 做四件事：
+
+1. **安全策略门禁**：`python -m app.scripts.security --check`——
+   36 条注入语料必须 **100% 被拒绝**（且原因码精确匹配），11 条正常查询必须
+   **零误杀**，S4 的 10 题基线 SQL 也必须全部通过策略。
+2. **语料判定表**：`python -m app.scripts.security --corpus`——
+   逐条打印「期望 / 实际 / 判定」。
+3. **安全层测试**：词法层、策略每条规则、执行器（假连接）、只读账号、
+   契约 / 代码 / 语料三方对齐、Demo。
+4. **全量后端测试**。
+
+单看一条 SQL 的判定：
+
+```bash
+cd backend
+uv run python -m app.scripts.security --policy "SELECT 1 FROM fact_order; DROP TABLE fact_order"
+# 判定：拒绝（原因码 SQL_MULTIPLE_STATEMENTS）
+```
+
+#### 为什么 S5 不需要数据库
+
+安全策略的输入只有两样：`contracts/schema.contract.yaml`（白名单）和
+`contracts/sql.policy.yaml`（行数上限、超时、禁词、只读账号、错误码）。
+两者都是仓库里的文件，所以门禁在任何一台机器上都给出同样的结果。
+
+#### 需要数据库的部分：只读账号
+
+S5 的底线是**执行器只用一个在 `dw` 上只有 SELECT 的账号**。
+旧系统 `fixtures/dw.sql` 里那句 `GRANT ALL PRIVILEGES ON dw.* TO 'didilili'@'%'`
+正是 D6 能发生的根本原因。
+
+```bash
+# Compose 密码是随机生成的；helper 同时导出只读、root 与 app 凭据
+source scripts/export-docker-env.sh
+make stage5-live
+```
+
+> 不用仓库根 Compose 时，仍可按同一组 `REBUILD_*` 变量手动提供凭据。
+
+它做三件事：
+
+1. `--provision-ro-account`：开通 `dw_reader`（`DROP USER IF EXISTS` +
+   `CREATE USER` + `GRANT SELECT ON dw.*`——权限集合**恰好**是策略声明的那一项）；
+2. `--verify-ro-account`：读 `SHOW GRANTS`，**并且真的去写一次**
+   （`UPDATE ... WHERE 1 = 0`，匹配不到任何行），确认数据库确实拒绝；
+3. `--demo`：两屏对比——同一段 payload，旧系统 `explain {sql}` 校验通过并
+   执行了第二句的 `DROP`，新系统在连库之前就拒绝。
+
+> ℹ️ `--demo` 用的探针表 `_s5_probe` 由它自己建、自己删，被 payload 里的
+> `DROP` 删掉正是要演示的效果——它只影响这一张一次性的表。
+>
+> ⚠️ `--demo` 需要一个**有权限**的账号（默认用 `REBUILD_MYSQL_USER` /
+> `REBUILD_MYSQL_PASSWORD`，即旧系统那个 ALL PRIVILEGES 账号），
+> 因为它要复现旧系统的行为。新系统自己的执行路径用的是 `dw_reader`。
+
+### 2.9 S6：失败通道（不需要三存储，也不需要 LLM）
+
+```bash
+cd "<你的目录>/A020-电商问数智能体实战教程fixed/code/rebuild"
+make stage6
+```
+
+`make stage6` 做五件事：
+
+1. **失败通道门禁**：`python -m app.scripts.failures --check`——
+   6 类失败各跑一遍，结局必须与夹具里 `expect` 写的一致（错误码 / 类别 /
+   失败步骤三项都对），外加「路线图点名的 7 个通道码都在错误码表里」。
+2. **错误码表**：`python -m app.scripts.failures --table`——
+   16 个码，带名称 / 类别 / 可否重试。
+3. **失败场景表**：`python -m app.scripts.failures --scenarios`。
+4. **失败层测试**：`pytest -q tests/agent`（107 条：S6 93 + S7 类型保真 14）+ 前端协议单测 + 构建。
+5. **全量后端测试**。
+
+单看一类失败：
+
+```bash
+cd backend
+uv run python -m app.scripts.failures --scenarios
+# | 场景 | 名称 | 期望 | 类别 | 失败步骤 |
+# | `sql_rejected` | SQL 被安全策略拒绝 | SQL_REJECTED | failure | validate_sql |
+# | `empty_result` | 查询成功但没有数据 | EMPTY_RESULT | empty | run_sql |
+```
+
+浏览器验收（需要 Chrome / Edge，Windows 上用 Edge 也行）：
+
+```bash
+make stage6-ui
+```
+
+它自起一个隔离的**场景应用**（默认 8102）与前端（5275），跑两个无头浏览器
+用例：正常路径，以及 6 类失败各一个 + 取消。跑完自动清理。
+
+#### 为什么 S6 不需要 MySQL，也不需要 LLM
+
+6 类失败由 `fixtures/failures/scenarios.yaml` 驱动。**场景应用与生产应用共用
+同一套 HTTP / SSE 管道**（`backend/app/main.py` 的 `create_app`），只把编排器的
+两个外部依赖换成夹具里的替身：
+
+| | 生产 | 场景 |
+|---|---|---|
+| 上下文 / 提示词 / 静态校验 / 安全策略 / 校正闭环 / SSE | 真 | 真 |
+| 模型 | 真 / 确定性 | 夹具 |
+| 数据库 | 只读账号 | 夹具 |
+
+所以屏幕上的每一个红叉都对应一次**真实的判定**，而失败又**可复现**——
+不能指望真模型恰好吐出一条坏 SQL。
+
+#### 校正闭环的验收
+
+`make stage6` 里最要紧的一条是：**校正后的 SQL 必须再次过 S5 策略**。
+校正器返回一条带写操作的 SQL、或一条 UNION，闭环都必须挡下来
+（`tests/agent/test_orchestrator.py` 里有对应的负例）。
+
+### 2.10 S7：前端收口（不需要三存储，也不需要 LLM / 浏览器）
+
+```bash
+cd "<你的目录>/A020-电商问数智能体实战教程fixed/code/rebuild"
+make stage7
+```
+
+`make stage7` 做五件事：
+
+1. **契约生成物新鲜度**：`python -m app.scripts.contracts_gen --check`——
+   `frontend/src/generated/` 三个文件必须与 `contracts/sse.schema.json` 一致。
+   手改生成物会立刻变红。
+2. **SSE 夹具对账**：`python -m app.scripts.record_sse --check`——
+   重新跑一遍场景应用，把后端吐出的字节流与 `fixtures/sse/*.json` 逐字比对。
+   只归一化 `duration_ms` 与 `request_id` 两处。
+3. **前端契约测试**：`pytest -q tests/frontend`（45 条：生成器 / 夹具 / 类型保真）。
+4. **前端协议单测 + 构建**：`npm run test`（40 条）+ `npm run build`
+   （即 `tsc --noEmit` 零错误 + Vite 构建）。
+5. **全量后端测试**：782 passed / 31 skipped（S0–S7 + Docker init 测试
+   + Docker 化复查修复新增）。
+
+生成物**不要手改**。改了契约就重新生成：
+
+```bash
+cd backend
+uv run python -m app.scripts.contracts_gen          # 生成
+uv run python -m app.scripts.contracts_gen --check  # 只检查
+```
+
+浏览器验收（需要 Chrome / Edge，Windows 上用 Edge 也行）：
+
+```bash
+make stage7-ui
+```
+
+它自起隔离的**回放服务器**（默认 8103）与前端（5276），用
+`frontend/tests/s7_frontend.mjs` 跑 14 条断言，覆盖 F1–F13（F11 拆成
+5xx / 422 两例），跑完只按自己记下的 pid 清理。端口冲突时：
+
+```bash
+API_PORT=8203 WEB_PORT=5376 make stage7-ui
+```
+
+#### 为什么是回放，不是真后端
+
+有些界面行为真系统**产生不了**：旧系统的伪 SQL 行、契约之外的事件、
+`data:[]` 空数组。但界面仍然必须处理对。
+
+`fixtures/sse/` 共 14 条夹具：10 条从场景应用的真实 SSE 字节流**录制**，
+4 条**手写**（`pseudo_row` / `unknown_event` / `empty_rows` / `null_column`）。
+录制走的是 `app.main.create_app` 的同一条 HTTP/SSE 管道，模型与数据库是夹具里的
+替身，其余全是真代码；只归一化了 `duration_ms` 与 `detail.request_id`。
+
+回放服务器（`frontend/tests/replay-server.mjs`）按生产协议提供
+`/api/health`、`/api/steps`、`/api/errors`、`/api/query`、`/api/cancel`。
+问题写成「场景:<夹具 id> <真实问题>」；`场景:http_500` / `场景:http_422`
+直接返回对应 HTTP 状态，用来验收 F11。
+
+#### 类型保真：Decimal 不再是字符串
+
+`backend/app/agent/values.py` 在 `json.dumps` 之前归一化单元格：
+
+| 数据库类型 | 归一化后 | JSON |
+|---|---|---|
+| `DECIMAL` 整数 | `int` | `10`（不是 `"10"`，也不是 `10.0`） |
+| `DECIMAL` 小数 | `float` | `10.5` |
+| `DATE` / `DATETIME` | ISO 8601 | `"2025-03-01"`，列类型仍是 `date` |
+| 未知类型 | 抛 `TypeError` | 变成 `INTERNAL_ERROR`（诚实的失败） |
+
+`_sse()` 刻意**不传** `default=str`：把 Decimal 静悄悄降级成字符串，正是
+审计 B4 那个缺陷本身。
+
+### 2.11 启动开发服务（可选）
+
+想看步骤条依次点亮、失败各有各的样子时才需要。
 
 终端 1：
 
@@ -457,20 +757,76 @@ make dev-frontend
 
 ```bash
 curl -sS http://127.0.0.1:8100/api/health
-# {"status":"ok","stage":"S0"}
+# {"status":"ok","stage":"S7"}
 
 curl -sS http://127.0.0.1:5273/api/health
-# 通过 Vite 代理，同样返回 stage:S0
+# 通过 Vite 代理，同样返回 stage:S7
 ```
 
-打开 `http://127.0.0.1:5273` 可以看到步骤条依次点亮，但结果是 **S0 假数据**，不是 S3 检索结果。
+打开 `http://127.0.0.1:5273` 可以看到步骤条依次点亮。**S6 起 `/api/query` 跑的是
+真的流水线**（上下文 → 生成 → 校验 → 校正 → 执行），不是 S0 的假流：
 
-> ✅ 本机已验证：当前 `5273` 返回 200，`8100/api/health` 和 `5273/api/health` 都返回
-> `{"status":"ok","stage":"S0"}`。
+- 没配只读账号（`REBUILD_DW_RO_PASSWORD`）时，执行步骤会**失败**，流以一条
+  `INTERNAL_ERROR` 收尾——**诚实的失败**，不是编一份假数据；
+- 想看 6 类失败各是什么样子，用**场景应用**（只替换模型与数据库）：
+
+```bash
+# 终端 1
+cd backend && uv run python -m app.scenarios.app --port 8102
+
+# 终端 2
+cd frontend && VITE_DEV_PROXY_TARGET=http://127.0.0.1:8102 npm run dev
+```
+
+然后在页面上提问「场景:sql_rejected 华北销售额」之类的话（场景前缀由场景应用
+剥掉，流水线拿到的仍是真实问题）。
+
+> ✅ 本机已验证：当前 `5273` 返回 200，`8100/api/health` 与 `5273/api/health` 都返回
+> `{"status":"ok","stage":"S7"}`。
 >
 > ℹ️ Vite 配置了 `host: "0.0.0.0"`，所以局域网可以用
 > `http://<宿主机IP>:5273` 打开；`/api` 由 Vite 在服务器侧代理到
 > `127.0.0.1:8100`。后端本身默认只监听 `127.0.0.1`，不直接暴露到局域网。
+
+### 2.12 全量 Docker 部署（可选）
+
+不想在本机装 Python / Node 时，整套系统可以跑在 Docker 里：前端、后端、
+MySQL、ES、Qdrant，外加一个一次性的 `init`。
+
+```bash
+make docker-env    # 生成 .env（随机密码；已存在则跳过）
+make docker-up     # 构建并启动五服务 + 一次性 init
+curl -fsS http://127.0.0.1:8080/api/health
+make docker-smoke  # 完整验收
+```
+
+`init` 负责开通只读账号、校验 S2 元知识（缺失就先构建），它成功退出后
+backend 才启动，backend 健康后 frontend 才启动。对外入口只有
+`http://127.0.0.1:8080`。
+
+`.env` 已经存在时 `make docker-env` 会跳过（不覆盖）。要重新生成：
+
+```bash
+python scripts/generate_docker_env.py --dry-run        # 预览，密码显示为 ***
+python scripts/generate_docker_env.py --force          # 覆盖，但保留已有密码
+python scripts/generate_docker_env.py --rotate-secrets # 换密码
+```
+
+**换 MySQL 密码必须先 `make docker-reset`**：MySQL 只在**首次**初始化
+`mysql_data` 数据卷时用 `MYSQL_ROOT_PASSWORD` 建账号；卷还在的话，容器里的
+密码仍然是旧的那个，新密码不生效——健康检查会一直失败，`init` 和 `backend`
+于是都起不来。顺序是 `make docker-reset` → `--rotate-secrets` → `make docker-up`。
+
+> ⚠️ 容器后端也占用宿主机 `8100`，和 `make dev-backend` 撞端口——
+> 两者不要同时跑（见 [`DOCKER-DEPLOY.md`](DOCKER-DEPLOY.md) 2.1 节）。
+>
+> ℹ️ 容器里的元知识 CLI 挂在 `init` 服务下跑（只有它持有构建凭据）：
+>
+> ```bash
+> docker compose run --rm --no-deps init python -m app.scripts.recall "华北销售额"
+> ```
+
+端口、镜像源、密钥轮换与排障见 [`DOCKER-DEPLOY.md`](DOCKER-DEPLOY.md)。
 
 ---
 
@@ -478,17 +834,40 @@ curl -sS http://127.0.0.1:5273/api/health
 
 | 阶段 | 命令 | 需要三存储 | 核心验收 |
 |---|---|:---:|---|
-| S0 | `make stage0` | 否 | SSE 契约、步骤目录、前端解析/构建；19 后端 + 18 前端 |
+| S0 | `make stage0` | 否 | SSE 契约、步骤目录、前端解析/构建；19 后端 + 40 前端（S7 扩写后） |
 | S1 | `make stage1` | 否 | 5 表/24 列/6 指标契约；旧系统 8 个错误码必须红；40 测试 |
-| S2 | `make stage2` | 是 | 三存储构建、manifest、计数对账、`NOOP: 0 writes`；16 测试 |
+| S2 | `make stage2` | 是 | 三存储构建、manifest、计数对账、`NOOP: 0 writes`；17 测试 |
 | S3 | `make stage3` | 是 | 4 路批量召回 + merge/filter/context；20 题黄金集；38 测试 |
+| S4 | `make stage4` | 否 | 7 个提示词槽位校验 + sqlglot AST 静态校验 + 10 题基线；113 测试 |
+| S5 | `make stage5` | 否 | AST 级安全策略 + 36 条注入语料 100% 拒绝 + 11 条零误杀；173 测试 |
+| S5 实战 | `make stage5-live` | 是（只要 MySQL） | 只读账号开通 / 验证 + 两屏对比（旧执行 / 新拒绝） |
+| S6 | `make stage6` | 否 | 错误码表 + 6 类失败 + 校正闭环 + 取消；107 测试（含 S7 的 `test_values` 14 条） |
+| S6 浏览器 | `make stage6-ui` | 否（要浏览器） | 6 类失败各一个用例 + 取消，UI 状态互不相同 |
+| S7 | `make stage7` | 否 | 生成物新鲜度 + 14 条 SSE 夹具逐字对账 + 前端契约测试 45 + 前端单测 40 + `tsc`/构建 |
+| S7 浏览器 | `make stage7-ui` | 否（要浏览器） | 13 条 F 缺陷各一条用例（14 条断言，F11 拆 5xx/422），回放夹具 |
 
 当前测试总数：
 
-- 后端：`19 + 40 + 16 + 38 = 113`
-- 前端：`18`
-- 全量后端默认：`90 passed, 23 skipped`（23 条是 S3 真实存储集成测试）
+- 后端：`665 passed / 31 skipped`（共 696 条）。31 条跳过里，23 条是 S3 真实存储
+  集成测试、5 条是 S4 的按需跳过、2 条是 S5 的按需跳过、1 条是 Windows 上
+  不适用的 `.env` 权限位检查。
+- 上一轮（Docker 化收尾，`c0a49e1`）只新增了 6 条：Docker init 初始化脚本
+  （`tests/test_docker_init.py`）。
+- **Docker 化复查修复**这一轮新增 134 条（12 个新测试文件共 133 条 + 既有
+  `tests/test_s2_build.py` 里补的 1 条）：`.env` 导出脚本的更多边界（44）、
+  验收脚本的 SSE 判据（22）、`.env` 生成脚本的 `--force` / `--rotate-secrets` /
+  `--dry-run` 行为（14）、构建凭据的 AST 护栏（11）、`docker-reset` 脚本（10）、
+  Python 解释器探测（9）、元数据库的 root 凭据报错（4）、
+  Makefile 与 UI 脚本的可移植性（7）、换行符（3）、召回演示脚本（3）、召回层缺凭据时的行为（3）、
+  只读账号 CLI（3），以及 `safe_repr()` 不泄露真实口令（1）。
+- 前端：`40`（26 协议 + 14 结果表）+ 2 个 S0/S6 无头浏览器用例 + 14 条 S7 断言
+- 全量后端默认：`665 passed, 31 skipped`
 - `make stage3` 的 S3 集成：`38 passed`
+- `make stage4` 的生成层：`108 passed, 5 skipped`
+- `make stage5` 的安全层：`171 passed, 2 skipped`
+- `make stage6` 的失败层：`107 passed`（93 S6 + 14 S7 `test_values`）
+- `make stage7` 的前端契约层：`45 passed`；`contracts_gen --check` 与
+  `record_sse --check` 均 PASS（14 条夹具）
 
 ---
 
@@ -501,9 +880,9 @@ curl -sS http://127.0.0.1:5273/api/health
 | `REBUILD_MYSQL_HOST` | `127.0.0.1` | MySQL 主机 |
 | `REBUILD_MYSQL_PORT` | `3306` | MySQL 端口 |
 | `REBUILD_MYSQL_USER` | `didilili` | 普通用户 |
-| `REBUILD_MYSQL_PASSWORD` | `dili123` | 普通用户密码 |
+| `REBUILD_MYSQL_PASSWORD` | **无默认** | 普通用户密码——**必须由部署环境提供** |
 | `REBUILD_MYSQL_ROOT_USER` | `root` | 建库/授权用 |
-| `REBUILD_MYSQL_ROOT_PASSWORD` | `dili123` | root 密码 |
+| `REBUILD_MYSQL_ROOT_PASSWORD` | **无默认** | root 密码——同上 |
 | `REBUILD_META_DB` | `meta_rebuild` | Meta 库名 |
 | `REBUILD_ES_URL` | `http://127.0.0.1:9200` | ES 地址 |
 | `REBUILD_ES_INDEX` | `value_index_rebuild` | ES 索引名 |
@@ -514,6 +893,27 @@ curl -sS http://127.0.0.1:5273/api/health
 | `REBUILD_EMBEDDING_PROVIDER` | `hash-ngram-v1` | 当前只支持这个值 |
 | `REBUILD_MAX_VALUE_DOCS` | `1000` | 每列最多同步多少值到 ES |
 | `REBUILD_REQUEST_TIMEOUT` | `15` | 外部请求超时（秒） |
+| `REBUILD_DW_RO_PASSWORD` | **无默认** | S5 只读账号（`dw_reader`）的密码——**必须由部署环境提供**，仓库里不存秘密 |
+| `REBUILD_LLM_BASE_URL` | 无 | S4 接真实 LLM 时的 OpenAI 兼容端点 |
+| `REBUILD_LLM_API_KEY` | 无 | 同上 |
+| `REBUILD_LLM_MODEL` | 无 | 同上 |
+
+> **注意**：表中的默认值描述的是**独立的本机 MySQL**。使用仓库根
+> `compose.yaml` 时，密码由 `make docker-env` 随机生成并写在 `.env` 中；
+> 宿主 CLI 不会自动读取 `.env`，请先 `source scripts/export-docker-env.sh`
+> 再跑 S2/S3/S5。
+
+> `REBUILD_DW_RO_PASSWORD` 没有默认值是**故意的**：只读账号的密码属于秘密，
+> 不进仓库、不进契约、不进任何生成物。缺它时 `make stage5-live` 会**直接报错**，
+> 不会悄悄连成别的账号。
+>
+> `REBUILD_MYSQL_PASSWORD` / `REBUILD_MYSQL_ROOT_PASSWORD` 同样**没有默认值**：
+> 早期版本内置过一个写死的 MySQL 兜底口令，那是把一个真实口令写进仓库——
+> 任何拿到仓库的人都能用它连库。去掉兜底之后，缺凭据会在**连库之前**就报错，
+> 并告诉你缺哪个环境变量，而不是拿一个错的口令去试。
+> 走 Compose 时密码由 `make docker-env` 随机生成，用
+> `source scripts/export-docker-env.sh` 导入；容器内的元知识 CLI 挂在
+> `init` 服务下跑（见 [`DOCKER-DEPLOY.md`](DOCKER-DEPLOY.md) 3.1 节）。
 
 ### 自定义目标时，S2 和 S3 必须用同一组变量
 
@@ -583,11 +983,19 @@ uv run python -m app.build_meta_knowledge --dry-run
 
 ## 6. 常见故障
 
+### Windows 相关
+
+| 症状 | 原因 | 处理 |
+|---|---|---|
+| `UnicodeEncodeError: 'gbk' codec can't encode character` | Windows 控制台默认代码页是 GBK（cp936），项目里的中文与 `↔` 之类符号 print 不了 | CLI 内部已把 stdout/stderr 切到 UTF-8（`backend/app/cli.py`）；**make 自己 echo 的那几行中文**仍按控制台代码页渲染，先 `chcp 65001` 再跑 make |
+| `make: command not found` | 没装 make | `winget install ezwinports.make`（便携版，不需要管理员），装完**重开一个终端**让 PATH 生效 |
+| `docs\SCHEMA-CONTRACT.md 已过期` | 生成文档时用了 `os.sep`，Windows 下路径分隔符是 `\`，与仓库里 Linux 生成的版本对不上 | 已修（`schema_contract._path_label` 改用 `as_posix()`）。若仍出现，跑 `python -m app.schema_contract --write-doc` 重新生成 |
+
 | 现象 | 原因 | 处理 |
 |---|---|---|
 | `permission denied ... /var/run/docker.sock` | 当前用户没有 Docker socket 权限 | 用有权限的账号，或加入 `docker` 组后重新登录 |
 | `Connection refused` 到 3306/9200/6333 | 三存储没起，或端口没映射 | 按 2.4 启动，`curl` 探活 |
-| `S2 FAIL: ... unknown analyzer [ik_max_word]` | 用了普通 ES 镜像，不是带 IK 的 compose 镜像 | 用 `code/shopkeeper-agent/docker` 里的 `elasticsearch` 构建 |
+| `S2 FAIL: ... unknown analyzer [ik_max_word]` | 官方 ES 没有 IK；S2 应自动回退 `standard` | 若仍失败，看 `init` 日志并确认 `es_store.create()` 的回退分支 |
 | `S2 FAIL: ... Access denied` | MySQL 账号/密码不对 | 检查 `REBUILD_MYSQL_*`；默认来自 compose |
 | `S2 FAIL: ... count mismatch` | 目标里有旧数据，或 manifest 过期 | 先 `--dry-run` 确认 targets，再 `--fresh` |
 | `S2 VERIFY FAIL` | S2 没构建好，或 S3 用了不同 env | 先 `make stage2`；确认 S2/S3 环境变量一致 |
@@ -598,12 +1006,64 @@ uv run python -m app.build_meta_knowledge --dry-run
 | 前端端口不是 5273 | 5273 被占用，Vite 自动换端口 | 看终端输出；或给 Vite 加 `--strictPort` |
 | `examples` 里没有某个值 | `examples` 只保留排序后前 10 条 | 查契约 `value_domain` / ES / S3 `matched_values` |
 | S3 候选统计和上次不同 | Qdrant 索引重建后调试统计变化 | 看黄金集和最终上下文；`retrieval` 不是契约 |
+| `make stage5-live` 报「缺少环境变量 REBUILD_DW_RO_PASSWORD」 | 只读账号的密码**故意不在仓库里** | `export REBUILD_DW_RO_PASSWORD='<你自己的密码>'` 再跑 |
+| `make stage5-live` 连不上 3306 | MySQL 没起 | 按 2.4 启动 mysql；首次启动会由 entrypoint 导入 `fixtures/dw.sql` |
+| `make stage5-live` 的 `--demo` 报权限不足 | `--demo` 需要一个有权限的账号来复现旧系统行为 | 确认 `REBUILD_MYSQL_USER` / `REBUILD_MYSQL_PASSWORD` 是那个 ALL PRIVILEGES 账号 |
+| `make stage6-ui` 报「找不到 Chrome/Edge」 | playwright-core 不自带浏览器 | 装 Chrome 或 Edge，或设 `CHROME_PATH=/path/to/chrome` |
+| `make stage6-ui` 报端口被占用 | 8102 / 5275 被别的进程占了 | `API_PORT=8202 WEB_PORT=5375 make stage6-ui` |
+| 页面上问什么都报 `INTERNAL_ERROR` | 没配只读账号，执行阶段连不上库 | 这是**诚实的失败**；配 `REBUILD_DW_RO_PASSWORD` 并跑 `make stage5-live` 开通账号，或用场景应用看 6 类失败 |
+| `make stage7` 报生成物过期 | 手改了 `frontend/src/generated/`，或改了契约没重新生成 | `cd backend && uv run python -m app.scripts.contracts_gen`；生成物**不要手改** |
+| `make stage7` 报 SSE 夹具不一致 | 后端输出变了，但仓库里的夹具没重录 | `cd backend && uv run python -m app.scripts.record_sse`，再人工 review diff；只应出现预期内的变化 |
+| `make stage7-ui` 报「找不到 Chrome/Edge」 | playwright-core 不自带浏览器 | 装 Chrome 或 Edge，或设 `CHROME_PATH=/path/to/chrome` |
+| `make stage7-ui` 报端口被占用 | 8103 / 5276 被别的进程占了 | `API_PORT=8203 WEB_PORT=5376 make stage7-ui` |
+| `make stage7-ui` 报「没有回放夹具」 | query 里的场景 id 不在 `fixtures/sse/` | 用「场景:<夹具 id> <真实问题>」；先 `ls fixtures/sse` 确认 id |
+| Windows 上 `stage7-ui` 结束后端口仍被占用 | 旧式 `kill` 带不走 npm/node 子进程 | 当前脚本会按 `winpid` 用 `taskkill /T /F` 只终止本次进程树；若仍占用，用 `netstat -ano \| findstr :5276` 找**非本次**的进程 |
 
 ---
 
 ## 7. 已验证 / 未验证清单
 
-### ✅ 本机已验证（2026-10-25）
+### ✅ 本机已验证（2026-10-26，Windows 11 + Git Bash）
+
+- `make stage0`：19 后端 + 40 前端 + 构建，PASS。
+- `make stage1`：契约/DDL/数据 + 旧系统 8 个错误码 + 59 条 S0/S1 测试，PASS。
+- `make stage4`：10 题基线 10/10（其中 2 道显式拒答）；生成层 108 passed /
+  5 skipped；全量后端 198 passed / 28 skipped；PASS。
+- S4 的静态校验：每个违规码都有能复现它的负例（多语句 / UPDATE / DELETE /
+  DROP / INTO OUTFILE / 未知表 / 未知列 / 常量投影 / NULL 投影 / 缺 ORDER BY /
+  缺 LIMIT / 语法错误 / 空 SQL）。
+- `make stage5`：注入语料 36/36 按预期拒绝（原因码精确匹配）+ 零误杀 11/11 +
+  S4 基线 8/8 通过策略；安全层 171 passed / 2 skipped；全量后端 369 passed /
+  30 skipped；PASS。
+- S5 的策略：每个原因码都有能复现它的语料（多语句 / 注释绕过 / 写操作 /
+  集合运算 / 危险函数 / 白名单外表 / 白名单外列）；执行的 SQL 与被校验的 SQL
+  是同一条（去注释 + 自动 LIMIT）。
+- `make stage6`：6 类失败各跑一遍，结局与夹具逐项吻合（错误码 / 类别 / 失败
+  步骤）；错误码表 16 个码，路线图点名的 7 个全在；失败层 107 passed；
+  全量后端 521 passed / 30 skipped；PASS。
+- `make stage6-ui`（真实浏览器，Edge）：6 类失败给出 **6 种互不相同**的界面状态
+  （SQL_REJECTED / SQL_SYNTAX / SQL_UNKNOWN_COLUMN / EMPTY_RESULT /
+  LLM_REFUSAL / TIMEOUT），空结果**不**标红，取消后状态是「已取消」且步骤条
+  停止推进；同一轮里 S0 的正常路径冒烟也一起通过。
+- S6 的校正闭环：校正后的 SQL **重新过**静态校验与安全策略——校正器返回写操作
+  或 UNION 都被挡下（`SQL_REJECTED`），执行器一次都没被调用；校正最多 1 次。
+- `make stage7`：`contracts_gen --check` PASS（3 个生成物与契约一致）；
+  `record_sse --check` PASS（14 条夹具与真实输出逐字一致）；前端契约测试
+  45 passed；前端单测 40 passed；`tsc --noEmit` 零错误；全量后端 521 passed /
+  30 skipped；PASS。
+- `make stage7-ui`（真实浏览器，Edge）：回放服务器 + 隔离前端跑 14 条断言，
+  覆盖 F1–F13（F11 拆 5xx / 422）全部通过；跑完 8103 / 5276 两个端口都释放。
+- S7 的类型保真：`Decimal("10")` → `10`（不是 `"10"`）、`Decimal("10.5")` →
+  `10.5`、`date` 列类型仍是 `date`、布尔不会被当成数字、未知类型抛 `TypeError`；
+  整条 SSE 响应体可以不带 `default` 直接 `json.dumps`。
+- S7 的契约驱动：生成物里 `"failure" | "empty" | "cancelled"` 只定义一次；
+  未知事件类型被忽略而不是报错；错误卡的失败步骤名来自 `/api/steps`。
+- `make stage0` / `stage4` / `stage5` / `stage6` 在 S7 之后重新跑过，仍全绿。
+- 依赖补全：`make`（winget `ezwinports.make` 4.4.1）、`frontend/node_modules`
+  （`npm ci`）、后端新增 `sqlglot`（AST 校验）与 `jsonschema`（输出形状校验）、
+  浏览器使用系统已装的 Edge（`playwright-core` 不自带浏览器）。
+
+### ✅ 本机已验证（2026-10-25，Linux）
 
 - `make stage0`：19 后端 + 18 前端 + 构建，PASS。
 - `make stage1`：契约/DDL/数据 + 旧系统 8 个错误码 + 59 条 S0/S1 测试，PASS。
@@ -624,8 +1084,21 @@ uv run python -m app.build_meta_knowledge --dry-run
 - `make stage0-ui` 的真实 Chrome 冒烟：脚本存在，但本轮没有重新跑。
 - 带鉴权的 ES/Qdrant：当前代码只发 URL，没有 API key/TLS 参数，不能只改 URL。
 - 真实 bge embedding：当前只支持 `hash-ngram-v1`，S3 召回质量有限。
-- S3 接入 `/api/query`：尚未接入，前端仍是 S0 假流。
-- S4–S8：不存在。
+- 真实召回（S3）接入 `/api/query`：S6 起 `/api/query` 跑的是**真的**流水线
+  （上下文 → 生成 → 校验 → 校正 → 执行），但上下文仍由契约**离线裁剪**，
+  没有接 S3 的向量召回。接真召回需要三存储。
+- 真实数据库接入 `/api/query`：默认执行器是 S5 的只读账号执行器；没有
+  `REBUILD_DW_RO_PASSWORD` 时它会诚实地以 `INTERNAL_ERROR` 收尾。
+  端到端跑通需要 MySQL + `make stage5-live`（本轮未跑）。
+- S4 的真实 LLM 通路（`HttpLlmGenerator`）：接口与校验都在，但没有对着
+  真实端点跑过；默认走的是确定性生成器。
+- S5 的只读账号与两屏对比（`make stage5-live`）：当前 shell 没有运行中的
+  MySQL，因此**没有**在这里端到端跑过。离线门禁（策略 / 语料 / 零误杀）
+  与执行器、账号的假连接测试都已通过。
+- S6 的真实 LLM 校正通路（`LlmCorrector` + 真实端点）：接口、提示词与校验都在，
+  但没有对着真实端点跑过；默认走的是确定性生成器，校正器在没配 LLM 时**不假装
+  能校正**——`correct_sql` 步骤会显式标成「未触发」。
+- S8：不存在（S7 已于 2026-10-26 在本机验证）。
 
 ### ℹ️ 明确的边界
 
@@ -639,11 +1112,20 @@ uv run python -m app.build_meta_knowledge --dry-run
 
 ## 8. 下一步
 
-当前停点就是 S3。下一步是 **S4：生成 SQL**：
+当前停点是 S7。下一步是 **S8：性能与真链路收口**（具体交付物以路线图 S8 为准）：
 
-- `generate_sql` + 7 个提示词槽位；
-- 输出 JSON schema：`{sql}` 或 `{refusal: {code, reason}}`；
-- 10 题基线；
-- 静态校验：单语句、只读、列存在、无常量/NULL 投影、排名有 ORDER BY。
+- 把 S3 的真实召回接进 `/api/query`，替换当前由契约**离线裁剪**的上下文；
+- 把真实 MySQL 与只读账号接到执行路径（`make stage5-live` 端到端跑通）；
+- 对真实 LLM 端点验证生成与校正通路（`HttpLlmGenerator` / `LlmCorrector`）；
+- S8 的性能项：并发、超时、缓存、压测与可观测性；
+- 补齐 `docs/screenshots/` 的失败态截图与路线图 Demo 录屏
+  （正常 / 示例 / 失败三支，与旧版逐帧对比）。
 
-在 S4 落地之前，不要承诺“前端能真实问数”，也不要执行不存在的 `make stage4`。
+S7 已经把前端收口做成**可执行的契约**：类型与运行时校验都从
+`contracts/sse.schema.json` 生成/派生，13 条前端缺陷各有浏览器用例，
+SSE 夹具逐字对账，`tsc --noEmit` 零错误。S5 的安全策略与 S6 的失败通道
+也已经接在同一条真流水线上。
+
+> 但仍然不要承诺「前端能真实问数」：`/api/query` 跑的是真流水线，**上下文却是
+> 契约离线裁剪的**，真实召回（S3）、真实数据库与真实 LLM 还没接上。
+> 前端要能问真问题，还要等 S8 的真链路收口。
