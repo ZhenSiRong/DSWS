@@ -42,6 +42,10 @@ from app.generate.models import (
 # 单字别名只在语义非常明确时参与匹配（与 S3 的规则保持一致）。
 _SAFE_SINGLE_CHAR_ALIASES = {"省", "年", "月", "日", "天"}
 
+# 排名问题里出现这些词时，用户问的是「商品/产品」这个实体本身，
+# 而不是某个已声明的维度列（品类、品牌……）。
+_PRODUCT_ENTITY_TERMS = ("商品", "产品")
+
 
 def _compact(text: str) -> str:
     return re.sub(r"\s+", "", str(text).strip().casefold())
@@ -49,6 +53,11 @@ def _compact(text: str) -> str:
 
 def _value_in_query(value: str, query: str) -> bool:
     return _compact(value) in _compact(query)
+
+
+def _mentions_product_entity(query: str) -> bool:
+    compact = _compact(query)
+    return any(term in compact for term in _PRODUCT_ENTITY_TERMS)
 
 
 def _matched_surface(surfaces: tuple[str, ...], query: str) -> str | None:
@@ -269,6 +278,23 @@ class OfflineContextBuilder:
                 value_domain=spec.value_domain,
             )
 
+        # 「卖得最好」这类排名问题往往不带指标名。没有指标、也没有命中
+        # 任何维度时，问题里的「商品/产品」问的是实体本身，而不是某个
+        # 已声明的维度列。此时补上商品维表的名称列，否则生成器只能按
+        # `product_id` 分组，把「哪个商品卖得最好」答成 `P001`。
+        implicit_ranking = (
+            self.fact_table is not None
+            and not self.metric_candidates
+            and has_ranking_intent(self.query)
+        )
+        if (
+            implicit_ranking
+            and not self.dimension_columns
+            and _mentions_product_entity(self.query)
+            and cat.column("dim_product.product_name") is not None
+        ):
+            self.core_column_ids.add("dim_product.product_name")
+
         for column_id in sorted(self.core_column_ids):
             add_column(column_id)
             table_name = cat.table_of_column(column_id)
@@ -285,9 +311,7 @@ class OfflineContextBuilder:
         # 因此：排名意图 + 没命中任何指标时，把事实表的度量列补进上下文。
         # 只补 measure（不补整张宽表），维表裁剪仍然保留，guard 对维表
         # 的「上下文之外的表不许查」依然有效。
-        if self.fact_table and not self.metric_candidates and has_ranking_intent(
-            self.query
-        ):
+        if implicit_ranking and self.fact_table:
             fact_spec = cat.table(self.fact_table)
             if fact_spec is not None:
                 for measure in fact_spec.measures:

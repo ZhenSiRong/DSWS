@@ -109,6 +109,33 @@ def test_implicit_ranking_measure_passes_guard() -> None:
     assert report.ok, [violation.to_dict() for violation in report.violations]
 
 
+def test_product_level_ranking_question_exposes_product_name() -> None:
+    """「哪个商品卖得最好」要按商品名称回答，而不是只回一个 product_id。
+
+    这句话没有命中品类/品牌这类维度列，如果不补 `dim_product.product_name`，
+    生成器只能拿事实表的外键分组，结果就是 `P001` 这种对用户无意义的 ID。
+    """
+    query = "哪个商品卖得最好"
+    context = build_offline_context(query)
+    columns = {column.id for column in context.columns}
+    assert "dim_product.product_name" in columns
+    assert "dim_product.product_id" in columns
+    assert "fact_order.product_id" in columns
+
+    from app.generate.guard import check_sql
+
+    sql = (
+        "SELECT dim_product.product_name AS 商品, "
+        "SUM(fact_order.order_amount) AS 销售额 "
+        "FROM fact_order "
+        "JOIN dim_product ON fact_order.product_id = dim_product.product_id "
+        "GROUP BY dim_product.product_name "
+        "ORDER BY 销售额 DESC LIMIT 1"
+    )
+    report = check_sql(sql, context, query)
+    assert report.ok, [violation.to_dict() for violation in report.violations]
+
+
 # ---------------------------------------------------------------------------
 # 确定性
 # ---------------------------------------------------------------------------
