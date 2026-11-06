@@ -67,6 +67,7 @@ evidence:
   success_sse: deliverable/v2/evidence/v2-fixed-query.sse
   product_ranking_sse: deliverable/v2/evidence/v2-product-ranking.sse
   correction_success_sse: deliverable/v2/evidence/v2-correct-success.sse
+  natural_correction_success_sse: deliverable/v2/evidence/v2-natural-correct-success.sse
   screenshots:
     - deliverable/v2/screenshots/v2-idle-1920x1080.png
     - deliverable/v2/screenshots/v2-query-result-1920x1080.png
@@ -77,4 +78,4 @@ notes:
   - "视频录制于 2026-11-06，界面已换回原版 shopkeeper-agent，后端仍是修复后的 v2。"
   - "视频中的问题与存档 SSE 为不同次真实运行；LLM 生成口径可能不同（商品级排名一次按销售额、一次按销售件数），步骤耗时也会有差异。"
   - "UNION 被 validate_sql 策略拒绝，属于预期安全边界，不进入 correct_sql。"
-  - "校正成功态不在本视频的自然问数里；用故障注入 + 真实 LLM/MySQL 复现，见 evidence/v2-correct-success.sse。"
+  - "本视频没有包含校正成功样本；修复后已用自然问数「查询销售额大于平均销售额的商品」复现（evidence/v2-natural-correct-success.sse），故障注入样本仍保留在 evidence/v2-correct-success.sse。"

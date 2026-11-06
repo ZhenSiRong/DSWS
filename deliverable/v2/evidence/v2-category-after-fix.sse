@@ -1,0 +1,48 @@
+data: {"type": "progress", "step": "extract_keywords", "status": "running", "duration_ms": null}
+
+data: {"type": "progress", "step": "extract_keywords", "status": "success", "duration_ms": 1.2}
+
+data: {"type": "progress", "step": "recall_column", "status": "running", "duration_ms": null}
+
+data: {"type": "progress", "step": "recall_column", "status": "success", "duration_ms": 0.2}
+
+data: {"type": "progress", "step": "recall_value", "status": "running", "duration_ms": null}
+
+data: {"type": "progress", "step": "recall_value", "status": "success", "duration_ms": 0.1}
+
+data: {"type": "progress", "step": "recall_metric", "status": "running", "duration_ms": null}
+
+data: {"type": "progress", "step": "recall_metric", "status": "success", "duration_ms": 0.2}
+
+data: {"type": "progress", "step": "merge_retrieved_info", "status": "running", "duration_ms": null}
+
+data: {"type": "progress", "step": "merge_retrieved_info", "status": "success", "duration_ms": 0.0}
+
+data: {"type": "progress", "step": "filter_table", "status": "running", "duration_ms": null}
+
+data: {"type": "progress", "step": "filter_table", "status": "success", "duration_ms": 0.1}
+
+data: {"type": "progress", "step": "filter_metric", "status": "running", "duration_ms": null}
+
+data: {"type": "progress", "step": "filter_metric", "status": "success", "duration_ms": 0.0}
+
+data: {"type": "progress", "step": "add_extra_context", "status": "running", "duration_ms": null}
+
+data: {"type": "progress", "step": "add_extra_context", "status": "success", "duration_ms": 0.0}
+
+data: {"type": "progress", "step": "generate_sql", "status": "running", "duration_ms": null}
+
+data: {"type": "progress", "step": "generate_sql", "status": "success", "duration_ms": 1964.9}
+
+data: {"type": "progress", "step": "validate_sql", "status": "running", "duration_ms": null}
+
+data: {"type": "progress", "step": "validate_sql", "status": "success", "duration_ms": 3.0}
+
+data: {"type": "progress", "step": "correct_sql", "status": "skipped", "duration_ms": null}
+
+data: {"type": "progress", "step": "run_sql", "status": "running", "duration_ms": null}
+
+data: {"type": "progress", "step": "run_sql", "status": "success", "duration_ms": 9.9}
+
+data: {"type": "result", "data": {"columns": [{"name": "商品品类", "type": "string"}, {"name": "销量", "type": "number"}, {"name": "销售额", "type": "number"}], "rows": [["手机数码", 10, 62190.0], ["食品饮料", 139, 1115.0], ["休闲零食", 156, 630.0], ["鞋靴", 4, 4396.0], ["服饰", 7, 2593.0], ["家用电器", 6, 19196.0]]}}
+
