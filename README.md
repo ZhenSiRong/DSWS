@@ -10,12 +10,14 @@
 
 ## 演示
 
-![v2 演示：原版界面 + LangGraph 12 节点 + 真实问数](deliverable/v2/screenshots/v2-demo-preview.gif)
+> GitHub 不支持在 README 内嵌 MP4；另外 README 原生相对路径会走 `raw.githubusercontent.com`，
+> 国内网络常加载失败，所以这里用 jsDelivr CDN 预览（GIF 与 MP4 都在仓库 `deliverable/v2/`）。
+> 点击 GIF 即可跳到完整 MP4。
 
-完整视频（46s，含 GMV 问数、商品级排名、UNION 策略拒绝）：
-[`DSWS-v2-original-ui-demo.mp4`](deliverable/v2/DSWS-v2-original-ui-demo.mp4)
+[![v2 演示：原版界面 + LangGraph 12 节点 + 真实问数](https://gcore.jsdelivr.net/gh/ZhenSiRong/DSWS@main/deliverable/v2/screenshots/v2-demo-preview.gif)](https://cdn.jsdelivr.net/gh/ZhenSiRong/DSWS@main/deliverable/v2/DSWS-v2-original-ui-demo.mp4)
 
-> GitHub README 不支持内联 `<video>`；这里用 GIF 做页面预览，完整 MP4 通过链接打开。
+[直接打开 GIF](https://gcore.jsdelivr.net/gh/ZhenSiRong/DSWS@main/deliverable/v2/screenshots/v2-demo-preview.gif) · [下载 / 全屏播放 MP4（46s：GMV 问数、商品级排名、UNION 策略拒绝）](https://cdn.jsdelivr.net/gh/ZhenSiRong/DSWS@main/deliverable/v2/DSWS-v2-original-ui-demo.mp4)
+
 > v2 的部署、验证与证据见 [`deliverable/v2/README-v2.md`](deliverable/v2/README-v2.md)。
 
 ## 当前进度

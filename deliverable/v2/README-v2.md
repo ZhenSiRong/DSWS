@@ -152,7 +152,9 @@ frontend build: ✓ built
 
 ## 演示视频
 
-![v2 演示预览](screenshots/v2-demo-preview.gif)
+[![v2 演示预览](https://gcore.jsdelivr.net/gh/ZhenSiRong/DSWS@main/deliverable/v2/screenshots/v2-demo-preview.gif)](https://cdn.jsdelivr.net/gh/ZhenSiRong/DSWS@main/deliverable/v2/DSWS-v2-original-ui-demo.mp4)
+
+> 点击 GIF 跳到完整 MP4；CDN 地址供国内直接访问：[GIF](https://gcore.jsdelivr.net/gh/ZhenSiRong/DSWS@main/deliverable/v2/screenshots/v2-demo-preview.gif) · [MP4](https://cdn.jsdelivr.net/gh/ZhenSiRong/DSWS@main/deliverable/v2/DSWS-v2-original-ui-demo.mp4)
 
 `deliverable/v2/DSWS-v2-original-ui-demo.mp4`（46.27s，1920×1080 / 30fps，H.264，1.7 MB）。
 
