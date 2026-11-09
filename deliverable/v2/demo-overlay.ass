@@ -1,0 +1,40 @@
+[Script Info]
+ScriptType: v4.00+
+PlayResX: 1920
+PlayResY: 1080
+WrapStyle: 0
+ScaledBorderAndShadow: yes
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: Badge,Noto Sans CJK SC,38,&H00FFFFFF,&H00FFFFFF,&H00111111,&H00111111,-1,0,0,0,100,100,0,0,3,10,0,9,40,40,20,1
+Style: Sub,Noto Sans CJK SC,34,&H00FFFFFF,&H00FFFFFF,&H00111111,&H00111111,0,0,0,0,100,100,0,0,1,2,0,2,60,60,28,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: 0,0:00:00.00,0:00:03.80,Badge,,0,0,0,,PRD 总览 · 电商问数
+Dialogue: 0,0:00:00.00,0:00:03.80,Sub,,0,0,0,,原版界面 + LangGraph 12 节点 + 真实问数
+Dialogue: 0,0:00:03.80,0:00:07.70,Badge,,0,0,0,,PRD 2 · LangGraph 12 节点 / 10 步
+Dialogue: 0,0:00:03.80,0:00:07.70,Sub,,0,0,0,,步骤目录来自 /api/steps，不硬编码
+Dialogue: 0,0:00:07.70,0:00:11.80,Badge,,0,0,0,,PRD 1 · 自然语言问数 NL2SQL
+Dialogue: 0,0:00:07.70,0:00:11.80,Sub,,0,0,0,,中文提问 → 生成 SQL → 只读执行
+Dialogue: 0,0:00:11.80,0:00:18.60,Badge,,0,0,0,,PRD 1 · 真实结果
+Dialogue: 0,0:00:11.80,0:00:18.60,Sub,,0,0,0,,5 行，来自 MySQL 只读账号 dw_reader
+Dialogue: 0,0:00:18.60,0:00:22.70,Badge,,0,0,0,,PRD 3 · 自校验 + 自纠错
+Dialogue: 0,0:00:18.60,0:00:22.70,Sub,,0,0,0,,不是每次都需要校正
+Dialogue: 0,0:00:22.70,0:00:30.20,Badge,,0,0,0,,PRD 1 · 结果表
+Dialogue: 0,0:00:22.70,0:00:30.20,Sub,,0,0,0,,数字列按类型渲染，不用字符串冒充
+Dialogue: 0,0:00:30.20,0:00:37.00,Badge,,0,0,0,,PRD 3 · 自校验
+Dialogue: 0,0:00:30.20,0:00:37.00,Sub,,0,0,0,,校验SQL 先跑，不合格才进校正
+Dialogue: 0,0:00:37.00,0:00:41.50,Badge,,0,0,0,,PRD 3 · correct_sql 接管
+Dialogue: 0,0:00:37.00,0:00:41.50,Sub,,0,0,0,,最多一次；校正后重新过 guard + policy
+Dialogue: 0,0:00:41.50,0:00:45.20,Badge,,0,0,0,,PRD 3 · 校正成功
+Dialogue: 0,0:00:41.50,0:00:45.20,Sub,,0,0,0,,重新校验通过，执行返回结果
+Dialogue: 0,0:00:45.20,0:00:50.00,Badge,,0,0,0,,PRD 4 · 安全边界
+Dialogue: 0,0:00:45.20,0:00:50.00,Sub,,0,0,0,,构造一条 UNION 查询
+Dialogue: 0,0:00:50.00,0:00:55.60,Badge,,0,0,0,,PRD 4 · SQL_REJECTED
+Dialogue: 0,0:00:50.00,0:00:55.60,Sub,,0,0,0,,危险构造不校正，直接拒绝
+Dialogue: 0,0:00:55.60,0:00:57.40,Badge,,0,0,0,,PRD 4 · 校正未触发
+Dialogue: 0,0:00:55.60,0:00:57.40,Sub,,0,0,0,,策略拒绝不送回模型
+Dialogue: 0,0:00:57.40,0:01:01.27,Badge,,0,0,0,,DSWS v2 · 验收完成
+Dialogue: 0,0:00:57.40,0:01:01.27,Sub,,0,0,0,,12 节点 · 校正闭环 · 安全拒绝

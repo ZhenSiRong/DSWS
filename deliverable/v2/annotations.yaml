@@ -3,7 +3,7 @@
 # 视频：deliverable/v2/DSWS-v2-original-ui-demo.mp4
 # 来源：Playwright 驱动系统 Chrome 操作云端 v2 前端（真实 SSE，无 mock）
 # 分辨率：1920x1080 / 30fps / 46.27s
-# 录制时间：2026-11-06（原版界面切换 + 2SQL 修复之后）
+# 录制时间：2026-11-06（原版界面切换 + 2SQL 修复之后）；2026-11-09 补录校正段并叠加右上角功能角标
 # 时间码为近似值（按画面切换估算）
 
 video: deliverable/v2/DSWS-v2-original-ui-demo.mp4
