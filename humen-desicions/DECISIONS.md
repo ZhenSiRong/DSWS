@@ -16,6 +16,13 @@
 | D8 | 资源配置 | 2 学生 + 1 构建；Lite 12 张；Pro 0 张 | `05-resource-plan.md` |
 | D9 | 人工评审 | 2 次：资源方案 + 终审 | `05-resource-plan.md` |
 | D10 | WBS 粒度 | 47 个工作包，够用 | `06-wbs-and-agents.md` |
+| D11 | 图表优化范围 | 32 张技术图全量审计，正文引用优先 | `07-figure-comprehension-plan.md` |
+| D12 | 图表分轨 | A 可读化（21）/ B 类比横幅（5）/ B1 漫画（6） | 同上 §3 |
+| D13 | 可理解性判据 | 三问盲测（2/3）+ 3 张学生抽检 | 同上 §4 |
+| D14 | 结构类做法 | 加读图带 + 高亮主路径，不重画 | 同上 §5 |
+| D15 | 概念类预算 | 6 张 Lite 漫画，Pro 0；其余加横幅 | 同上 §5 |
+| D16 | 文档分类 | 设计文档进 `design/`/`contracts/`；过程文档进 `humen-desicions/`/`pilot/`/`eval/` | `08-doc-placement.md` |
+| D17 | 视频结尾角标 | `DSWS · 验收完成` → `DSWS · 演示完成` | 已完成，commit `89611d9` |
 
 ## 2. 评审证据
 
@@ -33,6 +40,8 @@
 | `04-course-workflow.md` | 七阶段总流程与一致性测试设计 |
 | `05-resource-plan.md` | 资源/工具利用方案（已批准） |
 | `06-wbs-and-agents.md` | WBS + Agent 分工 + RACI（终版） |
+| `07-figure-comprehension-plan.md` | 32 张图的可理解性优化计划（2026-11-09 确认） |
+| `08-doc-placement.md` | 设计文档 vs 过程文档的定义与放置规则 |
 
 ## 4. 尚未决定
 
