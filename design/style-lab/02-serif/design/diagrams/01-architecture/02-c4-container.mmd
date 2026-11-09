@@ -1,0 +1,51 @@
+%% 02 · C4-L2 容器图
+%% 问题：一次请求跨哪些容器/进程？S2 构建与 init 在容器拓扑里处于什么位置？
+flowchart TB
+  classDef runtime fill:#f5f3ff,stroke:#7c3aed,color:#4c1d95
+  classDef build fill:#fff7ed,stroke:#b45309,color:#7c2d12
+  classDef store fill:#ecfdf5,stroke:#0f766e,color:#064e3b
+  classDef contract fill:#eff6ff,stroke:#1d4ed8,color:#1e3a8a
+  classDef danger fill:#fef2f2,stroke:#b91c1c,color:#7f1d1d
+  classDef edge fill:#f9fafb,stroke:#6b7280,color:#374151
+
+  BROWSER["浏览器"]:::edge
+
+  subgraph COMPOSE["Docker Compose 部署边界"]
+    FE["frontend · nginx :8080"]:::runtime
+    INIT["init · 一次性容器"]:::build
+
+    subgraph BACKEND["backend 容器 · uvicorn 单 worker :8100"]
+      API["FastAPI · 5 个端点"]:::runtime
+      AR["AgentRunner · 编排"]:::runtime
+      CTX["generate · 上下文/生成"]:::runtime
+      SEC["security · 策略/执行"]:::danger
+    end
+
+    CLI["build CLI · S2"]:::build
+    CON["contracts/ 只读挂载"]:::contract
+    MY["MySQL :3306"]:::store
+    ES["Elasticsearch :9200"]:::store
+    QD["Qdrant :6333"]:::store
+  end
+
+  RECALL["S3 recall · 阶段/集成"]:::build
+  LLM["LLM 端点 · 可选"]:::edge
+
+  BROWSER -->|"加载 SPA"| FE
+  FE -->|"/api/ 反向代理，关闭缓冲"| API
+  API -->|"runner_factory 启动问数"| AR
+  API -->|"读 steps / errors"| CON
+  AR -->|"8 阶段 + draft_sql"| CTX
+  AR -->|"validate_sql + execute"| SEC
+  CTX -->|"离线裁剪契约"| CON
+  SEC -->|"读取 sql.policy"| CON
+  CTX -.->|"可选 chat/completions"| LLM
+  SEC -->|"只读 SELECT"| MY
+  INIT -->|"执行 S2 构建"| CLI
+  INIT -->|"开通 dw_reader"| MY
+  CLI -->|"写 Meta"| MY
+  CLI -->|"写取值"| ES
+  CLI -->|"写向量"| QD
+  RECALL -->|"读 Meta"| MY
+  RECALL -->|"msearch"| ES
+  RECALL -->|"向量"| QD

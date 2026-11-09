@@ -1,0 +1,26 @@
+flowchart LR
+  classDef contract fill:#eff6ff,stroke:#1d4ed8,color:#1e3a8a
+  classDef store fill:#ecfdf5,stroke:#0f766e,color:#064e3b
+  classDef runtime fill:#f5f3ff,stroke:#7c3aed,color:#4c1d95
+  classDef danger fill:#fef2f2,stroke:#b91c1c,color:#7f1d1d
+  classDef pass fill:#f0fdf4,stroke:#15803d,color:#14532d
+  classDef edge fill:#f9fafb,stroke:#6b7280,color:#374151
+
+  U["用户提问"] -->|"输入"| B["浏览器 Composer"]
+  B -->|"POST /api/query"| F["FastAPI"]
+  F -->|"交给"| A["AgentRunner"]
+  A -->|"读取上下文"| C["契约离线裁剪"]
+  C -->|"可选：S3 召回"| S[("三存储")]
+  A -->|"生成"| G["Generator"]
+  G -->|"候选 SQL"| V["Guard 与 Policy"]
+  V -->|"放行"| X["ReadOnlyExecutor"]
+  X -->|"只读查询"| M[("MySQL 数仓")]
+  X -->|"结果或错误"| E["SSE 三事件"]
+  E -->|"推送"| B
+
+  class C,G contract
+  class S,M store
+  class B,A,F,X runtime
+  class V danger
+  class E pass
+  class U edge

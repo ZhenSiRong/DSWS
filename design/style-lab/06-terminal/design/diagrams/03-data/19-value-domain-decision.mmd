@@ -1,0 +1,34 @@
+%% 19 · 值域分类决策树（哪些列写 ES）
+%%{init: {"flowchart": {"diagramPadding": 0}}}%%
+flowchart TD
+    S["契约列 value_domain"] --> R{"role = dimension?"}
+
+    R -->|"否：主键 / 外键 / 度量"| X1["不写 ES<br/>sync_values=false"]
+    R -->|"是"| K{"value_domain.kind"}
+
+    K -->|"enum"| E["枚举列<br/>取 distinct 全集"]
+    K -->|"open"| O{"distinct 基数<br/>0 < n ≤ max_value_docs"}
+    K -->|"range / id / foreign_key"| X2["不写 ES<br/>sync_values=false"]
+
+    O -->|"是：如 customer_name 20 值"| E2["低基数开放文本<br/>取 distinct 全集"]
+    O -->|"否：超过阈值"| X1
+
+    E --> W["逐值生成 ValueDoc<br/>id = column_id.value"]
+    E2 --> W
+    W --> ES[("ES value_index_rebuild<br/>76 篇文档")]
+    W --> SY["column_info.sync_values = 1"]
+    X1 --> N["column_info.sync_values = 0"]
+    X2 --> N
+
+    SY --> T["examples 仍只存前 10 条<br/>完整值域只在 ES"]
+    ES --> Q["S3 关键词召回<br/>value 命中的 column_id"]
+    N --> U["Meta 只描述结构<br/>不承诺值域已索引"]
+
+    classDef contract fill:#eff6ff,stroke:#1d4ed8,color:#1e3a8a
+    classDef store fill:#ecfdf5,stroke:#0f766e,color:#064e3b
+    classDef build fill:#fff7ed,stroke:#b45309,color:#7c2d12
+    classDef edge fill:#f9fafb,stroke:#6b7280,color:#374151
+    class S,R,K,O contract
+    class E,E2,W build
+    class ES,SY store
+    class X1,X2,N,T,Q,U edge

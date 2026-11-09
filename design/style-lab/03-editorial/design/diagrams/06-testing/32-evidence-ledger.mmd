@@ -1,0 +1,48 @@
+%% 32 · 证据台账：已验证 / 推断 / 未验证
+%% 来源 → 三类证据 → 去向；右侧标出本设计工作树的本机边界
+flowchart TB
+  classDef pass fill:#f0fdf4,stroke:#15803d,color:#14532d
+  classDef warn fill:#fff7ed,stroke:#b45309,color:#7c2d12
+  classDef edge fill:#f9fafb,stroke:#6b7280,color:#374151
+  classDef contract fill:#eff6ff,stroke:#1d4ed8,color:#1e3a8a
+
+  subgraph SRC["证据来源"]
+    direction TB
+    S1["本机命令输出<br/>stage 门禁 / --dry-run"]
+    S2["仓库文件与契约<br/>compose / Makefile / errors"]
+    S3["他机记录<br/>README / HANDOFF / SETUP"]
+    S4["代码结构推导<br/>调用链 / 默认值"]
+    S5["本机 Docker socket<br/>permission denied"]
+  end
+
+  subgraph TAG["三类证据"]
+    direction TB
+    OK["✅ 已验证<br/>--dry-run 计数<br/>S0–S7 门禁记录<br/>旧系统计数未变"]
+    INF["🟡 推断<br/>782 passed / 31 skipped<br/>241 条写入总数<br/>SETUP §3 的 665 已过期"]
+    UNV["⚪ 未验证<br/>Docker 全栈<br/>真实 LLM / 真实召回<br/>本机浏览器与前端构建"]
+  end
+
+  subgraph DST["去向"]
+    direction TB
+    D1["每张图的证据表"]
+    D2["catalog-deploy-test.md"]
+    D3["书稿 / PDF / QA 报告"]
+  end
+
+  S1 -->|直接支撑| OK
+  S2 -->|文件可指认| OK
+  S3 -->|未在本工作树复跑| INF
+  S4 -->|附推导链| INF
+  S5 -->|环境不具备| UNV
+
+  OK -->|写入| D1
+  INF -->|标注推导链| D1
+  UNV -->|写明缺口| D1
+  D1 -->|汇总| D2
+  D2 -->|被引用| D3
+
+  class OK pass
+  class INF warn
+  class UNV edge
+  class S1,S2,S3,S4,S5 contract
+  class D1,D2,D3 contract

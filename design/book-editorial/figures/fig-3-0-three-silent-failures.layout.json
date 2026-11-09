@@ -1,0 +1,2190 @@
+{
+  "width": 1600,
+  "height": 900,
+  "elements": [
+    {
+      "kind": "text",
+      "id": "title",
+      "box": [
+        80,
+        29.560000000000002,
+        378.0,
+        44.1
+      ],
+      "text": "一顿『成功』的晚餐",
+      "font_size": 42,
+      "fill": "#111111",
+      "anchor": "start",
+      "x": 80,
+      "y": 64,
+      "weight": "bold"
+    },
+    {
+      "kind": "text",
+      "id": "subtitle",
+      "box": [
+        80,
+        78.68,
+        630.76,
+        27.3
+      ],
+      "text": "生活类比 · 界面说上齐了，桌上却没有一道能吃的菜。",
+      "font_size": 26,
+      "fill": "#5B5B5B",
+      "anchor": "start",
+      "x": 80,
+      "y": 100,
+      "weight": "normal"
+    },
+    {
+      "kind": "line",
+      "id": "header-rule",
+      "box": [
+        80,
+        126,
+        1440,
+        1.5
+      ],
+      "stroke": "#D9D3C7"
+    },
+    {
+      "kind": "rect",
+      "id": "analogy-tag",
+      "box": [
+        1370,
+        38,
+        150,
+        36
+      ],
+      "fill": "#F8EEDA",
+      "stroke": "#C58B1B"
+    },
+    {
+      "kind": "text",
+      "id": "tag-text",
+      "box": [
+        1409.0,
+        47.24,
+        72.0,
+        18.900000000000002
+      ],
+      "text": "生活类比",
+      "font_size": 18,
+      "fill": "#C58B1B",
+      "anchor": "middle",
+      "x": 1445,
+      "y": 62,
+      "weight": "normal"
+    },
+    {
+      "kind": "rect",
+      "id": "p1-bg",
+      "box": [
+        80,
+        160,
+        460,
+        540
+      ],
+      "fill": "#FFFDF8",
+      "stroke": "#D9D3C7"
+    },
+    {
+      "kind": "rect",
+      "id": "p1-header-bg",
+      "box": [
+        80,
+        160,
+        460,
+        76
+      ],
+      "fill": "#E7EDF8",
+      "stroke": "none"
+    },
+    {
+      "kind": "text",
+      "id": "p1-act",
+      "box": [
+        98,
+        168.32,
+        198.24,
+        25.200000000000003
+      ],
+      "text": "第一幕 · 纸条当菜",
+      "font_size": 24,
+      "fill": "#1F4E9C",
+      "anchor": "start",
+      "x": 98,
+      "y": 188,
+      "weight": "bold"
+    },
+    {
+      "kind": "text",
+      "id": "p1-root",
+      "box": [
+        98,
+        199.24,
+        237.24,
+        18.900000000000002
+      ],
+      "text": "根因 01 · 伪 SQL 被当成数据",
+      "font_size": 18,
+      "fill": "#5B5B5B",
+      "anchor": "start",
+      "x": 98,
+      "y": 214,
+      "weight": "normal"
+    },
+    {
+      "kind": "line",
+      "id": "p1-header-rule",
+      "box": [
+        80,
+        236,
+        460,
+        1.5
+      ],
+      "stroke": "#1F4E9C"
+    },
+    {
+      "kind": "line",
+      "id": "p1-floor",
+      "box": [
+        98,
+        560,
+        424,
+        1.5
+      ],
+      "stroke": "#D9D3C7"
+    },
+    {
+      "kind": "path",
+      "id": "p1-customer-hair",
+      "box": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "fill": "#111111",
+      "stroke": "#111111"
+    },
+    {
+      "kind": "ellipse",
+      "id": "p1-customer-head",
+      "box": [
+        145,
+        400,
+        60,
+        60
+      ],
+      "fill": "#FFFDF8",
+      "stroke": "#111111"
+    },
+    {
+      "kind": "ellipse",
+      "id": "p1-customer-eye-l",
+      "box": [
+        162.4,
+        425.4,
+        5.2,
+        5.2
+      ],
+      "fill": "#111111",
+      "stroke": "#111111"
+    },
+    {
+      "kind": "ellipse",
+      "id": "p1-customer-eye-r",
+      "box": [
+        182.4,
+        425.4,
+        5.2,
+        5.2
+      ],
+      "fill": "#111111",
+      "stroke": "#111111"
+    },
+    {
+      "kind": "path",
+      "id": "p1-customer-brow-l",
+      "box": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "fill": "none",
+      "stroke": "#111111"
+    },
+    {
+      "kind": "path",
+      "id": "p1-customer-brow-r",
+      "box": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "fill": "none",
+      "stroke": "#111111"
+    },
+    {
+      "kind": "path",
+      "id": "p1-customer-mouth",
+      "box": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "fill": "none",
+      "stroke": "#111111"
+    },
+    {
+      "kind": "rect",
+      "id": "p1-customer-body",
+      "box": [
+        143,
+        460,
+        64,
+        74
+      ],
+      "fill": "#E7EDF8",
+      "stroke": "#1F4E9C"
+    },
+    {
+      "kind": "path",
+      "id": "p1-customer-arm-l",
+      "box": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "fill": "none",
+      "stroke": "#1F4E9C"
+    },
+    {
+      "kind": "path",
+      "id": "p1-customer-arm-r",
+      "box": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "fill": "none",
+      "stroke": "#1F4E9C"
+    },
+    {
+      "kind": "path",
+      "id": "p1-waiter-hair",
+      "box": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "fill": "#111111",
+      "stroke": "#111111"
+    },
+    {
+      "kind": "ellipse",
+      "id": "p1-waiter-head",
+      "box": [
+        436,
+        376,
+        48,
+        48
+      ],
+      "fill": "#FFFDF8",
+      "stroke": "#111111"
+    },
+    {
+      "kind": "ellipse",
+      "id": "p1-waiter-eye-l",
+      "box": [
+        449.8,
+        396.8,
+        4.4,
+        4.4
+      ],
+      "fill": "#111111",
+      "stroke": "#111111"
+    },
+    {
+      "kind": "ellipse",
+      "id": "p1-waiter-eye-r",
+      "box": [
+        465.8,
+        396.8,
+        4.4,
+        4.4
+      ],
+      "fill": "#111111",
+      "stroke": "#111111"
+    },
+    {
+      "kind": "path",
+      "id": "p1-waiter-mouth",
+      "box": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "fill": "none",
+      "stroke": "#111111"
+    },
+    {
+      "kind": "rect",
+      "id": "p1-waiter-body",
+      "box": [
+        435,
+        424,
+        50,
+        92
+      ],
+      "fill": "#FFFFFF",
+      "stroke": "#111111"
+    },
+    {
+      "kind": "rect",
+      "id": "p1-waiter-apron",
+      "box": [
+        440,
+        452,
+        40,
+        58
+      ],
+      "fill": "#111111",
+      "stroke": "#111111"
+    },
+    {
+      "kind": "polygon",
+      "id": "p1-waiter-bow-l",
+      "box": [
+        450.0,
+        428.0,
+        10.0,
+        12.0
+      ],
+      "fill": "#B24A2E",
+      "stroke": "#B24A2E"
+    },
+    {
+      "kind": "polygon",
+      "id": "p1-waiter-bow-r",
+      "box": [
+        460.0,
+        428.0,
+        10.0,
+        12.0
+      ],
+      "fill": "#B24A2E",
+      "stroke": "#B24A2E"
+    },
+    {
+      "kind": "path",
+      "id": "p1-waiter-arm-l",
+      "box": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "fill": "none",
+      "stroke": "#111111"
+    },
+    {
+      "kind": "path",
+      "id": "p1-waiter-arm-r",
+      "box": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "fill": "none",
+      "stroke": "#111111"
+    },
+    {
+      "kind": "rect",
+      "id": "p1-table-top",
+      "box": [
+        120,
+        510,
+        380,
+        10
+      ],
+      "fill": "#D9D3C7",
+      "stroke": "#111111"
+    },
+    {
+      "kind": "path",
+      "id": "p1-table-leg-l",
+      "box": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "fill": "none",
+      "stroke": "#111111"
+    },
+    {
+      "kind": "path",
+      "id": "p1-table-leg-r",
+      "box": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "fill": "none",
+      "stroke": "#111111"
+    },
+    {
+      "kind": "ellipse",
+      "id": "p1-plate",
+      "box": [
+        268,
+        493,
+        124,
+        24
+      ],
+      "fill": "#FFFFFF",
+      "stroke": "#111111"
+    },
+    {
+      "kind": "ellipse",
+      "id": "p1-plate-inner",
+      "box": [
+        284,
+        498,
+        92,
+        14
+      ],
+      "fill": "none",
+      "stroke": "#D9D3C7"
+    },
+    {
+      "kind": "rect",
+      "id": "p1-note",
+      "box": [
+        290,
+        475,
+        80,
+        32
+      ],
+      "fill": "#FFFDF8",
+      "stroke": "#111111"
+    },
+    {
+      "kind": "text",
+      "id": "p1-note-text",
+      "box": [
+        294.0,
+        482.24,
+        72.0,
+        18.900000000000002
+      ],
+      "text": "错误说明",
+      "font_size": 18,
+      "fill": "#111111",
+      "anchor": "middle",
+      "x": 330,
+      "y": 497,
+      "weight": "normal"
+    },
+    {
+      "kind": "rect",
+      "id": "p1-receipt",
+      "box": [
+        400,
+        460,
+        80,
+        50
+      ],
+      "fill": "#F8EEDA",
+      "stroke": "#C58B1B"
+    },
+    {
+      "kind": "text",
+      "id": "p1-receipt-text",
+      "box": [
+        404.0,
+        467.24,
+        72.0,
+        18.900000000000002
+      ],
+      "text": "查询成功",
+      "font_size": 18,
+      "fill": "#111111",
+      "anchor": "middle",
+      "x": 440,
+      "y": 482,
+      "weight": "normal"
+    },
+    {
+      "kind": "path",
+      "id": "p1-check",
+      "box": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "fill": "none",
+      "stroke": "#2F5D46"
+    },
+    {
+      "kind": "rect",
+      "id": "p1-thought-box",
+      "box": [
+        98,
+        310,
+        150,
+        60
+      ],
+      "fill": "#FFFFFF",
+      "stroke": "#1F4E9C"
+    },
+    {
+      "kind": "ellipse",
+      "id": "p1-thought-dot-1",
+      "box": [
+        170,
+        381,
+        10,
+        10
+      ],
+      "fill": "#FFFFFF",
+      "stroke": "#1F4E9C"
+    },
+    {
+      "kind": "ellipse",
+      "id": "p1-thought-dot-2",
+      "box": [
+        172,
+        394,
+        6,
+        6
+      ],
+      "fill": "#FFFFFF",
+      "stroke": "#1F4E9C"
+    },
+    {
+      "kind": "text",
+      "id": "p1-thought-0",
+      "box": [
+        129.0,
+        328.96,
+        88.0,
+        23.1
+      ],
+      "text": "这是菜？",
+      "font_size": 22,
+      "fill": "#111111",
+      "anchor": "middle",
+      "x": 173.0,
+      "y": 347.0,
+      "weight": "normal"
+    },
+    {
+      "kind": "rect",
+      "id": "p1-speech-box",
+      "box": [
+        380,
+        300,
+        140,
+        56
+      ],
+      "fill": "#FFFFFF",
+      "stroke": "#1F4E9C"
+    },
+    {
+      "kind": "polygon",
+      "id": "p1-speech-tail",
+      "box": [
+        422.0,
+        355.0,
+        38.0,
+        21.0
+      ],
+      "fill": "#FFFFFF",
+      "stroke": "#1F4E9C"
+    },
+    {
+      "kind": "text",
+      "id": "p1-speech-0",
+      "box": [
+        395.0,
+        316.96,
+        110.0,
+        23.1
+      ],
+      "text": "您的菜来了",
+      "font_size": 22,
+      "fill": "#111111",
+      "anchor": "middle",
+      "x": 450.0,
+      "y": 335.0,
+      "weight": "normal"
+    },
+    {
+      "kind": "line",
+      "id": "p1-caption-rule",
+      "box": [
+        98,
+        570,
+        424,
+        1
+      ],
+      "stroke": "#D9D3C7"
+    },
+    {
+      "kind": "text",
+      "id": "p1-caption-seen",
+      "box": [
+        98,
+        581.96,
+        352.0,
+        23.1
+      ],
+      "text": "用户看到：一张『查询成功』的账单",
+      "font_size": 22,
+      "fill": "#111111",
+      "anchor": "start",
+      "x": 98,
+      "y": 600,
+      "weight": "bold"
+    },
+    {
+      "kind": "text",
+      "id": "p1-caption-actual",
+      "box": [
+        98,
+        615.24,
+        270.0,
+        18.900000000000002
+      ],
+      "text": "实际：盘子里是一张『错误说明』",
+      "font_size": 18,
+      "fill": "#5B5B5B",
+      "anchor": "start",
+      "x": 98,
+      "y": 630,
+      "weight": "normal"
+    },
+    {
+      "kind": "text",
+      "id": "p1-caption-fix",
+      "box": [
+        98,
+        645.24,
+        234.36,
+        18.900000000000002
+      ],
+      "text": "S5 拒单 · S6 报错 · S7 止损",
+      "font_size": 18,
+      "fill": "#1F4E9C",
+      "anchor": "start",
+      "x": 98,
+      "y": 660,
+      "weight": "bold"
+    },
+    {
+      "kind": "rect",
+      "id": "p2-bg",
+      "box": [
+        570,
+        160,
+        460,
+        540
+      ],
+      "fill": "#FFFDF8",
+      "stroke": "#D9D3C7"
+    },
+    {
+      "kind": "rect",
+      "id": "p2-header-bg",
+      "box": [
+        570,
+        160,
+        460,
+        76
+      ],
+      "fill": "#F7E8E1",
+      "stroke": "none"
+    },
+    {
+      "kind": "text",
+      "id": "p2-act",
+      "box": [
+        588,
+        168.32,
+        198.24,
+        25.200000000000003
+      ],
+      "text": "第二幕 · 空盘上齐",
+      "font_size": 24,
+      "fill": "#B24A2E",
+      "anchor": "start",
+      "x": 588,
+      "y": 188,
+      "weight": "bold"
+    },
+    {
+      "kind": "text",
+      "id": "p2-root",
+      "box": [
+        588,
+        199.24,
+        272.88,
+        18.900000000000002
+      ],
+      "text": "根因 02 · 召回为空也算 success",
+      "font_size": 18,
+      "fill": "#5B5B5B",
+      "anchor": "start",
+      "x": 588,
+      "y": 214,
+      "weight": "normal"
+    },
+    {
+      "kind": "line",
+      "id": "p2-header-rule",
+      "box": [
+        570,
+        236,
+        460,
+        1.5
+      ],
+      "stroke": "#B24A2E"
+    },
+    {
+      "kind": "line",
+      "id": "p2-floor",
+      "box": [
+        588,
+        560,
+        424,
+        1.5
+      ],
+      "stroke": "#D9D3C7"
+    },
+    {
+      "kind": "path",
+      "id": "p2-customer-hair",
+      "box": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "fill": "#111111",
+      "stroke": "#111111"
+    },
+    {
+      "kind": "ellipse",
+      "id": "p2-customer-head",
+      "box": [
+        635,
+        400,
+        60,
+        60
+      ],
+      "fill": "#FFFDF8",
+      "stroke": "#111111"
+    },
+    {
+      "kind": "ellipse",
+      "id": "p2-customer-eye-l",
+      "box": [
+        652.4,
+        425.4,
+        5.2,
+        5.2
+      ],
+      "fill": "#111111",
+      "stroke": "#111111"
+    },
+    {
+      "kind": "ellipse",
+      "id": "p2-customer-eye-r",
+      "box": [
+        672.4,
+        425.4,
+        5.2,
+        5.2
+      ],
+      "fill": "#111111",
+      "stroke": "#111111"
+    },
+    {
+      "kind": "path",
+      "id": "p2-customer-brow-l",
+      "box": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "fill": "none",
+      "stroke": "#111111"
+    },
+    {
+      "kind": "path",
+      "id": "p2-customer-brow-r",
+      "box": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "fill": "none",
+      "stroke": "#111111"
+    },
+    {
+      "kind": "path",
+      "id": "p2-customer-mouth",
+      "box": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "fill": "none",
+      "stroke": "#111111"
+    },
+    {
+      "kind": "rect",
+      "id": "p2-customer-body",
+      "box": [
+        633,
+        460,
+        64,
+        74
+      ],
+      "fill": "#E7EDF8",
+      "stroke": "#1F4E9C"
+    },
+    {
+      "kind": "path",
+      "id": "p2-customer-arm-l",
+      "box": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "fill": "none",
+      "stroke": "#1F4E9C"
+    },
+    {
+      "kind": "path",
+      "id": "p2-customer-arm-r",
+      "box": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "fill": "none",
+      "stroke": "#1F4E9C"
+    },
+    {
+      "kind": "path",
+      "id": "p2-waiter-hair",
+      "box": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "fill": "#111111",
+      "stroke": "#111111"
+    },
+    {
+      "kind": "ellipse",
+      "id": "p2-waiter-head",
+      "box": [
+        926,
+        376,
+        48,
+        48
+      ],
+      "fill": "#FFFDF8",
+      "stroke": "#111111"
+    },
+    {
+      "kind": "ellipse",
+      "id": "p2-waiter-eye-l",
+      "box": [
+        939.8,
+        396.8,
+        4.4,
+        4.4
+      ],
+      "fill": "#111111",
+      "stroke": "#111111"
+    },
+    {
+      "kind": "ellipse",
+      "id": "p2-waiter-eye-r",
+      "box": [
+        955.8,
+        396.8,
+        4.4,
+        4.4
+      ],
+      "fill": "#111111",
+      "stroke": "#111111"
+    },
+    {
+      "kind": "path",
+      "id": "p2-waiter-mouth",
+      "box": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "fill": "none",
+      "stroke": "#111111"
+    },
+    {
+      "kind": "rect",
+      "id": "p2-waiter-body",
+      "box": [
+        925,
+        424,
+        50,
+        92
+      ],
+      "fill": "#FFFFFF",
+      "stroke": "#111111"
+    },
+    {
+      "kind": "rect",
+      "id": "p2-waiter-apron",
+      "box": [
+        930,
+        452,
+        40,
+        58
+      ],
+      "fill": "#111111",
+      "stroke": "#111111"
+    },
+    {
+      "kind": "polygon",
+      "id": "p2-waiter-bow-l",
+      "box": [
+        940.0,
+        428.0,
+        10.0,
+        12.0
+      ],
+      "fill": "#B24A2E",
+      "stroke": "#B24A2E"
+    },
+    {
+      "kind": "polygon",
+      "id": "p2-waiter-bow-r",
+      "box": [
+        950.0,
+        428.0,
+        10.0,
+        12.0
+      ],
+      "fill": "#B24A2E",
+      "stroke": "#B24A2E"
+    },
+    {
+      "kind": "path",
+      "id": "p2-waiter-arm-l",
+      "box": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "fill": "none",
+      "stroke": "#111111"
+    },
+    {
+      "kind": "path",
+      "id": "p2-waiter-arm-r",
+      "box": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "fill": "none",
+      "stroke": "#111111"
+    },
+    {
+      "kind": "rect",
+      "id": "p2-table-top",
+      "box": [
+        610,
+        510,
+        380,
+        10
+      ],
+      "fill": "#D9D3C7",
+      "stroke": "#111111"
+    },
+    {
+      "kind": "path",
+      "id": "p2-table-leg-l",
+      "box": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "fill": "none",
+      "stroke": "#111111"
+    },
+    {
+      "kind": "path",
+      "id": "p2-table-leg-r",
+      "box": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "fill": "none",
+      "stroke": "#111111"
+    },
+    {
+      "kind": "ellipse",
+      "id": "p2-plate",
+      "box": [
+        758,
+        493,
+        124,
+        24
+      ],
+      "fill": "#FFFFFF",
+      "stroke": "#111111"
+    },
+    {
+      "kind": "ellipse",
+      "id": "p2-plate-inner",
+      "box": [
+        774,
+        498,
+        92,
+        14
+      ],
+      "fill": "none",
+      "stroke": "#D9D3C7"
+    },
+    {
+      "kind": "ellipse",
+      "id": "p2-crumb-1",
+      "box": [
+        802.5,
+        499.5,
+        5.0,
+        5.0
+      ],
+      "fill": "#C58B1B",
+      "stroke": "#C58B1B"
+    },
+    {
+      "kind": "ellipse",
+      "id": "p2-crumb-2",
+      "box": [
+        833,
+        501,
+        4,
+        4
+      ],
+      "fill": "#C58B1B",
+      "stroke": "#C58B1B"
+    },
+    {
+      "kind": "rect",
+      "id": "p2-thought-box",
+      "box": [
+        588,
+        300,
+        170,
+        80
+      ],
+      "fill": "#FFFFFF",
+      "stroke": "#B24A2E"
+    },
+    {
+      "kind": "ellipse",
+      "id": "p2-thought-dot-1",
+      "box": [
+        660,
+        381,
+        10,
+        10
+      ],
+      "fill": "#FFFFFF",
+      "stroke": "#B24A2E"
+    },
+    {
+      "kind": "ellipse",
+      "id": "p2-thought-dot-2",
+      "box": [
+        662,
+        394,
+        6,
+        6
+      ],
+      "fill": "#FFFFFF",
+      "stroke": "#B24A2E"
+    },
+    {
+      "kind": "text",
+      "id": "p2-thought-0",
+      "box": [
+        629.0,
+        316.96,
+        88.0,
+        23.1
+      ],
+      "text": "是没有，",
+      "font_size": 22,
+      "fill": "#111111",
+      "anchor": "middle",
+      "x": 673.0,
+      "y": 335.0,
+      "weight": "normal"
+    },
+    {
+      "kind": "text",
+      "id": "p2-thought-1",
+      "box": [
+        607.0,
+        340.96,
+        132.0,
+        23.1
+      ],
+      "text": "还是没找到？",
+      "font_size": 22,
+      "fill": "#111111",
+      "anchor": "middle",
+      "x": 673.0,
+      "y": 359.0,
+      "weight": "normal"
+    },
+    {
+      "kind": "rect",
+      "id": "p2-speech-box",
+      "box": [
+        890,
+        300,
+        120,
+        56
+      ],
+      "fill": "#FFFFFF",
+      "stroke": "#B24A2E"
+    },
+    {
+      "kind": "polygon",
+      "id": "p2-speech-tail",
+      "box": [
+        926.0,
+        355.0,
+        24.0,
+        21.0
+      ],
+      "fill": "#FFFFFF",
+      "stroke": "#B24A2E"
+    },
+    {
+      "kind": "text",
+      "id": "p2-speech-0",
+      "box": [
+        917.0,
+        316.96,
+        66.0,
+        23.1
+      ],
+      "text": "上齐了",
+      "font_size": 22,
+      "fill": "#111111",
+      "anchor": "middle",
+      "x": 950.0,
+      "y": 335.0,
+      "weight": "normal"
+    },
+    {
+      "kind": "line",
+      "id": "p2-caption-rule",
+      "box": [
+        588,
+        570,
+        424,
+        1
+      ],
+      "stroke": "#D9D3C7"
+    },
+    {
+      "kind": "text",
+      "id": "p2-caption-seen",
+      "box": [
+        588,
+        581.96,
+        308.0,
+        23.1
+      ],
+      "text": "用户看到：表格消失，像跑完了",
+      "font_size": 22,
+      "fill": "#111111",
+      "anchor": "start",
+      "x": 588,
+      "y": 600,
+      "weight": "bold"
+    },
+    {
+      "kind": "text",
+      "id": "p2-caption-actual",
+      "box": [
+        588,
+        615.24,
+        324.0,
+        18.900000000000002
+      ],
+      "text": "实际：空、召回失败、系统失败混在一起",
+      "font_size": 18,
+      "fill": "#5B5B5B",
+      "anchor": "start",
+      "x": 588,
+      "y": 630,
+      "weight": "normal"
+    },
+    {
+      "kind": "text",
+      "id": "p2-caption-fix",
+      "box": [
+        588,
+        645.24,
+        268.56,
+        18.900000000000002
+      ],
+      "text": "S3 trace · S6 空态 · S7 空态卡",
+      "font_size": 18,
+      "fill": "#B24A2E",
+      "anchor": "start",
+      "x": 588,
+      "y": 660,
+      "weight": "bold"
+    },
+    {
+      "kind": "rect",
+      "id": "p3-bg",
+      "box": [
+        1060,
+        160,
+        460,
+        540
+      ],
+      "fill": "#FFFDF8",
+      "stroke": "#D9D3C7"
+    },
+    {
+      "kind": "rect",
+      "id": "p3-header-bg",
+      "box": [
+        1060,
+        160,
+        460,
+        76
+      ],
+      "fill": "#E6EFE9",
+      "stroke": "none"
+    },
+    {
+      "kind": "text",
+      "id": "p3-act",
+      "box": [
+        1078,
+        168.32,
+        270.24,
+        25.200000000000003
+      ],
+      "text": "第三幕 · 糊菜指不到灶台",
+      "font_size": 24,
+      "fill": "#2F5D46",
+      "anchor": "start",
+      "x": 1078,
+      "y": 188,
+      "weight": "bold"
+    },
+    {
+      "kind": "text",
+      "id": "p3-root",
+      "box": [
+        1078,
+        199.24,
+        175.68,
+        18.900000000000002
+      ],
+      "text": "根因 03 · 错误被吞掉",
+      "font_size": 18,
+      "fill": "#5B5B5B",
+      "anchor": "start",
+      "x": 1078,
+      "y": 214,
+      "weight": "normal"
+    },
+    {
+      "kind": "line",
+      "id": "p3-header-rule",
+      "box": [
+        1060,
+        236,
+        460,
+        1.5
+      ],
+      "stroke": "#2F5D46"
+    },
+    {
+      "kind": "line",
+      "id": "p3-floor",
+      "box": [
+        1078,
+        560,
+        424,
+        1.5
+      ],
+      "stroke": "#D9D3C7"
+    },
+    {
+      "kind": "rect",
+      "id": "p3-window",
+      "box": [
+        1350,
+        250,
+        150,
+        120
+      ],
+      "fill": "#F8F5ED",
+      "stroke": "#D9D3C7"
+    },
+    {
+      "kind": "text",
+      "id": "p3-kitchen-text",
+      "box": [
+        1407.0,
+        257.24,
+        36.0,
+        18.900000000000002
+      ],
+      "text": "后厨",
+      "font_size": 18,
+      "fill": "#5B5B5B",
+      "anchor": "middle",
+      "x": 1425,
+      "y": 272,
+      "weight": "normal"
+    },
+    {
+      "kind": "rect",
+      "id": "p3-chef-hat-band",
+      "box": [
+        1403,
+        294,
+        44,
+        16
+      ],
+      "fill": "#FFFFFF",
+      "stroke": "#111111"
+    },
+    {
+      "kind": "ellipse",
+      "id": "p3-chef-hat-top",
+      "box": [
+        1403,
+        282,
+        44,
+        20
+      ],
+      "fill": "#FFFFFF",
+      "stroke": "#111111"
+    },
+    {
+      "kind": "ellipse",
+      "id": "p3-chef-head",
+      "box": [
+        1405,
+        318,
+        40,
+        40
+      ],
+      "fill": "#FFFDF8",
+      "stroke": "#111111"
+    },
+    {
+      "kind": "ellipse",
+      "id": "p3-chef-eye-l",
+      "box": [
+        1416,
+        334,
+        4,
+        4
+      ],
+      "fill": "#111111",
+      "stroke": "#111111"
+    },
+    {
+      "kind": "ellipse",
+      "id": "p3-chef-eye-r",
+      "box": [
+        1430,
+        334,
+        4,
+        4
+      ],
+      "fill": "#111111",
+      "stroke": "#111111"
+    },
+    {
+      "kind": "path",
+      "id": "p3-chef-mustache",
+      "box": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "fill": "none",
+      "stroke": "#111111"
+    },
+    {
+      "kind": "rect",
+      "id": "p3-chef-body",
+      "box": [
+        1401,
+        356,
+        48,
+        42
+      ],
+      "fill": "#FFFFFF",
+      "stroke": "#111111"
+    },
+    {
+      "kind": "rect",
+      "id": "p3-chef-apron",
+      "box": [
+        1407,
+        370,
+        36,
+        28
+      ],
+      "fill": "#2F5D46",
+      "stroke": "#2F5D46"
+    },
+    {
+      "kind": "rect",
+      "id": "p3-mask",
+      "box": [
+        1350,
+        360,
+        150,
+        10
+      ],
+      "fill": "#F8F5ED",
+      "stroke": "none"
+    },
+    {
+      "kind": "rect",
+      "id": "p3-counter",
+      "box": [
+        1350,
+        370,
+        150,
+        10
+      ],
+      "fill": "#D9D3C7",
+      "stroke": "#111111"
+    },
+    {
+      "kind": "ellipse",
+      "id": "p3-pass-plate",
+      "box": [
+        1387,
+        391,
+        76,
+        18
+      ],
+      "fill": "#FFFFFF",
+      "stroke": "#111111"
+    },
+    {
+      "kind": "ellipse",
+      "id": "p3-burnt-dish",
+      "box": [
+        1401,
+        389,
+        48,
+        14
+      ],
+      "fill": "#111111",
+      "stroke": "#111111"
+    },
+    {
+      "kind": "path",
+      "id": "p3-smoke-1",
+      "box": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "fill": "none",
+      "stroke": "#5B5B5B"
+    },
+    {
+      "kind": "path",
+      "id": "p3-smoke-2",
+      "box": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "fill": "none",
+      "stroke": "#5B5B5B"
+    },
+    {
+      "kind": "path",
+      "id": "p3-customer-hair",
+      "box": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "fill": "#111111",
+      "stroke": "#111111"
+    },
+    {
+      "kind": "ellipse",
+      "id": "p3-customer-head",
+      "box": [
+        1125,
+        400,
+        60,
+        60
+      ],
+      "fill": "#FFFDF8",
+      "stroke": "#111111"
+    },
+    {
+      "kind": "ellipse",
+      "id": "p3-customer-eye-l",
+      "box": [
+        1142.4,
+        425.4,
+        5.2,
+        5.2
+      ],
+      "fill": "#111111",
+      "stroke": "#111111"
+    },
+    {
+      "kind": "ellipse",
+      "id": "p3-customer-eye-r",
+      "box": [
+        1162.4,
+        425.4,
+        5.2,
+        5.2
+      ],
+      "fill": "#111111",
+      "stroke": "#111111"
+    },
+    {
+      "kind": "path",
+      "id": "p3-customer-brow-l",
+      "box": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "fill": "none",
+      "stroke": "#111111"
+    },
+    {
+      "kind": "path",
+      "id": "p3-customer-brow-r",
+      "box": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "fill": "none",
+      "stroke": "#111111"
+    },
+    {
+      "kind": "path",
+      "id": "p3-customer-mouth",
+      "box": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "fill": "none",
+      "stroke": "#111111"
+    },
+    {
+      "kind": "rect",
+      "id": "p3-customer-body",
+      "box": [
+        1123,
+        460,
+        64,
+        74
+      ],
+      "fill": "#E7EDF8",
+      "stroke": "#1F4E9C"
+    },
+    {
+      "kind": "path",
+      "id": "p3-customer-arm-l",
+      "box": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "fill": "none",
+      "stroke": "#1F4E9C"
+    },
+    {
+      "kind": "path",
+      "id": "p3-customer-arm-r",
+      "box": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "fill": "none",
+      "stroke": "#1F4E9C"
+    },
+    {
+      "kind": "path",
+      "id": "p3-waiter-hair",
+      "box": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "fill": "#111111",
+      "stroke": "#111111"
+    },
+    {
+      "kind": "ellipse",
+      "id": "p3-waiter-head",
+      "box": [
+        1416,
+        436,
+        48,
+        48
+      ],
+      "fill": "#FFFDF8",
+      "stroke": "#111111"
+    },
+    {
+      "kind": "ellipse",
+      "id": "p3-waiter-eye-l",
+      "box": [
+        1429.8,
+        456.8,
+        4.4,
+        4.4
+      ],
+      "fill": "#111111",
+      "stroke": "#111111"
+    },
+    {
+      "kind": "ellipse",
+      "id": "p3-waiter-eye-r",
+      "box": [
+        1445.8,
+        456.8,
+        4.4,
+        4.4
+      ],
+      "fill": "#111111",
+      "stroke": "#111111"
+    },
+    {
+      "kind": "path",
+      "id": "p3-waiter-mouth",
+      "box": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "fill": "none",
+      "stroke": "#111111"
+    },
+    {
+      "kind": "rect",
+      "id": "p3-waiter-body",
+      "box": [
+        1415,
+        484,
+        50,
+        92
+      ],
+      "fill": "#FFFFFF",
+      "stroke": "#111111"
+    },
+    {
+      "kind": "rect",
+      "id": "p3-waiter-apron",
+      "box": [
+        1420,
+        512,
+        40,
+        58
+      ],
+      "fill": "#111111",
+      "stroke": "#111111"
+    },
+    {
+      "kind": "polygon",
+      "id": "p3-waiter-bow-l",
+      "box": [
+        1430.0,
+        488.0,
+        10.0,
+        12.0
+      ],
+      "fill": "#B24A2E",
+      "stroke": "#B24A2E"
+    },
+    {
+      "kind": "polygon",
+      "id": "p3-waiter-bow-r",
+      "box": [
+        1440.0,
+        488.0,
+        10.0,
+        12.0
+      ],
+      "fill": "#B24A2E",
+      "stroke": "#B24A2E"
+    },
+    {
+      "kind": "path",
+      "id": "p3-waiter-arm-l",
+      "box": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "fill": "none",
+      "stroke": "#111111"
+    },
+    {
+      "kind": "path",
+      "id": "p3-waiter-arm-r",
+      "box": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "fill": "none",
+      "stroke": "#111111"
+    },
+    {
+      "kind": "rect",
+      "id": "p3-table-top",
+      "box": [
+        1100,
+        510,
+        380,
+        10
+      ],
+      "fill": "#D9D3C7",
+      "stroke": "#111111"
+    },
+    {
+      "kind": "path",
+      "id": "p3-table-leg-l",
+      "box": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "fill": "none",
+      "stroke": "#111111"
+    },
+    {
+      "kind": "path",
+      "id": "p3-table-leg-r",
+      "box": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "fill": "none",
+      "stroke": "#111111"
+    },
+    {
+      "kind": "ellipse",
+      "id": "p3-plate",
+      "box": [
+        1248,
+        493,
+        124,
+        24
+      ],
+      "fill": "#FFFFFF",
+      "stroke": "#111111"
+    },
+    {
+      "kind": "ellipse",
+      "id": "p3-plate-inner",
+      "box": [
+        1264,
+        498,
+        92,
+        14
+      ],
+      "fill": "none",
+      "stroke": "#D9D3C7"
+    },
+    {
+      "kind": "ellipse",
+      "id": "p3-table-burnt",
+      "box": [
+        1276,
+        488,
+        68,
+        20
+      ],
+      "fill": "#111111",
+      "stroke": "#111111"
+    },
+    {
+      "kind": "rect",
+      "id": "p3-alert-frame",
+      "box": [
+        1265,
+        472,
+        90,
+        58
+      ],
+      "fill": "none",
+      "stroke": "#B24A2E"
+    },
+    {
+      "kind": "ellipse",
+      "id": "p3-alert-badge",
+      "box": [
+        1343,
+        455,
+        30,
+        30
+      ],
+      "fill": "#B24A2E",
+      "stroke": "#FFFDF8"
+    },
+    {
+      "kind": "path",
+      "id": "p3-alert-stem",
+      "box": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "fill": "none",
+      "stroke": "#FFFFFF"
+    },
+    {
+      "kind": "ellipse",
+      "id": "p3-alert-dot",
+      "box": [
+        1355.4,
+        477.4,
+        5.2,
+        5.2
+      ],
+      "fill": "#FFFFFF",
+      "stroke": "#FFFFFF"
+    },
+    {
+      "kind": "path",
+      "id": "p3-cough-1",
+      "box": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "fill": "none",
+      "stroke": "#5B5B5B"
+    },
+    {
+      "kind": "path",
+      "id": "p3-cough-2",
+      "box": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "fill": "none",
+      "stroke": "#5B5B5B"
+    },
+    {
+      "kind": "path",
+      "id": "p3-cough-3",
+      "box": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "fill": "none",
+      "stroke": "#5B5B5B"
+    },
+    {
+      "kind": "rect",
+      "id": "p3-thought-box",
+      "box": [
+        1078,
+        300,
+        130,
+        56
+      ],
+      "fill": "#FFFFFF",
+      "stroke": "#2F5D46"
+    },
+    {
+      "kind": "ellipse",
+      "id": "p3-thought-dot-1",
+      "box": [
+        1150,
+        381,
+        10,
+        10
+      ],
+      "fill": "#FFFFFF",
+      "stroke": "#2F5D46"
+    },
+    {
+      "kind": "ellipse",
+      "id": "p3-thought-dot-2",
+      "box": [
+        1152,
+        394,
+        6,
+        6
+      ],
+      "fill": "#FFFFFF",
+      "stroke": "#2F5D46"
+    },
+    {
+      "kind": "text",
+      "id": "p3-thought-0",
+      "box": [
+        1099.0,
+        316.96,
+        88.0,
+        23.1
+      ],
+      "text": "哪个灶？",
+      "font_size": 22,
+      "fill": "#111111",
+      "anchor": "middle",
+      "x": 1143.0,
+      "y": 335.0,
+      "weight": "normal"
+    },
+    {
+      "kind": "rect",
+      "id": "p3-speech-box",
+      "box": [
+        1330,
+        370,
+        190,
+        60
+      ],
+      "fill": "#FFFFFF",
+      "stroke": "#2F5D46"
+    },
+    {
+      "kind": "polygon",
+      "id": "p3-speech-tail",
+      "box": [
+        1387.0,
+        429.0,
+        53.0,
+        7.0
+      ],
+      "fill": "#FFFFFF",
+      "stroke": "#2F5D46"
+    },
+    {
+      "kind": "text",
+      "id": "p3-speech-0",
+      "box": [
+        1359.0,
+        388.96,
+        132.0,
+        23.1
+      ],
+      "text": "后厨出问题了",
+      "font_size": 22,
+      "fill": "#111111",
+      "anchor": "middle",
+      "x": 1425.0,
+      "y": 407.0,
+      "weight": "normal"
+    },
+    {
+      "kind": "line",
+      "id": "p3-caption-rule",
+      "box": [
+        1078,
+        570,
+        424,
+        1
+      ],
+      "stroke": "#D9D3C7"
+    },
+    {
+      "kind": "text",
+      "id": "p3-caption-seen",
+      "box": [
+        1078,
+        581.96,
+        352.0,
+        23.1
+      ],
+      "text": "用户看到：红框亮了，却指不到灶台",
+      "font_size": 22,
+      "fill": "#111111",
+      "anchor": "start",
+      "x": 1078,
+      "y": 600,
+      "weight": "bold"
+    },
+    {
+      "kind": "text",
+      "id": "p3-caption-actual",
+      "box": [
+        1078,
+        615.24,
+        198.0,
+        18.900000000000002
+      ],
+      "text": "实际：错误没有步骤归属",
+      "font_size": 18,
+      "fill": "#5B5B5B",
+      "anchor": "start",
+      "x": 1078,
+      "y": 630,
+      "weight": "normal"
+    },
+    {
+      "kind": "text",
+      "id": "p3-caption-fix",
+      "box": [
+        1078,
+        645.24,
+        234.36,
+        18.900000000000002
+      ],
+      "text": "S4 形状 · S6 分类 · S7 映射",
+      "font_size": 18,
+      "fill": "#2F5D46",
+      "anchor": "start",
+      "x": 1078,
+      "y": 660,
+      "weight": "bold"
+    },
+    {
+      "kind": "line",
+      "id": "footer-rule",
+      "box": [
+        80,
+        718,
+        1440,
+        1.5
+      ],
+      "stroke": "#D9D3C7"
+    },
+    {
+      "kind": "text",
+      "id": "takeaway",
+      "box": [
+        80,
+        733.4,
+        540.0,
+        31.5
+      ],
+      "text": "共同点：三盘都上了，但没有一盘能吃。",
+      "font_size": 30,
+      "fill": "#111111",
+      "anchor": "start",
+      "x": 80,
+      "y": 758,
+      "weight": "bold"
+    },
+    {
+      "kind": "text",
+      "id": "countermeasure",
+      "box": [
+        80,
+        774.68,
+        494.0,
+        27.3
+      ],
+      "text": "新系统：让失败有名字、有位置、有通道。",
+      "font_size": 26,
+      "fill": "#5B5B5B",
+      "anchor": "start",
+      "x": 80,
+      "y": 796,
+      "weight": "normal"
+    },
+    {
+      "kind": "text",
+      "id": "source-line",
+      "box": [
+        80,
+        831.24,
+        910.080000000002,
+        18.900000000000002
+      ],
+      "text": "生活类比：餐厅三幕 · 事实来源：00-front.md §3.1–3.4 · contracts/errors.yaml · docs/S7-HANDOFF.md",
+      "font_size": 18,
+      "fill": "#5B5B5B",
+      "anchor": "start",
+      "x": 80,
+      "y": 846,
+      "weight": "normal"
+    }
+  ]
+}

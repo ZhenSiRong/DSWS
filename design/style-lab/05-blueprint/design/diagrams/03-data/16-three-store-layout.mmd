@@ -1,0 +1,42 @@
+%% 16 · 一份契约如何落到三存储（region_name / order_amount）
+%%{init: {"flowchart": {"diagramPadding": 0}}}%%
+flowchart LR
+    C[("schema.contract.yaml")]
+
+    P1["ColumnPlan<br/>dim_region.region_name<br/>enum 5 值 · sync_values=true"]
+    P2["ColumnPlan<br/>fact_order.order_amount<br/>range 30.0–9499.0 · sync_values=false"]
+
+    M1["Meta column_info<br/>1 行结构 · examples 5 条"]
+    M2["Meta column_info<br/>1 行结构 · sync_values=0"]
+
+    E1["ES value_index<br/>5 篇取值文档"]
+    E0["ES value_index<br/>0 篇取值文档"]
+
+    Q1["Qdrant column points<br/>5 个 point"]
+    Q2["Qdrant column points<br/>5 个 point"]
+
+    N["口径：Meta 存结构，ES 存取值，Qdrant 存可检索文本<br/>region_name 与 order_amount 各出 1 Meta 行、0 或 5 ES 文档、5 Qdrant 点"]
+
+    C -->|"逐列展开"| P1
+    C -->|"逐列展开"| P2
+
+    P1 -->|"写 1 行结构"| M1
+    P1 -->|"enum 每个值 1 篇"| E1
+    P1 -->|"名称/描述/别名各 1 点"| Q1
+
+    P2 -->|"写 1 行结构"| M2
+    P2 -->|"range 不展开"| E0
+    P2 -->|"名称/描述/别名各 1 点"| Q2
+
+    M1 ~~~ M2
+    E1 ~~~ E0
+    Q1 ~~~ Q2
+
+    classDef contract fill:#eff6ff,stroke:#1d4ed8,color:#1e3a8a
+    classDef store fill:#ecfdf5,stroke:#0f766e,color:#064e3b
+    classDef build fill:#fff7ed,stroke:#b45309,color:#7c2d12
+    classDef edge fill:#f9fafb,stroke:#6b7280,color:#374151
+    class C contract
+    class P1,P2 build
+    class M1,M2,E1,E0,Q1,Q2 store
+    class N edge

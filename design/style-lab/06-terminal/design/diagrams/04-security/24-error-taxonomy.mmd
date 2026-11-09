@@ -1,0 +1,33 @@
+%% 24 · 错误码分类（16 码 / 3 class / retryable）
+%%{init: {"flowchart": {"diagramPadding": 0}}}%%
+flowchart TB
+    ROOT["contracts/errors.yaml<br/>16 个错误码 · 3 个 class"]
+
+    F["failure · 14 个<br/>红框 + 失败步骤红叉"]
+    E["empty · 1 个<br/>空态卡，不标红"]
+    C["cancelled · 1 个<br/>取消态，既非 done 也非失败"]
+
+    FR["retryable = true · 6 个<br/>SQL_SYNTAX<br/>SQL_UNKNOWN_COLUMN<br/>SQL_UNKNOWN_TABLE<br/>SQL_CONSTANT_PROJECTION<br/>SQL_MISSING_ORDER_BY<br/>SQL_MISSING_LIMIT"]
+    FN["retryable = false · 8 个<br/>SQL_REJECTED<br/>LLM_REFUSAL<br/>TIMEOUT<br/>SQL_NOT_READ_ONLY<br/>SQL_MULTIPLE_STATEMENTS<br/>SQL_EMPTY<br/>SQL_EXECUTION_ERROR<br/>INTERNAL_ERROR"]
+
+    ROOT -->|"按 class 分组"| F
+    ROOT -->|"按 class 分组"| E
+    ROOT -->|"按 class 分组"| C
+    F -->|"可校正一次"| FR
+    F -->|"校正不适用"| FN
+    E -->|"合法空结果"| EMPTY_RESULT["EMPTY_RESULT"]
+    C -->|"用户主动停止"| CANCELLED["CANCELLED"]
+
+    FR -->|"correct_sql 最多 1 次<br/>重过 guard + policy"| CH["ChannelError<br/>统一失败形状"]
+    FN -->|"直接进错误通道"| CH
+    EMPTY_RESULT -->|"空态事件"| CH
+    CANCELLED -->|"取消事件"| CH
+
+    classDef danger fill:#fef2f2,stroke:#b91c1c,color:#7f1d1d
+    classDef edge fill:#f9fafb,stroke:#6b7280,color:#374151
+    classDef runtime fill:#f5f3ff,stroke:#7c3aed,color:#4c1d95
+    classDef build fill:#fff7ed,stroke:#b45309,color:#7c2d12
+    class ROOT,F,FR,FN danger
+    class E,EMPTY_RESULT edge
+    class C,CANCELLED runtime
+    class CH build

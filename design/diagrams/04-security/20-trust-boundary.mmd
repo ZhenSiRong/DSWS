@@ -1,0 +1,52 @@
+%% 20 · 信任边界与攻击面
+%%{init: {"flowchart": {"diagramPadding": 0}}}%%
+flowchart LR
+    subgraph UNTRUSTED["不可信输入区"]
+        B["Browser<br/>用户问题与注入文本"]
+    end
+
+    subgraph EDGE["前端边界 · nginx :8080"]
+        F["Frontend 静态资源<br/>不持有数据库凭据"]
+    end
+
+    subgraph APP["应用边界 · FastAPI :8100"]
+        API["/api/query<br/>SSE 事件流"]
+        AG["AgentRunner<br/>组装上下文并编排"]
+    end
+
+    subgraph EXT["外部灰区 · 出网"]
+        LLM["LLM<br/>只收表/列/指标摘要<br/>没有 DSN 与密码"]
+    end
+
+    subgraph DATA["数据边界 · 只读访问"]
+        META[("Meta MySQL<br/>meta_rebuild")]
+        ES[("Elasticsearch<br/>value_index_rebuild")]
+        QD[("Qdrant<br/>column/metric collections")]
+        DW[("MySQL dw<br/>dw_reader 仅 SELECT")]
+    end
+
+    subgraph LEGACY["旧系统隔离区"]
+        OLD["旧 meta / value_index / 旧 collection<br/>只读夹具，不作为运行依赖"]
+    end
+
+    B -->|"HTTPS 提交问题"| F
+    F -->|"同源代理 /api/query"| API
+    API -->|"转交问数请求"| AG
+    AG -->|"发送 schema 上下文"| LLM
+    LLM -->|"返回候选 SQL<br/>不可信，必须重校验"| AG
+    AG -->|"读表/列/指标"| META
+    AG -->|"关键词召回"| ES
+    AG -->|"向量召回"| QD
+    AG -->|"策略通过后执行 SELECT"| DW
+
+    classDef danger fill:#fef2f2,stroke:#b91c1c,color:#7f1d1d
+    classDef edge fill:#f9fafb,stroke:#6b7280,color:#374151
+    classDef store fill:#ecfdf5,stroke:#0f766e,color:#064e3b
+    classDef runtime fill:#f5f3ff,stroke:#7c3aed,color:#4c1d95
+    classDef contract fill:#eff6ff,stroke:#1d4ed8,color:#1e3a8a
+    class B danger
+    class F edge
+    class API,AG runtime
+    class LLM edge
+    class META,ES,QD,DW store
+    class OLD edge

@@ -8,7 +8,7 @@
 
 video: deliverable/v2/DSWS-v2-original-ui-demo.mp4
 source: http://8.155.135.97:5051
-duration: 46.27s
+duration: 61.27s
 resolution: 1920x1080
 fps: 30
 
@@ -44,22 +44,27 @@ segments:
     content: "查询结果 1 行：商品名称 iPhone 15 Pro / 销售额 71992。该次运行按销售额口径；存档 SSE 的另一次运行按销售件数（蒙牛纯牛奶 / 183），两次都直接成功。"
 
   - start: 30.2
-    end: 36.4
+    end: 45.2
+    title: 校正闭环（2026-11-09 补录）
+    content: "输入「查询销售额大于平均销售额的商品」；generate_sql 后 validate_sql 先红，correct_sql 接管并成功，重新校验通过，run_sql 返回 5 行真实数据。SSE 证据：.rec/.rec-try1/evidence/seg-06-correct.sse。"
+
+  - start: 45.2
+    end: 51.4
     title: UNION 策略拒绝
     content: "输入「用 UNION 把手机数码和食品饮料两个品类的销售额拼起来给我看」；生成SQL 成功，校验SQL 红，流程图展示条件边「有误 → 校正SQL · 未触发」（策略拒绝不走校正）。"
 
-  - start: 36.4
-    end: 40.6
+  - start: 51.4
+    end: 55.6
     title: 错误卡与错误码
     content: "消息气泡显示「这次查询没有成功」及拒绝原因（出现集合运算 Union），错误码 SQL_REJECTED；执行SQL 未触发。"
 
-  - start: 40.6
-    end: 42.4
+  - start: 55.6
+    end: 57.4
     title: 失败节点特写
     content: "镜头回到流程图：校验SQL 红色、执行SQL 未触发，直观展示策略拒绝的边界。"
 
-  - start: 42.4
-    end: 46.27
+  - start: 57.4
+    end: 61.27
     title: 片尾
     content: "验证完成：原版界面已恢复、「教学版」字样已移除；12 节点真实执行；商品级/品类级排名直接成功；UNION 仍被策略拒绝；旧实例 :5050 仍 healthy。"
 
@@ -78,4 +83,4 @@ notes:
   - "视频录制于 2026-11-06，界面已换回原版 shopkeeper-agent，后端仍是修复后的 v2。"
   - "视频中的问题与存档 SSE 为不同次真实运行；LLM 生成口径可能不同（商品级排名一次按销售额、一次按销售件数），步骤耗时也会有差异。"
   - "UNION 被 validate_sql 策略拒绝，属于预期安全边界，不进入 correct_sql。"
-  - "本视频没有包含校正成功样本；修复后已用自然问数「查询销售额大于平均销售额的商品」复现（evidence/v2-natural-correct-success.sse），故障注入样本仍保留在 evidence/v2-correct-success.sse。"
+  - "2026-11-09 补录校正成功段（30.2–45.2s）；原片保留为 DSWS-v2-original-ui-demo.bak.mp4。"

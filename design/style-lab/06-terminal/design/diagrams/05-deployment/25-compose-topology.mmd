@@ -1,0 +1,48 @@
+%% 25 · Docker Compose 拓扑
+%% 六服务 / 一个默认网络 / 三个命名卷 / 一个只读绑定
+flowchart TB
+  classDef contract fill:#eff6ff,stroke:#1d4ed8,color:#1e3a8a
+  classDef store fill:#ecfdf5,stroke:#0f766e,color:#064e3b
+  classDef build fill:#fff7ed,stroke:#b45309,color:#7c2d12
+  classDef runtime fill:#f5f3ff,stroke:#7c3aed,color:#4c1d95
+  classDef edge fill:#f9fafb,stroke:#6b7280,color:#374151
+
+  subgraph NET["Compose 默认网络 · shopkeeper-rebuild_default"]
+    direction TB
+    FE["frontend<br/>nginx :80"]
+    BE["backend<br/>uvicorn :8100"]
+    INI["init<br/>一次性初始化"]
+    MY[("mysql<br/>dw + meta_rebuild")]
+    ES[("elasticsearch<br/>value_index_rebuild")]
+    QD[("qdrant<br/>column / metric_info_rebuild")]
+  end
+
+  subgraph HOST["宿主挂载与命名卷"]
+    direction LR
+    SQL["fixtures/dw.sql<br/>只读绑定"]
+    VM[("mysql_data")]
+    VE[("es_data")]
+    VQ[("qdrant_data")]
+  end
+
+  FE -->|反向代理 /api/| BE
+  BE -->|执行只读 SELECT| MY
+  BE -.->|S3 召回查询| ES
+  BE -.->|S3 召回查询| QD
+  INI -->|等待 healthy| MY
+  INI -->|等待 healthy| ES
+  INI -->|等待 healthy| QD
+  INI -->|建库并开通只读账号| MY
+  INI -->|S2 写入索引| ES
+  INI -->|S2 写入 collection| QD
+  INI -.->|退出 0 后放行| BE
+  BE -.->|healthy 后放行| FE
+  MY ---|挂载数据卷| VM
+  ES ---|挂载数据卷| VE
+  QD ---|挂载数据卷| VQ
+  SQL -.->|首次初始化导入| MY
+
+  class FE,BE runtime
+  class INI build
+  class MY,ES,QD store
+  class SQL,VM,VE,VQ edge

@@ -1,0 +1,486 @@
+/* DSWS 设计图集与开发手册 · A4 印刷样式
+   目标：可读、可检索、可打印；图不跨页，代码不溢出。 */
+
+@page {
+  size: A4;
+  margin: 20mm 18mm 20mm 18mm;
+
+  @top-left {
+    content: string(part);
+    font-family: "Noto Sans CJK SC", sans-serif;
+    font-size: 8.5pt;
+    color: #6b7280;
+    letter-spacing: .04em;
+  }
+  @top-right {
+    content: "DSWS · 从零到一";
+    font-family: "Noto Sans CJK SC", sans-serif;
+    font-size: 8.5pt;
+    color: #9ca3af;
+  }
+  @bottom-center {
+    content: counter(page);
+    font-family: "Noto Sans CJK SC", sans-serif;
+    font-size: 9pt;
+    color: #374151;
+  }
+  @bottom-right {
+    content: "baseline eea5e75";
+    font-family: "Noto Sans CJK SC", sans-serif;
+    font-size: 7.5pt;
+    color: #b0b4bb;
+  }
+}
+
+@page cover {
+  margin: 0;
+  background: #111827;
+  @top-left { content: none; }
+  @top-right { content: none; }
+  @bottom-center { content: none; }
+  @bottom-right { content: none; }
+}
+
+@page landscape {
+  size: A4 landscape;
+  margin: 16mm 18mm 16mm 18mm;
+  @top-left {
+    content: string(part);
+    font-family: "Noto Sans CJK SC", sans-serif;
+    font-size: 8.5pt;
+    color: #6b7280;
+  }
+  @top-right {
+    content: "DSWS · 从零到一";
+    font-family: "Noto Sans CJK SC", sans-serif;
+    font-size: 8.5pt;
+    color: #9ca3af;
+  }
+  @bottom-center {
+    content: counter(page);
+    font-family: "Noto Sans CJK SC", sans-serif;
+    font-size: 9pt;
+    color: #374151;
+  }
+  @bottom-right {
+    content: "baseline eea5e75";
+    font-family: "Noto Sans CJK SC", sans-serif;
+    font-size: 7.5pt;
+    color: #b0b4bb;
+  }
+}
+
+@page toc {
+  @top-left { content: "目录"; }
+}
+
+html {
+  font-family: "Noto Sans CJK SC", "Noto Sans SC", "Source Han Sans SC", sans-serif;
+  font-size: 10.2pt;
+  line-height: 1.68;
+  color: #1f2937;
+}
+
+body { margin: 0; }
+
+/* ---------- 封面 ---------- */
+
+.cover {
+  page: cover;
+  height: 297mm;
+  padding: 34mm 24mm 24mm;
+  color: #f9fafb;
+  background: #111827;
+  box-sizing: border-box;
+  position: relative;
+}
+
+.cover .eyebrow {
+  font-family: "Noto Sans CJK SC", sans-serif;
+  font-size: 9pt;
+  letter-spacing: .22em;
+  color: #f59e0b;
+  text-transform: uppercase;
+}
+
+.cover h1 {
+  margin: 12mm 0 0;
+  font-size: 34pt;
+  line-height: 1.18;
+  font-weight: 700;
+  color: #ffffff;
+  border: 0;
+  padding: 0;
+  break-before: auto;
+  string-set: none;
+}
+
+.cover .subtitle {
+  margin: 6mm 0 0;
+  font-size: 14pt;
+  line-height: 1.5;
+  color: #d1d5db;
+  max-width: 150mm;
+}
+
+.cover .rule {
+  width: 38mm;
+  height: 2.2mm;
+  margin: 10mm 0;
+  background: #f59e0b;
+}
+
+.cover .meta {
+  position: absolute;
+  left: 24mm;
+  right: 24mm;
+  bottom: 24mm;
+  display: flex;
+  justify-content: space-between;
+  font-size: 8.6pt;
+  color: #9ca3af;
+  border-top: 1px solid #374151;
+  padding-top: 5mm;
+}
+
+.cover .badge {
+  display: inline-block;
+  margin-top: 8mm;
+  padding: 2mm 4mm;
+  border: 1px solid #4b5563;
+  border-radius: 2mm;
+  font-size: 8.6pt;
+  color: #e5e7eb;
+}
+
+/* ---------- 目录 ---------- */
+
+.toc-page {
+  page: toc;
+  break-before: page;
+}
+
+.toc-page h1 {
+  font-size: 22pt;
+  margin: 0 0 8mm;
+  border: 0;
+  padding: 0;
+  break-before: auto;
+  string-set: none;
+}
+
+.toc {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 9.6pt;
+}
+
+.toc li {
+  margin: 0;
+  padding: 1.1mm 0;
+  border-bottom: 1px dotted #d1d5db;
+}
+
+.toc li.lvl1 {
+  margin-top: 3.2mm;
+  font-weight: 700;
+  font-size: 10.4pt;
+  border-bottom: 1px solid #9ca3af;
+}
+
+.toc li.lvl2 { padding-left: 6mm; }
+
+.toc a {
+  color: #1f2937;
+  text-decoration: none;
+}
+
+.toc a::after {
+  content: target-counter(attr(href), page);
+  float: right;
+  font-variant-numeric: tabular-nums;
+  color: #6b7280;
+  font-weight: 400;
+}
+
+/* ---------- 正文 ---------- */
+
+h1, h2, h3, h4 {
+  font-family: "Noto Sans CJK SC", sans-serif;
+  color: #111827;
+  line-height: 1.28;
+  break-after: avoid;
+}
+
+h1 {
+  string-set: part content();
+  break-before: page;
+  margin: 0 0 7mm;
+  padding: 0 0 3.2mm;
+  border-bottom: 2.2pt solid #b45309;
+  font-size: 21pt;
+  font-weight: 700;
+}
+
+h1.part {
+  break-before: page;
+  margin-top: 0;
+  padding-top: 0;
+  font-size: 26pt;
+  border-bottom: 0;
+}
+
+h2 {
+  margin: 8mm 0 3mm;
+  font-size: 14.5pt;
+  color: #1f2937;
+}
+
+h3 {
+  margin: 6mm 0 2.2mm;
+  font-size: 11.6pt;
+  color: #374151;
+}
+
+h4 {
+  margin: 4.5mm 0 1.6mm;
+  font-size: 10.4pt;
+  color: #4b5563;
+}
+
+p { margin: 0 0 3.2mm; text-align: justify; }
+
+a { color: #1d4ed8; text-decoration: none; }
+
+strong { color: #111827; }
+
+ul, ol { margin: 0 0 3.4mm; padding-left: 6mm; }
+li { margin: 0 0 1.4mm; }
+
+blockquote {
+  margin: 4mm 0;
+  padding: 3mm 4mm;
+  background: #f9fafb;
+  border-left: 3pt solid #b45309;
+  color: #374151;
+}
+
+blockquote p:last-child { margin-bottom: 0; }
+
+/* ---------- 代码 ---------- */
+
+pre {
+  margin: 3.5mm 0 4.5mm;
+  padding: 3.2mm 3.6mm;
+  background: #111827;
+  color: #e5e7eb;
+  border-radius: 1.2mm;
+  font-family: "DejaVu Sans Mono", "Liberation Mono", monospace;
+  font-size: 8.1pt;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+  break-inside: avoid;
+}
+
+code {
+  font-family: "DejaVu Sans Mono", "Liberation Mono", monospace;
+  font-size: .88em;
+  background: #f3f4f6;
+  color: #7c2d12;
+  padding: .2mm 1.2mm;
+  border-radius: .8mm;
+}
+
+pre code {
+  background: none;
+  color: inherit;
+  padding: 0;
+  font-size: inherit;
+}
+
+/* ---------- 表格 ---------- */
+
+table {
+  width: 100%;
+  margin: 3.5mm 0 5mm;
+  border-collapse: collapse;
+  font-size: 8.7pt;
+  line-height: 1.5;
+  break-inside: avoid;
+}
+
+thead { display: table-header-group; }
+
+th {
+  background: #f3f4f6;
+  color: #111827;
+  font-weight: 700;
+  text-align: left;
+  padding: 2.2mm 2.4mm;
+  border-bottom: 1.4pt solid #9ca3af;
+}
+
+td {
+  padding: 2mm 2.4mm;
+  border-bottom: .5pt solid #e5e7eb;
+  vertical-align: top;
+}
+
+table th:first-child,
+table td:first-child {
+  min-width: 20mm;
+}
+
+tr:nth-child(even) td { background: #fcfcfd; }
+
+.table-caption {
+  margin: 4mm 0 1.2mm;
+  font-size: 8.6pt;
+  font-weight: 700;
+  color: #374151;
+  break-after: avoid;
+}
+
+/* ---------- 图 ---------- */
+
+figure {
+  margin: 5mm 0 6mm;
+  break-inside: avoid;
+  text-align: center;
+}
+
+figure.wide {
+  page: landscape;
+  margin: 2mm 0;
+}
+
+figure.tall {
+  page: auto;
+  margin: 2mm 0;
+}
+
+figure.wide img {
+  max-width: 100%;
+  max-height: 150mm;
+}
+
+figure.tall img {
+  max-width: 100%;
+  max-height: 222mm;
+}
+
+figure img {
+  max-width: 100%;
+  max-height: 190mm;
+}
+
+figcaption, .figcaption {
+  margin-top: 2.2mm;
+  font-size: 8.6pt;
+  color: #4b5563;
+  text-align: center;
+  line-height: 1.45;
+}
+
+.figure-note {
+  margin: 1.5mm 0 0;
+  font-size: 8pt;
+  color: #6b7280;
+  text-align: left;
+}
+
+/* ---------- 提示块 ---------- */
+
+.callout {
+  margin: 4mm 0;
+  padding: 3.2mm 4mm;
+  border: .8pt solid #fcd34d;
+  border-left: 3pt solid #b45309;
+  background: #fffbeb;
+  break-inside: avoid;
+}
+
+.callout-title {
+  margin: 0 0 1.2mm;
+  font-weight: 700;
+  font-size: 8.6pt;
+  letter-spacing: .08em;
+  color: #92400e;
+  text-transform: uppercase;
+}
+
+.callout p:last-child { margin-bottom: 0; }
+
+.evidence {
+  margin: 4mm 0;
+  padding: 3mm 3.6mm;
+  background: #f0fdf4;
+  border-left: 3pt solid #15803d;
+  font-size: 8.8pt;
+  break-inside: avoid;
+}
+
+.evidence-title {
+  font-weight: 700;
+  color: #166534;
+  font-size: 8.4pt;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  margin-bottom: 1.2mm;
+}
+
+.warn {
+  background: #fef2f2;
+  border-left-color: #b91c1c;
+}
+
+.warn .evidence-title { color: #991b1b; }
+
+/* ---------- 页内分栏 ---------- */
+
+.two-col {
+  display: flex;
+  gap: 6mm;
+  break-inside: avoid;
+}
+
+.two-col > * { flex: 1; }
+
+/* ---------- 附录 / 索引 ---------- */
+
+.small { font-size: 8.6pt; color: #4b5563; }
+
+hr {
+  border: 0;
+  border-top: .6pt solid #d1d5db;
+  margin: 6mm 0;
+}
+
+/* ---------- 证据标记图标 ---------- */
+
+/* 内联 SVG（Lucide，MIT）。颜色写死在 SVG 的 stroke 上，因为 WeasyPrint 70
+   不解析内联 SVG 里的 currentColor；下面的 color 供浏览器预览与后续渲染器使用。 */
+
+.status-icon {
+  width: 3.2mm;
+  height: 3.2mm;
+  vertical-align: -0.15em;
+  margin: 0 0.25mm;
+  display: inline-block;
+}
+
+.status-icon.status-ok { color: #15803d; }
+.status-icon.status-warn { color: #b45309; }
+.status-icon.status-unknown { color: #6b7280; }
+
+/* ---------- 打印微调 ---------- */
+
+img { max-width: 100%; }
+
+.page-break { break-before: page; }
+
+.avoid-break { break-inside: avoid; }
+
+h1 + p, h2 + p, h3 + p { margin-top: 0; }

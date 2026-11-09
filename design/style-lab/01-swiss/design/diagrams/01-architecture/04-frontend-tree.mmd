@@ -1,0 +1,41 @@
+%% 04 · 前端组件树
+%% 问题：App.tsx 把 SSE 事件分流给哪些子组件？契约类型与校验器从哪里来？
+flowchart LR
+  classDef runtime fill:#f5f3ff,stroke:#7c3aed,color:#4c1d95
+  classDef contract fill:#eff6ff,stroke:#1d4ed8,color:#1e3a8a
+  classDef danger fill:#fef2f2,stroke:#b91c1c,color:#7f1d1d
+  classDef pass fill:#f0fdf4,stroke:#15803d,color:#14532d
+  classDef edge fill:#f9fafb,stroke:#6b7280,color:#374151
+  classDef hidden fill:none,stroke:none,color:transparent
+
+  PAD[" "]:::hidden
+  MAIN["main.tsx · 挂载"]:::edge
+  APP["App.tsx · 状态机"]:::runtime
+  COMP["Composer · 输入/停止"]:::runtime
+  RAIL["StepRail · 12 步步骤条"]:::runtime
+  TABLE["ResultTable · 结果表"]:::pass
+  EC["ErrorCard · 三类失败"]:::danger
+  PEC["PseudoErrorCard · 止损"]:::danger
+
+  API["lib/api · fetch + SseParser"]:::contract
+  JS["lib/json-schema"]:::contract
+  RESULT["lib/result · 列语义"]:::contract
+  GEN["generated/sse · 类型"]:::contract
+  SCH["generated/sse.schema.json"]:::contract
+  TYPES["types.ts · UI 类型"]:::contract
+
+  PAD ~~~ MAIN
+  MAIN -->|"挂载"| APP
+  APP -->|"提交 / 停止"| COMP
+  APP -->|"传 steps + states"| RAIL
+  APP -->|"传 result"| TABLE
+  APP -->|"按 class 分流"| EC
+  APP -->|"止损渲染"| PEC
+  APP -->|"调用 4 个接口"| API
+  APP -->|"判伪错误"| RESULT
+  TABLE -->|"列语义/复制"| RESULT
+  API -->|"校验事件"| JS
+  API -->|"读 EVENT_TYPES"| GEN
+  API -->|"读 schema 副本"| SCH
+  TYPES -.->|"派生自契约"| GEN
+  APP -.->|"共享类型"| TYPES

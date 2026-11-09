@@ -1,0 +1,32 @@
+%% 05 · 阶段演进 S0→S8
+%% 问题：每阶段新增哪一类不确定性？在哪个可停点能验收它已经收敛？
+%% 阅读顺序：从左到右、从上到下，S0 → S8 逐格推进。
+block-beta
+  columns 3
+  classDef contract fill:#eff6ff,stroke:#1d4ed8,color:#1e3a8a
+  classDef build fill:#fff7ed,stroke:#b45309,color:#7c2d12
+  classDef runtime fill:#f5f3ff,stroke:#7c3aed,color:#4c1d95
+  classDef danger fill:#fef2f2,stroke:#b91c1c,color:#7f1d1d
+  classDef pass fill:#f0fdf4,stroke:#15803d,color:#14532d
+  classDef edge fill:#f9fafb,stroke:#6b7280,color:#374151
+  classDef head fill:none,stroke:none,color:#374151
+
+  T["S0 → S8：逐格新增不确定性与可停点"]:3
+
+  S0["S0 骨架<br/>不确定：假流永远成功<br/>可停：12 步协议回放"]
+  S1["S1 Schema 契约<br/>不确定：数据语义<br/>可停：5/24/6 校验"]
+  S2["S2 元知识<br/>不确定：三存储漂移<br/>可停：manifest NOOP"]
+  S3["S3 检索<br/>不确定：召回质量<br/>可停：20 题黄金集"]
+  S4["S4 生成<br/>不确定：SQL 合法性<br/>可停：AST 静态校验"]
+  S5["S5 安全<br/>不确定：恶意 SQL<br/>可停：36 注入全拒"]
+  S6["S6 失败通道<br/>不确定：失败无名字<br/>可停：16 码 / 6 类失败"]
+  S7["S7 前端<br/>不确定：界面契约漂移<br/>可停：14 条夹具回放"]
+  S8["S8 性能<br/>不确定：延迟与预算<br/>可停：P50/P95 目标"]
+
+  class S0,S1 contract
+  class S2,S3 build
+  class S4,S6 runtime
+  class S5 danger
+  class S7 pass
+  class S8 edge
+  class T head

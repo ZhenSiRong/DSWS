@@ -1,0 +1,88 @@
+%% 31 · 失败注入矩阵
+%% 只替换模型与数据库；校验、策略、校正、SSE 都是真代码
+flowchart LR
+  classDef contract fill:#eff6ff,stroke:#1d4ed8,color:#1e3a8a
+  classDef build fill:#fff7ed,stroke:#b45309,color:#7c2d12
+  classDef runtime fill:#f5f3ff,stroke:#7c3aed,color:#4c1d95
+  classDef danger fill:#fef2f2,stroke:#b91c1c,color:#7f1d1d
+  classDef edge fill:#f9fafb,stroke:#6b7280,color:#374151
+
+  subgraph INJ["注入点 · 只换外部依赖"]
+    direction TB
+    GEN["Generator 替身<br/>返回非法 SQL / 拒答"]
+    EXE["Executor 替身<br/>返回 0 行 / 抛超时"]
+    CAN["POST /api/cancel<br/>取消注册表"]
+  end
+
+  subgraph SCN["场景夹具 · fixtures/failures/scenarios.yaml"]
+    direction TB
+    SC1["sql_rejected<br/>UNION 外带"]
+    SC2["sql_syntax<br/>括号不配对"]
+    SC3["sql_unknown_column<br/>上下文外的列"]
+    SC4["empty_result<br/>执行成功 0 行"]
+    SC5["timeout<br/>执行超时"]
+    SC6["llm_refusal<br/>模型主动拒答"]
+    SC7["cancelled<br/>用户点取消"]
+  end
+
+  subgraph CODE["错误码 · contracts/errors.yaml"]
+    direction TB
+    CO1["SQL_REJECTED<br/>failure · 不可重试"]
+    CO2["SQL_SYNTAX<br/>failure · 可重试 1 次"]
+    CO3["SQL_UNKNOWN_COLUMN<br/>failure · 可重试 1 次"]
+    CO4["EMPTY_RESULT<br/>empty · 合法空态"]
+    CO5["TIMEOUT<br/>failure · 不可重试"]
+    CO6["LLM_REFUSAL<br/>failure · 不可重试"]
+    CO7["CANCELLED<br/>cancelled · 非完成非失败"]
+  end
+
+  subgraph FIX["校正闭环 · max_attempts=1"]
+    direction TB
+    CORR["correct_sql 校正"]
+    VAL["guard + policy 重新校验"]
+    RUN["ReadOnlyExecutor 执行"]
+  end
+
+  subgraph UI["前端渲染"]
+    direction TB
+    UIF["红框 + 失败步骤红叉"]
+    UIE["空态卡 · 不标红"]
+    UIC["取消态 · 步骤条停止"]
+  end
+
+  GEN -->|生成被拒 SQL| SC1
+  GEN -->|生成坏 SQL| SC2
+  GEN -->|生成未知列| SC3
+  GEN -->|返回拒答| SC6
+  EXE -->|返回空集| SC4
+  EXE -->|抛出超时| SC5
+  CAN -->|触发取消| SC7
+
+  SC1 -->|映射为| CO1
+  SC2 -->|映射为| CO2
+  SC3 -->|映射为| CO3
+  SC4 -->|映射为| CO4
+  SC5 -->|映射为| CO5
+  SC6 -->|映射为| CO6
+  SC7 -->|映射为| CO7
+
+  CO1 -->|渲染为| UIF
+  CO2 -->|渲染为| UIF
+  CO3 -->|渲染为| UIF
+  CO4 -->|渲染为| UIE
+  CO5 -->|渲染为| UIF
+  CO6 -->|渲染为| UIF
+  CO7 -->|渲染为| UIC
+
+  CO2 -->|可重试| CORR
+  CO3 -->|可重试| CORR
+  CORR -->|重新过校验| VAL
+  VAL -->|通过| RUN
+  VAL -->|拒绝| CO1
+  CORR -.->|根因未变，保留原码| CO2
+
+  class CO1,CO2,CO3,CO5,CO6,UIF,VAL danger
+  class SC1,SC2,SC3,SC4,SC5,SC6,SC7 build
+  class GEN,EXE,CAN,CORR,RUN runtime
+  class CO4,CO7,UIE,UIC edge
+  class CODE contract

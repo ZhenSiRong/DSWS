@@ -1,0 +1,45 @@
+%% 12 · S6 校正闭环状态机
+%% 主线：生成 → 校验 → [可重试] 校正一次 → 再校验 → 执行 → result / error
+stateDiagram-v2
+    direction TB
+    state "初始 · 收到 query" as Init
+    state "上下文 8 阶段" as Ctx
+    state "生成 generate_sql" as Gen
+    state "校验 validate_sql" as Val
+    state "校正 correct_sql ×1" as Cor
+    state "执行 run_sql" as Run
+    state "result" as Ok
+    state "error · EMPTY_RESULT" as Empty
+    state "error · 终止" as Err
+    state "error · CANCELLED" as Can
+
+    classDef ok fill:#f0fdf4,stroke:#15803d,color:#14532d
+    classDef danger fill:#fef2f2,stroke:#b91c1c,color:#7f1d1d
+    classDef cancel fill:#f9fafb,stroke:#6b7280,color:#374151
+
+    [*] --> Init
+    Init --> Ctx
+    Ctx --> Gen: 8 阶段全 success
+    Ctx --> Err: 阶段抛异常
+    Ctx --> Can: 检测到取消
+    Gen --> Val: draft.sql 非空
+    Gen --> Err: refusal / 异常
+    Val --> Run: 通过
+    Val --> Cor: 可重试且 attempts=0
+    Val --> Err: 不可重试 / 次数用尽
+    Cor --> Val: 重新校验
+    Cor --> Err: 校正失败
+    Run --> Ok: rows>0
+    Run --> Empty: rows=0
+    Run --> Err: 执行错误
+    Run --> Can: 执行中被取消
+
+    class Ok ok
+    class Empty ok
+    class Err danger
+    class Can cancel
+
+    Ok --> [*]
+    Empty --> [*]
+    Err --> [*]
+    Can --> [*]

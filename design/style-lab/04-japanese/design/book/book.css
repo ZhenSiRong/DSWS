@@ -1,0 +1,669 @@
+/* =========================================================================
+   DSWS 从零到一 · 风格 04 · 日式留白（Japanese Minimal）
+   -------------------------------------------------------------------------
+   网格    A4 · 上下 30mm / 左右 28mm · 版心 136mm（再内缩 9mm）· 行高 1.95
+   字体    正文 Noto Serif CJK SC 9.4pt；标题 Noto Sans CJK SC 300/400
+   色板    纸 #FAFAF7 · 墨 #1C1C1C · 次级 #6F6A62 · 线 #D8D4CC · 蓝 #223A5E
+   原则    只用细线与留白做结构；不加底色块、不加粗黑标题、不加装饰图标
+   ========================================================================= */
+
+@page {
+  size: A4;
+  margin: 30mm 28mm 30mm 28mm;
+  background: #FAFAF7;
+
+  /* 页眉：一条 0.3pt 细线，上方左侧为部分名 */
+  @top-center {
+    content: string(part);
+    width: 136mm;
+    text-align: left;
+    padding-bottom: 2.4mm;
+    border-bottom: .3pt solid #D8D4CC;
+    font-family: "Noto Sans CJK SC", sans-serif;
+    font-size: 6.6pt;
+    font-weight: 300;
+    letter-spacing: .2em;
+    color: #8C867B;
+    vertical-align: bottom;
+  }
+
+  /* 页脚：居中衬线页码 */
+  @bottom-center {
+    content: counter(page);
+    font-family: "Noto Serif CJK SC", serif;
+    font-size: 8pt;
+    letter-spacing: .14em;
+    color: #1C1C1C;
+    padding-top: 6mm;
+  }
+}
+
+/* 封面：整页纸色，无页眉页脚 */
+@page cover {
+  margin: 0;
+  background: #FAFAF7;
+  @top-center { content: none; border: 0; }
+  @bottom-center { content: none; }
+}
+
+/* 目录：保留页码，去掉页眉 */
+@page toc {
+  @top-center { content: none; border: 0; }
+}
+
+/* 横排整版图 */
+@page landscape {
+  size: A4 landscape;
+  margin: 26mm 28mm 26mm 28mm;
+  background: #FAFAF7;
+
+  @top-center {
+    content: string(part);
+    width: 223mm;
+    text-align: left;
+    padding-bottom: 2.4mm;
+    border-bottom: .3pt solid #D8D4CC;
+    font-family: "Noto Sans CJK SC", sans-serif;
+    font-size: 6.6pt;
+    font-weight: 300;
+    letter-spacing: .2em;
+    color: #8C867B;
+    vertical-align: bottom;
+  }
+  @bottom-center {
+    content: counter(page);
+    font-family: "Noto Serif CJK SC", serif;
+    font-size: 8pt;
+    letter-spacing: .14em;
+    color: #1C1C1C;
+    padding-top: 6mm;
+  }
+}
+
+/* -------------------------------------------------------------------------
+   基本文字
+   ------------------------------------------------------------------------- */
+
+html {
+  font-family: "Noto Serif CJK SC", "Noto Serif SC", serif;
+  font-size: 9.4pt;
+  line-height: 1.95;
+  color: #1C1C1C;
+  background: #FAFAF7;
+  -weasy-hyphens: none;
+}
+
+body {
+  margin: 0;
+  padding: 0 9mm;          /* 154mm 可用区 → 136mm 行宽 */
+  text-align: justify;
+  orphans: 2;
+  widows: 2;
+}
+
+p {
+  margin: 0 0 2.6mm;
+  text-indent: 1em;
+  text-align: justify;
+}
+
+h1 + p, h2 + p, h3 + p, h4 + p,
+blockquote p, li p, figcaption p { text-indent: 0; }
+
+a {
+  color: #223A5E;
+  text-decoration: none;
+}
+
+strong {
+  font-weight: 500;
+  color: #141414;
+}
+
+em { font-style: normal; color: #3A3733; }
+
+hr {
+  width: 24mm;
+  margin: 11mm auto 12mm;
+  border: 0;
+  border-top: .3pt solid #C9C4BA;
+}
+
+/* -------------------------------------------------------------------------
+   标题：无粗黑，靠字距与细线分层
+   ------------------------------------------------------------------------- */
+
+h1, h2, h3, h4 {
+  font-family: "Noto Sans CJK SC", sans-serif;
+  color: #1C1C1C;
+  font-weight: 400;
+  break-after: avoid;
+  text-align: left;
+}
+
+h1 {
+  string-set: part content();
+  break-before: page;
+  margin: 24mm 0 9mm;
+  padding: 0;
+  font-size: 18pt;
+  font-weight: 300;
+  letter-spacing: .12em;
+  line-height: 1.8;
+}
+
+/* 部分首页：标题上方 30mm 靛蓝细线 */
+h1::before {
+  content: "";
+  display: block;
+  width: 30mm;
+  border-top: .3pt solid #223A5E;
+  margin-bottom: 9mm;
+}
+
+h2 {
+  margin: 12mm 0 4.5mm;
+  padding-top: 3.6mm;
+  border-top: .3pt solid #D8D4CC;
+  font-size: 12.5pt;
+  letter-spacing: .06em;
+  line-height: 1.75;
+}
+
+h3 {
+  margin: 8mm 0 3mm;
+  font-size: 10.5pt;
+  letter-spacing: .08em;
+  line-height: 1.8;
+}
+
+/* 三级标题前的 4mm 靛蓝短线 */
+h3::before {
+  content: "";
+  display: inline-block;
+  width: 4mm;
+  height: 0;
+  border-top: .4pt solid #223A5E;
+  margin-right: 3mm;
+  vertical-align: .28em;
+}
+
+h4 {
+  margin: 6.5mm 0 2.2mm;
+  font-size: 9.6pt;
+  letter-spacing: .1em;
+  color: #6F6A62;
+}
+
+/* -------------------------------------------------------------------------
+   列表
+   ------------------------------------------------------------------------- */
+
+ul, ol {
+  margin: 0 0 3.4mm;
+  padding-left: 7mm;
+}
+
+li { margin: 0 0 1.8mm; }
+
+ul li::marker { color: #B9B4AA; font-size: .9em; }
+ol li::marker {
+  color: #8C867B;
+  font-family: "Noto Sans CJK SC", sans-serif;
+  font-size: .82em;
+}
+
+/* 检查清单：细方框，方框外挂在版心左缘 */
+li.task {
+  list-style: none;
+  margin-left: -7mm;
+}
+
+li.task::before {
+  content: "";
+  display: inline-block;
+  width: 3.1mm;
+  height: 3.1mm;
+  border: .3pt solid #B0AAA0;
+  margin-right: 3.2mm;
+  vertical-align: -.4mm;
+}
+
+/* 复习题：难度标记与自检线索 */
+.diff {
+  font-family: "Noto Sans CJK SC", sans-serif;
+  font-size: 7.6pt;
+  letter-spacing: .1em;
+  color: #6F6A62;
+  margin-right: 1.6mm;
+}
+
+.hint {
+  display: block;
+  margin-top: 1.4mm;
+  font-size: 8.2pt;
+  line-height: 1.85;
+  letter-spacing: .01em;
+  color: #6F6A62;
+}
+
+ol > li { margin-bottom: 3mm; }
+
+/* -------------------------------------------------------------------------
+   引用：不画框，左侧 0.3pt 竖线 + 小标签
+   ------------------------------------------------------------------------- */
+
+blockquote {
+  margin: 6mm 0 6mm 5mm;
+  padding: 0 0 0 5mm;
+  border-left: .3pt solid #C9C4BA;
+  color: #3A3733;
+  font-size: 9pt;
+  line-height: 1.9;
+}
+
+blockquote::before {
+  content: "NOTE";
+  display: block;
+  font-family: "Noto Sans CJK SC", sans-serif;
+  font-size: 7.5pt;
+  font-weight: 400;
+  letter-spacing: .16em;
+  color: #8C867B;
+  margin-bottom: 2mm;
+}
+
+blockquote p:last-child { margin-bottom: 0; }
+
+/* -------------------------------------------------------------------------
+   代码：纸色底 + 0.3pt 细框，不用深色块
+   ------------------------------------------------------------------------- */
+
+pre {
+  margin: 4mm 0 5.5mm;
+  padding: 4mm 4.5mm;
+  background: #F3F1EC;
+  color: #24211D;
+  border: .3pt solid #D8D4CC;
+  border-radius: 0;
+  font-family: "DejaVu Sans Mono", "Noto Sans Mono CJK SC", monospace;
+  font-size: 7.8pt;
+  line-height: 1.85;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  tab-size: 2;
+  break-inside: avoid;
+}
+
+code {
+  font-family: "DejaVu Sans Mono", "Noto Sans Mono CJK SC", monospace;
+  font-size: .86em;
+  color: #2E2B27;
+  background: #F3F1EC;
+  padding: 0 .9mm;
+  border-radius: 0;
+}
+
+pre code {
+  background: none;
+  color: inherit;
+  padding: 0;
+  font-size: inherit;
+}
+
+/* -------------------------------------------------------------------------
+   表格：无底色、无竖线；顶/底 0.4pt，行 0.25pt
+   ------------------------------------------------------------------------- */
+
+table {
+  width: 100%;
+  margin: 2.6mm 0 6.5mm;
+  border-collapse: collapse;
+  border-top: .4pt solid #1C1C1C;
+  border-bottom: .4pt solid #1C1C1C;
+  font-size: 7.8pt;
+  line-height: 1.8;
+  break-inside: auto;
+}
+
+thead { display: table-header-group; }
+tfoot { display: table-footer-group; }
+
+th {
+  font-family: "Noto Sans CJK SC", sans-serif;
+  font-size: 7.4pt;
+  font-weight: 400;
+  letter-spacing: .1em;
+  color: #6F6A62;
+  text-align: left;
+  vertical-align: bottom;
+  padding: 2.4mm 2.6mm;
+  border-bottom: .4pt solid #1C1C1C;
+  background: none;
+}
+
+td {
+  padding: 2.8mm 2.6mm;
+  border-bottom: .25pt solid #D8D4CC;
+  vertical-align: top;
+  text-align: left;
+}
+
+tr:last-child td { border-bottom: 0; }
+
+table th:first-child,
+table td:first-child {
+  min-width: 22mm;
+  padding-left: 0;
+}
+
+table th:last-child,
+table td:last-child { padding-right: 0; }
+
+tr { break-inside: avoid; }
+
+.table-caption {
+  margin: 7mm 0 2.2mm;
+  font-family: "Noto Sans CJK SC", sans-serif;
+  font-size: 7.4pt;
+  font-weight: 400;
+  letter-spacing: .12em;
+  color: #6F6A62;
+  text-indent: 0;
+  break-after: avoid;
+}
+
+/* -------------------------------------------------------------------------
+   图：小、居中、版心 82%
+   ------------------------------------------------------------------------- */
+
+figure {
+  width: 82%;
+  margin: 9mm auto 10mm;
+  padding: 0;
+  break-inside: avoid;
+  text-align: center;
+}
+
+figure img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 205mm;
+  margin: 0 auto;
+}
+
+figcaption, .figcaption {
+  margin-top: 4mm;
+  font-family: "Noto Sans CJK SC", sans-serif;
+  font-size: 7.8pt;
+  line-height: 1.75;
+  letter-spacing: .04em;
+  color: #6F6A62;
+  text-align: center;
+}
+
+figcaption::before {
+  content: "";
+  display: block;
+  width: 10mm;
+  border-top: .3pt solid #D8D4CC;
+  margin: 0 auto 3mm;
+}
+
+.figure-note {
+  margin: 2mm 0 0;
+  font-size: 7.6pt;
+  color: #8C867B;
+  text-align: left;
+}
+
+/* 横排整版图 */
+figure.wide {
+  page: landscape;
+  width: 100%;
+  margin: 0 auto;
+}
+
+figure.wide img {
+  width: auto;
+  max-width: 100%;
+  max-height: 150mm;
+}
+
+/* 竖长图：不旋转，只缩放 */
+figure.tall {
+  page: auto;
+  width: 68%;
+  margin: 5mm auto 7mm;
+}
+
+figure.tall img {
+  width: auto;
+  max-width: 100%;
+  max-height: 205mm;
+}
+
+/* -------------------------------------------------------------------------
+   封面：几乎空白，只有字、线、纸色
+   ------------------------------------------------------------------------- */
+
+.cover {
+  page: cover;
+  position: relative;
+  height: 297mm;
+  padding: 30mm 28mm;
+  box-sizing: border-box;
+  background: #FAFAF7;
+  color: #1C1C1C;
+  text-align: left;
+}
+
+.cover .mark {
+  position: absolute;
+  top: 30mm;
+  left: 28mm;
+  font-family: "Noto Sans CJK SC", sans-serif;
+  font-size: 7pt;
+  font-weight: 400;
+  letter-spacing: .46em;
+  color: #8C867B;
+  text-transform: uppercase;
+}
+
+.cover .rule {
+  position: absolute;
+  top: 92mm;
+  left: 28mm;
+  width: 0;
+  height: 30mm;
+  border-left: .3pt solid #223A5E;
+}
+
+.cover .titleblock {
+  position: absolute;
+  top: 88mm;
+  left: 41mm;
+  right: 28mm;
+}
+
+.cover h1 {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  break-before: auto;
+  string-set: none;
+  font-family: "Noto Serif CJK SC", serif;
+  font-size: 28pt;
+  font-weight: 400;
+  letter-spacing: .08em;
+  line-height: 1.62;
+  color: #1C1C1C;
+}
+
+.cover h1::before { content: none; border: 0; }
+
+.cover .subtitle {
+  margin: 11mm 0 0;
+  padding: 0;
+  font-family: "Noto Serif CJK SC", serif;
+  font-size: 9pt;
+  line-height: 1.9;
+  letter-spacing: .1em;
+  color: #6F6A62;
+  text-indent: 0;
+  max-width: 120mm;
+}
+
+.cover .foot {
+  position: absolute;
+  left: 28mm;
+  right: 28mm;
+  bottom: 30mm;
+}
+
+.cover .foot .line {
+  margin: 0 0 4mm;
+  padding: 0;
+  font-family: "Noto Sans CJK SC", sans-serif;
+  font-size: 8pt;
+  font-weight: 300;
+  letter-spacing: .16em;
+  color: #6F6A62;
+  text-indent: 0;
+}
+
+.cover .foot .hr {
+  width: 30mm;
+  border-top: .3pt solid #D8D4CC;
+  margin: 0 0 4mm;
+}
+
+.cover .foot .meta {
+  display: flex;
+  justify-content: space-between;
+  font-family: "Noto Sans CJK SC", sans-serif;
+  font-size: 7.5pt;
+  font-weight: 300;
+  letter-spacing: .1em;
+  color: #6F6A62;
+}
+
+/* -------------------------------------------------------------------------
+   目录：大量留白，点线引导，页码可点击
+   ------------------------------------------------------------------------- */
+
+.toc-page {
+  page: toc;
+  break-before: page;
+  break-after: page;
+  padding-top: 16mm;
+}
+
+.toc-page h1 {
+  margin: 0 0 14mm;
+  padding: 0;
+  border: 0;
+  break-before: auto;
+  string-set: none;
+  font-size: 16pt;
+  font-weight: 300;
+  letter-spacing: .2em;
+  line-height: 1.6;
+}
+
+.toc-page h1::before {
+  content: "CONTENTS";
+  display: block;
+  width: auto;
+  border: 0;
+  margin: 0 0 6mm;
+  font-size: 6.6pt;
+  font-weight: 400;
+  letter-spacing: .36em;
+  color: #8C867B;
+}
+
+.toc {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-family: "Noto Sans CJK SC", sans-serif;
+  font-size: 8.5pt;
+  line-height: 2.2;
+}
+
+.toc li {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.toc li.lvl1 {
+  margin-top: 11mm;
+  font-size: 9.8pt;
+  letter-spacing: .12em;
+  padding-bottom: 1.6mm;
+  border-bottom: .3pt solid #D8D4CC;
+}
+
+.toc li.lvl1:first-child { margin-top: 0; }
+
+.toc li.lvl2 {
+  padding-left: 9mm;
+  letter-spacing: .04em;
+}
+
+.toc a {
+  color: #1C1C1C;
+  text-decoration: none;
+}
+
+.toc a::after {
+  content: leader(". ") target-counter(attr(href), page);
+  color: #A9A39A;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+}
+
+.toc li.lvl1 a::after { color: #6F6A62; }
+
+/* -------------------------------------------------------------------------
+   杂项
+   ------------------------------------------------------------------------- */
+
+.small { font-size: 8.6pt; color: #6F6A62; }
+
+.two-col {
+  display: flex;
+  gap: 6mm;
+  break-inside: avoid;
+}
+
+.two-col > * { flex: 1; }
+
+img { max-width: 100%; }
+
+.page-break { break-before: page; }
+
+.avoid-break { break-inside: avoid; }
+
+h1 + p, h2 + p, h3 + p { margin-top: 0; }
+
+/* ---------- 证据标记图标 ---------- */
+
+/* 内联 SVG（Lucide，MIT）。颜色写死在 SVG 的 stroke 上，因为 WeasyPrint 70
+   不解析内联 SVG 里的 currentColor；下面的 color 供浏览器预览与后续渲染器使用。
+   色值取自本套色板（苔绿 / 琥珀 / 次级灰）：已验证 / 推断 / 未验证。 */
+
+.status-icon {
+  width: 3.2mm;
+  height: 3.2mm;
+  vertical-align: -0.15em;
+  margin: 0 0.25mm;
+  display: inline-block;
+}
+
+.status-icon.status-ok { color: #4E6B52; }
+.status-icon.status-warn { color: #9A6B2B; }
+.status-icon.status-unknown { color: #6F6A62; }

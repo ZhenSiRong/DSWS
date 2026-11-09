@@ -1,0 +1,45 @@
+%% 14 · 数仓 ER 图（5 表）
+erDiagram
+    dim_region ||--o{ fact_order : "按 region_id 关联多单"
+    dim_customer ||--o{ fact_order : "按 customer_id 关联多单"
+    dim_product ||--o{ fact_order : "按 product_id 关联多单"
+    dim_date ||--o{ fact_order : "按 date_id 关联多天"
+
+    dim_region {
+        varchar region_id PK "一行一个 region_id"
+        varchar province "省，非唯一键"
+        varchar region_name "大区，省的上级分组"
+        varchar country "国家"
+    }
+
+    dim_customer {
+        varchar customer_id PK "一行一个 customer_id"
+        varchar customer_name "客户名称"
+        varchar gender "性别"
+        varchar member_level "会员等级"
+    }
+
+    dim_product {
+        varchar product_id PK "一行一个 product_id"
+        varchar product_name "商品名称"
+        varchar category "品类"
+        varchar brand "品牌"
+    }
+
+    dim_date {
+        int date_id PK "一行一天，yyyyMMdd"
+        int year "年份"
+        varchar quarter "季度，Q1"
+        int month "月，1-12"
+        int day "日，1-31"
+    }
+
+    fact_order {
+        varchar order_id PK "一行一单，COUNT DISTINCT 得订单量"
+        varchar customer_id FK "逻辑外键 -> dim_customer"
+        varchar product_id FK "逻辑外键 -> dim_product"
+        int date_id FK "逻辑外键 -> dim_date"
+        varchar region_id FK "逻辑外键 -> dim_region"
+        int order_quantity "单内件数，不是订单数"
+        float order_amount "整单金额，已含件数"
+    }

@@ -1,0 +1,85 @@
+%% 15 · 契约模型（表 / 列 / 指标 / 值域 / 列—指标）
+classDiagram
+    direction LR
+
+    class SchemaContract {
+        +int version
+        +string dataset
+        +int expected_tables
+        +int expected_fact_rows
+        +int[] date_range
+        +float total_amount
+        +float total_quantity
+    }
+
+    class Table {
+        +string name
+        +string role
+        +string grain
+        +string description
+        +string primary_key
+        +ForeignKey[] foreign_keys
+        +Measure[] measures
+    }
+
+    class Column {
+        +string name
+        +string type
+        +string role
+        +bool nullable
+        +string description
+        +string[] aliases
+        +ValueDomain value_domain
+    }
+
+    class Metric {
+        +string name
+        +string label
+        +string description
+        +string formula
+        +string[] relevant_columns
+        +string[] aliases
+        +string aggregation
+        +float expected_value
+        +string grain
+        +RejectedValue[] rejected_values
+    }
+
+    class ValueDomain {
+        +string kind
+        +string[] values
+        +int min
+        +int max
+        +string pattern
+        +string format
+    }
+
+    class ColumnMetric {
+        +string column_id
+        +string metric_id
+    }
+
+    class ForeignKey {
+        +string column
+        +string references
+    }
+
+    class Measure {
+        +string column
+        +string aggregation
+        +string unit
+    }
+
+    SchemaContract "1" *-- "5" Table : 声明
+    SchemaContract "1" *-- "6" Metric : 声明
+    Table "1" *-- "24" Column : 拥有
+    Column "1" *-- "1" ValueDomain : 约束
+    Table "1" *-- "0..*" ForeignKey : 声明
+    Table "1" *-- "0..*" Measure : 声明
+    Column "1" -- "0..*" ColumnMetric : 参与
+    Metric "1" -- "0..*" ColumnMetric : 覆盖
+    Metric "1" ..> "1..*" Column : 引用 relevant_columns
+
+    note for ValueDomain "kind 只有五种：enum / range / id / foreign_key / open"
+    note for Table "grain 写明一行代表什么：省 / 客户 / 商品 / 天 / 一单"
+    note for ColumnMetric "派生表：9 条关系 = 6 个指标的 relevant_columns 之和"

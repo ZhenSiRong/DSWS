@@ -1,0 +1,405 @@
+{
+  "generated_at": "2026-11-08T17:08:31.495238+00:00",
+  "target": "http://8.155.135.97:5051",
+  "trials_per_case": 3,
+  "cases": [
+    {
+      "id": "live-01",
+      "question": "查询销售额大于平均销售额的商品",
+      "why": "自然触发校正并成功（已有 SSE 证据）",
+      "trials": [
+        {
+          "node_count": 12,
+          "validate_errors": 1,
+          "correct_sql": "success",
+          "corrected_ok": true,
+          "run_sql_ok": true,
+          "outcome": "result",
+          "error_code": null,
+          "row_count": 5,
+          "columns": [
+            "商品ID",
+            "商品名称",
+            "销售额"
+          ],
+          "class": "correction_success"
+        },
+        {
+          "node_count": 12,
+          "validate_errors": 1,
+          "correct_sql": "success",
+          "corrected_ok": true,
+          "run_sql_ok": true,
+          "outcome": "result",
+          "error_code": null,
+          "row_count": 5,
+          "columns": [
+            "商品ID",
+            "商品名称",
+            "销售额"
+          ],
+          "class": "correction_success"
+        },
+        {
+          "node_count": 12,
+          "validate_errors": 1,
+          "correct_sql": "success",
+          "corrected_ok": true,
+          "run_sql_ok": true,
+          "outcome": "result",
+          "error_code": null,
+          "row_count": 5,
+          "columns": [
+            "商品ID",
+            "商品名称",
+            "销售额"
+          ],
+          "class": "correction_success"
+        }
+      ]
+    },
+    {
+      "id": "live-02",
+      "question": "哪个商品品类卖得最好",
+      "why": "曾触发校正失败，用于回归",
+      "trials": [
+        {
+          "node_count": 12,
+          "validate_errors": 0,
+          "correct_sql": "skipped",
+          "corrected_ok": false,
+          "run_sql_ok": true,
+          "outcome": "result",
+          "error_code": null,
+          "row_count": 1,
+          "columns": [
+            "商品品类",
+            "销售额"
+          ],
+          "class": "no_correction_needed"
+        },
+        {
+          "node_count": 12,
+          "validate_errors": 0,
+          "correct_sql": "skipped",
+          "corrected_ok": false,
+          "run_sql_ok": true,
+          "outcome": "result",
+          "error_code": null,
+          "row_count": 1,
+          "columns": [
+            "商品品类",
+            "销售额"
+          ],
+          "class": "no_correction_needed"
+        },
+        {
+          "node_count": 12,
+          "validate_errors": 0,
+          "correct_sql": "skipped",
+          "corrected_ok": false,
+          "run_sql_ok": true,
+          "outcome": "result",
+          "error_code": null,
+          "row_count": 1,
+          "columns": [
+            "商品品类",
+            "销售额"
+          ],
+          "class": "no_correction_needed"
+        }
+      ]
+    },
+    {
+      "id": "live-03",
+      "question": "统计 2025 年第一季度各大区的 GMV",
+      "why": "不应触发校正",
+      "trials": [
+        {
+          "node_count": 12,
+          "validate_errors": 1,
+          "correct_sql": "success",
+          "corrected_ok": true,
+          "run_sql_ok": true,
+          "outcome": "result",
+          "error_code": null,
+          "row_count": 5,
+          "columns": [
+            "大区",
+            "GMV"
+          ],
+          "class": "correction_success"
+        },
+        {
+          "node_count": 12,
+          "validate_errors": 1,
+          "correct_sql": "success",
+          "corrected_ok": true,
+          "run_sql_ok": true,
+          "outcome": "result",
+          "error_code": null,
+          "row_count": 5,
+          "columns": [
+            "大区",
+            "GMV"
+          ],
+          "class": "correction_success"
+        },
+        {
+          "node_count": 12,
+          "validate_errors": 0,
+          "correct_sql": "skipped",
+          "corrected_ok": false,
+          "run_sql_ok": true,
+          "outcome": "result",
+          "error_code": null,
+          "row_count": 5,
+          "columns": [
+            "大区",
+            "GMV"
+          ],
+          "class": "no_correction_needed"
+        }
+      ]
+    },
+    {
+      "id": "live-04",
+      "question": "各省 GMV 排名",
+      "why": "排名意图，缺 ORDER BY 应被拦",
+      "trials": [
+        {
+          "node_count": 12,
+          "validate_errors": 0,
+          "correct_sql": "skipped",
+          "corrected_ok": false,
+          "run_sql_ok": true,
+          "outcome": "result",
+          "error_code": null,
+          "row_count": 6,
+          "columns": [
+            "省份",
+            "成交总额"
+          ],
+          "class": "no_correction_needed"
+        },
+        {
+          "node_count": 12,
+          "validate_errors": 0,
+          "correct_sql": "skipped",
+          "corrected_ok": false,
+          "run_sql_ok": true,
+          "outcome": "result",
+          "error_code": null,
+          "row_count": 6,
+          "columns": [
+            "省份",
+            "GMV"
+          ],
+          "class": "no_correction_needed"
+        },
+        {
+          "node_count": 12,
+          "validate_errors": 0,
+          "correct_sql": "skipped",
+          "corrected_ok": false,
+          "run_sql_ok": true,
+          "outcome": "result",
+          "error_code": null,
+          "row_count": 6,
+          "columns": [
+            "省份",
+            "成交总额"
+          ],
+          "class": "no_correction_needed"
+        }
+      ]
+    },
+    {
+      "id": "live-05",
+      "question": "品牌销售额 Top 3",
+      "why": "Top-N，缺 LIMIT 应被拦",
+      "trials": [
+        {
+          "node_count": 12,
+          "validate_errors": 0,
+          "correct_sql": "skipped",
+          "corrected_ok": false,
+          "run_sql_ok": true,
+          "outcome": "result",
+          "error_code": null,
+          "row_count": 3,
+          "columns": [
+            "品牌",
+            "销售额"
+          ],
+          "class": "no_correction_needed"
+        },
+        {
+          "node_count": 12,
+          "validate_errors": 0,
+          "correct_sql": "skipped",
+          "corrected_ok": false,
+          "run_sql_ok": true,
+          "outcome": "result",
+          "error_code": null,
+          "row_count": 3,
+          "columns": [
+            "品牌",
+            "销售额"
+          ],
+          "class": "no_correction_needed"
+        },
+        {
+          "node_count": 12,
+          "validate_errors": 0,
+          "correct_sql": "skipped",
+          "corrected_ok": false,
+          "run_sql_ok": true,
+          "outcome": "result",
+          "error_code": null,
+          "row_count": 3,
+          "columns": [
+            "品牌",
+            "销售额"
+          ],
+          "class": "no_correction_needed"
+        }
+      ]
+    },
+    {
+      "id": "live-06",
+      "question": "用 UNION 把两个品类的销售额拼起来",
+      "why": "策略拒绝，不校正",
+      "trials": [
+        {
+          "node_count": 10,
+          "validate_errors": 0,
+          "correct_sql": "skipped",
+          "corrected_ok": false,
+          "run_sql_ok": false,
+          "outcome": "error",
+          "error_code": "LLM_REFUSAL",
+          "row_count": 0,
+          "columns": [],
+          "class": "no_correction_needed"
+        },
+        {
+          "node_count": 10,
+          "validate_errors": 0,
+          "correct_sql": "skipped",
+          "corrected_ok": false,
+          "run_sql_ok": false,
+          "outcome": "error",
+          "error_code": "LLM_REFUSAL",
+          "row_count": 0,
+          "columns": [],
+          "class": "no_correction_needed"
+        },
+        {
+          "node_count": 10,
+          "validate_errors": 0,
+          "correct_sql": "skipped",
+          "corrected_ok": false,
+          "run_sql_ok": false,
+          "outcome": "error",
+          "error_code": "LLM_REFUSAL",
+          "row_count": 0,
+          "columns": [],
+          "class": "no_correction_needed"
+        }
+      ]
+    },
+    {
+      "id": "live-07",
+      "question": "各城市销售额",
+      "why": "无 city 粒度，应正确降级或拒答",
+      "trials": [
+        {
+          "node_count": 10,
+          "validate_errors": 0,
+          "correct_sql": "skipped",
+          "corrected_ok": false,
+          "run_sql_ok": false,
+          "outcome": "error",
+          "error_code": "LLM_REFUSAL",
+          "row_count": 0,
+          "columns": [],
+          "class": "no_correction_needed"
+        },
+        {
+          "node_count": 10,
+          "validate_errors": 0,
+          "correct_sql": "skipped",
+          "corrected_ok": false,
+          "run_sql_ok": false,
+          "outcome": "error",
+          "error_code": "LLM_REFUSAL",
+          "row_count": 0,
+          "columns": [],
+          "class": "no_correction_needed"
+        },
+        {
+          "node_count": 10,
+          "validate_errors": 0,
+          "correct_sql": "skipped",
+          "corrected_ok": false,
+          "run_sql_ok": false,
+          "outcome": "error",
+          "error_code": "LLM_REFUSAL",
+          "row_count": 0,
+          "columns": [],
+          "class": "no_correction_needed"
+        }
+      ]
+    },
+    {
+      "id": "live-08",
+      "question": "2024 年销售额",
+      "why": "越界时间，应显式提示",
+      "trials": [
+        {
+          "node_count": 10,
+          "validate_errors": 0,
+          "correct_sql": "skipped",
+          "corrected_ok": false,
+          "run_sql_ok": false,
+          "outcome": "error",
+          "error_code": "LLM_REFUSAL",
+          "row_count": 0,
+          "columns": [],
+          "class": "no_correction_needed"
+        },
+        {
+          "node_count": 10,
+          "validate_errors": 0,
+          "correct_sql": "skipped",
+          "corrected_ok": false,
+          "run_sql_ok": false,
+          "outcome": "error",
+          "error_code": "LLM_REFUSAL",
+          "row_count": 0,
+          "columns": [],
+          "class": "no_correction_needed"
+        },
+        {
+          "node_count": 10,
+          "validate_errors": 0,
+          "correct_sql": "skipped",
+          "corrected_ok": false,
+          "run_sql_ok": false,
+          "outcome": "error",
+          "error_code": "LLM_REFUSAL",
+          "row_count": 0,
+          "columns": [],
+          "class": "no_correction_needed"
+        }
+      ]
+    }
+  ],
+  "totals": {
+    "correction_success": 5,
+    "no_correction_needed": 19
+  },
+  "correction_opportunities": 5,
+  "correction_success_rate": 1.0
+}

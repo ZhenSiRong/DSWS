@@ -1,0 +1,25 @@
+%% 01 · C4-L1 系统上下文
+%% 问题：DSWS 作为一个系统，和用户、浏览器、三存储、可选 LLM、旧系统分别交换什么？
+flowchart TB
+  classDef person fill:#f9fafb,stroke:#6b7280,color:#374151
+  classDef runtime fill:#f5f3ff,stroke:#7c3aed,color:#4c1d95
+  classDef system fill:#eff6ff,stroke:#1d4ed8,color:#1e3a8a
+  classDef store fill:#ecfdf5,stroke:#0f766e,color:#064e3b
+  classDef edge fill:#f9fafb,stroke:#6b7280,color:#374151
+
+  USER["业务用户"]:::person
+  BROWSER["浏览器 SPA"]:::runtime
+  DSWS["DSWS 问数重建系统<br/>契约驱动的 NL→SQL→数据"]:::system
+  MYSQL["MySQL<br/>业务数仓 + Meta"]:::store
+  ES["Elasticsearch<br/>取值索引"]:::store
+  QD["Qdrant<br/>列/指标向量索引"]:::store
+  LLM["LLM 端点<br/>可选，可替换"]:::edge
+  LEGACY["旧系统 shopkeeper-agent<br/>只读负向夹具"]:::edge
+
+  USER -->|"自然语言问题"| BROWSER
+  BROWSER -->|"POST /api/query<br/>接收 3 种 SSE"| DSWS
+  DSWS -->|"只读 SELECT 取数"| MYSQL
+  DSWS -->|"构建写取值文档"| ES
+  DSWS -->|"构建写列/指标向量"| QD
+  DSWS -.->|"可选生成/校正 SQL"| LLM
+  LEGACY -.->|"冻结为夹具"| DSWS

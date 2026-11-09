@@ -1,0 +1,50 @@
+%% 23 · 只读账号权限模型（dw_reader 与应用账号分离）
+%%{init: {"flowchart": {"diagramPadding": 0}}}%%
+flowchart TB
+    subgraph INIT["init 一次性初始化 · root 执行"]
+        S1["DROP USER IF EXISTS<br/>'dw_reader'@'%'"]
+        S2["CREATE USER<br/>密码来自 REBUILD_DW_RO_PASSWORD"]
+        S3["GRANT SELECT ON dw.*<br/>唯一一条授权"]
+        S4["FLUSH PRIVILEGES"]
+        S1 -->|"清掉旧授权"| S2
+        S2 -->|"创建账号"| S3
+        S3 -->|"生效"| S4
+    end
+
+    subgraph VERIFY["verify 验证 · 两步"]
+        V1["SHOW GRANTS<br/>扫描 ALL/INSERT/UPDATE/DDL"]
+        V2["UPDATE fact_order<br/>WHERE 1 = 0"]
+        V3["期望 MySQL 1142<br/>权限拒绝"]
+        V1 -->|"只看到 SELECT 才继续"| V2
+        V2 -->|"被拒绝"| V3
+    end
+
+    subgraph RUNTIME["运行时账号分离"]
+        E["ReadOnlyExecutor<br/>S5 执行问数"]
+        B["S2 构建 / Meta 写入<br/>应用账号 didilili"]
+        L["旧 dw.sql 的 didilili<br/>GRANT ALL ON dw.*"]
+    end
+
+    DW[("MySQL dw<br/>事实与维度表")]
+    META[("MySQL meta_rebuild<br/>元数据表")]
+    DENY["dw_reader 明确没有<br/>INSERT / UPDATE / DELETE / DROP / CREATE / ALTER / GRANT / FILE"]
+
+    S4 -->|"账号就绪"| E
+    S4 -->|"随后验证"| V1
+    E -->|"只执行 SELECT"| DW
+    B -->|"建表与写元数据"| META
+    L -. "遗留越权入口，不复用" .-> DENY
+    E -. "策略之外的数据库底线" .-> DENY
+
+    classDef store fill:#ecfdf5,stroke:#0f766e,color:#064e3b
+    classDef build fill:#fff7ed,stroke:#b45309,color:#7c2d12
+    classDef danger fill:#fef2f2,stroke:#b91c1c,color:#7f1d1d
+    classDef pass fill:#f0fdf4,stroke:#15803d,color:#14532d
+    classDef runtime fill:#f5f3ff,stroke:#7c3aed,color:#4c1d95
+    classDef edge fill:#f9fafb,stroke:#6b7280,color:#374151
+    class S1,S2,S3,S4 build
+    class V1,V2,V3 pass
+    class E danger
+    class B runtime
+    class L,DENY danger
+    class DW,META store

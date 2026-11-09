@@ -1,55 +1,141 @@
 {
   "steps": {
     "version": 1,
+    "stages": [
+      {
+        "id": 1,
+        "label": "抽取关键词",
+        "nodes": [
+          "extract_keywords"
+        ]
+      },
+      {
+        "id": 2,
+        "label": "召回",
+        "nodes": [
+          "recall_column",
+          "recall_value",
+          "recall_metric"
+        ]
+      },
+      {
+        "id": 3,
+        "label": "合并召回",
+        "nodes": [
+          "merge_retrieved_info"
+        ]
+      },
+      {
+        "id": 4,
+        "label": "过滤表",
+        "nodes": [
+          "filter_table"
+        ]
+      },
+      {
+        "id": 5,
+        "label": "过滤指标",
+        "nodes": [
+          "filter_metric"
+        ]
+      },
+      {
+        "id": 6,
+        "label": "补充上下文",
+        "nodes": [
+          "add_extra_context"
+        ]
+      },
+      {
+        "id": 7,
+        "label": "生成 SQL",
+        "nodes": [
+          "generate_sql"
+        ]
+      },
+      {
+        "id": 8,
+        "label": "校验 SQL",
+        "nodes": [
+          "validate_sql"
+        ]
+      },
+      {
+        "id": 9,
+        "label": "校正 SQL",
+        "nodes": [
+          "correct_sql"
+        ]
+      },
+      {
+        "id": 10,
+        "label": "执行 SQL",
+        "nodes": [
+          "run_sql"
+        ]
+      }
+    ],
     "steps": [
       {
         "id": "extract_keywords",
-        "label": "抽取关键词"
+        "label": "抽取关键词",
+        "stage": 1
       },
       {
         "id": "recall_column",
-        "label": "召回字段信息"
+        "label": "召回字段信息",
+        "stage": 2
       },
       {
         "id": "recall_value",
-        "label": "召回字段取值"
+        "label": "召回字段取值",
+        "stage": 2
       },
       {
         "id": "recall_metric",
-        "label": "召回指标信息"
+        "label": "召回指标信息",
+        "stage": 2
       },
       {
         "id": "merge_retrieved_info",
-        "label": "合并召回信息"
+        "label": "合并召回信息",
+        "stage": 3
       },
       {
         "id": "filter_table",
-        "label": "过滤表信息"
+        "label": "过滤表信息",
+        "stage": 4
       },
       {
         "id": "filter_metric",
-        "label": "过滤指标信息"
+        "label": "过滤指标信息",
+        "stage": 5
       },
       {
         "id": "add_extra_context",
-        "label": "添加额外上下文"
+        "label": "添加额外上下文",
+        "stage": 6
       },
       {
         "id": "generate_sql",
-        "label": "生成SQL"
+        "label": "生成SQL",
+        "stage": 7
       },
       {
         "id": "validate_sql",
-        "label": "校验SQL"
+        "label": "校验SQL",
+        "stage": 8
       },
       {
         "id": "correct_sql",
         "label": "校正SQL",
-        "conditional": true
+        "conditional": true,
+        "stage": 9
       },
       {
         "id": "run_sql",
-        "label": "执行SQL"
+        "label": "执行SQL",
+        "stage": 10
       }
     ]
   },

@@ -1,0 +1,8 @@
+{"id": "live-01", "question": "查询销售额大于平均销售额的商品", "why": "自然触发校正并成功（已有 SSE 证据）"}
+{"id": "live-02", "question": "哪个商品品类卖得最好", "why": "曾触发校正失败，用于回归"}
+{"id": "live-03", "question": "统计 2025 年第一季度各大区的 GMV", "why": "不应触发校正"}
+{"id": "live-04", "question": "各省 GMV 排名", "why": "排名意图，缺 ORDER BY 应被拦"}
+{"id": "live-05", "question": "品牌销售额 Top 3", "why": "Top-N，缺 LIMIT 应被拦"}
+{"id": "live-06", "question": "用 UNION 把两个品类的销售额拼起来", "why": "策略拒绝，不校正"}
+{"id": "live-07", "question": "各城市销售额", "why": "无 city 粒度，应正确降级或拒答"}
+{"id": "live-08", "question": "2024 年销售额", "why": "越界时间，应显式提示"}

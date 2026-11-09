@@ -1,0 +1,32 @@
+%% 09 · S3 召回流水线时序
+%% 主线：关键词 → Qdrant 列 → ES 取值 → Qdrant 指标 → Meta 合并 → 过滤
+%%{init: {"themeVariables": {"noteBkgColor": "#f9fafb", "noteBorderColor": "#6b7280", "noteTextColor": "#374151"}, "sequence": {"actorMargin": 45, "width": 130, "messageMargin": 32, "boxMargin": 8, "noteMargin": 8, "mirrorActors": false}}}%%
+sequenceDiagram
+    autonumber
+    participant CL as S3 CLI
+    participant RP as RecallPipeline
+    participant CT as Catalog
+    participant QD as Qdrant
+    participant ES as ES
+    participant MT as Meta
+
+    CL->>RP: recall(query)
+    RP->>MT: load_snapshot()（全程只读一次）
+    MT-->>RP: 5 表 / 24 列 / 6 指标
+    RP->>CT: extract_keywords(query)
+    CT-->>RP: keywords + hints（纯内存，无 IO）
+
+    RP->>QD: batch_search(列向量, limit=12)
+    QD-->>RP: 列候选（98 点库）
+    RP->>ES: msearch(关键词, size=5)
+    ES-->>RP: 取值命中（76 条文档）
+    RP->>QD: batch_search(指标向量, limit=8)
+    QD-->>RP: 指标候选（22 点库）
+
+    Note over RP: 词法补偿：Qdrant 未召回也按 alias 命中进候选
+
+    RP->>RP: merge_retrieved_info(snapshot)
+    RP->>RP: filter_table（表 + 主外键）
+    RP->>RP: filter_metric（指标裁剪）
+    RP->>RP: add_extra_context（日期 / 季度 / 版本）
+    RP-->>CL: RecallState + trace 计数

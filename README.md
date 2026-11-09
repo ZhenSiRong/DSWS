@@ -16,7 +16,7 @@
 
 [![v2 演示：原版界面 + LangGraph 12 节点 + 真实问数](https://gcore.jsdelivr.net/gh/ZhenSiRong/DSWS@main/deliverable/v2/screenshots/v2-demo-preview.gif)](https://cdn.jsdelivr.net/gh/ZhenSiRong/DSWS@main/deliverable/v2/DSWS-v2-original-ui-demo.mp4)
 
-[直接打开 GIF](https://gcore.jsdelivr.net/gh/ZhenSiRong/DSWS@main/deliverable/v2/screenshots/v2-demo-preview.gif) · [下载 / 全屏播放 MP4（46s：GMV 问数、商品级排名、UNION 策略拒绝）](https://cdn.jsdelivr.net/gh/ZhenSiRong/DSWS@main/deliverable/v2/DSWS-v2-original-ui-demo.mp4)
+[直接打开 GIF](https://gcore.jsdelivr.net/gh/ZhenSiRong/DSWS@main/deliverable/v2/screenshots/v2-demo-preview.gif) · [下载 / 全屏播放 MP4（61s：GMV 问数、商品级排名、校正回环、UNION 策略拒绝）](https://cdn.jsdelivr.net/gh/ZhenSiRong/DSWS@main/deliverable/v2/DSWS-v2-original-ui-demo.mp4)
 
 > v2 的部署、验证与证据见 [`deliverable/v2/README-v2.md`](deliverable/v2/README-v2.md)。
 
@@ -214,7 +214,7 @@ HTTP 接口：`GET /api/health`、`GET /api/steps`、`GET /api/errors`、
 
 ### 3. 失败有名字，且长得不一样
 
-`class` 决定界面，不是错误码决定：
+界面按 `class` 分，不按错误码分：
 
 | `class` | 界面 | 步骤条 |
 |---|---|---|
@@ -247,7 +247,7 @@ SQL 在**连库之前**过六道检查：可执行注释/词法禁词 → 单语
 - 生产问数上下文由 `OfflineContextBuilder`（契约离线裁剪）生成；S3 的 ES/Qdrant
   召回只在 `stage3` 与集成测试中使用，不在线上问数主链路。
 - 换真实数据 = 替换 `fixtures/dw.sql` + 同步 `contracts/schema.contract.yaml`，
-  再重建 S2，属于数据建模改造而非配置项。
+  再重建 S2；这是数据建模改造，改配置项解决不了。
 
 ---
 

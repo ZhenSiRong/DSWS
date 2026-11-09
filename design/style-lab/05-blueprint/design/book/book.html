@@ -1,0 +1,1627 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>DSWS 从零到一 · 电商问数智能体 · 设计图集与开发手册</title>
+<link rel="stylesheet" href="book.css">
+</head>
+<body>
+
+<section class="cover">
+  <div class="cover-grid"></div>
+  <div class="cover-frame-outer"></div>
+  <div class="cover-frame-inner"></div>
+  <div class="cover-head">
+    <span>DSWS · DRAWING SET 01</span>
+    <span class="r">A4 · 210 × 297</span>
+  </div>
+  <div class="cover-kicker">DESIGN ATLAS &amp; BUILD MANUAL · S0–S8</div>
+  <h1 class="cover-title"><span>DSWS</span> 从零到一</h1>
+  <div class="cover-rule"></div>
+  <p class="cover-sub">电商问数智能体 · 设计图集与开发手册</p>
+  <figure class="cover-fig"><img src="file:///home/zhensirong/VM-Share/DSWS-design/design/style-lab/05-blueprint/design/diagrams/01-architecture/05-stage-evolution.svg" alt="">
+    <div class="cover-fig-label">REF. 05 · S0–S8 阶段演进 · 缩略 1:1</div>
+  </figure>
+  <table class="titleblock">
+    <tr><th>PROJECT</th><td>DSWS 从零到一</td><th>DWG NO.</th><td>DSWS-DA-01</td></tr>
+    <tr><th>BASELINE</th><td>baseline eea5e75 · 2026-10-29</td><th>SCALE</th><td>1:1 · A4</td></tr>
+    <tr><th>STATUS</th><td>v1.0 · 教学与评审双用途</td><th>SHEETS</th><td>32 张设计图 · S0–S8 全流程</td></tr>
+  </table>
+</section>
+
+<section class="toc-page">
+  <div class="toc-kicker">DRAWING INDEX</div>
+  <h1>目录</h1>
+  <table class="toc"><thead><tr><th class="c-sheet">SHEET</th><th class="c-title">TITLE</th><th class="c-page">PAGE</th></tr></thead><tbody><tr class="row-part"><td class="c-sheet">PART 01</td><td class="c-title"><a href="#_1">第一部分 · 先读这一页</a></td><td class="c-page"><a class="pg" href="#_1"></a></td></tr>
+<tr class="row-sheet"><td class="c-sheet">00.1</td><td class="c-title"><a href="#1">1. 这本书是什么、不是什么</a></td><td class="c-page"><a class="pg" href="#1"></a></td></tr>
+<tr class="row-sheet"><td class="c-sheet">00.2</td><td class="c-title"><a href="#2-dsws">2. 一分钟看懂 DSWS</a></td><td class="c-page"><a class="pg" href="#2-dsws"></a></td></tr>
+<tr class="row-sheet"><td class="c-sheet">00.3</td><td class="c-title"><a href="#3">3. 三个根因：为什么要重建</a></td><td class="c-page"><a class="pg" href="#3"></a></td></tr>
+<tr class="row-sheet"><td class="c-sheet">00.4</td><td class="c-title"><a href="#4-s0s8">4. S0–S8 地图</a></td><td class="c-page"><a class="pg" href="#4-s0s8"></a></td></tr>
+<tr class="row-sheet"><td class="c-sheet">00.5</td><td class="c-title"><a href="#5">5. 证据等级：已验证 / 推断 / 未验证</a></td><td class="c-page"><a class="pg" href="#5"></a></td></tr>
+<tr class="row-sheet"><td class="c-sheet">00.6</td><td class="c-title"><a href="#6">6. 怎么读这本书</a></td><td class="c-page"><a class="pg" href="#6"></a></td></tr>
+<tr class="row-sheet"><td class="c-sheet">00.7</td><td class="c-title"><a href="#7">7. 本书的约定</a></td><td class="c-page"><a class="pg" href="#7"></a></td></tr>
+<tr class="row-part"><td class="c-sheet">PART 03</td><td class="c-title"><a href="#s5s8">第三部分 · S5–S8：从能跑到敢用</a></td><td class="c-page"><a class="pg" href="#s5s8"></a></td></tr>
+<tr class="row-sheet"><td class="c-sheet">04</td><td class="c-title"><a href="#0">0. 这一部分的地图</a></td><td class="c-page"><a class="pg" href="#0"></a></td></tr>
+<tr class="row-sheet"><td class="c-sheet">05</td><td class="c-title"><a href="#1-s5">1. S5 · 安全边界</a></td><td class="c-page"><a class="pg" href="#1-s5"></a></td></tr>
+<tr class="row-sheet"><td class="c-sheet">06</td><td class="c-title"><a href="#2-s6">2. S6 · 失败通道</a></td><td class="c-page"><a class="pg" href="#2-s6"></a></td></tr>
+<tr class="row-sheet"><td class="c-sheet">07</td><td class="c-title"><a href="#3-s7">3. S7 · 前端收口</a></td><td class="c-page"><a class="pg" href="#3-s7"></a></td></tr>
+<tr class="row-sheet"><td class="c-sheet">08</td><td class="c-title"><a href="#4-s8">4. S8 · 生产化（边界与下一步）</a></td><td class="c-page"><a class="pg" href="#4-s8"></a></td></tr>
+<tr class="row-sheet"><td class="c-sheet">09</td><td class="c-title"><a href="#5_1">5. 走到这里，系统能做什么、还不能做什么</a></td><td class="c-page"><a class="pg" href="#5_1"></a></td></tr>
+<tr class="row-sheet"><td class="c-sheet">10</td><td class="c-title"><a href="#6_1">6. 复习题</a></td><td class="c-page"><a class="pg" href="#6_1"></a></td></tr></tbody></table>
+</section>
+<h1 id="_1" data-part="01" data-sheet="00.1" data-range="00.1 — 00.7">第一部分 · 先读这一页</h1>
+<p>先看一个旧系统的数字。<code>Decimal("10")</code> 从 MySQL 出来，经过 <code>default=str</code>，到了浏览器变成 <code>"10"</code>。表格还是那张表格，列也对齐，复制到表格软件里却再也不能求和。没有报错，也没有红框。</p>
+<p>这本书要处理的就是这类失败：让它有名字、有位置、有证据。</p>
+<h2 id="1" data-sheet="00.1">1. 这本书是什么、不是什么</h2>
+<p>这本书是 DSWS 重建项目的使用说明、设计论证和证据台账。S0–S8 每个阶段都写清了输入、动作、输出和硬验收命令，读者可以从空目录一路走到能跑的问数流水线；32 张设计图从架构、运行时、数据、安全、部署、测试六个角度解释同一套系统，每张图只回答一个具体问题。每个结论都带证据标记：<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#14684B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg> 是本机跑过或文件明确存在，<svg class="status-icon status-warn" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#C2620E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="推断"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> 是从代码结构推导、尚未实跑，<svg class="status-icon status-unknown" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#7A93B5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="未验证"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg> 是环境不具备、没有执行。读者据此判断一句话是验收依据、设计假设，还是待办。</p>
+<p>它明确<strong>不是</strong>下面几样东西：</p>
+<ol>
+<li><strong>不是旧系统的说明书。</strong> 旧系统 <code>shopkeeper-agent</code> 已冻结为 <code>legacy</code>，只作为反例库和负向夹具。书里提旧系统只有一个用途：说清哪一种静默失败必须被新系统挡住。兼容旧系统不在范围内。</li>
+<li><strong>不是 API 参考。</strong> 接口、步骤、错误码、SQL 策略的唯一事实源是 <code>contracts/</code> 下的文件；本书只解释这些文件为什么这样写，不复制一份可能过期的接口表。</li>
+<li><strong>不是生产运维手册。</strong> 当前实现是单机教学规模：单 MySQL、单 ES、单 Qdrant、单后端 worker。多租户、权限体系、容量规划、高可用都不在 S0–S7 的范围内，S8 也只给出方向。</li>
+<li><strong>不是「782 个测试全部通过」的证明。</strong> README 声称后端 782 passed / 31 skipped，但本次设计工作没有跑全量测试，因此书中一律写作「README 声称 782，本机未跑」，并标 <svg class="status-icon status-warn" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#C2620E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="推断"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>。类似地，前端 40 passed、14 条 SSE 夹具也来自 README 与契约文件，而不是本轮的实跑输出。</li>
+</ol>
+<p>读者对象有三类：第一次接触这个项目、准备按阶段重建的工程师；需要评审「设计是否成立」的架构师或评审者；线上出问题后需要快速定位的运维人员。三类人不需要从头读到尾，§6 给出三条路线。</p>
+<p>全书的总原则一句话：契约是事实源，图是论证，阶段是施工顺序，证据是发言资格。缺一条，读者就没法复核书里的任何结论。</p>
+<h2 id="2-dsws" data-sheet="00.2">2. 一分钟看懂 DSWS</h2>
+<p>DSWS 是一个电商问数智能体：用户用自然语言问「上个月华东的销售额是多少」，系统把它变成一条只读 SQL，在数仓上执行，再把结果按列类型渲染出来。它不做对话，也不是通用 BI 平台，边界只有四个词：单轮、单库、只读、可拒答。</p>
+<figure class="tall"><img src="file:///home/zhensirong/VM-Share/DSWS-design/design/style-lab/05-blueprint/design/book/generated/00-front-05.svg" alt="图 00-front"><figcaption><span class="fignum">图 00-front</span></figcaption></figure>
+<p>把这套系统压缩成五句话：</p>
+<ol>
+<li><strong>用户问数。</strong> 前端只做一件事：把一个自然语言问题、一个取消按钮和一条 SSE 流，组织成一次可观察的运行。它不猜 SQL，也不替后端补数据。</li>
+<li><strong>召回。</strong> S3 把问题拆成关键词，去 Qdrant 找列与指标、去 ES 找枚举取值、去 Meta 取详情，输出的是「候选表、候选列、候选取值、候选指标」，不是 SQL。召回为空是一个可记录的 trace，不是一次成功。</li>
+<li><strong>生成。</strong> S4 把候选压进 7 个提示词槽位，交给确定性生成器或真实 LLM，产出「一条 SQL」或「一次拒答」两种形状之一；输出形状先过 JSON Schema，再过 AST 静态校验。</li>
+<li><strong>校验。</strong> S5 在连库之前检查单语句、只读、表白名单、列白名单、常量投影、<code>ORDER BY</code> / <code>LIMIT</code>，并把注释去掉、把 <code>LIMIT</code> 补上。最终执行的是策略重新序列化后的那条 SQL，而不是模型原文。</li>
+<li><strong>执行与回答。</strong> 只读账号 <code>dw_reader</code> 执行，叠加 <code>max_execution_time</code>；SSE 一定以 <code>result</code> 或 <code>error</code> 收尾。0 行是 <code>EMPTY_RESULT</code>（类别 <code>empty</code>），用户取消是 <code>CANCELLED</code>（类别 <code>cancelled</code>），两者都不许伪装成「查询成功」。</li>
+</ol>
+<p>五个环节里，生成 SQL 只占一环。剩下的部分大都在处理同一件事：失败怎么被看见、被命名。</p>
+<h2 id="3" data-sheet="00.3">3. 三个根因：为什么要重建</h2>
+<p>旧系统不是「架构不漂亮」才被替换，而是有三类静默失败：界面显示成功，语义已经错了；用户没有任何线索发现。重建的每一层，基本都在回答这三个根因中的一个。</p>
+<h3 id="31-sql">3.1 根因一：伪 SQL 被当成数据</h3>
+<p>生成失败时，旧系统把一段错误说明塞进「一行一列」的结果里，列名像错误文案，值是一段文本。这个结构在协议上完全合法：有 <code>columns</code>、有 <code>rows</code>，前端于是按表格渲染。用户看到的是「查询成功」加一句话，而不是一次失败。</p>
+<p>这类错误最危险：形状合法，语义完全错。下游复制、导出、再计算，拿到的都是这段文本。</p>
+<p>新系统的三道止损：</p>
+<ul>
+<li>S5 在连库前拒绝非 <code>SELECT</code>、多语句、非白名单表列的 SQL，伪 SQL 形态拿不到执行许可；</li>
+<li>S6 规定失败必须走 <code>type:"error"</code>，错误码来自 <code>contracts/errors.yaml</code>，不允许把错误文案塞进结果行；</li>
+<li>S7 在展示层用 <code>looksLikePseudoError()</code> 做保守识别，命中则渲染 <code>PseudoErrorCard</code>，并且<strong>刻意不编造错误码</strong>——错误码只有契约一份，前端硬编一个等于又抄了一份契约。</li>
+</ul>
+<p>对应阶段：S5 → S6 → S7。对应图：<a href="../../diagrams/04-security/24-error-taxonomy.svg">图 24 · 错误码分类与 UI 映射</a>、<a href="../../diagrams/06-testing/31-failure-injection.svg">图 31 · 失败注入矩阵</a>、<a href="../../diagrams/02-runtime/13-s7-sse-sequence.svg">图 13 · S7 SSE 事件序列</a>。证据：<code>docs/S7-HANDOFF.md</code> §2.4 与 §4.2 的 F5、<code>fixtures/sse/pseudo_row.json</code>、<code>frontend/src/lib/result.ts</code>。</p>
+<h3 id="32-success">3.2 根因二：召回为空也算 success</h3>
+<p>旧系统把空数组 <code>data: []</code> 当成一次正常结果：表格消失，页面看起来「跑完了」，但用户既不知道是没有符合条件的数据，还是召回根本没找到东西。审计把这条记为 FP-8：<strong>空数组是合法语义，不是失败，但也不是成功的数据</strong>。</p>
+<p>新系统把「空」拆成两个可观察的事实：</p>
+<ul>
+<li>召回为空时，S3 的 trace 记录候选数；生成层拿不到足够上下文时选择拒答，而不是编造一张表；</li>
+<li>执行返回 0 行时，S6 发 <code>EMPTY_RESULT</code>，类别是 <code>empty</code>：界面给虚线空态卡，执行步骤保持绿色，<strong>不标红</strong>；错误卡只在真正失败时出现。</li>
+</ul>
+<p>所以新系统不允许用同一种界面表达三种不同的事实：没有数据、召回失败、系统失败。加一张空态卡解决不了这个问题。</p>
+<p>对应阶段：S3（可观察的召回）→ S6（分类）→ S7（渲染）。对应图：<a href="../../diagrams/02-runtime/09-s3-recall-sequence.svg">图 09 · S3 召回流水线时序</a>、<a href="../../diagrams/04-security/24-error-taxonomy.svg">图 24 · 错误码分类与 UI 映射</a>、<a href="../../diagrams/02-runtime/13-s7-sse-sequence.svg">图 13 · S7 SSE 事件序列</a>。证据：<code>contracts/errors.yaml</code> 中 <code>EMPTY_RESULT</code> 的注释、<code>docs/S7-HANDOFF.md</code> §1 的 FP-8 引用、<code>fixtures/sse/empty_rows.json</code>。</p>
+<h3 id="33">3.3 根因三：错误被吞掉</h3>
+<p>「吞掉」有四种常见形态，旧系统至少中了三种：</p>
+<ol>
+<li><strong>类型被静默改写。</strong> SSE 序列化传了 <code>default=str</code>，MySQL 的 <code>Decimal("10")</code> 悄悄变成字符串 <code>"10"</code>。界面看起来正常，复制出去的数字已经不可计算。</li>
+<li><strong>错误没有归属。</strong> 红框出现了，但用户不知道哪一步失败；前端把「progress / result / 其余」全当 error，后端新增一个事件类型就会制造一次莫名其妙的失败。</li>
+<li><strong>HTTP 错误被压成一句话。</strong> 400/422/5xx/网络不可达都显示「无法连接问数接口」，排障只能靠猜。</li>
+<li><strong>没有依赖时编造结果。</strong> 没有数据库就返回一份假数据，而不是诚实失败。</li>
+</ol>
+<p>新系统的对策是「让失败有名字、有位置、有通道」：</p>
+<ul>
+<li>S6 用 16 个错误码、3 个类别（<code>failure</code> / <code>empty</code> / <code>cancelled</code>）和 <code>retryable</code> 描述每一种失败；<code>SQL_REJECTED</code> 永远不可重试，避免拿被拒的 SQL 去问模型「改一下」；</li>
+<li>S7 的 <code>_sse()</code> 不传 <code>default=str</code>，未知类型直接变成 <code>INTERNAL_ERROR</code>；HTTP 400/422/404/5xx/网络错误分级给文案；失败步骤名来自 <code>/api/steps</code>；</li>
+<li>没有 MySQL 时，<code>/api/query</code> 以一条诚实的 <code>INTERNAL_ERROR</code> 收尾，而不是编一份假数据。</li>
+</ul>
+<p>对应阶段：S4（输出形状）→ S5（执行错误）→ S6（错误通道）→ S7（界面映射）。对应图：<a href="../../diagrams/04-security/24-error-taxonomy.svg">图 24 · 错误码分类与 UI 映射</a>、<a href="../../diagrams/06-testing/32-evidence-ledger.svg">图 32 · 证据台账</a>、<a href="../../diagrams/02-runtime/13-s7-sse-sequence.svg">图 13 · S7 SSE 事件序列</a>。证据：<code>docs/S7-HANDOFF.md</code> §2.1 与 §2.4、<code>backend/app/main.py</code> 的 <code>_sse()</code>、<code>contracts/errors.yaml</code> 文件头注释。</p>
+<h3 id="34">3.4 根因与阶段的对应关系</h3>
+<table>
+<thead>
+<tr>
+<th>根因</th>
+<th>旧系统的可见症状</th>
+<th>新系统主要由谁承担</th>
+<th>图号</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>伪 SQL 被当成数据</td>
+<td>一行一列的错误文案被渲染成成功表格</td>
+<td>S5 拒绝 → S6 错误事件 → S7 展示层止损</td>
+<td>13、24、31</td>
+</tr>
+<tr>
+<td>召回为空也算 success</td>
+<td><code>data: []</code> 后表格消失，无任何说明</td>
+<td>S3 trace → S6 <code>EMPTY_RESULT</code> → S7 空态卡</td>
+<td>09、13、24</td>
+</tr>
+<tr>
+<td>错误被吞掉</td>
+<td>类型被改写、错误无步骤、HTTP 一句话、假数据</td>
+<td>S4 形状 → S5 执行 → S6 分类 → S7 映射</td>
+<td>13、24、32</td>
+</tr>
+</tbody>
+</table>
+<h2 id="4-s0s8" data-sheet="00.4">4. S0–S8 地图</h2>
+<p>S0–S7 是已经实现的八个阶段，S8 是后续的生产化方向。每个阶段引入一种新的不确定性，也留一个可停点：到这里为止，系统仍然可演示、可验收、可回退。图号与 <code>WBS.md</code> 的 32 张图一一对应。</p>
+<table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>新增能力</th>
+<th>新增的不确定性</th>
+<th>可停点</th>
+<th>对应图号</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>S0 骨架</strong></td>
+<td>12 步 SSE 契约、5 个 HTTP 端点、前端协议守卫</td>
+<td>前后端能否对同一份事件契约保持一致</td>
+<td>后端能起服务，前端能解析/回放事件</td>
+<td>01、02、04、05、07、13、29、30</td>
+</tr>
+<tr>
+<td><strong>S1 Schema 契约</strong></td>
+<td>5 表 / 24 列 / 6 指标；DDL 与真实值校验；旧系统负向夹具</td>
+<td>契约是否与真实数据一致（粒度、值域、口径）</td>
+<td><code>make stage1</code> 全绿；旧夹具必须红</td>
+<td>14、15、30</td>
+</tr>
+<tr>
+<td><strong>S2 元知识</strong></td>
+<td>Meta / ES / Qdrant 三份可检索知识 + manifest + 幂等</td>
+<td>同一份契约翻成三种存储后是否仍然等价</td>
+<td><code>make stage2</code>；<code>--verify</code> 对账；第二次构建 <code>NOOP: 0 writes</code></td>
+<td>06、08、16、17、19、30</td>
+</tr>
+<tr>
+<td><strong>S3 检索</strong></td>
+<td>20 题黄金集；ES 1 次 <code>_msearch</code>、Qdrant 2 次批量、Meta 5 条 SQL</td>
+<td>召回质量：哈希向量不是语义模型，候选可能不足</td>
+<td><code>make stage3</code>；只读验收，不做 <code>--fresh</code></td>
+<td>09、16、19、30</td>
+</tr>
+<tr>
+<td><strong>S4 生成 SQL</strong></td>
+<td>7 槽位提示词、确定性生成器、JSON Schema 输出校验、AST 静态校验</td>
+<td>模型输出形状与语义；真实 LLM 尚未验证</td>
+<td><code>make stage4</code>，完全离线也能跑</td>
+<td>10、15、21、30、31</td>
+</tr>
+<tr>
+<td><strong>S5 安全边界</strong></td>
+<td>六道 SQL 检查、只读执行器、36 条注入语料、11 条零误杀</td>
+<td>策略覆盖度（新语法、新函数）与真实账号权限</td>
+<td><code>make stage5</code>；接 MySQL 用 <code>stage5-live</code></td>
+<td>11、20、21、22、23、30、31</td>
+</tr>
+<tr>
+<td><strong>S6 失败通道</strong></td>
+<td>16 个错误码 / 3 类失败、校正闭环最多 1 次、取消</td>
+<td>失败分类是否穷尽；校正是否引入新风险</td>
+<td><code>make stage6</code>；浏览器用 <code>stage6-ui</code></td>
+<td>07、12、13、24、30、31</td>
+</tr>
+<tr>
+<td><strong>S7 前端收口</strong></td>
+<td>契约生成物、14 条 SSE 夹具、13 条 F 缺陷闭环</td>
+<td>真实召回与真实模型下，界面语义是否仍成立</td>
+<td><code>make stage7</code>；浏览器用 <code>stage7-ui</code></td>
+<td>04、13、24、30、31、32</td>
+</tr>
+<tr>
+<td><strong>S8 性能与生产化</strong></td>
+<td>真召回接主链路、真库、真 LLM、并发/超时/缓存/可观测</td>
+<td>容量、并发、真实数据分布、多租户</td>
+<td>尚未实现；本书只保留设计与边界</td>
+<td>05、25、26、27、28、29、32</td>
+</tr>
+</tbody>
+</table>
+<p>这张表有两处容易读错。阶段不是功能清单，是不确定性清单：每加一层能力，就多一个可能出错的地方，所以每层都要有硬验收。可停点也不等于可上线：S3 通过只说明召回流水线成立，不说明前端能真实问数；S7 通过只说明协议、契约和界面收口成立，真实召回、真实数据库与真实 LLM 仍属于 S8。</p>
+<h2 id="5" data-sheet="00.5">5. 证据等级：<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#14684B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg> / <svg class="status-icon status-warn" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#C2620E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="推断"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> / <svg class="status-icon status-unknown" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#7A93B5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="未验证"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg></h2>
+<p>证据标记在这本书里是要兑现的：标 <svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#14684B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg> 得能指到命令或行号，标 <svg class="status-icon status-warn" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#C2620E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="推断"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> 得写清推导链，标 <svg class="status-icon status-unknown" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#7A93B5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="未验证"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg> 得说明缺什么。</p>
+<table>
+<thead>
+<tr>
+<th>标记</th>
+<th>含义</th>
+<th>读者可以怎么用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#14684B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg> 已验证</td>
+<td>本机命令跑过、退出码为 0，或文件明确存在且可逐行引用</td>
+<td>可以作为验收依据；仍要注意环境差异</td>
+</tr>
+<tr>
+<td><svg class="status-icon status-warn" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#C2620E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="推断"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> 推断</td>
+<td>从代码、契约或配置推导出来，但没有实跑</td>
+<td>可以作为设计假设，不能当作已验收</td>
+</tr>
+<tr>
+<td><svg class="status-icon status-unknown" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#7A93B5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="未验证"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg> 未验证</td>
+<td>环境不具备或本轮没有执行</td>
+<td>只能作为待办或风险，不能作为结论</td>
+</tr>
+</tbody>
+</table>
+<p>读者常把 <svg class="status-icon status-warn" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#C2620E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="推断"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> 当 <svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#14684B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg> 用：照着做失败时，会误以为是自己的环境错了；评审时会把「代码里应该有」当成「系统确实做过」。把推断写成已验证，风险就转给了读者。反过来，把 <svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#14684B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg> 写成 <svg class="status-icon status-unknown" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#7A93B5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="未验证"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg> 会浪费已有的证据，让读者重跑一遍。</p>
+<p>本机的三条硬边界，必须在读任何结论前知道：</p>
+<ol>
+<li><strong>Docker socket 无权限。</strong> 本设计工作树没有跑 <code>docker compose up</code>，也没有跑 S2 的 <code>--fresh</code> 写三存储。S2 的计数来自 <code>--dry-run</code> 与 <code>plan.counts()</code>；写入总数 241 是按代码公式推导（44 行 Meta + 76 ES + 98 + 22 Qdrant + 1 manifest），标 <svg class="status-icon status-warn" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#C2620E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="推断"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>，不是实测。</li>
+<li><strong><code>dw_reader</code> 密码不在仓库里。</strong> 只读账号密码由 <code>REBUILD_DW_RO_PASSWORD</code> 提供，没有默认值。没有这个变量，<code>make stage5-live</code> 不会跑；只读账号的 GRANT 与执行器行为来自代码、脚本和假连接测试，标 <svg class="status-icon status-warn" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#C2620E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="推断"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>。</li>
+<li><strong>没有 LLM 端点与 Key。</strong> 生成默认走确定性生成器，<code>correct_sql</code> 在未配置 LLM 时显示「未触发」。<code>HttpLlmGenerator</code> / <code>LlmCorrector</code> 的接口、提示词与校验都在，但没有对着真实端点跑过，标 <svg class="status-icon status-unknown" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#7A93B5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="未验证"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>。</li>
+</ol>
+<p>另外两条本轮边界：全量后端测试没有跑，README 声称 782 passed / 31 skipped（<svg class="status-icon status-warn" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#C2620E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="推断"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>）；前端浏览器验收本轮没有跑，<code>stage0-ui</code> / <code>stage6-ui</code> / <code>stage7-ui</code> 的历史结论来自文档（<svg class="status-icon status-warn" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#C2620E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="推断"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>），本轮状态为 <svg class="status-icon status-unknown" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#7A93B5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="未验证"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>。</p>
+<h2 id="6" data-sheet="00.6">6. 怎么读这本书</h2>
+<p><strong>路线一：新手照着做。</strong> 先读本章 §1–§2，建立「问数五环节」的心智模型；然后读 <code>10-s0-s4.md</code> 与 <code>20-s5-s8.md</code>，按阶段执行 <code>make stage0</code> 到 <code>make stage7</code>。每跑完一个阶段，回到 <code>30-atlas.md</code> 找对应图号，确认自己刚才跑的东西在整条链路里的位置。遇到需要三存储的阶段（S2/S3/S5-live），先读 <code>40-ops.md</code> 的启动顺序，不要在没有 <code>source scripts/export-docker-env.sh</code> 的情况下直接跑 CLI。S8 只读设计，不照着做。</p>
+<p><strong>路线二：评审看设计。</strong> 先读本章 §3–§4，知道三个根因与九个阶段；再读 <code>30-atlas.md</code> 的架构角度（图 01–06）与数据/安全角度（图 14–24），核对「契约是否真的贯穿构建时与查询时」「安全是否真的在连库之前」；最后读图集 §7「图集没有回答的问题」，把 <svg class="status-icon status-unknown" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#7A93B5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="未验证"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg> 项列入评审待办。评审时看每张图的「证据与边界」有没有指到文件或命令，图漂不漂亮不作数。</p>
+<p><strong>路线三：运维查故障。</strong> 直接读 <code>40-ops.md</code>，再按症状查图：<a href="../../diagrams/05-deployment/25-compose-topology.svg">图 25 · Docker Compose 拓扑</a> 看服务依赖，<a href="../../diagrams/05-deployment/26-port-exposure.svg">图 26 · 端口与网络暴露面</a> 看为什么 8080 通而 8100 不通，<a href="../../diagrams/05-deployment/27-startup-order.svg">图 27 · 启动顺序与健康检查</a> 看 <code>init</code> 卡住会停在哪，<a href="../../diagrams/04-security/24-error-taxonomy.svg">图 24 · 错误码分类与 UI 映射</a> 看用户看到的那句话对应哪个码，<a href="../../diagrams/06-testing/31-failure-injection.svg">图 31 · 失败注入矩阵</a> 看这个码能不能被稳定复现，<a href="../../diagrams/06-testing/32-evidence-ledger.svg">图 32 · 证据台账</a> 看这条结论到底验没验过。命令层面的排障步骤以 <code>docs/SETUP-FROM-SCRATCH.md</code> §6 为准。</p>
+<p>三条路线共用一条纪律：先看证据标记，再看结论。一个 <svg class="status-icon status-unknown" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#7A93B5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="未验证"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg> 的结论不值得你花半小时复现；一个 <svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#14684B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg> 的结论，也仍要确认自己的端口、目录和依赖版本与书中一致。</p>
+<h2 id="7" data-sheet="00.7">7. 本书的约定</h2>
+<p><strong>命令。</strong> 所有 <code>make</code> 命令都在源码仓库根执行；设计工作树的命令会先写 <code>cd design</code>。代码块里不写提示符，直接给可复制的命令。需要环境变量的命令会显式写出变量名，例如 <code>REBUILD_DW_RO_PASSWORD=... make stage5-live</code>，不暗示仓库里有默认密码。</p>
+<p><strong>路径。</strong> 源码路径相对仓库根，例如 <code>backend/app/main.py</code>、<code>contracts/steps.yaml</code>、<code>fixtures/dw.sql</code>。设计产物路径相对 <code>design/</code>，例如 <code>diagrams/02-runtime/08-s2-build-sequence.svg</code>、<code>inventory/facts.md</code>。章节里的图片路径相对章节文件本身（<code>design/book/chapters/</code>），所以统一写成 <code>../../diagrams/&lt;角度&gt;/&lt;编号&gt;-&lt;短名&gt;.svg</code>，解析后落在 <code>design/diagrams/**</code>。</p>
+<p><strong>端口。</strong> 后端 <code>8100</code>，Vite <code>5273</code>，前端容器 <code>8080 → 80</code>，MySQL <code>3306</code>，Elasticsearch <code>9200</code>，Qdrant <code>6333</code>。临时验收端口：S0 用 <code>8101/5274</code>，S6 用 <code>8102/5275</code>，S7 用 <code>8103/5276</code>，刻意避开旧系统的 <code>8000/5173</code>。除 <code>8080</code> 外，其余端口默认只绑 <code>127.0.0.1</code>。</p>
+<p><strong>计数。</strong> 契约 5 表 / 24 列 / 6 指标 / 9 条列—指标关系；12 个步骤；16 个错误码、3 个类别；3 种 SSE 事件；5 个 HTTP 端点。S2 三存储：Meta 5/24/6/9（合计 44 行）、ES 76 条取值文档、Qdrant 98 条列文本 + 22 条指标文本、manifest 1 条；写入总数 241 是公式推导（<svg class="status-icon status-warn" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#C2620E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="推断"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>）。代码规模：后端 60 个 Python 文件、45 个测试文件，前端 2 个测试文件。测试数一律写「README 声称 782 passed / 31 skipped，本机未跑」，不写成已验证。</p>
+<p><strong>图号。</strong> 图号 <code>01</code>–<code>32</code> 在全图集内唯一，不按目录重排。正文首次提到某图时给「图 NN · 标题」并链接；完整说明集中在第四部分 <code>30-atlas.md</code>。图题在图下方，表题在表上方；表号用「表 2-1」这种「章-序」格式，只在需要交叉引用时编号。</p>
+<p><strong>证据标记。</strong> <svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#14684B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg> / <svg class="status-icon status-warn" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#C2620E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="推断"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> / <svg class="status-icon status-unknown" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#7A93B5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="未验证"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg> 只出现在证据句或证据表里，不用来修饰产品能力。一个段落如果同时包含事实与推断，会分开写，不把两种语气混在一句话里。</p>
+<p><strong>术语。</strong> 「构建时」指 S2 一次性 CLI 任务，退出后不参与查询；「查询时」指 <code>/api/query</code> 触发的 FastAPI + AgentRunner 链路。「召回」专指 S3 的候选生成，不指最终 SQL。「伪 SQL」指形状像结果、内容是错误文案的载荷。「空结果」专指执行成功但 0 行，不等于召回为空。「失败通道」专指 S6 的错误码、类别、校正与取消机制。术语首次出现时给英文标识符，之后用中文；英文标识符保留原文，不改写。</p>
+<h3 id="71">7.1 如果只记三件事</h3>
+<ul>
+<li>契约是事实源。<code>contracts/</code> 里的表结构、步骤、错误码改一个字，代码和前端都得跟着对账。</li>
+<li>证据分三级。<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#14684B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg> 是本机跑过或文件明确存在，<svg class="status-icon status-warn" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#C2620E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="推断"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> 是推导，<svg class="status-icon status-unknown" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#7A93B5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="未验证"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg> 是没跑；别把 <svg class="status-icon status-warn" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#C2620E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="推断"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> 说成 <svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#14684B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>。</li>
+<li>失败要有名字。<code>contracts/errors.yaml</code> 里的错误码决定用户看到什么，也决定能不能重试。</li>
+</ul>
+<h1 id="s5s8" data-part="03" data-sheet="04" data-range="04 — 10">第三部分 · S5–S8：从能跑到敢用</h1>
+<p>旧系统会把错误文案当成数据发回来。模型生成的 SQL 是 <code>SELECT '无法生成SQL…' AS error_message</code>，它通过了 <code>EXPLAIN</code>；后端把这一行当成正常结果，前端渲染成 1 行 1 列的表。屏幕上没有红色，用户以为查到了数据。</p>
+<p>先停一秒，问一个看起来矛盾的问题：<code>EXPLAIN</code> 都通过了，这条 SQL 为什么还是不该执行？</p>
+<p><code>EXPLAIN</code> 回答的是「数据库能不能解析并给出执行计划」，它不评价这句话该不该说出口。<code>SELECT '无法生成SQL…' AS error_message</code> 是一条完全合法的查询：不写库、不越权、不拖垮服务，数据库没有理由拒绝它。问题出在语义层：它把「模型放弃了」这件事伪装成了一行数据。按 S4 的规则，这条 SQL 属于常量投影，本该在生成质量那一层被拦下；旧系统把校验写成了 <code>explain {sql}</code> 的字符串拼接，既不检查投影，也不检查语句条数。于是它一路走到执行器，带着一句道歉变成了结果。</p>
+<p>S5–S8 要解决的就是这种「看起来成功」的失败：拒绝要可判定，错误要有名字，类型要保真，部署边界要说清。</p>
+<p>S0–S4 解决的是「系统能不能产出一条看起来像样的 SQL」。S5 开始，问题换了：这条 SQL 凭什么可以碰数据库？出错时用户能不能知道发生了什么？界面会不会把失败画成成功？把它装进容器以后，还有哪些事没有证明？四个问题分别对应 S5 安全边界、S6 失败通道、S7 前端收口、S8 生产化，也是把「能跑」变成「敢用」的四次交接。</p>
+<p>这一部分每节的结构一样：先说上一阶段留下了什么风险，再说本阶段新增了什么不确定性，最后用一条可复现的命令证明这个不确定性已经被压住。凡是本设计工作树没有实际执行的，一律标 <svg class="status-icon status-unknown" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#7A93B5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="未验证"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>；凡是只有文档声称、没有本机输出的，一律标 <svg class="status-icon status-warn" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#C2620E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="推断"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>；凡是 2026-10-29 在本工作树跑过、输出可对照，或文件明确存在且可逐行引用的，才标 <svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#14684B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>。</p>
+<h4 id="_2">学习目标</h4>
+<p>读完这一部分，你应该能：</p>
+<ul>
+<li>说出 S4 静态校验与 S5 安全策略各自回答的问题，并解释为什么前者不能替代后者；</li>
+<li>沿着一条 SQL 走完 S5 的判定链，指出哪一步保证「执行的就是判定过的那条」；</li>
+<li>用一张表说明 S6 的三种 <code>class</code> 如何决定界面，并解释空结果与取消为什么都不算失败；</li>
+<li>从一段 SSE 字节流还原出前端的状态迁移，指出未知事件与未知步骤的处理为什么相反；</li>
+<li>画出 S8 的启动依赖链，说明 <code>service_started</code> 为什么不够，并列出「换一台机器」的检查顺序；</li>
+<li>分清已验证、推断与未验证，知道这一部分哪些结论还缺证据。</li>
+</ul>
+<h4 id="_3">读之前需要什么</h4>
+<p>你应当读过上一章（S0–S4），知道系统能生成 SQL、能做静态校验；会 Python、SQL 与 HTTP/JSON；对容器、镜像、端口、卷有基本概念。AST 策略、SSE 解析细节、MySQL 权限模型、nginx 缓冲这四件事，本章不假设你会，首次出现时会拆开讲。</p>
+<h4 id="_4">术语约定</h4>
+<p>本章反复用几个词：<strong>契约</strong>指仓库 <code>contracts</code> 目录下的事实源；<strong>生成物</strong>指由契约生成、不能手改的前端文件；<strong>夹具</strong>指录下来供逐字比对的真实事件流；<strong>门禁</strong>指 <code>make stage5</code> 这类可重复的验收命令；<strong>语料</strong>指注入测试用的 SQL 样本；<strong>通道码</strong>是暴露给前端的错误码，<strong>原因码</strong>是策略内部的具体违规码。</p>
+<h4 id="_5">这一部分在全书的位置</h4>
+<p>S0–S4 证明系统「能生成」；S5–S8 证明它「敢用」。但「敢用」有边界：本章只讲到离线门禁与证据边界，不把 S8 写成已经上线。S8 之后的容量、可观测性、身份与传输安全属于后续工作，本章只标出缺口。</p>
+<h4 id="_6">四道交接，一句话各自管什么</h4>
+<ul>
+<li><strong>S5 管入口</strong>：执行前判定，拒绝时不连库。</li>
+<li><strong>S6 管失败</strong>：每种失败有名字、有类别、有步骤、有能否重试的结论。</li>
+<li><strong>S7 管呈现</strong>：后端的契约直接变成前端的类型、步骤与界面状态。</li>
+<li><strong>S8 管交付</strong>：把本机能跑变成换一台机器也能起，并把没证明的部分标出来。</li>
+</ul>
+<p>四次交接问的是同一个句式：上一阶段留下了什么风险，这一阶段新增了什么不确定性，用什么命令证明它被压住。</p>
+<hr>
+<h2 id="0" data-sheet="04">0. 这一部分的地图</h2>
+<p class="table-caption"><span class="tabnum">表 3-1</span> · S5–S8 的阶段地图</p>
+<table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>新增能力</th>
+<th>新增的不确定性</th>
+<th>可停点</th>
+<th>前置</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>S5 安全边界</td>
+<td>SQL 在连库前过 AST 策略；只读账号执行</td>
+<td>生成出来的 SQL 可能带写操作、多语句、越权表列或外带构造</td>
+<td><code>make stage5</code>：36 条注入全拒、11 条正常查询零误杀；<code>make stage5-live</code>：只读账号写不了</td>
+<td>S4 能产出 SQL；<code>contracts/schema.contract.yaml</code> 与 <code>sql.policy.yaml</code> 可读</td>
+</tr>
+<tr>
+<td>S6 失败通道</td>
+<td>16 个错误码、3 个 class、校正闭环、取消</td>
+<td>失败可能没有名字、被归错类、被无限重试，或者取消被当成完成</td>
+<td><code>make stage6</code>：6 类失败逐条对上码 / 类 / 步骤；<code>make stage6-ui</code>：界面状态互不相同</td>
+<td>S5 的拒绝已经是一个可判定的结论</td>
+</tr>
+<tr>
+<td>S7 前端收口</td>
+<td>契约生成物、SSE 三事件消费、StepRail / ErrorCard / 类型保真</td>
+<td>前端可能按旧契约渲染、把未知事件当失败、把 Decimal 悄悄降级成字符串</td>
+<td><code>make stage7</code>：生成物新鲜度、14 条夹具逐字对账、前端契约测试与构建；<code>make stage7-ui</code>：13 条 F 缺陷</td>
+<td>S6 的错误已经带 <code>code</code> / <code>class</code> / <code>step</code></td>
+</tr>
+<tr>
+<td>S8 生产化</td>
+<td>Compose 六服务、健康检查、端口收敛、非 root 镜像</td>
+<td>本机能跑不等于换一台机器能起；单 worker、无鉴权、无 TLS、无指标都是边界</td>
+<td>目前没有已完成的 S8 性能门禁；Docker 全栈在本工作树标 <svg class="status-icon status-unknown" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#7A93B5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="未验证"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg></td>
+<td>S5–S7 的离线门禁与契约</td>
+</tr>
+</tbody>
+</table>
+<p>可停点的意思是「这一类不确定性有了可重复的判据」，不是「功能做完」。S5 的判据是 36/36 与 11/11；S6 的判据是 16 个码和 6 类失败；S7 的判据是 14 条夹具逐字一致；S8 之所以还不能算完成，正是因为它还没有这样一条判据。</p>
+<p>读这张表时，把「可停点」和「证据等级」分开看。可停点回答「这一类不确定性有没有判据」，证据等级回答「这条判据在本工作树跑没跑过」。S5 的判据写在表里，也真的在本机跑出了 36/36；S8 连判据都还没有成形，所以它的停点是空的。这两件事不能合并成一句「做完了」或「没做完」。</p>
+<p>表里的标记只描述本工作树 2026-10-29 的状态，不描述设计质量。一个标为未验证的条目可能是设计正确、只是环境不具备；一个标为已验证的条目也可能只证明了一条窄路径。读后续各节时，先看结论后面的证据，再看结论本身。</p>
+<p class="table-caption"><span class="tabnum">表 3-1a</span> · 四道交接的一页纸</p>
+<table>
+<thead>
+<tr>
+<th>交接</th>
+<th>上一阶段留下的风险</th>
+<th>这一阶段压住的不确定性</th>
+<th>判据长什么样</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>S4 → S5</td>
+<td>SQL 看起来对，但可能写库、越权、拖垮服务</td>
+<td>生成文本能否在执行前被判定为安全</td>
+<td>注入全拒、正常查询零误杀</td>
+</tr>
+<tr>
+<td>S5 → S6</td>
+<td>拒绝是一个结论，但用户看不到结论</td>
+<td>失败能否变成有名字、有类别的事件</td>
+<td>每类失败对上码、类、步骤</td>
+</tr>
+<tr>
+<td>S6 → S7</td>
+<td>事件有名字，但界面可能不认</td>
+<td>契约能否直接约束类型、步骤与渲染</td>
+<td>生成物与夹具逐字一致</td>
+</tr>
+<tr>
+<td>S7 → S8</td>
+<td>开发机上能跑、能失败、能展示</td>
+<td>同一套文件能否在另一台机器上起来</td>
+<td>启动链与验收脚本</td>
+</tr>
+</tbody>
+</table>
+<figure><img src="file:///home/zhensirong/VM-Share/DSWS-design/design/style-lab/05-blueprint/design/diagrams/02-runtime/07-end-to-end-request.svg" alt="图 07 · 端到端请求生命周期"><figcaption><span class="fignum">图 07</span> · 端到端请求生命周期</figcaption></figure>
+
+<p>图 07 把 S5–S7 放进同一条请求：S5 负责执行前的闸，S6 负责失败怎么变成事件，S7 负责事件怎么变成界面。三者共用一条 SSE 管道，任何一层的契约漂移都会在下一层显形。</p>
+<hr>
+<h2 id="1-s5" class="sheet" data-sheet="05">1. S5 · 安全边界</h2>
+<h3 id="11-s4-sql">1.1 问题：为什么 S4 的 SQL 不能直接执行</h3>
+<p>S4 结束时，系统已经能生成 SQL，也能做 AST 静态校验。但 S4 的校验回答的是「这条 SQL 像不像这个问题的答案」，不是「这条 SQL 有没有资格碰数据库」。这两件事必须分开，因为它们的输入不同、失败后果也不同。</p>
+<p>把两件事混在一起，最常见的写法就是「先 <code>EXPLAIN</code> 一下，能过就执行」。这条路径有三个盲点。<code>EXPLAIN</code> 只编译第一句，多语句里的第二句不进入计划；它不检查账号有没有写权限，只检查语法与对象是否存在；它也不关心投影出来的是不是一行伪装成数据的错误文案。换句话说，<code>EXPLAIN</code> 证明的是「数据库看得懂」，不是「这句话该被执行」。</p>
+<p>旧系统的教训写在 <code>fixtures/injection/sql-injection.yaml</code> 的文件头里：旧 <code>validate()</code> 做的是 <code>f"explain {sql}"</code>，只给第一句加 <code>EXPLAIN</code> 前缀，不检查语句条数。MySQL 对 DDL 自动提交，所以下面这条语句在旧系统里会真的把 <code>fact_order</code> 删掉：</p>
+<pre><code class="language-sql">SELECT 1 AS a FROM fact_order LIMIT 1; DROP TABLE fact_order
+</code></pre>
+<p>问题出在校验和执行不是同一条语句，跟模型偶尔胡说无关。<code>EXPLAIN</code> 只看第一句，第二句照原样执行；只要生成器被诱导一次，整张事实表就没了。这条语句之所以能过旧校验，是因为 <code>EXPLAIN</code> 与执行分属两次调用：校验时把整段文本加上前缀交给数据库，执行时又把原始文本原样交给驱动，两次调用之间没有任何东西保证它们是同一条语句。S5 的核心不变式就从这里来：<strong>执行的文本必须由被判定过的那棵 AST 生成</strong>，不能是「同一段字符串再拼一次」。</p>
+<p>S4 的静态校验能挡住一部分「生成质量问题」，但它不是执行安全层：它不知道数据库账号有没有写权限，也不负责把「校验通过的那条 SQL」和「真正执行的那条 SQL」钉成同一条。</p>
+<p>所以 S5 的问题可以写成一句话：<strong>在打开数据库连接之前，如何把「一条 SQL 文本」变成一个可解释的放行 / 拒绝结论，并保证执行的就是被判定过的那条 SQL？</strong></p>
+<p>这句话里有三个词要兑现。「可解释」意味着拒绝要带原因码，不能只说不行；「放行 / 拒绝」意味着结论只有两类，执行错误是放行之后的另一件事；「执行的就是被判定过的那条」意味着判定必须产出可执行的 SQL，不能只产出一个布尔值。</p>
+<h3 id="12">1.2 实体与边界：策略、执行器、账号</h3>
+<p>S5 有四个实体，边界清楚才不会互相冒充。</p>
+<p>第一是<strong>策略</strong>。<code>backend/app/security/policy.py</code> 的 <code>enforce()</code> 是纯函数式的判定器：输入 SQL 文本、白名单、策略配置，输出 <code>PolicyDecision</code>。它不连库，不抛「拒绝异常」，而是把违规收进 <code>violations</code>，让调用方决定怎么降级。拒绝因此是一个结论，不是一次崩溃。</p>
+<p>第二是<strong>执行器</strong>。<code>backend/app/security/executor.py</code> 的 <code>ReadOnlyExecutor</code> 负责连接、会话超时、执行和取行。它在 <code>execute()</code> 的第一行先调用 <code>enforce()</code>；策略不通过时直接返回 <code>SQL_REJECTED</code>，<strong>连连接都不打开</strong>。这一条是 S5 的硬边界：没有数据库往返，就没有「校验过了但跑的是另一条」的机会。</p>
+<p>第三是<strong>账号</strong>。执行器只使用 <code>dw_reader</code> 连接 <code>dw</code>，这个账号在 <code>dw</code> 上只有 <code>SELECT</code>。策略是代码，账号是数据库；两者独立生效。旧系统的 <code>didilili</code> 是 <code>GRANT ALL PRIVILEGES ON dw.*</code>，这正是 D6 能发生的根本原因。新系统不复用它，只把 <code>didilili</code> 留给构建与初始化，把查询路径收窄到 <code>dw_reader</code>。</p>
+<p>第四是<strong>白名单</strong>。哪些表、哪些列可以出现，不在 <code>sql.policy.yaml</code> 里再抄一遍，而是从 <code>contracts/schema.contract.yaml</code> 派生。<code>SqlWhitelist.from_catalog()</code> 把契约里的 5 张表、24 个列变成执行期的集合，避免「契约改了、白名单没改」的漂移。</p>
+<p>四个实体各守一条边：策略管「文本能不能执行」，执行器管「这条路径必须先问策略」，账号管「即使绕过程序也写不了」，白名单管「哪些表列算数」。任意一条单独拿出来都不够。策略写对了但执行器先连库，连接已经发生在判定之前；执行器顺序对了但账号仍有写权限，一次漏判就是一次真实写入；账号收窄了但白名单靠手写，契约一改就会漂移。</p>
+<figure><img src="file:///home/zhensirong/VM-Share/DSWS-design/design/style-lab/05-blueprint/design/diagrams/02-runtime/11-s5-security-sequence.svg" alt="图 11 · S5 安全校验与执行"><figcaption><span class="fignum">图 11</span> · S5 安全校验与执行</figcaption></figure>
+
+<p>图 11 的时序值得逐段读：<code>AgentRunner</code> 先问 <code>Policy</code>，拒绝就返回 <code>SQL_REJECTED</code>，根本不进入 <code>MySQL</code>；放行才把 <code>PolicyDecision.sql</code> 交给 <code>ReadOnlyExecutor</code>。执行器在连库前<strong>又</strong>跑一次 <code>enforce()</code>，这是纵深防御，不是重复劳动：自定义执行器、校正后的 SQL、未来新增的调用方，都可能绕过第一道调用点。</p>
+<figure class="wide"><img src="file:///home/zhensirong/VM-Share/DSWS-design/design/style-lab/05-blueprint/design/diagrams/03-data/14-er-diagram.svg" alt="图 14 · 数仓 ER 图（5 表）"><figcaption><span class="fignum">图 14</span> · 数仓 ER 图（5 表）</figcaption></figure>
+
+<p>图 14 是白名单的现实依据。<code>dw</code> 里只有 <code>dim_region</code>、<code>dim_customer</code>、<code>dim_product</code>、<code>dim_date</code>、<code>fact_order</code> 五张表；<code>fact_order</code> 的 <code>order_quantity</code> 是单内件数，<code>order_amount</code> 是整单金额。策略拒绝 <code>information_schema.tables</code>，理由是 <code>information_schema</code> 这个库不在 <code>dw</code> 白名单里，跟名字可不可疑无关；策略拒绝 <code>secret_table</code>，是因为契约里根本没有这张表。每条拒绝都能落回一张真实的表或一个真实的列。</p>
+<h3 id="13-sql">1.3 输入：SQL 文本 + 契约 + 策略</h3>
+<p>S5 的离线判定只需要三样输入，都不依赖数据库：</p>
+<ol>
+<li><strong>SQL 文本</strong>：来自 S4 的生成结果，或校正闭环给出的候选 SQL。</li>
+<li><strong>策略契约</strong>：<code>contracts/sql.policy.yaml</code>。它声明单语句、根节点只允许 <code>Select</code>、禁止集合运算、禁止可执行注释、写操作禁词、危险函数禁词、<code>default_limit: 1000</code>、<code>max_limit: 1000</code>、<code>max_execution_time_ms: 5000</code>、只读账号 <code>dw_reader</code>，以及对外通道码 <code>SQL_REJECTED</code>。</li>
+<li><strong>Schema 契约</strong>：<code>contracts/schema.contract.yaml</code>。它提供表白名单与列白名单；库名 <code>dw</code> 也来自策略契约，不在代码里再写一遍。</li>
+</ol>
+<p>这三样都是仓库里的文件，所以 <code>make stage5</code> 在任何一台有 Python 依赖的机器上都能给出同样的结果。这也是为什么 S5 的离线门禁不需要 MySQL：策略判定不查库，只查契约。</p>
+<p>需要数据库的是「只读账号真的写不了」这一条，拆在 <code>make stage5-live</code>。它需要 <code>REBUILD_DW_RO_PASSWORD</code>，密码不在仓库里，由部署环境提供。这个拆分是刻意的：<strong>策略的正确性</strong>可以离线证明，<strong>账号的权限</strong>必须在线证明，两者不能互相代替。</p>
+<p>所以 <code>make stage5</code> 通过只证明判定器，不证明账号；两者都过，才叫「恶意 SQL 进不来」。</p>
+<h3 id="14-ast">1.4 动作：AST 解析 → 策略判定 → 只读执行</h3>
+<p><code>enforce()</code> 的判定顺序是排过的：</p>
+<ol>
+<li>可执行注释 <code>/*! ... */</code>：服务端会执行，解析器会忽略，必须在解析前先抓。</li>
+<li>解析：<code>sqlglot.parse(text, read="mysql")</code>。解析失败时，先看词法禁词，再退到 <code>SQL_SYNTAX</code>。</li>
+<li>单语句：过滤掉 <code>None</code> 与 <code>Semicolon</code> 后，如果多于一条，直接 <code>SQL_MULTIPLE_STATEMENTS</code>。</li>
+<li>集合运算：<code>Union</code> / <code>Except</code> / <code>Intersect</code> 一律拒绝，原因码 <code>SQL_FORBIDDEN_CONSTRUCT</code>。</li>
+<li>根节点：只允许 <code>Select</code>；<code>Update</code>、<code>Delete</code>、<code>Drop</code> 等根节点给 <code>SQL_NOT_READ_ONLY</code>。</li>
+<li>任意位置的写节点：再遍历一次 AST，防止写操作藏在子查询或 CTE 里。</li>
+<li>危险函数：<code>SLEEP</code>、<code>BENCHMARK</code>、<code>LOAD_FILE</code>、<code>GET_LOCK</code>、<code>EXTRACTVALUE</code>、<code>UPDATEXML</code>。</li>
+<li>词法兜底：AST 看不见的 <code>INTO OUTFILE</code> 之类，交给 <code>scan_keywords()</code>。</li>
+<li>表白名单：库名必须是 <code>dw</code>，表名必须在契约的 5 张表里。</li>
+<li>列白名单：限定列按别名解析到真实表；无限定列允许命中投影别名（例如 <code>ORDER BY 销售额</code>）。</li>
+<li>LIMIT：没有就补 <code>default_limit</code>，超过 <code>max_limit</code> 就截断。</li>
+<li>重新序列化：剥掉注释，生成最终 SQL。</li>
+</ol>
+<p>把这十二步当成一条流水线，而不是一张检查清单：每一步只回答一个问题，多数步骤一旦给出确定结论就短路返回。第 2 步解析失败、第 3、4 步命中时直接返回；第 1、5、6、7、8、9、10 步把违规记进 <code>violations</code>，最后统一拒绝。短路的方向也排过：先抓服务端会执行、解析器会忽略的可执行注释，再解析；解析失败时先看词法禁词，再退到语法错；集合运算先于根节点判定，因为 <code>Union</code> 的根节点本身是只读的，但它是外带数据的载体，原因码必须说「构造不允许」；写节点再遍历一次，是因为写操作可以藏在子查询或 CTE 里；词法兜底放在 AST 之后，是为了让原因码更准——<code>SELECT 1; DROP TABLE t</code> 应该说「不是单条语句」，而不是「出现了 DROP」。</p>
+<p>也有些步骤先记账、最后一起返回：可执行注释与白名单违规会累积进 <code>violations</code>，等所有检查跑完再统一拒绝。两种写法都保证同一个结果：只要 <code>violations</code> 非空，就没有执行路径。</p>
+<h4 id="_7">例题：一条正常查询走完判定链</h4>
+<p>拿一条正常查询走一遍。输入 <code>SELECT SUM(fact_order.order_amount) AS gmv FROM fact_order</code>：第 1 步没有可执行注释；第 2 步解析出一条 <code>Select</code>；第 3 步的单语句检查通过；第 4 步没有集合运算；第 5 步根节点是 <code>Select</code>；第 6 步遍历不到写节点；第 7 步没有危险函数；第 8 步词法兜底不触发；第 9 步库名缺省，表 <code>fact_order</code> 在契约的五张表里；第 10 步限定列 <code>order_amount</code> 解析到 <code>fact_order</code>，在二十四列之内；第 11 步没有 LIMIT，补上默认上限；第 12 步剥掉注释、重新序列化，得到可执行文本。每一步只做一个判断，判定链结束时以 <code>violations</code> 是否为空收口。</p>
+<p>第 12 步最关键：策略返回的 <code>decision.sql</code> 是 AST 重新序列化后的产物，不是原始文本。执行器只执行这个产物。这样「校验的那条」和「跑的那条」在结构上就是同一条；否则 D6 的漏洞只是换了一个地方复发。</p>
+<p>关键代码不长，第 3 步的判定可以对照 <code>backend/app/security/policy.py:enforce</code> 读：</p>
+<pre><code class="language-python">statements = sqlglot.parse(text, read=dialect)
+meaningful = [
+    statement for statement in statements
+    if statement is not None and not isinstance(statement, exp.Semicolon)
+]
+if cfg.single_statement and len(meaningful) &gt; 1:
+    violations.append(PolicyViolation(
+        &quot;SQL_MULTIPLE_STATEMENTS&quot;,
+        f&quot;SQL 必须只有一条语句，实际解析出 {len(meaningful)} 条&quot;,
+    ))
+    return _reject(original, violations)
+
+tree = meaningful[0]
+</code></pre>
+<p>最后两步决定了这条流水线的产物，同样可以在同一个函数末尾读到：</p>
+<pre><code class="language-python">    existing = _existing_limit(tree)
+    if existing is None:
+        tree = tree.limit(cfg.default_limit)
+        applied_limit = cfg.default_limit
+    elif existing &gt; cfg.max_limit:
+        tree = tree.limit(cfg.max_limit)
+        applied_limit = cfg.max_limit
+    else:
+        applied_limit = existing
+
+    final_sql = _strip_comments(tree).sql(dialect=dialect)
+</code></pre>
+<p><code>decision.sql</code> 是这棵 AST 重新序列化的结果，不是原始文本。原文里的注释、大小写、空白都不保证保留；不变式要求的是「执行文本由这棵 AST 生成」，不是「字节不变」。基线那句话在这里落地：<strong>执行的就是判定过的那条</strong>。这条不变式还有一个推论：策略可以改写 SQL，而且改写是显式的。补 LIMIT、截 LIMIT、剥注释都会改变用户看到的文本，但不会改变语义边界。</p>
+<p>AST 与词法兜底的分工，可以压成一句话：AST 负责「我认得的结构」，词法负责「我认得但解析器看不见的写法」。<code>INTO OUTFILE</code> 这类构造经常让解析器直接失败，此时 AST 什么都给不了，只能靠 <code>scan_keywords()</code> 在文本里找禁词；可执行注释则相反，解析器会把它当普通注释丢掉，必须在解析前用 <code>has_executable_comment()</code> 抓住。解析前抓可执行注释，解析失败后与 AST 判定后各扫一次词法禁词；三层各管一段，不互相替代。</p>
+<p>执行器这一侧有四道闸，代码在 <code>backend/app/security/executor.py:ReadOnlyExecutor</code>：</p>
+<pre><code class="language-python">decision = enforce(sql, whitelist=self.whitelist, config=self.config)
+if not decision.ok:
+    return ExecutionResult(ok=False, sql=&quot;&quot;, error=ExecutionError(
+        code=self.config.channel_code,
+        message=first.message,
+        reason_code=first.code,
+    ))
+return self._run(decision)
+</code></pre>
+<p><code>_run()</code> 里再设置 <code>SET SESSION max_execution_time = 5000</code>，并用 <code>CLIENT.CAPABILITIES &amp; ~CLIENT.MULTI_STATEMENTS</code> 显式去掉多语句标志。注意最后这一句：即使策略被绕过，连接本身也只可能跑一条语句。这是「代码」和「驱动」两层独立生效，不是同一道检查写两遍。</p>
+<p>「先连库再判定」是一个值得走一遍的反事实。假设执行器把顺序倒过来：先连库，再跑 <code>enforce()</code>。功能上它仍然会拒绝，测试也可能全绿，但风险结构变了。判定之前就消耗了一次数据库连接与一次会话初始化，恶意请求可以用合法形状的 SQL 让每一次拒绝都先付一次连接成本。更麻烦的是，一旦某个调用方在判定与执行之间插入自己的逻辑，判定结果与执行文本就可能分叉，D6 的漏洞换一个地方复发。连接建立后如果先做会话设置，那段语句也发生在判定之前，等于让未判定的请求先影响了数据库会话。S5 把 <code>enforce()</code> 放在 <code>execute()</code> 的第一行，就是为了让「拒绝」与「没连过」成为同一件事。</p>
+<h3 id="15">1.5 输出：放行 / 拒绝 / 执行错误</h3>
+<p>S5 有三类输出，不能混成一句「失败了」。</p>
+<p><strong>放行</strong>：<code>PolicyDecision(ok=True, sql=..., applied_limit=1000)</code>。<code>sql</code> 是去掉注释、补过 LIMIT 的最终文本。比如 <code>SELECT SUM(fact_order.order_amount) AS gmv FROM fact_order</code> 会被改写成带 <code>LIMIT 1000</code> 的版本；聚合查询本来只返回一行，但策略仍然按统一规则补上上限。</p>
+<p><strong>拒绝</strong>：<code>ok=False</code>，<code>violations</code> 至少一条，<code>reason_code</code> 是第一条违规的原因码。对外通道码统一是 <code>SQL_REJECTED</code>，细粒度原因放在 <code>reason_code</code>。这是刻意的：如果「多语句」「写语句」「非白名单表」各自变成一个对外通道码，下游就要为每种拒绝写一套分支，失败又会长得不一样。原因码保留在 <code>detail.reason_code</code> 里，机器仍然能判定，人也能读懂。</p>
+<p><strong>执行错误</strong>：策略通过后，数据库仍可能报错。<code>ExecutionResult.error</code> 用 <code>code</code> 表示通道码，用 <code>reason_code</code> 表示数据库类别。MySQL 错误码的映射写在 <code>_ERROR_CODE_MAP</code> 里：<code>1064</code> → <code>SQL_SYNTAX</code>，<code>1146</code> → <code>SQL_UNKNOWN_TABLE</code>，<code>1054</code> → <code>SQL_UNKNOWN_COLUMN</code>，<code>3024</code> / <code>1205</code> / <code>1317</code> → <code>TIMEOUT</code>，其余 → <code>SQL_EXECUTION_ERROR</code>；客户端侧的 <code>2006</code> / <code>2013</code> 也按超时处理。这是实现层的归类，不是对错误本质的判断：2006 / 2013 本质是连接中断，文案写成超时会把排查带偏。</p>
+<p>三类输出互斥：<code>ok=True</code> 只有一种，<code>ok=False</code> 只有一种，执行错误只在 <code>ok=True</code> 之后出现。把它们混成「失败了」会让下游失去判断依据——策略拒绝可以教育用户改问题，执行错误应该重试或报障，两者的处置完全不同。</p>
+<p>这里有一个容易混淆的点：<code>SQL_TABLE_NOT_ALLOWED</code>、<code>SQL_COLUMN_NOT_ALLOWED</code>、<code>SQL_FORBIDDEN_CONSTRUCT</code>、<code>SQL_COMMENT_OBFUSCATION</code> 是<strong>策略原因码</strong>，不是 <code>contracts/errors.yaml</code> 里的 16 个通道码。对外只出现 <code>SQL_REJECTED</code>，原因码在 <code>detail</code> 里。S6 的错误码表不会为这四种原因各开一个通道；它只要求「拒绝」这件事有一个稳定的名字。</p>
+<p>这条分层在验收里也能看见：注入语料核对的是 <code>reason_code</code>，通道码只出现一次。原因码是给人看的诊断，通道码是给机器看的分支。把原因码提升成通道码，等于让每种攻击手法各占一个对外分支，攻击面越宽，下游越不稳。</p>
+<h3 id="16-100">1.6 验收：注入语料 100% 拒绝、零误杀、只读账号写不了</h3>
+<p>离线门禁的命令来自 <code>Makefile</code> 的 <code>stage5</code>：</p>
+<pre><code class="language-bash">make stage5
+</code></pre>
+<p>它依次做四件事：</p>
+<pre><code class="language-bash">cd backend &amp;&amp; uv run python -m app.scripts.security --check
+cd backend &amp;&amp; uv run python -m app.scripts.security --corpus
+cd backend &amp;&amp; uv run python -m pytest -q tests/security
+cd backend &amp;&amp; uv run pytest -q
+</code></pre>
+<p><code>uv</code> 是 Python 的包与环境管理器；它按锁文件准备环境再执行，避免「本机装了什么就跑什么」。</p>
+<p>四条命令各证明一层：<code>--check</code> 证明语料与原因码，<code>--corpus</code> 证明注入/放行两组语料的整体判定，安全测试证明边界，全量测试证明这次改动没有碰坏别处。任何一条单独绿都不够；四条一起绿，才叫「离线门禁通过」。</p>
+<p>2026-10-29 在本工作树执行 <code>--check</code>，输出如下（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#14684B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>）：</p>
+<pre><code class="language-text">== 1/3 注入语料（必须 100% 拒绝） ==
+  注入语料：36/36 条按预期拒绝
+== 2/3 零误杀语料（必须全部放行） ==
+  零误杀语料：11/11 条放行
+== 3/3 S4 基线零误杀 ==
+  S4 基线：8/8 条 SQL 通过策略
+S5 PASS
+</code></pre>
+<p>「36 条全拒」不够，还要「原因码精确匹配」。否则把所有东西都拒掉也能得到 36/36，但正常问题会被误杀。所以 <code>_check_corpus()</code> 同时核对 <code>decision.reason_code == case.reason_code</code>；<code>_check_allow()</code> 再跑 11 条「长得像正常查询」的语料，必须全部放行。</p>
+<p class="table-caption"><span class="tabnum">表 3-2</span> · 五条真实注入 SQL 与本机判定结果（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#14684B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg> 2026-10-29）</p>
+<table>
+<thead>
+<tr>
+<th>语料 id</th>
+<th>SQL</th>
+<th>判定</th>
+<th>原因码</th>
+<th>为什么被拒</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>multi_statement_drop</code></td>
+<td><code>SELECT 1 AS a FROM fact_order LIMIT 1; DROP TABLE fact_order</code></td>
+<td>拒绝</td>
+<td><code>SQL_MULTIPLE_STATEMENTS</code></td>
+<td><code>sqlglot.parse</code> 解析出 2 条语句；策略在单语句检查处直接返回，第二句没有机会执行</td>
+</tr>
+<tr>
+<td><code>update_statement</code></td>
+<td><code>UPDATE fact_order SET order_amount = 0 WHERE 1 = 0</code></td>
+<td>拒绝</td>
+<td><code>SQL_NOT_READ_ONLY</code></td>
+<td>根节点是 <code>Update</code>，不在 <code>allowed_roots</code>；同时遍历到写节点 <code>Update</code>，给同一条原因码</td>
+</tr>
+<tr>
+<td><code>union_exfiltration</code></td>
+<td><code>SELECT order_amount FROM fact_order UNION SELECT customer_id FROM dim_customer</code></td>
+<td>拒绝</td>
+<td><code>SQL_FORBIDDEN_CONSTRUCT</code></td>
+<td><code>Union</code> 是集合运算，可能把别的表的数据并进结果；策略在根节点判定前先拒绝它</td>
+</tr>
+<tr>
+<td><code>executable_comment_drop</code></td>
+<td><code>SELECT 1 FROM fact_order; /*! DROP TABLE fact_order */</code></td>
+<td>拒绝</td>
+<td><code>SQL_COMMENT_OBFUSCATION</code></td>
+<td><code>/*! ... */</code> 是 MySQL 可执行注释：服务端会执行，解析器会忽略；第 1 步就抓</td>
+</tr>
+<tr>
+<td><code>information_schema_tables</code></td>
+<td><code>SELECT table_name FROM information_schema.tables</code></td>
+<td>拒绝</td>
+<td><code>SQL_TABLE_NOT_ALLOWED</code></td>
+<td>库 <code>information_schema</code> 不在白名单（只允许 <code>dw</code>）；列 <code>table_name</code> 也不在契约 24 列里</td>
+</tr>
+</tbody>
+</table>
+<p>对应的本机 CLI 输出可以逐条复现：</p>
+<pre><code class="language-bash">cd backend
+uv run python -m app.scripts.security --policy &quot;SELECT 1 FROM fact_order; DROP TABLE fact_order&quot;
+# 判定：拒绝（原因码 SQL_MULTIPLE_STATEMENTS）
+#   - SQL_MULTIPLE_STATEMENTS：SQL 必须只有一条语句，实际解析出 2 条
+</code></pre>
+<pre><code class="language-bash">cd backend
+uv run python -m app.scripts.security --policy &quot;SELECT order_amount FROM fact_order UNION SELECT customer_id FROM dim_customer&quot;
+# 判定：拒绝（原因码 SQL_FORBIDDEN_CONSTRUCT）
+#   - SQL_FORBIDDEN_CONSTRUCT：出现集合运算 Union
+</code></pre>
+<p>零误杀也要能举出一条真实的放行结果。<code>simple_aggregate</code> 的输入是：</p>
+<pre><code class="language-sql">SELECT SUM(fact_order.order_amount) AS gmv FROM fact_order
+</code></pre>
+<p>本机判定是「放行（自动 LIMIT = 1000）」，可执行 SQL 变成：</p>
+<pre><code class="language-sql">SELECT SUM(fact_order.order_amount) AS gmv FROM fact_order LIMIT 1000
+</code></pre>
+<p>这就是 S5 的「改写后执行」：用户看到的 SQL 和执行器跑的 SQL 可以不同，但差异只有注释与 LIMIT，且这个差异是策略显式做出的。</p>
+<p>只读账号的验收是另一条命令，来自 <code>Makefile</code> 的 <code>stage5-live</code>：</p>
+<pre><code class="language-bash">source scripts/export-docker-env.sh
+make stage5-live
+</code></pre>
+<p>它做三件事：</p>
+<pre><code class="language-bash">cd backend &amp;&amp; uv run python -m app.scripts.security --provision-ro-account
+cd backend &amp;&amp; uv run python -m app.scripts.security --verify-ro-account
+cd backend &amp;&amp; uv run python -m app.scripts.security --demo
+</code></pre>
+<p><code>--provision-ro-account</code> 用 <code>DROP USER IF EXISTS</code> + <code>CREATE USER</code> + <code>GRANT SELECT ON dw.*</code> 开通 <code>dw_reader</code>，权限集合恰好是策略声明的那一项。<code>--verify-ro-account</code> 读 <code>SHOW GRANTS</code>，并且<strong>真的去写一次</strong>：执行 <code>UPDATE ... WHERE 1 = 0</code>，匹配不到任何行，但数据库仍会先检查 <code>UPDATE</code> 权限；如果账号只有 <code>SELECT</code>，这一步会被拒绝。<code>--demo</code> 是两屏对比：同一段 payload，旧系统 <code>explain {sql}</code> 校验通过并执行了第二句的 <code>DROP</code>，新系统在连库之前就拒绝。</p>
+<p>本工作树没有 <code>REBUILD_DW_RO_PASSWORD</code>、也没有启动 MySQL，所以 <code>make stage5-live</code> 标 <svg class="status-icon status-unknown" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#7A93B5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="未验证"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>。策略验过了，账号在线行为没验，两者分开记账。</p>
+<h3 id="17">1.7 常见故障</h3>
+<p><strong>故障一：<code>make stage5</code> 报缺少只读密码。</strong> 不会。<code>make stage5</code> 是离线门禁，不连库；报缺 <code>REBUILD_DW_RO_PASSWORD</code> 的通常是 <code>stage5-live</code>，或者你在本地起了后端却没有配只读账号。后端的执行步骤会以 <code>INTERNAL_ERROR</code> 收尾，而不是编一份假数据；这是 S6 定义的「诚实的失败」。</p>
+<p><strong>故障二：把 <code>SELECT 1</code> 当成「策略漏了」。</strong> <code>SELECT 1</code> 在注入语料的 <code>allow</code> 段里，策略确实放行它。原因是常量投影归 S4 的生成质量校验（<code>SQL_CONSTANT_PROJECTION</code>），不归 S5 的执行安全。S5 只回答「这条 SQL 会不会写库、越权、拖垮服务」；<code>SELECT 1</code> 不写库、不越权，所以策略放行。真正的问数链路上，S4 的 guard 会先把它拦下；S5 是执行前的最后一道，不是唯一一道。</p>
+<p>这条 SQL 值得多停一步：它在 S5 是放行的，在 S4 是拒绝的。两个结论都正确，因为它们回答的问题不同。S4 的 guard 管「这条 SQL 像不像这个问题的答案」，常量投影意味着模型没有真的查数据，只是拿一个常量占位；S5 管「这条 SQL 会不会写库、越权、拖垮服务」，<code>SELECT 1</code> 三样都不占。真正的问数链路上，S4 先跑，<code>SELECT 1</code> 到不了执行器；S5 的放行只说明「如果它到了这里，也不会造成危害」。把两层当成一层，才会得出「策略漏了」的错觉。</p>
+<p><strong>故障三：列白名单误杀 <code>ORDER BY 销售额</code>。</strong> <code>销售额</code> 不是物理列，是投影别名。<code>_projection_aliases()</code> 会把 <code>exp.Alias</code> 的名字收集起来，无限定列命中别名时放行。这条规则由 <code>group_by_with_cn_alias</code> 与 <code>order_by_alias</code> 两条 allow 语料钉住；如果改坏了，零误杀会立刻变红。</p>
+<p><strong>故障四：可执行注释漏过。</strong> 检查顺序里第 1 步就是 <code>has_executable_comment()</code>，不是等 AST 解析。原因是 <code>/*! ... */</code> 在 MySQL 里是「注释形式，但服务端执行」；解析器会把它当注释忽略，等你看到 AST 时已经晚了。语料 <code>executable_comment_union</code> 与 <code>executable_comment_drop</code> 就是为这条准备的。</p>
+<p><strong>故障五：执行器超时没生效。</strong> <code>_prepare_session()</code> 执行 <code>SET SESSION max_execution_time = 5000</code>，失败会显式抛出，不静默降级。客户端还有 <code>read_timeout=10</code> 作为兜底。<code>max_execution_time</code> 只对 <code>SELECT</code> 生效，这也是为什么「只允许单条 SELECT」和「超时」要一起看。</p>
+<p><strong>故障六：以为「策略拒绝」等于「数据库没连」。</strong> 在 <code>ReadOnlyExecutor.execute()</code> 里确实如此：<code>enforce()</code> 不通过就直接返回，不进 <code>_run()</code>。但如果你绕过执行器，直接拿 <code>decision.sql</code> 去连库，那就是另一个调用方的问题。S5 的保证是「执行器这条路径」；新增入口必须复用 <code>enforce()</code>。</p>
+<h3 id="18">1.8 证据</h3>
+<ul>
+<li><code>contracts/sql.policy.yaml</code>：单语句、根节点、集合运算、可执行注释、写词、危险函数、LIMIT、超时、账号、通道码与原因码（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#14684B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg> 文件存在，逐项可读）。</li>
+<li><code>contracts/schema.contract.yaml</code>：5 表 / 24 列 / 6 指标，白名单的唯一来源（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#14684B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>）。</li>
+<li><code>backend/app/security/policy.py:enforce</code>：12 步判定与重新序列化（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#14684B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg> 文件存在）。</li>
+<li><code>backend/app/security/executor.py:ReadOnlyExecutor</code>：四道闸、错误码映射、会话超时（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#14684B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>）。</li>
+<li><code>fixtures/injection/sql-injection.yaml</code>：36 条 reject + 11 条 allow（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#14684B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg> 文件存在；本机 <code>--check</code> 输出 36/36 与 11/11）。</li>
+<li><code>make stage5</code> 的 <code>--check</code> 输出（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#14684B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg> 2026-10-29 本工作树）。</li>
+<li><code>make stage5-live</code>：只读账号开通、验证、两屏对比（<svg class="status-icon status-unknown" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#7A93B5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="未验证"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg> 本工作树无 MySQL / 无 <code>REBUILD_DW_RO_PASSWORD</code>）。</li>
+</ul>
+<h3 id="19">1.9 检查清单</h3>
+<ul>
+<li class="task"><span class="box">[ ]</span> 我能说出 S4 静态校验和 S5 安全策略各自回答什么问题。</li>
+<li class="task"><span class="box">[ ]</span> 我能解释为什么策略拒绝时执行器不连库。</li>
+<li class="task"><span class="box">[ ]</span> 我能背出至少三条注入 SQL 及其原因码。</li>
+<li class="task"><span class="box">[ ]</span> 我知道 <code>SQL_REJECTED</code> 是通道码，<code>SQL_MULTIPLE_STATEMENTS</code> 是原因码。</li>
+<li class="task"><span class="box">[ ]</span> 我知道白名单来自 <code>schema.contract.yaml</code>，不是手写在策略里。</li>
+<li class="task"><span class="box">[ ]</span> 我知道执行的是 <code>decision.sql</code>，不是用户输入的原文。</li>
+<li class="task"><span class="box">[ ]</span> 我知道 <code>make stage5</code> 与 <code>make stage5-live</code> 的依赖不同。</li>
+<li class="task"><span class="box">[ ]</span> 我知道只读账号的密码来自 <code>REBUILD_DW_RO_PASSWORD</code>，不在仓库里。</li>
+</ul>
+<hr>
+<h2 id="2-s6" class="sheet" data-sheet="06">2. S6 · 失败通道</h2>
+<h3 id="21-s5">2.1 问题：S5 留下了什么风险</h3>
+<p>S5 让「拒绝」变得可判定，但它只解决了执行前的那一半。剩下的一半是：<strong>拒绝之后，用户看到什么？</strong> 旧系统在这里有三个更深的缺陷：</p>
+<p>第一，后端一次都没发过 <code>type=error</code>。模型编出 <code>SELECT '无法生成SQL…' AS error_message</code>，这条 SQL 能过 <code>EXPLAIN</code>，于是后端把它当成一行正常数据发回来，前端渲染成一张 1 行 1 列的表，全屏没有一处红色。用户以为「查到了 1 条数据」。</p>
+<p>第二，空结果被当成失败，或者失败被当成空结果。审计 FP-8 的结论是：<code>[]</code> 是合法语义，查询成功但没有数据，不应该标红。旧系统没有 <code>empty</code> 这个类别，所以「没有数据」和「查询炸了」只能挤在同一套红框里。</p>
+<p>第三，取消被当成完成。旧前端写的是 <code>status: isAbort ? "done" : "error"</code>：用户点了停止，界面显示「已停止」，状态却是 <code>done</code>——一次被掐断的查询和一次成功返回 20 行的查询长得一样。</p>
+<p>三个缺陷有一个共同点：失败没有被建模。问题不在错误码的数量，而在失败的形状不确定——有时是一行数据，有时是一个空数组，有时是一个被改写的状态字符串。形状不确定，界面就只能猜；猜错的代价由用户承担。</p>
+<p>所以 S6 要解决的是：如何让每一种失败都有名字、有类别、有界面、有是否可重试的结论，并且保证流一定以 <code>result</code> 或 <code>error</code> 收尾。多写几个错误码解决不了这件事。</p>
+<h3 id="22">2.2 实体与边界：错误表、通道错误、编排器、校正器、取消开关</h3>
+<p>S6 的中心是一张表：<code>contracts/errors.yaml</code>。它只回答三个问题：这个失败叫什么（<code>code</code> + <code>label</code>）、用户该看到什么（<code>class</code> + <code>message</code>）、能不能自动校正一次（<code>retryable</code>）。运行时的 <code>ErrorTable</code> 会严格加载它：少一个键、多一个键、<code>class</code> 不在 <code>classes</code> 里、<code>retryable</code> 不是布尔值、<code>max_attempts &lt; 1</code>，都会抛 <code>ErrorTableError</code>。这一层不放过「差不多能用」的配置。</p>
+<p>错误表的严格加载值得多看一眼。契约是运行时的事实源，一个拼错的键在开发期被放过，到了线上就变成一次 <code>INTERNAL_ERROR</code>；而 <code>INTERNAL_ERROR</code> 恰恰是最难排查的那一类，因为它只说明「别处坏了」。加载期就炸，至少能指到是哪一行。</p>
+<p>第二个实体是 <code>ChannelError</code>。它是所有失败的唯一形状：<code>code</code> / <code>message</code> / <code>step</code> / <code>detail</code>。S4 的拒答、S5 的策略拒绝、数据库执行错误、校正失败、取消，全部变成它。<code>ChannelError.to_event()</code> 只保留 <code>contracts/sse.schema.json</code> 允许的 <code>detail</code> 键，避免把内部对象泄漏到线上。</p>
+<p>第三个实体是 <code>AgentRunner</code>。它把上下文 8 阶段、生成、校验、校正、执行接成一条会发事件的流水线。它的三条不变式写在文件头：每一步都有真事、每一种失败都有名字、流必须以 <code>result</code> 或 <code>error</code> 收尾。任何未捕获异常都会被 <code>events()</code> 兜住，变成 <code>INTERNAL_ERROR</code>，绝不静默结束。</p>
+<p>第四个实体是校正器。<code>propose_correction()</code> 只在错误可重试、有校正器、契约允许时才会动手；最多一次。校正后的 SQL 必须先回到 <code>validate_sql</code> 重新过 guard 与 policy，不能直接执行。</p>
+<p>第五个实体是取消开关。<code>CancelRegistry</code> 维护 <code>request_id → CancelToken</code>，生命周期跟着 SSE 流走：流开始登记，结束注销。取消是<strong>一个状态</strong>，不是 <code>done</code>，也不是 <code>error</code>。</p>
+<figure><img src="file:///home/zhensirong/VM-Share/DSWS-design/design/style-lab/05-blueprint/design/diagrams/02-runtime/12-s6-correction-state.svg" alt="图 12 · S6 校正闭环状态机"><figcaption><span class="fignum">图 12</span> · S6 校正闭环状态机</figcaption></figure>
+
+<p>图 12 把这条路径画成了状态机：<code>Gen → Val</code>，可重试且 <code>attempts=0</code> 才进 <code>Cor</code>，<code>Cor → Val</code> 重新校验；不可重试或次数用尽直接进 <code>Err</code>；<code>Run</code> 有行进 <code>Ok</code>，0 行进 <code>Empty</code>，执行错误进 <code>Err</code>，执行中被取消进 <code>Can</code>。注意 <code>Empty</code> 用的是绿色类，不是红色：空结果不是失败。</p>
+<p>后文用四个缩写：<code>Gen</code> = <code>generate_sql</code>，<code>Val</code> = <code>validate_sql</code>，<code>Cor</code> = <code>correct_sql</code>，<code>Run</code> = <code>run_sql</code>；<code>Ok</code> / <code>Empty</code> / <code>Err</code> / <code>Can</code> 分别是成功、空结果、失败、取消。<code>attempts</code> 数的是已用掉的校正次数，首次校验失败时为 0。</p>
+<p>把这台状态机当成一个证明来看：状态有限，正常路径的终止状态恰好四个——<code>Ok</code>、<code>Empty</code>、<code>Err</code>、<code>Can</code>，从 <code>Gen</code> 出发的每条路径都必须在其中一个停下。<code>Gen → Val</code> 之后，校验通过进 <code>Run</code>；不通过时，可重试且次数未用尽进 <code>Cor</code>，其余进 <code>Err</code>。<code>Cor → Val</code> 只有回边，没有直达 <code>Run</code> 的边，这一条边就保证了校正结果一定重新校验。<code>Run</code> 之后按「有行 / 零行 / 执行错误」三分，取消则在步骤边界与执行成功之后各检查一次。最后还有一层兜底：<code>events()</code> 把任何未捕获异常收成 <code>INTERNAL_ERROR</code>。四类终止状态加上这层兜底，就是「流一定以 <code>result</code> 或 <code>error</code> 收尾」的完整论证。</p>
+<h3 id="23">2.3 输入：内部码、异常、取消信号</h3>
+<p>S6 的输入有四类：</p>
+<ol>
+<li><strong>S4 的拒答码</strong>：<code>OUT_OF_RANGE</code>、<code>UNSUPPORTED_INTENT</code> 等。它们不是失败类别，是模型的判断。<code>channel_code_for_refusal()</code> 的规则只有一条：在错误码表里就是它自己，不在就是 <code>LLM_REFUSAL</code>；原码留在 <code>detail.reason_code</code>。</li>
+<li><strong>S4 的静态校验违规码</strong>：9 个 <code>SQL_*</code> 违规码，包括 <code>SQL_EMPTY</code>、<code>SQL_MULTIPLE_STATEMENTS</code>、<code>SQL_NOT_READ_ONLY</code>、<code>SQL_UNKNOWN_TABLE</code>、<code>SQL_CONSTANT_PROJECTION</code>、<code>SQL_MISSING_ORDER_BY</code>、<code>SQL_MISSING_LIMIT</code>、<code>SQL_UNKNOWN_COLUMN</code>、<code>SQL_SYNTAX</code>。</li>
+<li><strong>S5 的执行错误</strong>：<code>SQL_REJECTED</code>、<code>SQL_SYNTAX</code>、<code>SQL_UNKNOWN_TABLE</code>、<code>SQL_UNKNOWN_COLUMN</code>、<code>SQL_EXECUTION_ERROR</code>、<code>TIMEOUT</code>。</li>
+<li><strong>取消信号</strong>：<code>CancelToken.cancelled</code>，在每个步骤边界检查；客户端断开时 <code>_stream</code> 的 <code>finally</code> 也会调用 <code>CANCEL_REGISTRY.cancel()</code>。</li>
+</ol>
+<p>另外还有两个兜底：编排器自身异常 → <code>INTERNAL_ERROR</code>；执行器返回了表里没有的码 → <code>INTERNAL_ERROR</code>，并把原码放进 <code>reason_code</code>。这条规则很重要：<strong>失败必须有名字，不能因为码不认识就悄悄消失</strong>。</p>
+<p>四类输入是四种不同的信号，没有统一的错误对象形状。拒答码是模型的判断，违规码是静态检查的结论，执行错误是数据库的回应，取消是用户的动作。把它们压成同一种异常，就会丢掉「谁说的」这个信息；<code>ChannelError</code> 保留 <code>step</code>，正是为了记住「在哪一步、由谁给出」。</p>
+<h3 id="24">2.4 动作：映射 → 分类 → 校正一次 → 收尾</h3>
+<p>S6 的动作可以拆成五步。</p>
+<p><strong>第一步，映射成通道码。</strong> 所有内部码先过 <code>channel_code_for_refusal()</code> 或 <code>_execution_error()</code>。在表里就保留，不在表里就归到 <code>LLM_REFUSAL</code> 或 <code>INTERNAL_ERROR</code>。这样下游永远只需要面对 16 个码。</p>
+<p><strong>第二步，由 <code>class</code> 决定界面。</strong> <code>failure</code> 是真失败：红框 + 失败步骤红叉。<code>empty</code> 是合法但没有数据：虚线空态卡，不标红，执行步骤保持绿色。<code>cancelled</code> 是用户取消：中性卡，正在跑的步骤标「已取消」，既不是 <code>done</code> 也不是失败。最容易写反的是把判断换成 <code>code</code>：同一个码换个 <code>class</code>，界面就该跟着换，这是 S6 里最容易错的一处。</p>
+<p><strong>第三步，由 <code>retryable</code> 决定要不要校正。</strong> 只有校验阶段、<code>retryable: true</code> 的错误才进 <code>correct_sql</code>，且最多一次（<code>correction.max_attempts: 1</code>）。<code>SQL_REJECTED</code> 永远不可重试：拿一条被安全策略拒掉的 SQL 去问模型「改一下」，等于给注入开了重试的口子。<code>TIMEOUT</code>、<code>SQL_EXECUTION_ERROR</code>、<code>SQL_NOT_READ_ONLY</code>、<code>SQL_MULTIPLE_STATEMENTS</code>、<code>SQL_EMPTY</code>、<code>LLM_REFUSAL</code>、<code>CANCELLED</code>、<code>INTERNAL_ERROR</code> 也都不可重试。</p>
+<p><strong>第四步，校正后重新校验。</strong> <code>correction.revalidate: true</code>，<code>revalidate_with: [guard, policy]</code>。校正器给出的候选 SQL 先过 <code>validate_payload()</code> 的形状校验，再回到 <code>validate_sql</code> 跑 S4 的 guard 与 S5 的 policy。校正不是绕过安全检查的后门；如果校正结果带写操作或 UNION，策略照样拒绝，最后的错误仍然是 <code>SQL_REJECTED</code>。</p>
+<p><strong>第五步，收尾。</strong> 流必须以 <code>result</code> 或 <code>error</code> 收尾。有行 → <code>result</code>；0 行 → <code>EMPTY_RESULT</code>（<code>class: empty</code>）；执行失败 → 对应错误；取消 → <code>CANCELLED</code>（<code>class: cancelled</code>）。<code>AgentRunner._skip_correct()</code> 还会在流提前结束时补一条 <code>correct_sql: skipped</code>，避免条件步骤永远是一块灰的 pending。</p>
+<h4 id="sql-sql">例题：被拒绝的 SQL 与被校正的 SQL</h4>
+<p><strong>一条被拒绝的 SQL 走完整条链。</strong> 假设模型生成了一条带 <code>UNION</code> 的查询。生成阶段发出 <code>progress(generate_sql, running)</code>，成功后在步骤边界检查取消；校验阶段 <code>validate_sql</code> 先过 S4 的 guard，再问 S5 的 policy；策略返回 <code>SQL_FORBIDDEN_CONSTRUCT</code>，校验把通道码统一成 <code>SQL_REJECTED</code>，原因码放进 <code>detail.reason_code</code>。编排器查错误表：<code>class</code> 是 <code>failure</code>，<code>retryable</code> 是「否」，于是不进校正，直接发 <code>error</code> 事件并结束。前端的步骤条把 <code>validate_sql</code> 标红，<code>correct_sql</code> 显式发一条 <code>skipped</code>，卡片显示「SQL 被安全策略拒绝」。整条链上没有任何一步重试，也没有任何一步把原因码当成通道码。</p>
+<p><strong>一条可校正的 SQL 走完一次回边。</strong> 模型第一次给出语法错误的 SQL，<code>validate_sql</code> 失败，错误码 <code>SQL_SYNTAX</code>，<code>retryable</code> 为「是」，<code>attempts</code> 一直没动，于是进入 <code>correct_sql</code>。校正器返回候选 SQL，<code>propose_correction()</code> 先做形状校验，通过后把候选交回循环顶部；<code>validate_sql</code> 重新跑 guard 与 policy，通过后进入 <code>run_sql</code>，有行则发 <code>result</code>。步骤条上 <code>validate_sql</code> 先红后绿，<code>correct_sql</code> 从 running 到 success。回边只允许一次：第二次校验如果仍失败，次数已用尽，直接进 <code>Err</code>，不再问模型。</p>
+<p>取消的实现有一个必须讲清楚的边界：编排器在<strong>步骤边界</strong>检查取消开关，不能中断已经发给 MySQL 的查询。取消发生在执行期间时，<code>ReadOnlyExecutor</code> 仍会把这条 SQL 跑完；编排器在执行返回后丢弃结果并发 <code>CANCELLED</code>。所以「取消」的语义是「用户说了停，系统不再推进」，不是「数据库查询被瞬间杀死」。</p>
+<p>收尾那一段代码把「取消」写成了控制流，可以对照读：</p>
+<pre><code class="language-python">            if execution.ok:
+                if self._cancelled():
+                    # 取消发生在执行期间：这次问数不算成功——用户已经说了
+                    # 「停」。结果照常丢弃，换成一条 CANCELLED。
+                    yield from self._skip_correct()
+                    yield self._error_event(self._cancel_error())
+                    return
+</code></pre>
+<p>注意 <code>if execution.ok</code> 这一层：取消的检查发生在执行成功之后、结果发出之前。执行失败走的是另一条分支，不会被这条取消逻辑改写。</p>
+<blockquote>
+<p><strong>关键问题</strong>：零行算不算失败？答案取决于「查询是否成功」，不取决于「用户是否满意」。成功但零行是 <code>empty</code>；查询本身出错才是 <code>failure</code>。</p>
+</blockquote>
+<h4 id="_8">常见误解：错误码越多，失败就管得越好</h4>
+<p>错误码是失败的名字，不是失败的分类。名字回答「发生了什么」，类别回答「界面该怎么表现」，步骤回答「在哪一步发生」，可重试回答「要不要再试一次」。四件事任意一件缺失，下游都只能猜。把码从十几个加到几十个，如果类别仍然是「全都红」，界面还是一句话；反过来，码不多但四件事齐备，用户至少知道该做什么。这一节所有的表与代码，都在补这四个维度，而不是在扩充码表。</p>
+<h3 id="25-16-3-class">2.5 输出：16 个错误码、3 个 class</h3>
+<p>表 3-3 · <code>contracts/errors.yaml</code> 的 16 个错误码（class / retryable 与契约逐项一致）</p>
+<table>
+<thead>
+<tr>
+<th>code</th>
+<th>class</th>
+<th>retryable</th>
+<th>UI 表现</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>SQL_REJECTED</code></td>
+<td>failure</td>
+<td>否</td>
+<td>红框 + <code>validate_sql</code> 红叉；显示「SQL 被安全策略拒绝」，<code>detail.reason_code</code> 给出细粒度原因；不可校正</td>
+</tr>
+<tr>
+<td><code>SQL_SYNTAX</code></td>
+<td>failure</td>
+<td>是</td>
+<td>红框 + <code>validate_sql</code> 红叉；若校正器给出候选 SQL，先 <code>correct_sql</code> 再重新校验；校正失败仍显示原错误</td>
+</tr>
+<tr>
+<td><code>SQL_UNKNOWN_COLUMN</code></td>
+<td>failure</td>
+<td>是</td>
+<td>红框 + <code>validate_sql</code> 红叉；可进入一次校正，校正后必须重新过 guard 与 policy</td>
+</tr>
+<tr>
+<td><code>EMPTY_RESULT</code></td>
+<td>empty</td>
+<td>否</td>
+<td>虚线空态卡，不标红；<code>run_sql</code> 保持绿色；文案「查询成功但没有数据」</td>
+</tr>
+<tr>
+<td><code>LLM_REFUSAL</code></td>
+<td>failure</td>
+<td>否</td>
+<td>红框 + <code>generate_sql</code> 红叉；<code>detail.reason_code</code> 保留 <code>OUT_OF_RANGE</code> 等原码</td>
+</tr>
+<tr>
+<td><code>TIMEOUT</code></td>
+<td>failure</td>
+<td>否</td>
+<td>红框 + <code>run_sql</code> 红叉；文案「SQL 执行超时，已中止」；不校正</td>
+</tr>
+<tr>
+<td><code>CANCELLED</code></td>
+<td>cancelled</td>
+<td>否</td>
+<td>中性卡；正在跑的步骤标「已取消」；状态是「已取消」，不是「完成」</td>
+</tr>
+<tr>
+<td><code>SQL_UNKNOWN_TABLE</code></td>
+<td>failure</td>
+<td>是</td>
+<td>红框 + <code>validate_sql</code> 红叉；可校正一次，重新校验</td>
+</tr>
+<tr>
+<td><code>SQL_NOT_READ_ONLY</code></td>
+<td>failure</td>
+<td>否</td>
+<td>红框 + <code>validate_sql</code> 红叉；不可校正，杜绝「改一下就能写」</td>
+</tr>
+<tr>
+<td><code>SQL_MULTIPLE_STATEMENTS</code></td>
+<td>failure</td>
+<td>否</td>
+<td>红框 + <code>validate_sql</code> 红叉；不可校正，避免多语句再次出现</td>
+</tr>
+<tr>
+<td><code>SQL_CONSTANT_PROJECTION</code></td>
+<td>failure</td>
+<td>是</td>
+<td>红框 + <code>validate_sql</code> 红叉；可校正一次，常用于「模型拿常量占位」</td>
+</tr>
+<tr>
+<td><code>SQL_MISSING_ORDER_BY</code></td>
+<td>failure</td>
+<td>是</td>
+<td>红框 + <code>validate_sql</code> 红叉；可校正一次，补排序</td>
+</tr>
+<tr>
+<td><code>SQL_MISSING_LIMIT</code></td>
+<td>failure</td>
+<td>是</td>
+<td>红框 + <code>validate_sql</code> 红叉；可校正一次，补 LIMIT</td>
+</tr>
+<tr>
+<td><code>SQL_EMPTY</code></td>
+<td>failure</td>
+<td>否</td>
+<td>红框 + <code>validate_sql</code> 红叉；生成结果是空串，校正没有意义</td>
+</tr>
+<tr>
+<td><code>SQL_EXECUTION_ERROR</code></td>
+<td>failure</td>
+<td>否</td>
+<td>红框 + <code>run_sql</code> 红叉；数据库执行出错，不校正</td>
+</tr>
+<tr>
+<td><code>INTERNAL_ERROR</code></td>
+<td>failure</td>
+<td>否</td>
+<td>红框；多为配置 / 连接 / 未预期异常；<code>detail.request_id</code> 便于排查</td>
+</tr>
+</tbody>
+</table>
+<p>表 3-3 的步骤列写的是最常见产生点；<code>SQL_SYNTAX</code> / <code>SQL_UNKNOWN_TABLE</code> / <code>SQL_UNKNOWN_COLUMN</code> 也可能在执行期出现，此时步骤是 <code>run_sql</code>，且不再校正。</p>
+<p>十六个码不是随手列的：它覆盖生成拒答、静态校验的九类违规、执行期的语法 / 表 / 列 / 超时 / 其他错误、空结果、取消与内部错误。三类 <code>class</code> 也不是装饰：<code>failure</code> 要红，<code>empty</code> 要中性，<code>cancelled</code> 要另一种中性。路线图点名的那几个码必须在表里，这是错误表加载期的检查；新增码可以加，但必须同时给出类别、是否可重试与文案，否则表加载不通过。</p>
+<p>三个 class 的界面差异可以再压成一张小表：</p>
+<p class="table-caption"><span class="tabnum">表 3-4</span> · class 决定界面，不是 code 决定界面</p>
+<table>
+<thead>
+<tr>
+<th>class</th>
+<th>步骤条</th>
+<th>卡片</th>
+<th>状态文案</th>
+<th>典型码</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>failure</code></td>
+<td>当前 running 步骤标 <code>×</code></td>
+<td>红框，可复制错误</td>
+<td>失败</td>
+<td><code>SQL_REJECTED</code>、<code>TIMEOUT</code>、<code>INTERNAL_ERROR</code></td>
+</tr>
+<tr>
+<td><code>empty</code></td>
+<td>执行步骤保持 <code>✓</code></td>
+<td>虚线空态卡，不标红</td>
+<td>无数据</td>
+<td><code>EMPTY_RESULT</code></td>
+</tr>
+<tr>
+<td><code>cancelled</code></td>
+<td>running 步骤标 <code>⊘</code></td>
+<td>中性卡</td>
+<td>已取消</td>
+<td><code>CANCELLED</code></td>
+</tr>
+</tbody>
+</table>
+<p>把 <code>表 3-4</code> 读成一张真值表：三行互斥且穷尽，输入是 <code>class</code>，输出是步骤条标记、卡片样式、状态文案三件事。<code>failure</code> 的三个输出都是「坏」；<code>empty</code> 的三个输出都是「中性偏绿」；<code>cancelled</code> 的三个输出都是「中性」。判断依据只有 <code>class</code>，<code>code</code> 不参与。为什么？因为同一个码可以换类别——<code>EMPTY_RESULT</code> 今天是 <code>empty</code>，如果业务改口说「零行也算失败」，改的是契约里的 <code>class</code>，界面应当跟着变，而不是去改前端的一串 <code>if code === ...</code>。这就是把分类放在契约里、把渲染放在组件里的理由。</p>
+<p><code>empty</code> 不是失败，这条规则值得单独说清楚，因为它最容易被写反。<code>[]</code> 是合法语义：查询成功，库里就是没有这批数据。用户需要知道「没有」，不需要看到红色。把它归成 <code>failure</code> 会带来三个错误：步骤条把 <code>run_sql</code> 标成红叉，卡片给出一句道歉，用户会去改问题、重试，甚至怀疑权限。归类为 <code>empty</code> 之后，界面说「查询成功但没有数据」，步骤保持绿色，重试与否由用户决定。判断依据只有一个：执行成功且行数为零。</p>
+<p><code>error</code> 事件的形状必须符合 <code>contracts/sse.schema.json#/$defs/error</code>：</p>
+<pre><code class="language-json">{
+  &quot;type&quot;: &quot;error&quot;,
+  &quot;code&quot;: &quot;EMPTY_RESULT&quot;,
+  &quot;class&quot;: &quot;empty&quot;,
+  &quot;message&quot;: &quot;查询执行成功，但没有符合条件的数据。&quot;,
+  &quot;step&quot;: &quot;run_sql&quot;,
+  &quot;detail&quot;: {
+    &quot;sql&quot;: &quot;SELECT ... LIMIT 1000&quot;,
+    &quot;rows&quot;: 0,
+    &quot;request_id&quot;: &quot;8f0c...&quot;
+  }
+}
+</code></pre>
+<p><code>detail</code> 有白名单：<code>reason_code</code>、<code>reason</code>、<code>sql</code>、<code>original_sql</code>、<code>corrected_sql</code>、<code>attempts</code>、<code>rows</code>、<code>request_id</code> 这八个键以外，<code>ChannelError.to_event()</code> 会过滤掉。这样前端拿到的永远是契约允许的字段，不会因为后端多塞一个内部对象而崩。</p>
+<h3 id="26-6-16-done">2.6 验收：6 类失败、16 个码、校正只一次、取消不是 done</h3>
+<p>离线门禁来自 <code>Makefile</code> 的 <code>stage6</code>：</p>
+<pre><code class="language-bash">make stage6
+</code></pre>
+<p>它跑：</p>
+<pre><code class="language-bash">cd backend &amp;&amp; uv run python -m app.scripts.failures --check
+cd backend &amp;&amp; uv run python -m app.scripts.failures --table
+cd backend &amp;&amp; uv run python -m app.scripts.failures --scenarios
+cd backend &amp;&amp; uv run pytest -q tests/agent
+cd frontend &amp;&amp; npm run test
+cd frontend &amp;&amp; npm run build
+cd backend &amp;&amp; uv run pytest -q
+</code></pre>
+<p>2026-10-29 在本工作树执行 <code>--check</code> 与 <code>--table</code>，输出（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#14684B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>）：</p>
+<pre><code class="language-text">== 1/2 失败场景（每类都必须演出它声称的结局） ==
+  happy                期望 result               实际 result
+  sql_rejected         期望 SQL_REJECTED         实际 SQL_REJECTED
+  sql_syntax           期望 SQL_SYNTAX           实际 SQL_SYNTAX
+  sql_unknown_column   期望 SQL_UNKNOWN_COLUMN   实际 SQL_UNKNOWN_COLUMN
+  empty_result         期望 EMPTY_RESULT         实际 EMPTY_RESULT
+  llm_refusal          期望 LLM_REFUSAL          实际 LLM_REFUSAL
+  timeout              期望 TIMEOUT              实际 TIMEOUT
+  slow                 期望 result               实际 result
+  corrected            期望 result               实际 result
+== 2/2 错误码表（路线图点名的 7 个码必须都在） ==
+  错误码表：16 个码，路线图要求的 7 个全在
+S6 PASS
+</code></pre>
+<p>标题的「6 类」指六个失败剧本（含空结果）；输出里的 9 行另有 happy / slow / corrected 三个非失败场景。</p>
+<p><code>--check</code> 不只比对错误码，还比对 <code>class</code> 与失败步骤。比如 <code>sql_rejected</code> 必须是 <code>SQL_REJECTED</code> / <code>failure</code> / <code>validate_sql</code>，<code>empty_result</code> 必须是 <code>EMPTY_RESULT</code> / <code>empty</code> / <code>run_sql</code>。如果只比错误码，<code>empty</code> 被写成 <code>failure</code> 也能过，界面就会把空结果标红——这正是 S6 要消灭的缺陷。</p>
+<p>6 类失败的剧本由 <code>fixtures/failures/scenarios.yaml</code> 驱动。场景应用 <code>backend/app/scenarios/app.py</code> 起的是<strong>同一个</strong> <code>create_app</code>，只把模型与数据库换成夹具替身；上下文、提示词、静态校验、安全策略、校正闭环、SSE 序列化全是真代码，所以每个红叉都对应一次真实判定。</p>
+<p>浏览器验收是另一条命令：</p>
+<pre><code class="language-bash">make stage6-ui
+</code></pre>
+<p>它自起场景应用（默认 8102）与前端（5275），跑正常路径、6 类失败各一个用例、以及取消。本工作树没有 Chrome / Edge，也没有执行它，所以标 <svg class="status-icon status-unknown" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#7A93B5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="未验证"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>。<code>stage6</code> 与 <code>stage6-ui</code> 的关系和 S5 的 <code>stage5</code> / <code>stage5-live</code> 一样：一个证明后端判定，一个证明界面表现，不能互相代替。</p>
+<p>校正闭环的验收要点是三个负例：</p>
+<ol>
+<li>校正器返回一条带写操作的 SQL → 重新校验必须给 <code>SQL_REJECTED</code>，不能因为「这是校正结果」就放行。</li>
+<li>校正器返回一条 UNION → 同样必须拒绝，原因码 <code>SQL_FORBIDDEN_CONSTRUCT</code>。</li>
+<li>校正器拒答或产物不合契约 → 旧错误仍然是根因，不能把旧错误清掉、换成「校正成功」。</li>
+</ol>
+<p>这三条在 <code>tests/agent/test_orchestrator.py</code> 里有对应负例。正例则是 <code>corrected</code> 场景：模型第一次给出语法错误的 SQL，校正器给出最小修正，重新校验通过，最后 <code>result</code> 成功；步骤条上 <code>validate_sql</code> 会先红后绿，<code>correct_sql</code> 从 running 到 success。</p>
+<p>取消的验收要看三件事：状态文案是「已取消」而不是「已完成」；正在跑的步骤标 <code>⊘</code>，不是 <code>×</code>；结果表不出现。旧系统的 <code>status: isAbort ? "done" : "error"</code> 在这里被拆成了 <code>cancelled</code> 与 <code>failure</code> 两条路径。</p>
+<h3 id="27">2.7 常见故障</h3>
+<p><strong>故障一：<code>error.code</code> 不在表里。</strong> <code>build_error()</code> 会直接抛 <code>ErrorTableError</code>；<code>_execution_error()</code> 则把它降级成 <code>INTERNAL_ERROR</code>，并把原码放进 <code>reason_code</code>。两种处理看起来不一致，但原则一致：<strong>码必须有名字</strong>。前者是开发期错误，越早炸越好；后者是运行期，不能让一次未知码把整个流吞掉。</p>
+<p><strong>故障二：把 <code>SQL_REJECTED</code> 设成可重试。</strong> 这是最危险的一条。策略拒绝意味着 SQL 已经越过了安全边界；再问模型「改一下」，等于给注入一次重试机会。契约里 <code>SQL_REJECTED.retryable: false</code>，<code>propose_correction()</code> 也会在 <code>if not error.retryable</code> 处直接返回 <code>attempted=False</code>。两处都拦，不靠单点。</p>
+<p><strong>故障三：校正成功但没有重新校验。</strong> <code>propose_correction()</code> 返回的 <code>sql</code> 只是<strong>候选</strong>，不是最终 SQL。编排器拿到候选后 <code>continue</code> 回到循环顶部，重新跑 <code>validate_sql</code>。如果跳过这一步，模型改出来的写操作就会直接执行；这正是旧系统 <code>correct_sql</code> 的三个问题之一。</p>
+<p><strong>故障四：校正失败后旧错误被清空。</strong> <code>CorrectionProposal(ok=False)</code> 会带着原来的 <code>error</code> 返回；编排器用 <code>proposal.error or failure</code> 收尾。根因没变，错误就不该变。旧系统 <code>except</code> 之后 <code>raise</code>，但 <code>state["error"]</code> 还留着上一轮的旧错误，界面会同时显示「已校正」和「校验失败」；新系统只保留一个根因。</p>
+<p><strong>故障五：空结果被标红。</strong> 执行成功且 <code>rows == 0</code> 时，编排器发的是 <code>EMPTY_RESULT</code>，<code>class</code> 是 <code>empty</code>；前端 <code>App.tsx</code> 收到 <code>event.class === "empty"</code> 时只把状态设为 <code>empty</code>，不调用 <code>markRunning(..., "error")</code>。如果这里写错，步骤条会把 <code>run_sql</code> 标成红叉，用户会以为查询失败了。</p>
+<p><strong>故障六：前端自己发明错误码。</strong> <code>App.tsx</code> 在流没有 terminal 事件时，会伪造一个 <code>STREAM_INCOMPLETE</code>；网络异常时伪造 <code>NETWORK_ERROR</code>。这两个码<strong>不在</strong> <code>contracts/errors.yaml</code> 里，它们是前端本地状态，不是后端通道码。<code>PseudoErrorCard</code> 也刻意不编造错误码，只显示「这一行不是查询结果」。前端硬编一个契约码，等于又抄了一份契约。</p>
+<p><strong>故障七：多 worker 下取消失效。</strong> <code>CANCEL_REGISTRY</code> 是进程内状态。<code>compose.yaml</code> 的 backend 固定 <code>--workers 1</code>，为的是让「取消」打到同一个进程，省资源只是顺带。如果改成多 worker，取消请求可能落到另一个进程，<code>cancel()</code> 返回 <code>False</code>，用户点了停止但查询继续跑。</p>
+<p>这条限制的根源在状态放在哪里。取消需要「同一个请求 id 打到同一个进程」，进程内字典是最直接的实现；要跨进程，就得引入共享存储或消息通道，那是另一个量级的工程。当前的选择是单 worker，把限制写在部署里，而不是假装可以水平扩展。</p>
+<h3 id="28">2.8 证据</h3>
+<ul>
+<li><code>contracts/errors.yaml</code>：16 个码、3 个 class、<code>correction.max_attempts: 1</code>、<code>revalidate_with: [guard, policy]</code>（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#14684B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg> 文件存在）。</li>
+<li><code>backend/app/agent/errors.py:parse_error_table</code>：严格键校验、class 校验、retryable 布尔校验、路线图 7 码校验（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#14684B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>）。</li>
+<li><code>backend/app/agent/correct.py:propose_correction</code>：不可重试直接返回、最多一次、产物形状校验（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#14684B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>）。</li>
+<li><code>backend/app/agent/orchestrator.py:AgentRunner</code>：校验 → 校正 → 重新校验 → 执行；取消在步骤边界；流必收尾（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#14684B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>）。</li>
+<li><code>backend/app/agent/cancel.py:CancelRegistry</code>：<code>request_id → CancelToken</code>，流结束注销（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#14684B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>）。</li>
+<li><code>backend/app/scenarios/app.py</code>：生产/场景共用 <code>create_app</code>，只换模型与数据库（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#14684B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>）。</li>
+<li><code>make stage6</code> 的 <code>--check</code> / <code>--table</code> 输出（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#14684B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg> 2026-10-29 本工作树）。</li>
+<li><code>make stage6-ui</code>：6 类失败 + 取消的浏览器用例（<svg class="status-icon status-unknown" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#7A93B5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="未验证"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg> 本工作树无 Chrome / Edge）。</li>
+</ul>
+<h3 id="29">2.9 检查清单</h3>
+<ul>
+<li class="task"><span class="box">[ ]</span> 我能说出 <code>failure</code> / <code>empty</code> / <code>cancelled</code> 三种界面差在哪里。</li>
+<li class="task"><span class="box">[ ]</span> 我能背出 16 个错误码，并说出哪些是可重试的。</li>
+<li class="task"><span class="box">[ ]</span> 我知道 <code>SQL_REJECTED</code> 永远不可重试，以及为什么。</li>
+<li class="task"><span class="box">[ ]</span> 我知道校正最多一次，且校正后必须重新过 guard 与 policy。</li>
+<li class="task"><span class="box">[ ]</span> 我知道执行阶段的失败<strong>不</strong>进入校正。</li>
+<li class="task"><span class="box">[ ]</span> 我知道空结果不是失败，<code>run_sql</code> 保持绿色。</li>
+<li class="task"><span class="box">[ ]</span> 我知道取消是 <code>cancelled</code>，不是 <code>done</code>，也不是 <code>failure</code>。</li>
+<li class="task"><span class="box">[ ]</span> 我知道取消只在步骤边界生效，不能中断已经发出的数据库查询。</li>
+</ul>
+<hr>
+<h2 id="3-s7" class="sheet" data-sheet="07">3. S7 · 前端收口</h2>
+<h3 id="31-s6">3.1 问题：S6 留下了什么风险</h3>
+<p>S6 让后端有了名字，但名字要到用户眼前才算数。S6 结束时，后端能发 <code>progress</code> / <code>result</code> / <code>error</code>，错误带 <code>code</code> / <code>class</code> / <code>step</code>；但前端仍可能把它压扁成三种老问题：</p>
+<p>第一，<strong>前端硬编码步骤</strong>。旧前端写死 12 个节点，<code>correct_sql</code> 永远灰着；后端新增一个步骤，前端不认，界面就少一块。S6 的 <code>skipped</code> 事件如果没有对应的渲染，条件步骤会永远停在灰色 pending。</p>
+<p>第二，<strong>未知事件被当成失败</strong>。旧 <code>App.tsx</code> 的兜底分支把任何未知 <code>type</code> 当成 <code>error</code>；后端将来加一个 <code>type:"meta"</code>，用户就会看到一次莫名的红框，而且 <code>message</code> 还是 <code>undefined</code>。契约长了一条腿，不该变成一次报错。</p>
+<p>第三，<strong>类型被悄悄改写</strong>。旧系统 <code>json.dumps(..., default=str)</code> 把 <code>Decimal</code> 降级成字符串，同一行里出现 <code>{"销量": "10", "销售额": 62190.0}</code>。屏幕上看不出差别，复制出去才是 <code>"10"</code>，下游做数值计算会踩坑。审计把这条记成 B4。</p>
+<p>第三个问题最隐蔽：类型被改写之后，界面完全正常。用户看不出 <code>"10"</code> 与 <code>10</code> 的差别，只有把结果复制到表格里做求和，才会发现一列数字里混着字符串。这类缺陷不制造红色，也不制造空态，它制造的是「看起来对」。</p>
+<p>所以 S7 的问题：<strong>如何让后端的契约直接变成前端的类型、步骤、错误文案和界面状态，而不是靠人再抄一遍？</strong> 换句话说，S6 解决的是「失败有没有名字」，S7 解决的是「名字有没有被正确地翻译成界面」。</p>
+<h3 id="32">3.2 实体与边界：契约、生成物、组件、解析器</h3>
+<p>S7 的实体分三层。</p>
+<p><strong>事实源层</strong>：<code>contracts/sse.schema.json</code>、<code>contracts/steps.yaml</code>、<code>contracts/errors.yaml</code>。它们是唯一事实源；前端不硬编码事件字段、步骤列表、错误码含义。</p>
+<p><strong>生成物层</strong>：<code>frontend/src/generated/</code> 下三个文件——<code>sse.schema.json</code>、<code>sse.ts</code>、<code>contract.json</code>。它们由 <code>backend/app/scripts/contracts_gen.py</code> 从契约生成，文件头明确写着「不要手改」。<code>sse.ts</code> 生成判别联合 <code>AgentEvent = ProgressEvent | ResultEvent | ErrorEvent</code>，以及从联合派生的别名 <code>ProgressStatus</code>、<code>ErrorClass</code>、<code>ColumnType</code>、<code>CellValue</code>。派生而不是重抄，是为了让「一个事实源」在类型层也成立。</p>
+<p><strong>运行时层</strong>：<code>frontend/src/lib/api.ts</code> 的 <code>SseParser</code> 与 <code>parseAgentEvent</code>，<code>frontend/src/lib/json-schema.ts</code> 的通用校验器，<code>frontend/src/App.tsx</code> 的事件 switch，<code>StepRail</code> / <code>ErrorCard</code> / <code>PseudoErrorCard</code> / <code>ResultTable</code> 四个组件。<code>/api/steps</code> 与 <code>/api/errors</code> 在启动时拉取，前端不写死步骤与错误文案。</p>
+<p>三层之间是单向依赖：事实源生成生成物，生成物约束运行时，运行时不再回头改事实源。手改生成物等于在运行时层伪造了一个事实源，下一次生成就会覆盖它，而 <code>--check</code> 会在覆盖之前先报错。正确顺序永远是「改契约 → 重新生成 → 再跑门禁」。</p>
+<figure class="tall"><img src="file:///home/zhensirong/VM-Share/DSWS-design/design/style-lab/05-blueprint/design/diagrams/02-runtime/13-s7-sse-sequence.svg" alt="图 13 · S7 SSE 事件序列与前端消费"><figcaption><span class="fignum">图 13</span> · S7 SSE 事件序列与前端消费</figcaption></figure>
+
+<p>图 13 把「事件 → 组件」画得很清楚：<code>progress</code> 进 <code>StepRail</code>，<code>result</code> 进 <code>ResultTable</code>，<code>error</code> 按 <code>class</code> 分到红框 / 空态 / 中性卡。<code>correct_sql</code> 的 <code>skipped</code> 也在图里：它是「未触发 –」，不是灰色 pending。</p>
+<figure><img src="file:///home/zhensirong/VM-Share/DSWS-design/design/style-lab/05-blueprint/design/diagrams/03-data/15-contract-model.svg" alt="图 15 · 契约模型（表/列/指标/值域）"><figcaption><span class="fignum">图 15</span> · 契约模型（表/列/指标/值域）</figcaption></figure>
+
+<p>图 15 解释了 S7 生成物的底气：契约是有结构、有计数、有类型约束的模型，不只是给人看的文档。<code>SchemaContract</code> 声明 5 张表、6 个指标；<code>Table</code> 拥有 24 个 <code>Column</code>；每个 <code>Column</code> 有 <code>ValueDomain</code>。S7 的 <code>sse.schema.json</code> 和它一样，是可以被机器校验的结构，不是一段散文。</p>
+<h3 id="33-sse">3.3 输入：SSE 字节流 + 契约 + 生成物</h3>
+<p>S7 的输入是网络上的字节流，不是后端内存里的事件对象。这一点决定了前端必须自己校验：代理可能改写、后端可能回滚到旧版本、前端可能连上别的服务。旧系统就是在这里崩的——它信任了「后端会发对」，然后把未知类型当失败。</p>
+<p>SSE 的帧以空行分隔，帧内每行是 <code>field: value</code>；前端只取 <code>data:</code> 行拼成 JSON，event 行和以 <code>:</code> 开头的心跳行不参与。</p>
+<p>一个合法的 SSE 帧长这样：</p>
+<pre><code class="language-text">data: {&quot;type&quot;:&quot;progress&quot;,&quot;step&quot;:&quot;run_sql&quot;,&quot;status&quot;:&quot;running&quot;,&quot;duration_ms&quot;:null}
+
+</code></pre>
+<p>前端按空行切帧，接受 <code>\n\n</code> 与 <code>\r\n\r\n</code>；多条 <code>data:</code> 行按规范用 <code>\n</code> 拼接；跨 chunk 的半帧留在 buffer；流结束时 flush 尾帧。这四点看起来是解析细节，实际上每一点都对应一种丢帧方式：只认一种换行、跨 chunk 丢帧、多行截断、尾帧丢失。<code>SseParser</code> 把这四点都修了。</p>
+<p>把解析器想成一个只有两个字段的状态机：<code>buffer</code> 与「当前帧是否完整」。输入是任意切分的字节块，输出是若干个完整帧。四条规则对应四个转移：</p>
+<ul>
+<li><strong>换行</strong>：帧分隔符接受 <code>\n\n</code> 与 <code>\r\n\r\n</code> 两种，一条正则同时覆盖。只认一种换行的实现，在另一种代理后面会把整条流当成一帧。</li>
+<li><strong>跨 chunk</strong>：每次 <code>feed()</code> 把新块拼到 <code>buffer</code> 尾部，按分隔符切分，最后一段可能是不完整的帧，留在 <code>buffer</code> 里等下一次。切完就丢 buffer 的实现会丢帧。</li>
+<li><strong>多 data 行</strong>：一帧里可以有多条 <code>data:</code> 行，规范要求用换行拼接。只取第一行的实现会截断 JSON。</li>
+<li><strong>尾帧</strong>：流结束时 buffer 里可能还剩最后一帧，没有空行结尾。<code>flush()</code> 负责把它交出去；不 flush 就会丢掉最后一条事件，而最后一条往往正是 <code>result</code> 或 <code>error</code>。</li>
+</ul>
+<p>真实实现只有两个方法：</p>
+<pre><code class="language-ts">  feed(chunk: string): void {
+    this.buffer += chunk;
+    const frames = this.buffer.split(/\r?\n\r?\n/);
+    this.buffer = frames.pop() ?? &quot;&quot;;
+    for (const frame of frames) this.dispatch(frame);
+  }
+
+  flush(): void {
+    const rest = this.buffer.trim();
+    this.buffer = &quot;&quot;;
+    if (rest) this.dispatch(rest);
+  }
+</code></pre>
+<p><code>feed()</code> 里的 <code>pop()</code> 就是「半帧留在 buffer」：切出来的最后一段永远不派发，等下一次拼接。<code>flush()</code> 是尾帧的唯一出口，调用方在流结束时必须显式调用它。</p>
+<p>解析出来以后，<code>parseAgentEvent()</code> 先看 <code>type</code> 是否在 <code>EVENT_TYPES</code> 里。不在，返回 <code>unknown_type</code>，调用 <code>onUnknownType</code> 记一笔，<strong>忽略</strong>，不报错。在，则用 <code>sse.schema.json</code> 做运行时校验；字段不合法返回 <code>invalid</code>，抛 <code>PROTOCOL_ERROR</code>。三种结局，不是两种：合法、未知类型、契约破坏。这是 F3 的落点。</p>
+<h3 id="34_1">3.4 动作：校验 → 状态迁移 → 渲染</h3>
+<p><code>App.tsx</code> 的 <code>ask()</code> 是一个显式状态机。开始请求时先把状态设为 <code>running</code>，清空 <code>states</code>、<code>result</code>、<code>error</code>；收到事件后按 <code>type</code> 分派：</p>
+<ul>
+<li><code>progress</code>：先确认 <code>event.step</code> 在 <code>/api/steps</code> 返回的步骤列表里；不在就抛 <code>UNKNOWN_STEP</code>。在就更新 <code>states[step]</code>，<code>StepRail</code> 据此渲染 running / success / error / skipped。</li>
+<li><code>result</code>：<code>terminal = true</code>，设置结果，状态 <code>done</code>。</li>
+<li><code>error</code>：<code>terminal = true</code>，设置错误；<code>class === "empty"</code> → 状态 <code>empty</code>，不动步骤；<code>class === "cancelled"</code> → 状态 <code>cancelled</code>，把 running 步骤标 <code>cancelled</code>；其余 → 状态 <code>error</code>，把 running 步骤标 <code>error</code>，并把 <code>event.step</code> 也标红。</li>
+</ul>
+<p>流结束后如果 <code>terminal</code> 仍是 <code>false</code>，前端伪造 <code>STREAM_INCOMPLETE</code>，状态 <code>error</code>。这是契约要求的兜底：静默结束等于失败，不能当成成功。捕获到 <code>AbortError</code> 时，状态是 <code>cancelled</code>，不是 <code>done</code>；这是旧系统 <code>isAbort ? "done" : "error"</code> 的直接修正。</p>
+<h4 id="progress-dom">例题：一条 progress 事件从字节到 DOM</h4>
+<p>拿一条 <code>progress</code> 走一遍，从字节到像素：</p>
+<ol>
+<li>网络层交来一段字符串，可能是半个帧，也可能是一帧半。<code>feed()</code> 把它接到 <code>buffer</code> 后面。</li>
+<li>切分后，完整帧进入 <code>dispatch()</code>；半帧留在 <code>buffer</code>。</li>
+<li><code>dispatch()</code> 只取 <code>data:</code> 开头的行，去掉前缀与一个可选空格，用换行拼接。</li>
+<li><code>JSON.parse</code> 得到对象；失败抛 <code>PROTOCOL_ERROR</code>，这次问数结束。</li>
+<li><code>parseAgentEvent()</code> 先看 <code>type</code>。不在 <code>EVENT_TYPES</code> 里，交给 <code>onUnknownType</code> 记一笔并忽略。</li>
+<li>在，则用 <code>sse.schema.json</code> 校验字段；不合法抛 <code>PROTOCOL_ERROR</code>，错误信息带路径。</li>
+<li>合法事件回到 <code>ask()</code> 的 switch：<code>progress</code> 先查步骤白名单，不在抛 <code>UNKNOWN_STEP</code>，在就更新 <code>states[step]</code>。</li>
+<li><code>StepRail</code> 按状态渲染：running 是 spinner，success 是 ✓ 加耗时，skipped 是「未触发 –」。</li>
+</ol>
+<p>这条路径上有三处「停下来」：JSON 不合法、字段不合契约、步骤不在白名单。三处都抛错，因为契约已经被破坏，继续渲染只会把错误藏得更深。未知事件类型是唯一的例外，它选择继续。</p>
+<p>状态迁移可以写成表：</p>
+<p class="table-caption"><span class="tabnum">表 3-5</span> · 前端运行状态迁移</p>
+<table>
+<thead>
+<tr>
+<th>当前状态</th>
+<th>触发</th>
+<th>下一状态</th>
+<th>步骤条变化</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>idle</code></td>
+<td>提交问题</td>
+<td><code>running</code></td>
+<td>全部 pending，随后按 <code>progress</code> 推进</td>
+</tr>
+<tr>
+<td><code>running</code></td>
+<td><code>progress(status=running)</code></td>
+<td><code>running</code></td>
+<td>该步骤 spinner</td>
+</tr>
+<tr>
+<td><code>running</code></td>
+<td><code>progress(status=success)</code></td>
+<td><code>running</code></td>
+<td>该步骤 ✓ + 耗时</td>
+</tr>
+<tr>
+<td><code>running</code></td>
+<td><code>progress(status=skipped)</code></td>
+<td><code>running</code></td>
+<td>该步骤「未触发 –」</td>
+</tr>
+<tr>
+<td><code>running</code></td>
+<td><code>result</code></td>
+<td><code>done</code></td>
+<td>已完成步骤保持绿色</td>
+</tr>
+<tr>
+<td><code>running</code></td>
+<td><code>error(class=failure)</code></td>
+<td><code>error</code></td>
+<td>当前 running 步骤 ×，<code>event.step</code> 也 ×</td>
+</tr>
+<tr>
+<td><code>running</code></td>
+<td><code>error(class=empty)</code></td>
+<td><code>empty</code></td>
+<td>执行步骤保持 ✓，不标红</td>
+</tr>
+<tr>
+<td><code>running</code></td>
+<td><code>error(class=cancelled)</code></td>
+<td><code>cancelled</code></td>
+<td>当前 running 步骤 ⊘</td>
+</tr>
+<tr>
+<td><code>running</code></td>
+<td>用户点停止 / <code>AbortError</code></td>
+<td><code>cancelled</code></td>
+<td>当前 running 步骤 ⊘</td>
+</tr>
+<tr>
+<td><code>running</code></td>
+<td>流结束但没有 terminal</td>
+<td><code>error</code></td>
+<td>当前 running 步骤 ×（<code>STREAM_INCOMPLETE</code>）</td>
+</tr>
+<tr>
+<td>任意</td>
+<td>新的提交</td>
+<td><code>running</code></td>
+<td>清空上一次的状态</td>
+</tr>
+</tbody>
+</table>
+<p><code>StepRail</code> 的 <code>STATUS_TEXT</code> 有六个值：<code>pending</code> 等待、<code>running</code> 执行中、<code>success</code> 完成、<code>error</code> 失败、<code>skipped</code> 未触发、<code>cancelled</code> 已取消。六个值对应六种标记：数字、spinner、✓、×、–、⊘。<code>skipped</code> 不是 <code>pending</code>：pending 是「还没轮到」，skipped 是「这一步这次不会跑」；<code>correct_sql</code> 在没有可重试错误时必须显式 <code>skipped</code>，否则它会永远灰着。</p>
+<p>六个状态值不是装饰，它们把「没轮到」「正在跑」「跑完了」「没触发」「失败」「取消」分成互不相同的六件事。最容易混淆的是 <code>pending</code> 与 <code>skipped</code>：前者是时间上的「还没到」，后者是逻辑上的「这次不会到」。条件步骤如果没有显式的 <code>skipped</code>，就会永远停在 <code>pending</code>，用户无法区分「系统卡住了」与「这一步本来就不需要」。</p>
+<p><code>ErrorCard</code> 的三种长相由 <code>class</code> 决定，不是由 <code>code</code> 决定：</p>
+<ul>
+<li><code>failure</code>：红框，标题来自 <code>/api/errors</code> 的 <code>label</code>（<code>SQL_REJECTED</code> → 「SQL 被安全策略拒绝」），显示错误码、失败步骤中文名、原因码、消息；有 <code>original_sql</code> / <code>corrected_sql</code> 时给可展开的 SQL 细节；有 <code>attempts &gt; 0</code> 时显示「已校正 N 次」。整段文本可一键复制。</li>
+<li><code>empty</code>：虚线空态卡，标题「查询成功但没有数据」，不标红；步骤条保持绿色。</li>
+<li><code>cancelled</code>：中性卡，标题「用户取消」，状态「已取消」；不算 done，也不算失败。</li>
+</ul>
+<p><code>PseudoErrorCard</code> 是第四种，但它不是错误码驱动的：它是前端止损。判据刻意保守——单行 + 单列 + 列名像错误文案（<code>error|错误|失败|异常|message|状态|reason|无法|不支持</code>）+ 值是文本，才判定为伪数据行。宁可漏判，也不要把一张真的 1 行 1 列表误判成失败。它不编造错误码，只显示「这一行不是查询结果，是失败信息」。</p>
+<h3 id="35-sse">3.5 输出：三种 SSE 事件与类型保真</h3>
+<p><code>progress</code> 的样例：</p>
+<pre><code class="language-text">data: {&quot;type&quot;:&quot;progress&quot;,&quot;step&quot;:&quot;run_sql&quot;,&quot;status&quot;:&quot;running&quot;,&quot;duration_ms&quot;:null}
+
+</code></pre>
+<p><code>result</code> 的样例：</p>
+<pre><code class="language-text">data: {&quot;type&quot;:&quot;result&quot;,&quot;data&quot;:{&quot;columns&quot;:[{&quot;name&quot;:&quot;地区&quot;,&quot;type&quot;:&quot;string&quot;},{&quot;name&quot;:&quot;销售额&quot;,&quot;type&quot;:&quot;number&quot;}],&quot;rows&quot;:[[&quot;华北&quot;,128400.0]]}}
+
+</code></pre>
+<p><code>error</code> 的样例（<code>class: empty</code>）：</p>
+<pre><code class="language-text">data: {&quot;type&quot;:&quot;error&quot;,&quot;code&quot;:&quot;EMPTY_RESULT&quot;,&quot;class&quot;:&quot;empty&quot;,&quot;message&quot;:&quot;查询执行成功，但没有符合条件的数据。&quot;,&quot;step&quot;:&quot;run_sql&quot;,&quot;detail&quot;:{&quot;sql&quot;:&quot;SELECT ... LIMIT 1000&quot;,&quot;rows&quot;:0,&quot;request_id&quot;:&quot;8f0c...&quot;}}
+
+</code></pre>
+<p>三条事件都受 <code>contracts/sse.schema.json</code> 约束：<code>progress.duration_ms</code> 在 running / skipped 时必须为 <code>null</code>，在 success / error 时必须是数字；<code>result.data.rows</code> 是二维数组，不是对象数组；<code>error.detail</code> 只允许八个键。前端收到的如果不符合，<code>parseAgentEvent()</code> 会给带路径的错误，例如 <code>$.duration_ms 缺少必填字段</code>，而不是一句「解析失败」。</p>
+<p><code>result.data.rows</code> 是二维数组而不是对象数组，这个选择让「列顺序」由 <code>columns</code> 单独声明，行只负责值。对象数组会把列名重复写进每一行，列顺序还要靠键的插入顺序猜；二维数组把「有哪些列」与「每行有哪些值」分开，校验器可以分别检查列数、类型与值。</p>
+<p>类型保真的规则写在 <code>backend/app/agent/values.py</code>：</p>
+<p class="table-caption"><span class="tabnum">表 3-6</span> · 单元格值的归一化</p>
+<table>
+<thead>
+<tr>
+<th>数据库类型</th>
+<th>归一化后</th>
+<th>JSON 结果</th>
+<th>列类型</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>DECIMAL("10")</code></td>
+<td><code>int</code></td>
+<td><code>10</code></td>
+<td><code>number</code></td>
+</tr>
+<tr>
+<td><code>DECIMAL("10.5")</code></td>
+<td><code>float</code></td>
+<td><code>10.5</code></td>
+<td><code>number</code></td>
+</tr>
+<tr>
+<td><code>DATE</code> / <code>DATETIME</code></td>
+<td>ISO 8601 字符串</td>
+<td><code>"2025-03-01"</code></td>
+<td><code>date</code></td>
+</tr>
+<tr>
+<td>未知类型</td>
+<td>抛 <code>TypeError</code></td>
+<td>变成 <code>INTERNAL_ERROR</code></td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<p><code>Decimal("10")</code> 走 <code>int</code> 而不是 <code>10.0</code>：<code>SUM(INT)</code> 在 MySQL 里是 DECIMAL，但用户心里的「10 件」应该显示成 <code>10</code>。<code>Decimal("10")</code> 走 <code>int</code> 是刻意的取舍；反过来，真正带小数的金额走 <code>float</code>，会引入浮点误差，这是 JSON 数字类型的固有限制。归一化模块选择「整数走整数、非整数走浮点」，并在列类型上统一标成 <code>number</code>，让前端按数字渲染。</p>
+<p><code>_sse()</code> 也刻意不传 <code>default=str</code>，万一还有漏网的类型，就让它炸成 <code>INTERNAL_ERROR</code>，不要悄悄把数字改成字符串。<code>default=str</code> 会把任何没归一化的类型悄悄变成字符串，屏幕上看起来正常，复制出去才发现 <code>"10"</code>。归一化模块遇到未知类型直接抛 <code>TypeError</code>，调用方把它变成 <code>INTERNAL_ERROR</code>，用户看到一次诚实的失败，而不是一份被改过类型的数据。</p>
+<p>前端 <code>ResultTable</code> 再按契约列类型渲染：<code>number</code> 走 <code>Intl.NumberFormat</code>，整列 NULL 加「无数据」标记，数字样式的字符串加类型不匹配标记，复制输出 JSON 而不是 TSV。</p>
+<h3 id="36-13-f">3.6 验收：生成物新鲜、夹具逐字对账、13 条 F 缺陷</h3>
+<p>离线门禁来自 <code>Makefile</code> 的 <code>stage7</code>：</p>
+<pre><code class="language-bash">make stage7
+</code></pre>
+<p>它跑：</p>
+<pre><code class="language-bash">cd backend &amp;&amp; uv run python -m app.scripts.contracts_gen --check
+cd backend &amp;&amp; uv run python -m app.scripts.record_sse --check
+cd backend &amp;&amp; uv run pytest -q tests/frontend
+cd frontend &amp;&amp; npm run test
+cd frontend &amp;&amp; npm run build
+cd backend &amp;&amp; uv run pytest -q
+</code></pre>
+<p>2026-10-29 在本工作树执行前两条，输出（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#14684B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>）：</p>
+<pre><code class="language-text">S7 CONTRACT GEN PASS（3 个文件与契约一致）
+S7 SSE RECORD PASS（14 个夹具与真实输出一致）
+</code></pre>
+<p><code>contracts_gen --check</code> 检查 <code>frontend/src/generated/</code> 三个文件是否与 <code>contracts/sse.schema.json</code> 一致。手改生成物会立刻变红：<code>--check</code> 不重新生成覆盖，而是生成到内存、逐字比对，不一致就报错。<code>record_sse --check</code> 重新跑一遍场景应用，把后端吐出的字节流与 <code>fixtures/sse/*.json</code> 逐字比对，只归一化 <code>duration_ms</code> 与 <code>request_id</code> 两处。14 条夹具里 10 条是录制的真实 SSE，4 条是手写的（<code>pseudo_row</code> / <code>unknown_event</code> / <code>empty_rows</code> / <code>null_column</code>），因为新后端已经产生不了伪 SQL 行、未知事件、空数组和全 NULL 列。所以 <code>--check</code> 的「一致」指与夹具逐字一致，不指这 4 条由后端重新生成。</p>
+<p><code>contracts_gen --check</code> 与「重新生成再覆盖」的区别也值得说清楚：前者生成到内存、逐字比对，不一致就报错；后者会掩盖漂移，让手改生成物的错误看起来像一次正常更新。门禁要的是发现漂移，不是消除证据。</p>
+<p>前端契约测试 <code>pytest -q tests/frontend</code> 计划 45 条，覆盖生成器 / 夹具 / 类型保真；<code>npm run test</code> 计划 40 条，覆盖 SSE 解析与结果表语义；<code>npm run build</code> 包含 <code>tsc --noEmit</code>。这三条本工作树没有执行，标 <svg class="status-icon status-warn" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#C2620E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="推断"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>（文档声称 45 / 40 / 零错误）。</p>
+<p>浏览器验收是：</p>
+<pre><code class="language-bash">make stage7-ui
+</code></pre>
+<p>它自起回放服务器（默认 8103）与隔离前端（5276），跑 14 条断言，覆盖 F1–F13（F11 拆成 5xx / 422 两例）。端口冲突时：</p>
+<pre><code class="language-bash">API_PORT=8203 WEB_PORT=5376 make stage7-ui
+</code></pre>
+<p>本工作树没有 Chrome / Edge，标 <svg class="status-icon status-unknown" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#7A93B5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="未验证"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>。回放而不是真后端的原因很实际：有些界面行为真系统产生不了——旧系统的伪 SQL 行、契约之外的事件、<code>data:[]</code> 空数组。回放服务器按生产协议提供 <code>/api/health</code>、<code>/api/steps</code>、<code>/api/errors</code>、<code>/api/query</code>、<code>/api/cancel</code>，问题写成「场景:&lt;夹具 id&gt; &lt;真实问题&gt;」；<code>场景:http_500</code> / <code>场景:http_422</code> 直接返回对应 HTTP 状态，用来验收 F11。</p>
+<p class="table-caption"><span class="tabnum">表 3-7</span> · 几条代表性的 F 缺陷与修法</p>
+<table>
+<thead>
+<tr>
+<th>编号</th>
+<th>旧缺陷</th>
+<th>新行为</th>
+<th>证据</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>F1</td>
+<td>取消被算成「完成」</td>
+<td>状态「已取消」，且不出现结果表</td>
+<td><code>App.tsx:stop</code> / <code>isAbortError</code></td>
+</tr>
+<tr>
+<td>F3</td>
+<td>未知事件类型被当成错误</td>
+<td>忽略 + 提示条，界面正常出结果</td>
+<td><code>lib/api.ts:parseAgentEvent</code></td>
+</tr>
+<tr>
+<td>F4</td>
+<td>空数组导致表格消失</td>
+<td>空态块，文案「没有数据」，不画表头</td>
+<td><code>ResultTable</code></td>
+</tr>
+<tr>
+<td>F5</td>
+<td>伪 SQL 行被当成功</td>
+<td><code>PseudoErrorCard</code> 止损卡，不画表</td>
+<td><code>lib/result.ts:looksLikePseudoError</code></td>
+</tr>
+<tr>
+<td>F9</td>
+<td>条件步骤永远灰着</td>
+<td><code>skipped</code> → 「未触发 –」</td>
+<td><code>StepRail</code></td>
+</tr>
+<tr>
+<td>F11</td>
+<td>4xx/5xx 一律同一句话</td>
+<td>422「问题格式不对」、5xx「服务异常」</td>
+<td><code>lib/api.ts:httpError</code></td>
+</tr>
+<tr>
+<td>F13</td>
+<td>复制把 <code>"10"</code> 原样复制</td>
+<td>数字就是数字，复制输出 JSON</td>
+<td><code>values.py</code> + <code>buildCopyPayload</code></td>
+</tr>
+</tbody>
+</table>
+<p>F13 是这条链的终点：复制出去的 <code>"10"</code> 不是显示问题，是数据问题。修法不在剪贴板，而在源头——归一化保证数字是数字，列类型保证前端按数字渲染，复制输出 JSON 保证下游拿到的是类型而不是字符串。三处任何一处退回旧写法，缺陷都会复发。</p>
+<h3 id="37">3.7 常见故障</h3>
+<p><strong>故障一：改了契约但忘了重新生成。</strong> 症状是 <code>make stage7</code> 在 <code>contracts_gen --check</code> 处变红，提示运行 <code>cd backend &amp;&amp; uv run python -m app.scripts.contracts_gen</code>。不要手改 <code>frontend/src/generated/</code>；手改的下一秒就会被 <code>--check</code> 抓住。改契约 → 重新生成 → 再跑 <code>make stage7</code>，这是唯一顺序。</p>
+<p><strong>故障二：SSE 夹具对不上。</strong> <code>record_sse --check</code> 会逐字比对，只归一化 <code>duration_ms</code> 与 <code>request_id</code>。如果后端改了事件顺序、字段名、默认文案，或者前端场景前缀解析变了，夹具就会红。正确做法是先判断哪边是事实源：契约变了就重新录制；代码坏了就修代码。改夹具让它过只是把证据擦掉——夹具是证据，不是橡皮擦。</p>
+<p><strong>故障三：未知步骤导致整次失败。</strong> <code>App.tsx</code> 对 <code>progress.step</code> 做白名单校验，不在 <code>/api/steps</code> 里就抛 <code>UNKNOWN_STEP</code>。这是刻意的：步骤 id 是契约的一部分，后端发了一个前端不认识的步骤，说明契约不一致，应该报错而不是悄悄忽略。注意这和「未知事件类型」不同：事件类型未知可以忽略（契约长了一条腿），步骤 id 未知是契约内部矛盾。</p>
+<p>两种处理的差别在于「谁应该被修」。未知事件类型是后端向前扩展，前端必须容忍；未知步骤 id 是两端版本不一致，容忍只会把错误藏起来。一条流里如果步骤 id 出错，后面的 <code>states</code> 更新会落在不存在的键上，界面看起来「什么都没发生」，这比一次明确的报错更难查。</p>
+<p><strong>故障四：<code>duration_ms</code> 在 running 时不是 null。</strong> <code>sse.schema.json</code> 用 <code>allOf</code> + <code>if/then/else</code> 约束：success / error 必须是数字，running / skipped 必须是 null。前端校验器支持 <code>if/then/else</code>，所以这条会在运行时被抓。后端 <code>_progress()</code> 默认 <code>duration_ms=None</code>，success / error 才传数字；改事件构造时不要顺手给 running 也塞一个 0。</p>
+<p><strong>故障五：流没有 terminal 事件。</strong> 前端会伪造 <code>STREAM_INCOMPLETE</code>，状态 <code>error</code>。这个码不在契约里，是前端本地状态；它不应该出现在后端事件里，也不应该被当成契约码去 <code>/api/errors</code> 查文案。它存在的意义是「静默结束等于失败」，而不是新增一种业务失败。</p>
+<p><strong>故障六：Decimal 又变成字符串。</strong> 检查 <code>_sse()</code> 是否被加上了 <code>default=str</code>，检查 <code>to_result_payload()</code> 是否走了 <code>normalize_cell()</code>，检查 <code>ResultTable</code> 是否对 <code>number</code> 列做了类型校验。三处任何一处退回旧写法，F13 就会复发；前端会在数字列上标出「数字样式的字符串」，让问题可见，而不是安安静静地显示。</p>
+<p><strong>故障七：空结果被画成空表。</strong> <code>EMPTY_RESULT</code> 的 <code>class</code> 是 <code>empty</code>，前端状态是 <code>empty</code>；<code>ResultTable</code> 对 <code>rows.length === 0</code> 走空态块，不画表头。后端把空结果发成 <code>result</code> 且 <code>rows: []</code> 时前端也有兜底（F4 的 <code>empty_rows</code> 夹具），但正确路径仍然是 <code>EMPTY_RESULT</code> 事件。</p>
+<h3 id="38">3.8 证据</h3>
+<ul>
+<li><code>contracts/sse.schema.json</code>：3 种事件、<code>progress</code> 的 <code>duration_ms</code> 条件约束、<code>result</code> 的二维 rows、<code>error</code> 的 3 个 class（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#14684B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>）。</li>
+<li><code>contracts/steps.yaml</code>：12 步，<code>correct_sql</code> 标 <code>conditional: true</code>（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#14684B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>）。</li>
+<li><code>contracts/errors.yaml</code>：16 码 / 3 class（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#14684B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>）。</li>
+<li><code>frontend/src/generated/sse.ts</code>、<code>sse.schema.json</code>、<code>contract.json</code>：机器生成物（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#14684B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg> 文件存在；<code>contracts_gen --check</code> 本机 PASS）。</li>
+<li><code>frontend/src/lib/api.ts</code>：<code>SseParser</code>、<code>parseAgentEvent</code>、<code>httpError</code>（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#14684B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>）。</li>
+<li><code>frontend/src/lib/json-schema.ts</code>：通用校验器，支持 <code>$ref</code> / <code>oneOf</code> / <code>allOf</code> / <code>if-then-else</code>（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#14684B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>）。</li>
+<li><code>frontend/src/App.tsx</code>：事件 switch、状态迁移、取消、<code>STREAM_INCOMPLETE</code>（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#14684B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>）。</li>
+<li><code>frontend/src/components/StepRail.tsx</code>、<code>ErrorCard.tsx</code>、<code>PseudoErrorCard.tsx</code>、<code>ResultTable.tsx</code>（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#14684B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>）。</li>
+<li><code>fixtures/sse/</code> 14 条夹具（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#14684B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg> 文件存在；<code>record_sse --check</code> 本机 PASS）。</li>
+<li><code>make stage7-ui</code> 的 14 条断言（<svg class="status-icon status-unknown" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#7A93B5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="未验证"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg> 本工作树无 Chrome / Edge）。</li>
+</ul>
+<h3 id="39">3.9 检查清单</h3>
+<ul>
+<li class="task"><span class="box">[ ]</span> 我能说出 <code>frontend/src/generated/</code> 三个文件分别是什么，以及为什么不能手改。</li>
+<li class="task"><span class="box">[ ]</span> 我能背出 SSE 的三种事件，并各写一条合法样例。</li>
+<li class="task"><span class="box">[ ]</span> 我知道未知事件类型应该忽略，未知步骤 id 应该报错，为什么不同。</li>
+<li class="task"><span class="box">[ ]</span> 我知道 <code>skipped</code> 和 <code>pending</code> 的区别，以及 <code>correct_sql</code> 为什么必须显式 skipped。</li>
+<li class="task"><span class="box">[ ]</span> 我知道 <code>ErrorCard</code> 的三种长相由 <code>class</code> 决定，不是由 <code>code</code> 决定。</li>
+<li class="task"><span class="box">[ ]</span> 我知道 <code>DECIMAL("10")</code> 为什么是 <code>10</code> 而不是 <code>"10"</code> 或 <code>10.0</code>。</li>
+<li class="task"><span class="box">[ ]</span> 我知道 <code>_sse()</code> 为什么不传 <code>default=str</code>。</li>
+<li class="task"><span class="box">[ ]</span> 我知道 <code>STREAM_INCOMPLETE</code> / <code>NETWORK_ERROR</code> 是前端本地码，不在契约里。</li>
+</ul>
+<hr>
+<h2 id="4-s8" class="sheet" data-sheet="08">4. S8 · 生产化（边界与下一步）</h2>
+<h3 id="41-s7">4.1 问题：S7 留下了什么风险</h3>
+<p>S7 结束时，系统在开发机上「能跑、能失败、能展示」。但「能跑」和「敢用」之间还隔着一层：换一台机器、换一个网络、换一个用户，系统还成不成立？</p>
+<p>S7 留下的风险至少有六个：</p>
+<ol>
+<li><strong>部署没有端到端证据</strong>。<code>compose.yaml</code> 写得很完整，但本工作树没有 Docker socket 权限，<code>make docker-up</code> 与 <code>make docker-smoke</code> 都没跑过。拓扑是「设计上应该成立」，不是「本机已经成立」。</li>
+<li><strong>没有身份与传输安全</strong>。<code>/api/query</code> 没有鉴权，前端默认 <code>0.0.0.0:8080</code>，没有 TLS。它适合教学与内网演示，不适合直接暴露到公网。</li>
+<li><strong>取消是进程内状态</strong>。<code>CANCEL_REGISTRY</code> 只在一个进程里有效，backend 固定单 worker。这是正确的取舍，但也意味着它不是一个可水平扩展的服务。</li>
+<li><strong>没有可观测性</strong>。有 <code>/api/health</code>、<code>request_id</code>、Docker healthcheck、nginx access log，但没有 metrics、tracing、结构化日志聚合、告警。</li>
+<li><strong>没有容量基线</strong>。<code>default_limit: 1000</code>、<code>max_execution_time_ms: 5000</code>、LLM 超时 30 秒是保护阈值，不是容量结论。P50 / P95、并发数、连接池、慢查询分布都没有测。</li>
+<li><strong>测试总数只有文档声称</strong>。README 写「782 passed / 31 skipped」，<code>docs/SETUP-FROM-SCRATCH.md</code> §3 另一处写「665 passed / 31 skipped」；本工作树没有跑全量 pytest。这个数字只能标 <svg class="status-icon status-warn" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#C2620E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="推断"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>，不能当已验证事实。</li>
+</ol>
+<p>这六条风险有一个共同形状：它们在开发机上都不显形。端口冲突、密码轮换、健康检查、SSE 缓冲，只有换一台机器、换一个网络、换一个用户才会暴露。S8 的工作因此是把「本机成立」改写成「条件成立」——每条结论都带上它依赖的条件。</p>
+<p>所以 S8 要做的是把「本机可运行」变成「可交付、可观测、可恢复」，并把没证明的部分标出来。这不是再加一个功能。这三个词各自对应一类证据：可交付的证据是「另一台机器起得来」，可观测的证据是「出了问题能定位到哪一环」，可恢复的证据是「卷坏了、密码换了，能按顺序救回来」。S8 目前只完成了第一类的设计部分，后两类只有清单。</p>
+<h3 id="42">4.2 实体与边界：六服务、镜像、端口、卷</h3>
+<p><code>compose.yaml</code> 定义六个服务，项目名 <code>shopkeeper-rebuild</code>：</p>
+<table>
+<thead>
+<tr>
+<th>服务</th>
+<th>作用</th>
+<th>关键依赖</th>
+<th>健康检查</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>mysql</code></td>
+<td>数仓 <code>dw</code> + Meta 库</td>
+<td>无</td>
+<td><code>mysqladmin ping</code></td>
+</tr>
+<tr>
+<td><code>elasticsearch</code></td>
+<td>取值索引</td>
+<td>无</td>
+<td>集群状态 green / yellow</td>
+</tr>
+<tr>
+<td><code>qdrant</code></td>
+<td>向量索引</td>
+<td>无</td>
+<td><code>GET /readyz</code> 返回 200</td>
+</tr>
+<tr>
+<td><code>init</code></td>
+<td>建库、开只读账号、校验/构建 S2</td>
+<td>三存储 healthy</td>
+<td>无，退出码即结果</td>
+</tr>
+<tr>
+<td><code>backend</code></td>
+<td>FastAPI + uvicorn，单 worker</td>
+<td><code>init</code> completed</td>
+<td><code>GET /api/health</code></td>
+</tr>
+<tr>
+<td><code>frontend</code></td>
+<td>nginx + 静态资源</td>
+<td><code>backend</code> healthy</td>
+<td><code>GET /healthz</code></td>
+</tr>
+</tbody>
+</table>
+<figure class="wide"><img src="file:///home/zhensirong/VM-Share/DSWS-design/design/style-lab/05-blueprint/design/diagrams/05-deployment/25-compose-topology.svg" alt="图 25 · Docker Compose 拓扑"><figcaption><span class="fignum">图 25</span> · Docker Compose 拓扑</figcaption></figure>
+
+<p>图 25 的重点是三条依赖边，六个盒子只是背景：三存储 healthy → <code>init</code> 开始；<code>init</code> 退出 0 → <code>backend</code> 开始；<code>backend</code> healthy → <code>frontend</code> 开始。<code>depends_on</code> 写的是条件，不是「启动顺序建议」：<code>service_healthy</code> 会一直等健康检查变绿，<code>service_completed_successfully</code> 会等 <code>init</code> 以 0 退出。所以「栈起来了但页面 502」通常意味着这条链在某一环停住了，nginx 本身多半没问题。</p>
+<p>把这三条边连起来，启动链是一张有向无环图：三存储是三个源点，<code>init</code> 是汇合点，<code>backend</code> 依赖 <code>init</code> 的退出码，<code>frontend</code> 依赖 <code>backend</code> 的健康状态。图上有两种不同性质的边：<code>service_healthy</code> 等的是「持续为真」的状态，<code>service_completed_successfully</code> 等的是「一次性事件的结果」。这两者不能互换。</p>
+<p><code>service_started</code> 为什么不够？它只说明容器进程起来了，不说明里面的服务能接受连接。MySQL 启动后还要初始化数据目录、建库、建账号；这段时间里端口可能已经监听，但查询会失败。如果 <code>init</code> 只等 <code>service_started</code>，它会在数据库还没准备好的时候尝试建表、开账号，结果要么失败退出，要么写下一半状态；而 <code>backend</code> 又依赖 <code>init</code> 的退出码，整条链会把一次「等得不够久」放大成「栈起不来」。健康检查等的是「服务真的可用」，不是「进程真的存在」。</p>
+<p><code>service_completed_successfully</code> 同理：它等的是 <code>init</code> 以 0 退出，而不是「<code>init</code> 启动过」。<code>init</code> 是一次性任务，没有长期健康状态可等；它的结果就是退出码。把条件改成 <code>service_started</code>，<code>backend</code> 可能在 <code>init</code> 还在建库时就启动，连上一个半成品。</p>
+<p>镜像边界也值得说清楚。后端镜像是多阶段构建：<code>uv</code> 阶段装依赖，<code>python:3.12-slim</code> 运行阶段只带 <code>.venv</code>、<code>backend/app</code>、<code>contracts</code>、<code>fixtures</code>，不含测试；非 root，uid 10001；<code>uvicorn</code> 单 worker。前端镜像是 <code>node:20-alpine</code> 构建 → <code>nginx:1.27-alpine</code> 托管 <code>dist</code>；<code>/api/</code> 关闭 <code>proxy_buffering</code>，否则 SSE 会被 nginx 攒起来一次性发。<code>init</code> 与 <code>backend</code> 用同一个镜像、同一份源码，但环境变量不同：<code>init</code> 拿构建凭据与 root 密码，<code>backend</code> 只拿 <code>REBUILD_DW_RO_PASSWORD</code>。</p>
+<p>共用镜像让「初始化用的代码」与「运行时用的代码」不可能版本不一致，也省了一次构建；代价是镜像里同时带着构建依赖与运行依赖，在一次性任务面前可以接受。</p>
+<p>nginx 那一侧只有一行是关键：<code>/api/</code> 关闭 <code>proxy_buffering</code>。开着缓冲时，nginx 会把后端的 SSE 响应攒够一批再发，浏览器看到的是「一次性到达」；流式语义在代理这一层被悄悄取消，而后端与前端都以为一切正常。<code>gzip off</code> 同理：压缩需要攒数据，攒数据就破坏实时性。</p>
+<h3 id="43">4.3 输入：环境变量、镜像、端口、卷</h3>
+<p>S8 的输入主要是四类：</p>
+<ol>
+<li><strong>环境变量</strong>：<code>.env</code> 里的 <code>MYSQL_ROOT_PASSWORD</code>、<code>MYSQL_PASSWORD</code>、<code>REBUILD_DW_RO_PASSWORD</code>、镜像名、宿主机端口、可选的 LLM 三元组。<code>.env</code> 不入库；<code>.env.example</code> 里是 <code>change-me-*</code> 占位值。</li>
+<li><strong>镜像</strong>：MySQL 8.0、Elasticsearch 8.15.3、Qdrant v1.12.4、Python 3.12-slim、Node 20-alpine、nginx 1.27-alpine。Qdrant 必须 ≥ v1.5.0，因为健康检查打的是 <code>/readyz</code>。</li>
+<li><strong>端口</strong>：前端 <code>0.0.0.0:8080 → 80</code>；后端、MySQL、ES、Qdrant 都只绑 <code>127.0.0.1</code>，分别是 <code>8100</code>、<code>3306</code>、<code>9200</code>、<code>6333</code>。只有前端是唯一对外入口。</li>
+<li><strong>卷</strong>：<code>mysql_data</code>、<code>es_data</code>、<code>qdrant_data</code> 三个命名卷；<code>fixtures/dw.sql</code> 以只读方式挂到 MySQL 初始化目录，首次启动导入。</li>
+</ol>
+<p>端口收敛也遵循同一条原则：只有 <code>frontend</code> 绑 <code>0.0.0.0</code>，其余全部绑 <code>127.0.0.1</code>。后端、MySQL、ES、Qdrant 都需要被容器网络里的服务访问，但不需要被宿主机以外的机器访问。把「谁能访问」写成端口绑定，比写在文档里可靠。</p>
+<p>还有一条容易忽略的边界：构建凭据与应用凭据分离。<code>mysql</code> 与 <code>init</code> 拿 <code>MYSQL_PASSWORD</code>（应用账号 <code>didilili</code>，在 <code>dw</code> 上有 ALL PRIVILEGES）和 root 密码；<code>backend</code> 只拿 <code>REBUILD_DW_RO_PASSWORD</code>，也就是 <code>dw_reader</code> 的密码。<code>didilili</code> 的 ALL PRIVILEGES 正是 S5 要消除的越权入口，不能因为「容器里方便」就把它给 backend。</p>
+<p>构建凭据与运行凭据的分离，是 S5 的账号边界在部署层的投影。<code>init</code> 需要 root 与 <code>didilili</code>：它要建库、开只读账号、写元知识。<code>backend</code> 只需要 <code>REBUILD_DW_RO_PASSWORD</code>：它执行的每一条 SQL 都该走 <code>dw_reader</code>。如果为了「容器里方便」把 <code>MYSQL_PASSWORD</code> 也给 <code>backend</code>，S5 在代码层收窄的权限，会在环境变量层被重新放宽；一次策略漏判就又有了写库的能力。凭据的最小化不是运维偏好，是安全边界的一部分。</p>
+<h3 id="44-env">4.4 动作：生成 .env → 构建 → 等健康 → 验收</h3>
+<p>首次部署的命令来自 <code>README.md</code> 与 <code>docs/DOCKER-DEPLOY.md</code>：</p>
+<pre><code class="language-bash">make docker-env       # 生成 .env（随机密码；已存在则跳过）
+make docker-up        # docker compose up -d --build
+curl http://127.0.0.1:8080/api/health
+make docker-smoke     # 8 步验收，输出 DOCKER SMOKE PASS
+</code></pre>
+<p>启动链是：</p>
+<ol>
+<li>MySQL / Elasticsearch / Qdrant 并行启动，各自跑健康检查。</li>
+<li>三存储全部 healthy 后，<code>init</code> 开始。</li>
+<li><code>init</code> 等待三存储（每个最多 180 秒），开通 <code>dw_reader</code>，验证它真的只有 SELECT，对账 S2 元知识（<code>--verify</code>；失败则 <code>--fresh</code> 再 <code>--verify</code>）。</li>
+<li><code>init</code> 退出 0，<code>backend</code> 才启动。</li>
+<li><code>backend</code> 的 <code>/api/health</code> 通过后，<code>frontend</code> 才启动。</li>
+</ol>
+<p>换一台机器时，按依赖顺序检查，而不是按报错顺序：</p>
+<ol>
+<li><code>.env</code> 是否存在、密码是否与卷匹配。<code>make docker-env</code> 只在缺失时生成；卷还在而密码换了，栈会一直不健康。</li>
+<li><code>docker compose ps -a</code> 看 <code>init</code> 的退出码。非零就先看 <code>docker compose logs init</code>，不要先动 <code>backend</code>。</li>
+<li>三存储是否 healthy。Qdrant 的健康检查打 <code>/readyz</code>，老镜像会一直 404。</li>
+<li><code>backend</code> 的 <code>/api/health</code> 是否返回 <code>ok</code>。这一步通过，才说明 <code>init</code> 的产物可用。</li>
+<li>最后才看前端：健康检查与一条真实查询。页面 502 先查上游某一环，nginx 本身通常没问题。</li>
+</ol>
+<p><code>make docker-smoke</code> 检查五服务运行、12 个步骤、经 8080 的真实查询、只读账号、S2 对账，并再次运行 <code>init</code> 证明「跳过重建」。真实查询那一步看的是 SSE <strong>是不是边生成边发</strong>：用裸 socket 记录每个分片的到达时刻，首尾分片几乎同时到达就说明代理把响应攒起来了。判定分三档：首尾时间差 ≥ 50 毫秒 → 流式；整个响应 &lt; 200 毫秒 → 太快，分辨不出来，重试几次；其余 → 攒完了一次性到达，失败，并提示查 <code>docker/nginx.conf</code> 的 <code>proxy_buffering off</code>。这条判据防的是验收脚本最要命的失效：报了 PASS，可它验的东西根本没验。它是一条启发式：50 / 200 毫秒是经验阈值，不是统计结论；它能抓住「一次性到达」，不能证明「每一帧都单独到达」。</p>
+<p>分片个数为什么不能当证据？因为一个攒起来一次性发送的响应，照样会在传输层被拆成好几个分片；数分片只能证明「网络把它切开了」，不能证明「后端边生成边发」。所以判据看的是到达时刻的分布：首尾几乎同时到达，说明中间被攒过；首尾拉开足够间隔，才说明每一段都是现发的。整个响应太快时也分辨不出来，脚本选择重试而不是宣布通过，这是同一原则的另一面：判据不确定时，不给绿灯。</p>
+<h3 id="45">4.5 输出：健康、日志、验收结论</h3>
+<p>S8 的输出是四类可核对的证据，不是「页面能打开」：</p>
+<ul>
+<li><strong>健康检查</strong>：<code>curl http://127.0.0.1:8100/api/health</code> 返回 <code>{"status":"ok","stage":"S7"}</code>（<code>stage</code> 是后端声明的已完成阶段）；Compose 的 backend healthcheck 用 Python 标准库 <code>urllib.request.urlopen</code> 打同一个接口；frontend 用 <code>wget -qO- http://127.0.0.1/healthz</code>。</li>
+<li><strong>启动状态</strong>：<code>docker compose ps -a</code> 能看到 <code>init</code> 是 <code>Exited (0)</code>，backend / frontend 是 <code>healthy</code>。</li>
+<li><strong>验收结论</strong>：<code>make docker-smoke</code> 输出 <code>DOCKER SMOKE PASS</code>；<code>init</code> 第二次运行显示 <code>NOOP: 0 writes</code>。</li>
+<li><strong>日志</strong>：<code>make docker-logs</code> 跟踪全部日志，<code>docker compose logs -f backend</code> 只看后端；nginx 的 <code>/api/</code> 关闭了 <code>proxy_buffering</code>，SSE 才能实时到达。</li>
+</ul>
+<p>但本工作树没有这些输出。Docker socket 无权限，<code>make docker-env</code> / <code>make docker-up</code> / <code>make docker-smoke</code> 都没有执行。所以 S8 的部署结论只能是「按文件推导成立」，标 <svg class="status-icon status-unknown" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#7A93B5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="未验证"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>；不能写成「已验证」。</p>
+<h3 id="46">4.6 验收：哪些已验证、哪些没有</h3>
+<p class="table-caption"><span class="tabnum">表 3-8</span> · S8 相关的证据状态</p>
+<table>
+<thead>
+<tr>
+<th>结论</th>
+<th>状态</th>
+<th>依据 / 缺口</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>compose.yaml</code> 定义 6 个服务、3 个卷、1 个默认网络</td>
+<td><svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#14684B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg></td>
+<td>文件可逐项核对</td>
+</tr>
+<tr>
+<td>只有 frontend 默认监听 <code>0.0.0.0</code>，其余绑 <code>127.0.0.1</code></td>
+<td><svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#14684B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg></td>
+<td><code>compose.yaml</code> 的 <code>ports</code> 段</td>
+</tr>
+<tr>
+<td>backend 非 root（uid 10001）、单 worker</td>
+<td><svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#14684B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg></td>
+<td><code>docker/backend.Dockerfile</code>、<code>compose.yaml</code> 的 <code>--workers 1</code></td>
+</tr>
+<tr>
+<td>nginx <code>/api/</code> 关闭缓冲、读超时 3600s</td>
+<td><svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#14684B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg></td>
+<td><code>docker/nginx.conf</code></td>
+</tr>
+<tr>
+<td>Docker 全栈本机跑通</td>
+<td><svg class="status-icon status-unknown" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#7A93B5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="未验证"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg></td>
+<td>本工作树无 Docker socket 权限，未执行 <code>make docker-up</code> / <code>make docker-smoke</code></td>
+</tr>
+<tr>
+<td>真实 MySQL 上 <code>dw_reader</code> 写不了</td>
+<td><svg class="status-icon status-unknown" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#7A93B5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="未验证"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg></td>
+<td>无 <code>REBUILD_DW_RO_PASSWORD</code>、未执行 <code>make stage5-live</code></td>
+</tr>
+<tr>
+<td>真实 LLM 生成</td>
+<td><svg class="status-icon status-unknown" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#7A93B5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="未验证"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg></td>
+<td>无端点 / 无 Key</td>
+</tr>
+<tr>
+<td>浏览器 UI 验收</td>
+<td><svg class="status-icon status-unknown" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#7A93B5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="未验证"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg></td>
+<td>本工作树无 Chrome / Edge</td>
+</tr>
+<tr>
+<td>后端 782 passed / 31 skipped</td>
+<td><svg class="status-icon status-warn" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#C2620E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="推断"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></td>
+<td><code>README.md</code> 声称；<code>docs/SETUP-FROM-SCRATCH.md</code> §3 另有 665 的版本；本工作树未跑全量</td>
+</tr>
+<tr>
+<td>S8 性能基线（P50 / P95、并发、容量）</td>
+<td><svg class="status-icon status-unknown" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#7A93B5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="未验证"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg></td>
+<td><code>README.md</code> 进度表写「S8 性能 待做」</td>
+</tr>
+</tbody>
+</table>
+<p>这张表是 S8 最重要的产出：哪些结论能拿去做验收，哪些只能当设计意图。评审时该问的是「没跑通的那部分，凭什么说它成立」，而不是「你跑通了吗」。</p>
+<p>这张表的用法是「先看状态，再看结论」。标为未验证的条目不是「设计错了」，是「本工作树没有条件验证」；标为推断的条目不是「假的」，是「有文档声称、没有本机输出」。所以「按文件推导成立」只能算一个待验证的命题，不能算一条验收结论。</p>
+<h3 id="47">4.7 常见故障</h3>
+<p><strong>故障一：容器后端和 <code>make dev-backend</code> 抢 8100。</strong> 两者都映射 <code>127.0.0.1:8100</code>，后起的那个报 <code>address already in use</code>。要么只用 Docker，要么只用本机开发；要并存就把 <code>.env</code> 的 <code>BACKEND_HOST_PORT</code> 改成 <code>8110</code>。前端不受影响，因为 nginx 在容器网络里仍按 <code>backend:8100</code> 找后端。</p>
+<p><strong>故障二：改了 <code>.env</code> 但密码没生效。</strong> <code>docker compose restart</code> 不会重新读取环境变量；必须 <code>docker compose up -d</code>。换 MySQL 密码更麻烦：MySQL 只在<strong>首次</strong>初始化 <code>mysql_data</code> 时用 <code>MYSQL_ROOT_PASSWORD</code> 建账号；卷还在的话，容器里的密码仍是旧的，新密码不生效，健康检查会一直失败。正确顺序是 <code>make docker-reset</code> → <code>python scripts/generate_docker_env.py --rotate-secrets</code> → <code>source scripts/export-docker-env.sh</code> → <code>make docker-up</code>。</p>
+<p><strong>故障三：<code>make docker-env</code> 覆盖了正在用的 <code>.env</code>。</strong> 默认不覆盖；<code>--force</code> 保留已有密码与配置，<code>--rotate-secrets</code> 才换密码。不要手动删 <code>.env</code> 再生成：数据卷里的账号还是旧密码，栈会起不来。</p>
+<p>故障二与故障三指向同一件事：<code>.env</code> 是输入，不是缓存。<code>docker compose restart</code> 不会重新读取它；改密码而不删卷，数据库里的账号还是旧的。把「配置变更」当成「重启一下」，是这一类故障的共同根因。</p>
+<p><strong>故障四：Qdrant 永远不 healthy。</strong> 健康检查打 <code>/readyz</code>，这个端点 v1.5.0 才有；老镜像上它一直 404，<code>init</code> 就不会启动。默认 <code>QDRANT_IMAGE</code> 是 v1.12.4，满足要求；如果你在 <code>.env</code> 里换了老版本，先换回来。</p>
+<p><strong>故障五：<code>init</code> 失败导致 backend 不启动。</strong> <code>init</code> 非零退出会阻止 backend（<code>service_completed_successfully</code>）。先看 <code>docker compose logs init</code>：常见原因是三存储没 healthy、<code>REBUILD_DW_RO_PASSWORD</code> 缺失、S2 对账失败。不要用「把 depends_on 删掉」来绕过；那只会让 backend 带着坏数据启动。</p>
+<p><strong>故障六：页面 502。</strong> 先看 <code>docker compose ps -a</code> 的 backend 是否 healthy，再看 <code>docker compose logs backend</code>；backend 没起来查 <code>init</code>，backend healthy 但 502 查 nginx 反代。不要一上来就改 nginx 配置。</p>
+<p><strong>故障七：SSE 看起来「一次性到达」。</strong> 查 <code>docker/nginx.conf</code> 的 <code>/api/</code> location 是否 <code>proxy_buffering off</code>、<code>proxy_cache off</code>、<code>gzip off</code>，以及 <code>proxy_read_timeout</code> 是否足够长。<code>make docker-smoke</code> 的裸 socket 判据就是为这条准备的；如果它说「攒完了一次性到达」，不要用「分片个数」反驳——攒起来一次发的响应照样会被拆成好几个分片。</p>
+<p><strong>故障八：在 backend 容器里跑构建 CLI。</strong> backend 只有 <code>dw_reader</code>，读不了 <code>meta_rebuild</code>；构建类 CLI 要挂在 <code>init</code> 服务下，并加 <code>--no-deps</code>，前提是三存储已经在跑：</p>
+<pre><code class="language-bash">docker compose run --rm --no-deps init python -m app.build_meta_knowledge --verify
+</code></pre>
+<h3 id="48">4.8 证据</h3>
+<ul>
+<li><code>compose.yaml</code>：6 服务、健康检查、<code>depends_on</code> 条件、端口绑定、卷（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#14684B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg> 文件存在）。</li>
+<li><code>docker/backend.Dockerfile</code>：多阶段、非 root uid 10001、只带运行所需文件（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#14684B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>）。</li>
+<li><code>docker/frontend.Dockerfile</code>、<code>docker/nginx.conf</code>：nginx 托管、<code>/api/</code> 反代、SSE 关闭缓冲（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#14684B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>）。</li>
+<li><code>docs/DOCKER-DEPLOY.md</code>：启动顺序、密钥轮换、<code>docker-smoke</code> 判据（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#14684B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg> 文档存在）。</li>
+<li><code>README.md</code>：Docker 表、端口、<code>make docker-*</code> 命令（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#14684B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg> 文档存在）。</li>
+<li><code>design/inventory/facts.md</code> §7、§9：服务清单与「Docker Compose 全栈未跑」的记录（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#14684B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>）。</li>
+<li><code>make docker-up</code> / <code>make docker-smoke</code> 的实际输出（<svg class="status-icon status-unknown" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#7A93B5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="未验证"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg> 本工作树未执行）。</li>
+<li><code>README.md</code> 的 782 passed / 31 skipped（<svg class="status-icon status-warn" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#C2620E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="推断"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> 文档声称，未在本工作树复跑）。</li>
+</ul>
+<h3 id="49">4.9 检查清单</h3>
+<ul>
+<li class="task"><span class="box">[ ]</span> 我能说出六个服务、三个卷、唯一对外端口。</li>
+<li class="task"><span class="box">[ ]</span> 我知道 <code>init</code> 为什么是 <code>service_completed_successfully</code>，不是 <code>service_started</code>。</li>
+<li class="task"><span class="box">[ ]</span> 我知道构建凭据与应用凭据为什么要分开。</li>
+<li class="task"><span class="box">[ ]</span> 我知道改 <code>.env</code> 为什么必须 <code>up -d</code>，<code>restart</code> 为什么不行。</li>
+<li class="task"><span class="box">[ ]</span> 我知道换 MySQL 密码为什么必须先删卷。</li>
+<li class="task"><span class="box">[ ]</span> 我知道 SSE 在 nginx 上要关哪些开关。</li>
+<li class="task"><span class="box">[ ]</span> 我知道 Docker 全栈在本工作树是 <svg class="status-icon status-unknown" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#7A93B5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="未验证"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>，不是 <svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#14684B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>。</li>
+<li class="task"><span class="box">[ ]</span> 我知道 782 是 README 声称，标 <svg class="status-icon status-warn" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#C2620E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="推断"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>，不能写成已验证。</li>
+</ul>
+<hr>
+<h2 id="5_1" data-sheet="09">5. 走到这里，系统能做什么、还不能做什么</h2>
+<p>把 S5–S8 放在一起看，系统已经从「能生成 SQL」走到「能拒绝、能解释、能展示、能装进容器」。但「能」和「敢」之间还有一段距离。下面这张表把话说死：哪些是本次真的跑过的，哪些是代码推导，哪些是环境缺口。</p>
+<p class="table-caption"><span class="tabnum">表 3-9</span> · 能力与证据状态</p>
+<table>
+<thead>
+<tr>
+<th>能力</th>
+<th>状态</th>
+<th>证据 / 缺口</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>36 条注入语料 100% 拒绝，原因码精确匹配</td>
+<td><svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#14684B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg></td>
+<td>2026-10-29 <code>security --check</code>：36/36</td>
+</tr>
+<tr>
+<td>11 条正常查询零误杀</td>
+<td><svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#14684B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg></td>
+<td>同一次输出：11/11</td>
+</tr>
+<tr>
+<td>S4 基线 SQL 通过策略</td>
+<td><svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#14684B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg></td>
+<td>同一次输出：8/8</td>
+</tr>
+<tr>
+<td>16 个错误码 / 3 个 class / 7 个路线图通道码</td>
+<td><svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#14684B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg></td>
+<td>2026-10-29 <code>failures --table</code> / <code>--check</code></td>
+</tr>
+<tr>
+<td>6 类失败场景逐条对上码 / 类 / 步骤</td>
+<td><svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#14684B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg></td>
+<td>同一次 <code>failures --check</code>：9 个场景全 PASS</td>
+</tr>
+<tr>
+<td>前端生成物与契约一致</td>
+<td><svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#14684B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg></td>
+<td>2026-10-29 <code>contracts_gen --check</code>：3 个文件一致</td>
+</tr>
+<tr>
+<td>14 条 SSE 夹具逐字对账</td>
+<td><svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#14684B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg></td>
+<td>2026-10-29 <code>record_sse --check</code>：14 条一致</td>
+</tr>
+<tr>
+<td>只读账号 <code>dw_reader</code> 真的写不了</td>
+<td><svg class="status-icon status-unknown" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#7A93B5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="未验证"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg></td>
+<td>无 MySQL / 无 <code>REBUILD_DW_RO_PASSWORD</code>，<code>stage5-live</code> 未跑</td>
+</tr>
+<tr>
+<td>浏览器里 6 类失败 + 取消各有各的样子</td>
+<td><svg class="status-icon status-unknown" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#7A93B5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="未验证"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg></td>
+<td>无 Chrome / Edge，<code>stage6-ui</code> 未跑</td>
+</tr>
+<tr>
+<td>浏览器里 13 条 F 缺陷闭环</td>
+<td><svg class="status-icon status-unknown" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#7A93B5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="未验证"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg></td>
+<td>无 Chrome / Edge，<code>stage7-ui</code> 未跑</td>
+</tr>
+<tr>
+<td>真实 LLM 生成并过策略</td>
+<td><svg class="status-icon status-unknown" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#7A93B5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="未验证"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg></td>
+<td>无端点 / 无 Key</td>
+</tr>
+<tr>
+<td>Docker 全栈本机跑通</td>
+<td><svg class="status-icon status-unknown" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#7A93B5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="未验证"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg></td>
+<td>无 Docker socket 权限，<code>docker-up</code> / <code>docker-smoke</code> 未跑</td>
+</tr>
+<tr>
+<td>后端 782 passed / 31 skipped</td>
+<td><svg class="status-icon status-warn" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#C2620E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="推断"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></td>
+<td>README 声称；SETUP §3 另有 665 的数字；本工作树未跑全量</td>
+</tr>
+<tr>
+<td>前端 40 passed、<code>tsc</code> 零错误</td>
+<td><svg class="status-icon status-warn" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#C2620E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="推断"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></td>
+<td>README / SETUP 声称；本工作树未跑 <code>npm run test</code> / <code>npm run build</code></td>
+</tr>
+<tr>
+<td>S8 性能基线（P50 / P95、并发、容量）</td>
+<td><svg class="status-icon status-unknown" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#7A93B5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="未验证"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg></td>
+<td>README 进度表写「待做」</td>
+</tr>
+</tbody>
+</table>
+<p>这张表直接回答两个问题。</p>
+<p><strong>系统能做什么？</strong> 它能在离线环境证明「恶意 SQL 进不来、正常 SQL 不被误杀、失败有名字、前端契约不漂移」。这四件事都有可复现的命令，不依赖真实模型或数据库。</p>
+<p><strong>系统还不能做什么？</strong> 它还没有证明「换一台机器、用真实 MySQL、接真实 LLM、在浏览器里点一遍」也成立。证据链缺了四段：<code>stage5-live</code>、<code>stage6-ui</code>、<code>stage7-ui</code>、<code>docker-smoke</code>。下一步是补证据，不是加功能，顺序就是上面这四段；没有真实执行，性能数字没有意义。</p>
+<p>能力表与证据表要一起读。能力回答「系统会做什么」，证据回答「这件事被证明到什么程度」。一条能力可以在表里，但证据是空的；一条证据可以很硬，但只覆盖一条窄路径。把两列并排看，才不会把「代码里有」当成「线上成立」。</p>
+<h4 id="_9">倒读排障顺序</h4>
+<p>正向读，四节是「设计 → 证明」；排障时反过来读更快：从用户看到的现象出发，往上游找最近一个该成立却没成立的不变量。</p>
+<ol>
+<li>页面显示成功、但表格只有一行像错误文案的数据 → 先查 S7 的 <code>PseudoErrorCard</code> 是否触发，再查后端是否把失败发成了 <code>result</code>。</li>
+<li>页面红框、码是 <code>SQL_REJECTED</code> → 看 <code>detail.reason_code</code>，再回到 S5 的对应步骤。</li>
+<li>页面一直转圈、最后报 <code>STREAM_INCOMPLETE</code> → 流没有收尾，查 S6 的终止状态与代理缓冲。</li>
+<li>页面 502 → 查 S8 的启动链：<code>init</code> 退出码、<code>backend</code> 健康、nginx 反代，顺序不能反。</li>
+<li>同一条查询在另一台机器上失败 → 查 <code>.env</code> 与卷，再查镜像与端口绑定。</li>
+</ol>
+<p>倒读的价值在于：它把「四道交接」变成四条定位路径，每条路径的终点都是一个可执行的命令，而不是一句「再看看」。</p>
+<h3 id="51">5.1 本部分小结</h3>
+<ul>
+<li>S5 像闸机：刷卡不过，门不开，连库都不连。36/36 注入全拒，11/11 正常查询零误杀。</li>
+<li>S6 像病历：每种失败都有码、有类别、有步骤。16 个错误码 / 3 个 class；<code>SQL_REJECTED</code> 永远不可重试。</li>
+<li>S7 像收据：后端说 <code>10</code>，前端不能写成 <code>"10"</code>。14 条 SSE 夹具逐字对账；13 条 F 缺陷都有浏览器用例，但本工作树没跑（<svg class="status-icon status-unknown" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#7A93B5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="未验证"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>）。</li>
+<li>S8 像搬家：本机收拾得再好，换一台机器能不能起，是另一回事。这一步目前是 <svg class="status-icon status-unknown" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#7A93B5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="未验证"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>：只有清单，没有整机实跑。</li>
+</ul>
+<p>回到本章开头那个问题：一条能生成 SQL 的流水线，怎样证明它「敢用」？这一部分的回答是四句话：恶意 SQL 在连库前被判定（S5），失败有名字、有类别、有位置（S6），契约直接约束界面而不是靠人再抄一遍（S7），交付边界被写清楚、没证明的部分被标出来（S8）。四件事合起来，才是「敢用」的证据链；缺任何一环，链上就有一段只能靠相信。</p>
+<p>证据等级划出了这条链的边界。标为已验证的条目说明本工作树跑过，标为推断的说明只有文档声称，标为未验证的说明环境不具备。读到这里，你应该能对着表 3-9 说出：哪些结论可以直接拿去做验收，哪些只能当设计意图，下一步该补哪条命令。</p>
+<hr>
+<h2 id="6_1" data-sheet="10">6. 复习题</h2>
+<p>十四道题按难度分三档：易题考「能不能复述一条规则」，中等题考「能不能解释一个选择」，难题考「能不能推演一个反事实」。每题后面给一条自检线索，只指方向，不给完整答案。</p>
+<ol>
+<li>【易】S4 的 <code>validate_sql</code> 已经做了 AST 静态校验，为什么还需要 S5 的 <code>enforce()</code>？两层各自回答什么问题？
+   自检线索：一层管「像不像答案」，一层管「能不能碰库」；输入不同，失败后果也不同。</li>
+<li>【中】为什么 <code>ReadOnlyExecutor.execute()</code> 在策略拒绝时连数据库连接都不打开？如果先连库再判定，会多出什么风险？
+   自检线索：判定与连接谁先谁后，决定「拒绝」是否等价于「没发生过」。</li>
+<li>【中】<code>SQL_REJECTED</code> 是通道码，<code>SQL_MULTIPLE_STATEMENTS</code> 是原因码。为什么要这样分层？如果反过来，下游会遇到什么问题？
+   自检线索：通道码是下游分支的全集，原因码是诊断信息；想想每种攻击各占一个分支的代价。</li>
+<li>【易】为什么 <code>UNION</code> 被归到 <code>SQL_FORBIDDEN_CONSTRUCT</code>，而不是 <code>SQL_NOT_READ_ONLY</code>？这两条原因码在语义上差在哪里？
+   自检线索：<code>Union</code> 的根节点本身是只读的，问题在它能带出什么。</li>
+<li>【中】策略返回的 <code>decision.sql</code> 和用户输入的原始 SQL 可能不一样（去注释、补 LIMIT）。为什么执行器必须执行前者？这和旧系统 D6 的漏洞有什么关系？
+   自检线索：D6 的漏洞是「校验的文本」与「执行的文本」分叉；重新序列化把两者钉成一个对象。</li>
+<li>【中】16 个错误码里哪些是可重试的？为什么 <code>SQL_REJECTED</code> 永远不可重试？如果把它设成可重试，攻击面会怎么变化？
+   自检线索：可重试意味着「再问一次模型」，而被策略拒绝的 SQL 已经越过边界。</li>
+<li>【中】校正闭环为什么最多只重试一次？校正后的 SQL 为什么必须重新过 guard 与 policy？如果只过 guard 不过 policy，会漏掉什么？
+   自检线索：一次是成本，重新校验是边界；只过 guard 不过 policy，漏掉的是执行安全。</li>
+<li>【易】<code>EMPTY_RESULT</code> 的 <code>class</code> 是 <code>empty</code>，不是 <code>failure</code>。这个分类对前端步骤条、错误卡片、用户心理分别有什么影响？
+   自检线索：分别看步骤条、卡片、用户心理三处的变化。</li>
+<li>【难】取消为什么是 <code>cancelled</code>，不是 <code>done</code>，也不是 <code>failure</code>？编排器在哪个粒度检查取消？为什么不能中断已经发给 MySQL 的查询？
+   自检线索：取消的语义是「不再推进」，不是「杀死数据库里的查询」；再想步骤边界在哪。</li>
+<li>【易】<code>frontend/src/generated/</code> 三个文件为什么不能手改？<code>contracts_gen --check</code> 与「重新生成再覆盖」有什么区别？
+    自检线索：生成物是派生物；<code>--check</code> 做的是比对，不是覆盖。</li>
+<li>【难】前端遇到未知事件类型和未知步骤 id 的处理为什么不同？这两种「未知」分别代表什么契约状态？
+    自检线索：一个是「契约多了一条腿」，一个是「契约自相矛盾」；容忍与报错分别对应哪种。</li>
+<li>【中】<code>DECIMAL("10")</code> 归一化成 <code>int</code>，<code>DECIMAL("10.5")</code> 归一化成 <code>float</code>。为什么不用统一 <code>float</code>？<code>_sse()</code> 为什么不传 <code>default=str</code>？
+    自检线索：<code>int</code> 与 <code>float</code> 的选择服务的是「用户看到什么」，<code>default=str</code> 服务的是「不要报错」。</li>
+<li>【难】Docker Compose 里 <code>init</code> 为什么用 <code>service_completed_successfully</code>，而不是 <code>service_started</code>？如果改成后者，backend 可能在什么状态下启动？
+    自检线索：一个是「进程起来了」，一个是「初始化成功退出」；<code>init</code> 是一次性任务。</li>
+<li>【难】为什么本工作树把 Docker 全栈标 <svg class="status-icon status-unknown" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#7A93B5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="未验证"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>、把 782 tests 标 <svg class="status-icon status-warn" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#C2620E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="推断"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>？这两个标记分别缺什么证据？如果你要补，第一步跑哪条命令？
+    自检线索：一个缺环境，一个缺复跑；补证据的第一步是让缺的那条命令真的跑起来。</li>
+</ol>
+<p>难题不要求你同意本章的取舍，只要求你指出取舍的代价。比如第 6 题与第 9 题都可以反问：如果业务要求「取消立刻释放数据库连接」，当前设计要改哪一层？能问出这个问题，说明你已经把四道交接看成了四条可以单独修改的边界，而不是一个笼统的「系统」。</p>
+</body>
+</html>

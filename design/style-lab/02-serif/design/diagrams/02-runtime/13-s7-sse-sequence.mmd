@@ -1,0 +1,49 @@
+%% 13 · S7 SSE 事件序列与前端消费
+%% 主线：progress / result / error 三种事件 → StepRail / ResultTable / ErrorCard
+%%{init: {"themeVariables": {"noteBkgColor": "#f9fafb", "noteBorderColor": "#6b7280", "noteTextColor": "#374151"}, "sequence": {"actorMargin": 45, "width": 130, "messageMargin": 32, "boxMargin": 8, "noteMargin": 8, "mirrorActors": false}}}%%
+sequenceDiagram
+    autonumber
+    participant AR as AgentRunner
+    participant SS as SSE
+    participant BR as Browser
+    participant SR as StepRail
+    participant RT as ResultTable
+    participant EC as ErrorCard
+
+    AR->>SS: progress(step, running)
+    SS->>BR: data: {"type":"progress",...}
+    BR->>SR: 执行中（spinner）
+    AR->>SS: progress(step, success, duration_ms)
+    SS->>BR: data: {"type":"progress",...}
+    BR->>SR: ✓ + 耗时
+    AR->>SS: progress(correct_sql, skipped)
+    SS->>BR: data: {"type":"progress",...}
+    BR->>SR: 未触发 –（不是灰色 pending）
+
+    alt result
+        AR->>SS: result(columns, rows)
+        SS->>BR: data: {"type":"result",...}
+        BR->>RT: 按列类型渲染
+        Note over RT: rows=[] 时给空态块，不画表头
+    else error class=failure
+        AR->>SS: error(code, class=failure, step)
+        SS->>BR: data: {"type":"error",...}
+        BR->>SR: 当前 running 步骤标 ×
+        BR->>EC: 红框 + 可复制细节
+    else error class=empty
+        AR->>SS: error(EMPTY_RESULT, class=empty)
+        SS->>BR: data: {"type":"error",...}
+        BR->>SR: 步骤保持 ✓，不标红
+        BR->>EC: 虚线空态卡
+    else error class=cancelled
+        AR->>SS: error(CANCELLED, class=cancelled)
+        SS->>BR: data: {"type":"error",...}
+        BR->>SR: running 步骤标 ⊘ 已取消
+        BR->>EC: 中性卡，不算 done
+    end
+
+    opt 客户端断开
+        BR->>BR: AbortController.abort()
+        BR->>SR: 本地直接置 cancelled
+        Note over AR,BR: FastAPI finally 里 cancel + release
+    end

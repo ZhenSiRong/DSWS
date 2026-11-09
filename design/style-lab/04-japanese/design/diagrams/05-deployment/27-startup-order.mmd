@@ -1,0 +1,33 @@
+%% 27 · 启动顺序与失败停点（主线）
+%% 只画「谁等谁」；健康检查参数见 25 / 40-ops 表 5-4
+sequenceDiagram
+    autonumber
+    participant U as Operator
+    participant DC as Compose
+    participant S as 三存储
+    participant I as init
+    participant B as Backend
+    participant F as Frontend
+
+    U->>DC: make docker-up
+    DC->>S: 启动 mysql / es / qdrant
+    S-->>DC: healthy 3/3
+    DC->>I: depends_on service_healthy
+    I->>S: 轮询 + 开通 dw_reader + verify
+
+    alt verify 通过
+        I-->>DC: skip rebuild · exit 0
+    else verify 失败
+        I->>S: --fresh 写三存储 + 再 verify
+        I-->>DC: exit 0
+    end
+
+    DC->>B: service_completed_successfully
+    B-->>DC: /api/health healthy
+    DC->>F: depends_on service_healthy
+    F-->>DC: /healthz healthy
+    DC-->>U: 5 healthy + init Exited (0)
+
+    alt 任一环节失败
+        DC-->>U: 停在下一服务之前
+    end

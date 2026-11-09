@@ -1,0 +1,51 @@
+%% 26 · 宿主端口与容器端口暴露面
+%% 只有 frontend 默认监听所有网卡；其余四个发布端口只绑 127.0.0.1
+flowchart LR
+  classDef store fill:#ecfdf5,stroke:#0f766e,color:#064e3b
+  classDef runtime fill:#f5f3ff,stroke:#7c3aed,color:#4c1d95
+  classDef build fill:#fff7ed,stroke:#b45309,color:#7c2d12
+  classDef edge fill:#f9fafb,stroke:#6b7280,color:#374151
+  classDef danger fill:#fef2f2,stroke:#b91c1c,color:#7f1d1d
+
+  subgraph OUT["对外访问面"]
+    LAN["局域网 / 任意网卡<br/>FRONTEND_BIND=0.0.0.0"]
+    LOOP["仅本机回环<br/>127.0.0.1"]
+  end
+
+  subgraph HOSTP["宿主机发布端口（默认值）"]
+    P8080["8080<br/>FRONTEND_HOST_PORT"]
+    P8100["8100<br/>BACKEND_HOST_PORT"]
+    P3306["3306<br/>MYSQL_HOST_PORT"]
+    P9200["9200<br/>ES_HOST_PORT"]
+    P6333["6333<br/>QDRANT_HOST_PORT"]
+  end
+
+  subgraph CONT["容器网络内端口"]
+    CFE["frontend<br/>:80"]
+    CBE["backend<br/>:8100"]
+    CMY["mysql<br/>:3306"]
+    CES["elasticsearch<br/>:9200"]
+    CQD["qdrant<br/>:6333"]
+    CIN["init<br/>一次性 · 无端口"]
+  end
+
+  LAN -->|唯一对外入口| P8080
+  LOOP -->|本机访问| P8100
+  LOOP -->|本机访问| P3306
+  LOOP -->|本机访问| P9200
+  LOOP -->|本机访问| P6333
+  P8080 -->|映射 80| CFE
+  P8100 -->|映射 8100| CBE
+  P3306 -->|映射 3306| CMY
+  P9200 -->|映射 9200| CES
+  P6333 -->|映射 6333| CQD
+  CFE -->|反向代理 /api/| CBE
+  CBE -->|容器 DNS 访问| CMY
+  CBE -.->|容器 DNS 访问| CES
+  CBE -.->|容器 DNS 访问| CQD
+
+  class P8080,CFE runtime
+  class P8100,CBE runtime
+  class P3306,CMY,P9200,CES,P6333,CQD store
+  class CIN build
+  class LAN,LOOP edge

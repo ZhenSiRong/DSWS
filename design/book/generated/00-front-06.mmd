@@ -1,0 +1,22 @@
+flowchart TB
+  classDef contract fill:#eff6ff,stroke:#1d4ed8,color:#1e3a8a
+  classDef store fill:#ecfdf5,stroke:#0f766e,color:#064e3b
+  classDef runtime fill:#f5f3ff,stroke:#7c3aed,color:#4c1d95
+  classDef danger fill:#fef2f2,stroke:#b91c1c,color:#7f1d1d
+  classDef pass fill:#f0fdf4,stroke:#15803d,color:#14532d
+  classDef edge fill:#f9fafb,stroke:#6b7280,color:#374151
+
+  U["用户提问"] -->|"POST /api/query"| F["FastAPI · AgentRunner"]
+  F -->|"S3 可选召回"| R["三存储 · 候选表/列/值/指标"]
+  R -->|"S4 生成"| G["Generator · SQL 或拒答"]
+  G -->|"S5 校验"| V["Guard + Policy"]
+  V -->|"放行"| X["ReadOnlyExecutor · dw_reader"]
+  X -->|"结果 / 空 / 失败 / 取消"| E["SSE 三事件"]
+
+  class F runtime
+  class R store
+  class G contract
+  class V danger
+  class X runtime
+  class E pass
+  class U edge

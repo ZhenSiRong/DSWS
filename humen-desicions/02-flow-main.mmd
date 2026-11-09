@@ -1,0 +1,36 @@
+flowchart TD
+  A["0. 选条目<br/>补图 / 校正 / 学生任务"] --> B["1. 事实与来源<br/>Grep/Read 到 file:line；能跑的命令先跑"]
+  B --> C{"2. 条目类型？"}
+
+  C -->|解释性插图| D["写 content JSON<br/>生活类比 + 3–5 条事实 + 画面文案"]
+  C -->|技术架构图| E["保留 Mermaid/Graphviz/既有 SVG<br/>不强行漫画化"]
+  C -->|错误内容| F["建 correction 条目<br/>原文 / 出处 / 改法 / 复测命令"]
+
+  D --> G["make_figure.sh<br/>gen_figure.py → Chrome PNG → check_figure.py"]
+  E --> G
+
+  G --> H{"自动门禁通过？<br/>拼写/字号/色板/重叠/越界"}
+  H -->|否| I["读 gate 证据<br/>改 JSON 或生成器"]
+  I --> G
+  H -->|是| J{"hy4free 逐字复核<br/>+ 人工 5 秒/删图门通过？"}
+  J -->|否| I
+  J -->|是| K["插入书稿<br/>Edit 图引用 → build_book.py"]
+
+  F --> L["按出处修正<br/>Edit + 记录 before/after"]
+  L --> K
+
+  K --> M["build_pdf.py<br/>style-lab/.venv/bin/python"]
+  M --> N{"pdftotext / pdftoppm<br/>图注同页、不溢出、分页合理？"}
+  N -->|否| O["调图尺寸/插入点/分页"]
+  O --> K
+
+  N -->|是| P{"student agent<br/>只给 PDF，medium/low effort<br/>能独立完成？"}
+  P -->|否| Q["收集卡点<br/>缺前提/命令错/表述歧义"]
+  Q --> R["改教材/补前提/改命令"]
+  R --> K
+
+  P -->|是| S["记录证据<br/>学生反馈 + 页码 + 命令输出"]
+  S --> T{"还有条目？"}
+  T -->|是| A
+  T -->|否| U["全书回归<br/>构建、页码、交叉引用、学生复测"]
+  U --> V["人工终审 + git status<br/>试点期不 commit"]

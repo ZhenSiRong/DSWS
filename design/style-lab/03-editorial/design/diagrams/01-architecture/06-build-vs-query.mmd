@@ -1,0 +1,55 @@
+%% 06 · 构建时 vs 查询时
+%% 问题：S2 CLI 退出之后，查询时的每个阶段各自直接读什么？有没有常驻构建进程？
+flowchart LR
+  classDef contract fill:#eff6ff,stroke:#1d4ed8,color:#1e3a8a
+  classDef build fill:#fff7ed,stroke:#b45309,color:#7c2d12
+  classDef runtime fill:#f5f3ff,stroke:#7c3aed,color:#4c1d95
+  classDef store fill:#ecfdf5,stroke:#0f766e,color:#064e3b
+  classDef danger fill:#fef2f2,stroke:#b91c1c,color:#7f1d1d
+  classDef edge fill:#f9fafb,stroke:#6b7280,color:#374151
+  classDef hidden fill:none,stroke:none,color:transparent
+
+  subgraph BUILD["构建时 · 一次性 S2（无守护进程）"]
+    DW["fixtures/dw.sql"]:::store
+    CLI["S2 build CLI"]:::build
+    MAN["manifest 对账"]:::store
+    EXIT["进程退出 · 不常驻"]:::edge
+    DW -->|"内存 SQLite 校验"| CLI
+    CLI -->|"最后写 manifest"| MAN
+    CLI -->|"退出码 0"| EXIT
+  end
+
+  subgraph MID["持久化结果 + S3 阶段验收（构建写、查询读）"]
+    META["Meta · MySQL"]:::store
+    ES["ES · 取值索引"]:::store
+    QD["Qdrant · 向量索引"]:::store
+    DWR["dw 库 · dw_reader"]:::store
+    S3["S3 recall · 不在生产主链路"]:::build
+  end
+
+  subgraph QUERY["查询时 · 每次请求"]
+    FE["浏览器 / 前端"]:::edge
+    API["FastAPI"]:::runtime
+    AR["AgentRunner"]:::runtime
+    S4["S4 generate"]:::runtime
+    S5["S5 security"]:::danger
+    FE -->|"POST /api/query"| API
+    API -->|"runner_factory"| AR
+    AR -->|"上下文 8 阶段"| S4
+    AR -->|"校验 + 执行"| S5
+  end
+
+  CON["contracts/ 契约<br/>构建与查询共用"]:::contract
+
+  CLI -->|"读契约"| CON
+  S4 -->|"读契约"| CON
+  S5 -->|"读 sql.policy"| CON
+
+  CLI -->|"写 Meta"| META
+  CLI -->|"写取值"| ES
+  CLI -->|"写向量"| QD
+  S3 -->|"读快照"| META
+  S3 -->|"msearch"| ES
+  S3 -->|"向量检索"| QD
+  S3 -.->|"可选 RecallState"| S4
+  S5 -->|"只读 SELECT"| DWR

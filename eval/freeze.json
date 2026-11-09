@@ -1,0 +1,104 @@
+{
+  "frozen_at": "2026-11-08T16:57:42.999901+00:00",
+  "git": {
+    "branch": "design/atlas",
+    "commit": "95ab5f69510f2a1127a3d9c94f1bd0e5c4a3288a",
+    "dirty_files": 16
+  },
+  "files": {
+    "contracts/steps.yaml": "e4192a25f3ef8062ffc92560d8c35b0b1078d7ab5e24465d527ae5242199ba65",
+    "contracts/errors.yaml": "b5ad5011521d652f577da343996f906094b947be406ff3e7d2a6ecffd3d956a9",
+    "contracts/sql.policy.yaml": "ecfcc239f5f355b778c9254eb47d7418a6dc0b86d0d1fc009f6fd5b2fb14bf70",
+    "contracts/schema.contract.yaml": "8a0de97a2ff134ea65bbb1b6ae0176123d4c7da12931edee82c36e0414c0838b",
+    "contracts/metrics.yaml": null,
+    "backend/app/agent/graph.py": "b5c3ce45b417cd92fd7ee6f1f66cb8f44b2e5f41c3de64e6038139308c9ba899",
+    "backend/app/agent/validate.py": "ab23bf1bd0ba3f9f9c6756639e9d81d26dea5119d7e42f9dd951b2ece8f17720",
+    "backend/app/agent/correct.py": "6b6966cf56dc22cb32fd2f95c7ef60a2d859f73c80b82d2de8b005ef7172ff97",
+    "backend/app/generate/provider.py": "87ac30f043ca65ab573c7808e176ff3b00f17bb6eeed78ea298a7a84ef2f48a3",
+    "backend/app/security/policy.py": "d246601d1539a579aa44eba6831822d75adeddce241580f98059aa1ddfa68079",
+    "backend/app/security/executor.py": "568fdd41533e2880bad9d2b05aac1793888ef1e491e1c8e28c047ff38c032e2c",
+    "frontend/package.json": "51ad8f76d55e6617737ba5ac71dbfbaa8c9151f992d9a8484c37c802e826f180",
+    "deliverable/v2/original-frontend/package.json": "f333b47f896f87b9030cf54d76a6b9c1ab3414008964f5b5bf3e5f9d00c13f3c"
+  },
+  "remote": {
+    "steps_5051": {
+      "url": "http://8.155.135.97:5051/api/steps",
+      "status": 200,
+      "sha256": "29db9e0404b67f9275e6073996f6c82d60a2dedd42ecd141876b1d4b3ea4aaf1",
+      "body": {
+        "version": 1,
+        "steps": [
+          {
+            "id": "extract_keywords",
+            "label": "抽取关键词",
+            "conditional": false
+          },
+          {
+            "id": "recall_column",
+            "label": "召回字段信息",
+            "conditional": false
+          },
+          {
+            "id": "recall_value",
+            "label": "召回字段取值",
+            "conditional": false
+          },
+          {
+            "id": "recall_metric",
+            "label": "召回指标信息",
+            "conditional": false
+          },
+          {
+            "id": "merge_retrieved_info",
+            "label": "合并召回信息",
+            "conditional": false
+          },
+          {
+            "id": "filter_table",
+            "label": "过滤表信息",
+            "conditional": false
+          },
+          {
+            "id": "filter_metric",
+            "label": "过滤指标信息",
+            "conditional": false
+          },
+          {
+            "id": "add_extra_context",
+            "label": "添加额外上下文",
+            "conditional": false
+          },
+          {
+            "id": "generate_sql",
+            "label": "生成SQL",
+            "conditional": false
+          },
+          {
+            "id": "validate_sql",
+            "label": "校验SQL",
+            "conditional": false
+          },
+          {
+            "id": "correct_sql",
+            "label": "校正SQL",
+            "conditional": true
+          },
+          {
+            "id": "run_sql",
+            "label": "执行SQL",
+            "conditional": false
+          }
+        ]
+      }
+    },
+    "health_5051": {
+      "url": "http://8.155.135.97:5051/api/health",
+      "status": 200,
+      "sha256": "39b9503e305f1a9b85f2ee75e848f4cb2165b1a0991f16398b59ed1827242de4",
+      "body": {
+        "status": "ok",
+        "stage": "S7"
+      }
+    }
+  }
+}

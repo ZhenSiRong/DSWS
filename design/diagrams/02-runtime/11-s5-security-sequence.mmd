@@ -1,0 +1,32 @@
+%% 11 · S5 安全校验与执行
+%% 主线：SQL 文本 → 策略判定 → 只读执行器 → MySQL → 结果 / 错误
+%%{init: {"themeVariables": {"noteBkgColor": "#f9fafb", "noteBorderColor": "#6b7280", "noteTextColor": "#374151"}, "sequence": {"actorMargin": 45, "width": 130, "messageMargin": 32, "boxMargin": 8, "noteMargin": 8, "mirrorActors": false}}}%%
+sequenceDiagram
+    autonumber
+    participant AR as AgentRunner
+    participant PO as Policy
+    participant EX as ReadOnlyExecutor
+    participant MY as MySQL
+
+    AR->>PO: enforce(sql) 白名单 / 只读 / 单语句
+    alt 策略拒绝
+        PO-->>AR: violations → SQL_REJECTED（不连库）
+    else 策略通过
+        PO-->>AR: PolicyDecision（可自动补 LIMIT）
+        AR->>EX: execute(sql)
+        EX->>PO: 再 enforce 一次（纵深防御）
+        PO-->>EX: decision.ok
+        EX->>MY: connect 只读账号（禁用多语句）
+        EX->>MY: SET SESSION max_execution_time
+        EX->>MY: cursor.execute(sql)
+        alt 正常返回
+            MY-->>EX: rows + description
+            EX-->>AR: ExecutionResult(ok=True)
+        else 超时
+            MY-->>EX: 3024 / 1205 / 1317
+            EX-->>AR: ExecutionResult(TIMEOUT)
+        else 执行错误
+            MY-->>EX: 其它数据库异常
+            EX-->>AR: ExecutionResult(SQL_EXECUTION_ERROR)
+        end
+    end

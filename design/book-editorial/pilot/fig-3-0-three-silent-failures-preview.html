@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>fig-3-0-three-silent-failures · pilot preview</title>
+<style>
+  :root { --paper:#FFFDF8; --ink:#111111; --ink2:#5B5B5B; --line:#D9D3C7; --cobalt:#1F4E9C; --rust:#B24A2E; --forest:#2F5D46; }
+  body { margin:0; background:#F1EDE4; color:var(--ink); font-family:"Noto Serif CJK SC",serif; }
+  main { max-width:1280px; margin:0 auto; padding:32px 24px 64px; }
+  h1 { font-size:30px; margin:0 0 6px; color:var(--ink); }
+  h2 { font-size:20px; margin:34px 0 12px; color:var(--cobalt); border-left:4px solid var(--cobalt); padding-left:10px; }
+  .sub { color:var(--ink2); margin-bottom:24px; }
+  img { width:100%; border:1px solid var(--line); border-radius:4px; background:var(--paper); }
+  .compare { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+  .compare figure { margin:0; }
+  .compare figcaption { font-size:13px; color:var(--ink2); margin-top:6px; }
+  table { width:100%; border-collapse:collapse; background:var(--paper); border:1px solid var(--line); }
+  th, td { text-align:left; vertical-align:top; padding:10px 12px; border-bottom:1px solid #E9E3D7; font-size:13px; }
+  th { background:#F8F5ED; color:var(--cobalt); }
+  .pass { color:var(--forest); font-weight:700; }
+  .fail { color:var(--rust); font-weight:700; }
+  .manual { color:#9a6700; font-weight:700; }
+  pre { background:var(--paper); border:1px solid var(--line); border-radius:4px; padding:12px; white-space:pre-wrap; font-size:13px; }
+  .meta { color:var(--ink2); font-size:13px; }
+  code { font-family:"DejaVu Sans Mono",monospace; font-size:12px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>一顿『成功』的晚餐</h1>
+  <div class="sub">生活类比 · 界面说上齐了，桌上却没有一道能吃的菜。</div>
+  <img src="../figures/fig-3-0-three-silent-failures.png" alt="fig-3-0-three-silent-failures">
+  <p class="meta">图：<code>figures/fig-3-0-three-silent-failures.png</code> · 审计：<code>figures/fig-3-0-three-silent-failures.md</code></p>
+
+  <h2>改前 / 改后</h2>
+  <div class="compare">
+    <figure><img src="before-6.png" alt="旧书第 6 页"><figcaption>旧书 · 第 6 页</figcaption></figure>
+    <figure><img src="after-7.png" alt="新书第 7 页"><figcaption>新书 · 第 7 页</figcaption></figure>
+  </div>
+
+  <h2>事实核对</h2>
+  <table><thead><tr><th>#</th><th>事实</th><th>原文摘录</th><th>出处</th><th>核对</th></tr></thead>
+  <tbody><tr><td>1</td><td>旧系统有三类静默失败：界面显示成功，语义已经错了；用户没有任何线索发现。</td><td>“旧系统不是「架构不漂亮」才被替换，而是有三类静默失败：界面显示成功，语义已经错了；用户没有任何线索发现。”</td><td>00-front.md §3 开头<br><code>00-front.md:65</code></td><td>✅</td></tr><tr><td>2</td><td>生成失败时，错误说明被塞进一行一列的结果，前端按表格渲染；用户看到「查询成功」加一句话。</td><td>“生成失败时，旧系统把一段错误说明塞进「一行一列」的结果里……用户看到的是「查询成功」加一句话，而不是一次失败。”</td><td>00-front.md §3.1；fixtures/sse/pseudo_row.json；frontend/src/lib/result.ts；docs/S7-HANDOFF.md F5<br><code>00-front.md:69–71; pseudo_row.json; result.ts:103–112; S7-HANDOFF.md:167,193–198,302</code></td><td>✅</td></tr><tr><td>3</td><td>旧系统把空数组 data: [] 当成正常结果；新系统用 EMPTY_RESULT（类别 empty）把「没有数据」和「失败」分开。</td><td>“旧系统把空数组 `data: []` 当成一次正常结果……审计把这条记为 FP-8：空数组是合法语义，不是失败，但也不是成功的数据。”</td><td>00-front.md §3.2；contracts/errors.yaml EMPTY_RESULT；fixtures/sse/empty_rows.json；docs/S7-HANDOFF.md FP-8<br><code>00-front.md:83–90; errors.yaml:70–74; empty_rows.json; S7-HANDOFF.md:26,301</code></td><td>✅</td></tr><tr><td>4</td><td>SSE 序列化传 default=str，Decimal(&quot;10&quot;) 变成字符串 &quot;10&quot;；新系统 _sse() 不传 default=str，未知类型变成 INTERNAL_ERROR。</td><td>“SSE 序列化传了 `default=str`，MySQL 的 `Decimal(&quot;10&quot;)` 悄悄变成字符串 `&quot;10&quot;`。”</td><td>00-front.md §3.3；backend/app/main.py _sse()<br><code>00-front.md:98–107; main.py:250–259</code></td><td>✅</td></tr><tr><td>5</td><td>三个根因分别由 S5/S6/S7、S3/S6/S7、S4/S5/S6/S7 承担。</td><td>“伪 SQL 被当成数据 → S5 拒绝 → S6 错误事件 → S7 展示层止损；召回为空也算 success → S3 trace → S6 EMPTY_RESULT → S7 空态卡；错误被吞掉 → S4 形状 → S5 执行 → S6 分类 → S7 映射。”</td><td>00-front.md §3.4 根因与阶段的对应关系表<br><code>00-front.md:113–117</code></td><td>✅</td></tr></tbody></table>
+
+  <h2>门禁</h2>
+  <table><thead><tr><th>门</th><th>结果</th><th>证据</th></tr></thead>
+  <tbody><tr><td>spelling</td><td class='pass'>pass</td><td>spelling_manifest=True; spelling_expected=True; 31/31 manifest strings found in hy4free review; missing=[]</td></tr><tr><td>layout</td><td class='pass'>pass</td><td>layout_text_overlap=True; layout_rect_overlap=True; layout_bounds=True</td></tr><tr><td>color</td><td class='manual'>manual</td><td>no automated check</td></tr><tr><td>typography</td><td class='pass'>pass</td><td>typography_sizes=True; typography_title=True; typography_section=True; typography_label=True; typography_note=True; typography_small=True</td></tr><tr><td>uniqueness</td><td class='pass'>pass</td><td>uniqueness=True</td></tr><tr><td>style_card</td><td class='pass'>pass</td><td>typography_sizes=True</td></tr><tr><td>teaching_5s</td><td class='manual'>manual</td><td>5 秒读懂：三盘都上了，但没有一盘能吃；每幕底部给出新系统的止损点。</td></tr><tr><td>no_figure_needed</td><td class='manual'>manual</td><td>删图门：§3 是 3 个小节 + 1 张表，读者要在脑内把三种失败并排比较；餐厅三幕用同一个故事把三种失败串起来，保留。</td></tr></tbody></table>
+
+  <h2>hy4free 逐字复核</h2>
+  <pre>一顿『成功』的晚餐
+生活类比 · 界面说上齐了，桌上却没有一道能吃的菜。
+生活类比
+第一幕 · 纸条当菜
+根因 01 · 伪 SQL 被当成数据
+这是菜？
+您的菜来了
+错误说明
+查询成功
+用户看到：一张『查询成功』的账单
+实际：盘子里是一张『错误说明』
+S5 拒单 · S6 报错 · S7 止损
+第二幕 · 空盘上齐
+根因 02 · 召回为空也算 success
+是没有，还是没找到？
+上齐了
+用户看到：表格消失，像跑完了
+实际：空、召回失败、系统失败混在一起
+S3 trace · S6 空态 · S7 空态卡
+第三幕 · 糊菜指不到灶台
+根因 03 · 错误被吞掉
+哪个灶？
+后厨
+后厨出问题了
+用户看到：红框亮了，却指不到灶台
+实际：错误没有步骤归属
+S4 形状 · S6 分类 · S7 映射
+共同点：三盘都上了，但没有一盘能吃。
+新系统：让失败有名字、有位置、有通道。
+生活类比：餐厅三幕 · 事实来源：00-front.md § 3.1–3.4 · contracts/errors.yaml · docs/S7-HANDOFF.md</pre>
+</main>
+</body>
+</html>

@@ -1,0 +1,40 @@
+%% 21 · 五层纵深防御
+%%{init: {"flowchart": {"diagramPadding": 0}}}%%
+flowchart TB
+    A["不可信输入<br/>用户问题 + 模型候选 SQL"]
+
+    L1["第 1 层 · 契约白名单<br/>schema.contract.yaml 派生表/列"]
+    L2["第 2 层 · 静态 guard<br/>单语句 / 只读 / 表列存在 / 常量 / 排名"]
+    L3["第 3 层 · 策略判定<br/>AST 复查 + 词法兜底 + 白名单"]
+    L4["第 4 层 · 只读执行器<br/>dw_reader + 超时 + 禁多语句"]
+    L5["第 5 层 · 错误通道与审计<br/>16 码 / 3 class / SSE error"]
+
+    DB[("MySQL dw<br/>只读查询")]
+    OK["SSE result<br/>rows 或 empty"]
+
+    A -->|"进入校验"| L1
+    L1 -->|"表列在契约内"| L2
+    L2 -->|"语义通过"| L3
+    L3 -->|"策略通过"| L4
+    L4 -->|"SELECT 成功"| DB
+    DB -->|"返回行"| OK
+
+    L1 -.->|"非白名单表/列"| L5
+    L2 -.->|"SQL_* 具体码"| L5
+    L3 -.->|"SQL_REJECTED + reason_code"| L5
+    L4 -.->|"TIMEOUT / SQL_EXECUTION_ERROR"| L5
+    L5 -->|"按 class 渲染"| UI["UI：红框 / 空态 / 取消态"]
+
+    classDef contract fill:#eff6ff,stroke:#1d4ed8,color:#1e3a8a
+    classDef danger fill:#fef2f2,stroke:#b91c1c,color:#7f1d1d
+    classDef runtime fill:#f5f3ff,stroke:#7c3aed,color:#4c1d95
+    classDef store fill:#ecfdf5,stroke:#0f766e,color:#064e3b
+    classDef pass fill:#f0fdf4,stroke:#15803d,color:#14532d
+    classDef edge fill:#f9fafb,stroke:#6b7280,color:#374151
+    class A danger
+    class L1 contract
+    class L2,L3 runtime
+    class L4,L5 danger
+    class DB store
+    class OK pass
+    class UI edge

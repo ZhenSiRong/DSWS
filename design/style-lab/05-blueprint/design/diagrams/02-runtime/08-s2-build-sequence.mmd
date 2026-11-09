@@ -1,0 +1,46 @@
+%% 08 · S2 构建流水线时序
+%% 主线：make stage2 → CLI → plan → Meta → ES → Qdrant → manifest → exit
+%%{init: {"themeVariables": {"noteBkgColor": "#f9fafb", "noteBorderColor": "#6b7280", "noteTextColor": "#374151"}, "sequence": {"actorMargin": 45, "width": 130, "messageMargin": 32, "boxMargin": 8, "noteMargin": 8, "mirrorActors": false}}}%%
+sequenceDiagram
+    autonumber
+    participant MK as Make
+    participant CLI as CLI
+    participant PL as Plan
+    participant EM as Embedder
+    participant MT as Meta
+    participant ES as ES
+    participant QD as Qdrant
+
+    MK->>CLI: make stage2（dry-run → fresh → verify 三次调用）
+    CLI->>CLI: argparse 解析互斥开关
+    Note over CLI: --dry-run / --fresh / --verify / --assert-idempotent
+
+    alt --dry-run
+        CLI->>PL: load_plan(config)
+        PL-->>CLI: BuildPlan + counts()
+        CLI-->>MK: 打印计数，0 writes，exit 0
+    else --verify
+        CLI->>MT: read_manifest() + 只读计数
+        CLI->>ES: 计数 + 样例文档
+        CLI->>QD: 计数 + 向量维度
+        CLI-->>MK: VERIFY PASS / FAIL，exit 0 / 1
+    else 构建（默认 / --fresh / --assert-idempotent）
+        CLI->>PL: load_plan(config)
+        PL-->>CLI: BuildPlan（纯内存，不连存储）
+        alt --fresh
+            CLI->>MT: drop_database + create_schema
+        else 增量
+            CLI->>MT: read_manifest() 比对 config_hash
+            Note over CLI,MT: 哈希 / 计数 / 样例全一致 → noop，0 writes
+        end
+        CLI->>ES: delete + create
+        CLI->>QD: delete + create（列 / 指标两个 collection）
+        CLI->>MT: write_plan() 44 行
+        CLI->>ES: bulk_index() 76 条取值文档
+        CLI->>EM: embed_many(98 条列文本)
+        CLI->>QD: upsert() 98 个列点
+        CLI->>EM: embed_many(22 条指标文本)
+        CLI->>QD: upsert() 22 个指标点
+        CLI->>MT: write_manifest(build_id, status, counts)
+        CLI-->>MK: BUILT writes=241，exit 0
+    end

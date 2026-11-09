@@ -1,0 +1,67 @@
+%% 18 · Meta 表结构（5 张元数据表）
+erDiagram
+    table_info ||--o{ column_info : "table_id 逻辑外键"
+    column_info ||--o{ column_metric : "column_id 逻辑外键"
+    metric_info ||--o{ column_metric : "metric_id 逻辑外键"
+
+    table_info {
+        varchar id PK "表名，如 fact_order"
+        varchar name "表名"
+        varchar role "fact / dim"
+        text description "表说明"
+        text grain "一行代表什么"
+    }
+
+    column_info {
+        varchar id PK "table.column，如 fact_order.order_amount"
+        varchar name "列名"
+        varchar type "DDL 类型，如 FLOAT"
+        varchar role "primary_key / foreign_key / dimension / measure"
+        json examples "排序后前 10 条，不是全集"
+        text description "列说明"
+        json alias "别名数组"
+        varchar table_id FK "-> table_info.id"
+        json value_domain "kind / values / min / max / pattern"
+        tinyint sync_values "1 表示该列取值已写入 ES"
+    }
+
+    metric_info {
+        varchar id PK "指标名，如 AOV"
+        varchar name "指标名"
+        varchar label "中文标签"
+        text description "指标说明"
+        text formula "口径公式"
+        json relevant_columns "相关列 ID 数组"
+        json alias "指标别名数组"
+        varchar aggregation "additive / non_additive"
+        double expected_value "验收期望值"
+        varchar grain "订单 / 件"
+        json rejected_values "易混口径与反例"
+    }
+
+    column_metric {
+        varchar column_id PK,FK "-> column_info.id"
+        varchar metric_id PK,FK "-> metric_info.id"
+    }
+
+    build_manifest {
+        bigint seq PK "自增序号"
+        varchar build_id UK "一次构建的 UUID"
+        int manifest_version "manifest 格式版本"
+        varchar built_at "UTC ISO 时间"
+        char config_hash "契约 + 配置 + 取值 + 目标"
+        int contract_version "契约 version"
+        varchar embedding_provider "如 hash-ngram-v1"
+        int embedding_dim "如 256"
+        int meta_tables "5"
+        int meta_columns "24"
+        int meta_metrics "6"
+        int meta_column_metrics "9"
+        int es_values "76"
+        int qdrant_columns "98"
+        int qdrant_metrics "22"
+        varchar es_analyzer "ik_max_word 或 standard"
+        text targets_json "meta_db / es_index / collection"
+        varchar status "success / failed"
+        text error "失败原因，成功为空"
+    }

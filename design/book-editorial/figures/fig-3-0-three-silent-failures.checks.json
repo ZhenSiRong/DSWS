@@ -1,0 +1,234 @@
+{
+  "figure": "fig-3-0-three-silent-failures",
+  "png": "/home/zhensirong/VM-Share/DSWS-design/design/book-editorial/figures/fig-3-0-three-silent-failures.png",
+  "svg": "/home/zhensirong/VM-Share/DSWS-design/design/book-editorial/figures/fig-3-0-three-silent-failures.svg",
+  "checks": [
+    {
+      "gate": "size",
+      "pass": true,
+      "evidence": "PNG 1600x900, expected 1600x900"
+    },
+    {
+      "gate": "svg_size",
+      "pass": true,
+      "evidence": "<svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" width=\"1600\" height=\"900\""
+    },
+    {
+      "gate": "spelling_manifest",
+      "pass": true,
+      "evidence": "31 text elements, 31 unique strings in manifest"
+    },
+    {
+      "gate": "spelling_expected",
+      "pass": true,
+      "evidence": "missing={} extra={}"
+    },
+    {
+      "gate": "hybrid_text_layer",
+      "pass": true,
+      "evidence": "31 <text> nodes in overlay, 31 layout strings"
+    },
+    {
+      "gate": "hybrid_raster_ref",
+      "pass": true,
+      "evidence": "render_source=ai-pilot/fig-3-0-ai-lite.png"
+    },
+    {
+      "gate": "typography_sizes",
+      "pass": true,
+      "evidence": "sizes=[18, 22, 24, 26, 30, 42], allowed=[18, 22, 24, 26, 30, 42]"
+    },
+    {
+      "gate": "typography_title",
+      "pass": true,
+      "evidence": "title 42px present"
+    },
+    {
+      "gate": "typography_section",
+      "pass": true,
+      "evidence": "section 30px present"
+    },
+    {
+      "gate": "typography_label",
+      "pass": true,
+      "evidence": "label 24px present"
+    },
+    {
+      "gate": "typography_note",
+      "pass": true,
+      "evidence": "note 22px present"
+    },
+    {
+      "gate": "typography_small",
+      "pass": true,
+      "evidence": "small 18px present"
+    },
+    {
+      "gate": "color_palette_text",
+      "pass": true,
+      "evidence": "text fills=['#111111', '#1F4E9C', '#2F5D46', '#5B5B5B', '#B24A2E', '#C58B1B'] bad=[]"
+    },
+    {
+      "gate": "color_raster",
+      "pass": true,
+      "evidence": "deferred: AI-rendered raster palette is checked in vision review, not by hex gate"
+    },
+    {
+      "gate": "layout_text_overlap",
+      "pass": true,
+      "evidence": "collisions=[]"
+    },
+    {
+      "gate": "layout_rect_overlap",
+      "pass": true,
+      "evidence": "comic: intentional scene overlaps; text overlap gate covers labels"
+    },
+    {
+      "gate": "layout_bounds",
+      "pass": true,
+      "evidence": "out_of_bounds=[]"
+    },
+    {
+      "gate": "png_nonblank",
+      "pass": true,
+      "evidence": "unique_colors=92936"
+    },
+    {
+      "gate": "file_size_png",
+      "pass": true,
+      "evidence": "PNG 2.04 MB < 3 MB"
+    },
+    {
+      "gate": "file_size_svg",
+      "pass": true,
+      "evidence": "SVG 7.1 KB < 1 MB"
+    },
+    {
+      "gate": "uniqueness",
+      "pass": true,
+      "evidence": "found 1 PNG(s) named fig-3-0-three-silent-failures.png"
+    },
+    {
+      "gate": "spelling_review",
+      "pass": true,
+      "evidence": "31/31 manifest strings found in hy4free review; missing=[]"
+    }
+  ],
+  "all_pass": true,
+  "manual_gates": {
+    "teaching_5s": "pending human/reviewer confirmation",
+    "no_figure_needed": "pending human/reviewer confirmation"
+  },
+  "by_name": {
+    "size": {
+      "gate": "size",
+      "pass": true,
+      "evidence": "PNG 1600x900, expected 1600x900"
+    },
+    "svg_size": {
+      "gate": "svg_size",
+      "pass": true,
+      "evidence": "<svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" width=\"1600\" height=\"900\""
+    },
+    "spelling_manifest": {
+      "gate": "spelling_manifest",
+      "pass": true,
+      "evidence": "31 text elements, 31 unique strings in manifest"
+    },
+    "spelling_expected": {
+      "gate": "spelling_expected",
+      "pass": true,
+      "evidence": "missing={} extra={}"
+    },
+    "hybrid_text_layer": {
+      "gate": "hybrid_text_layer",
+      "pass": true,
+      "evidence": "31 <text> nodes in overlay, 31 layout strings"
+    },
+    "hybrid_raster_ref": {
+      "gate": "hybrid_raster_ref",
+      "pass": true,
+      "evidence": "render_source=ai-pilot/fig-3-0-ai-lite.png"
+    },
+    "typography_sizes": {
+      "gate": "typography_sizes",
+      "pass": true,
+      "evidence": "sizes=[18, 22, 24, 26, 30, 42], allowed=[18, 22, 24, 26, 30, 42]"
+    },
+    "typography_title": {
+      "gate": "typography_title",
+      "pass": true,
+      "evidence": "title 42px present"
+    },
+    "typography_section": {
+      "gate": "typography_section",
+      "pass": true,
+      "evidence": "section 30px present"
+    },
+    "typography_label": {
+      "gate": "typography_label",
+      "pass": true,
+      "evidence": "label 24px present"
+    },
+    "typography_note": {
+      "gate": "typography_note",
+      "pass": true,
+      "evidence": "note 22px present"
+    },
+    "typography_small": {
+      "gate": "typography_small",
+      "pass": true,
+      "evidence": "small 18px present"
+    },
+    "color_palette_text": {
+      "gate": "color_palette_text",
+      "pass": true,
+      "evidence": "text fills=['#111111', '#1F4E9C', '#2F5D46', '#5B5B5B', '#B24A2E', '#C58B1B'] bad=[]"
+    },
+    "color_raster": {
+      "gate": "color_raster",
+      "pass": true,
+      "evidence": "deferred: AI-rendered raster palette is checked in vision review, not by hex gate"
+    },
+    "layout_text_overlap": {
+      "gate": "layout_text_overlap",
+      "pass": true,
+      "evidence": "collisions=[]"
+    },
+    "layout_rect_overlap": {
+      "gate": "layout_rect_overlap",
+      "pass": true,
+      "evidence": "comic: intentional scene overlaps; text overlap gate covers labels"
+    },
+    "layout_bounds": {
+      "gate": "layout_bounds",
+      "pass": true,
+      "evidence": "out_of_bounds=[]"
+    },
+    "png_nonblank": {
+      "gate": "png_nonblank",
+      "pass": true,
+      "evidence": "unique_colors=92936"
+    },
+    "file_size_png": {
+      "gate": "file_size_png",
+      "pass": true,
+      "evidence": "PNG 2.04 MB < 3 MB"
+    },
+    "file_size_svg": {
+      "gate": "file_size_svg",
+      "pass": true,
+      "evidence": "SVG 7.1 KB < 1 MB"
+    },
+    "uniqueness": {
+      "gate": "uniqueness",
+      "pass": true,
+      "evidence": "found 1 PNG(s) named fig-3-0-three-silent-failures.png"
+    },
+    "spelling_review": {
+      "gate": "spelling_review",
+      "pass": true,
+      "evidence": "31/31 manifest strings found in hy4free review; missing=[]"
+    }
+  }
+}

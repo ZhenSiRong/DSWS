@@ -1,0 +1,9 @@
+flowchart LR
+  A[契约 schema.contract.yaml] -->|生成计划| B[BuildPlan]
+  B -->|写入| C[(Meta MySQL)]
+  B -->|写入| D[(Elasticsearch)]
+  B -->|写入| E[(Qdrant)]
+  classDef contract fill:#eff6ff,stroke:#1d4ed8,color:#1e3a8a
+  classDef store fill:#ecfdf5,stroke:#0f766e,color:#064e3b
+  class A contract
+  class C,D,E store

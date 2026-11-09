@@ -1,0 +1,45 @@
+%% 07 · 端到端请求生命周期（主线）
+%% 只画一条主线和四个收尾；细节分叉见 08–13
+%%{init: {"themeVariables": {"noteBkgColor": "#f9fafb", "noteBorderColor": "#6b7280", "noteTextColor": "#374151"}, "sequence": {"actorMargin": 38, "width": 120, "messageMargin": 28, "boxMargin": 8, "noteMargin": 8, "mirrorActors": false}}}%%
+sequenceDiagram
+    autonumber
+    participant B as Browser
+    participant F as FastAPI
+    participant A as AgentRunner
+    participant G as Generator
+    participant V as Guard+Policy
+    participant X as ReadOnlyExecutor
+    participant M as MySQL
+
+    B->>F: POST /api/query
+    F->>F: request_id + cancel token
+    F-->>B: 200 SSE
+    F->>A: runner_factory(query, token)
+    A->>A: 8 阶段上下文
+    A->>G: draft_sql(query, context)
+    G-->>A: SQL 或 refusal
+    A->>V: validate(sql)
+
+    alt 校验失败
+        V-->>A: ChannelError
+        A-->>B: error(code, step)
+    else 校验通过
+        V-->>A: ok
+        A->>X: execute(sql)
+        X->>M: SELECT ... LIMIT
+        M-->>X: rows / error
+        alt rows > 0
+            X-->>A: rows
+            A-->>B: result(columns, rows)
+        else 0 行
+            A-->>B: error(EMPTY_RESULT, empty)
+        else 执行异常
+            A-->>B: error(SQL_EXECUTION_ERROR)
+        end
+    end
+
+    opt 用户取消
+        B->>F: POST /api/cancel
+        F->>A: cancel(request_id)
+        A-->>B: error(CANCELLED, cancelled)
+    end

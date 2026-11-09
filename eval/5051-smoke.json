@@ -1,0 +1,55 @@
+{
+  "checked_at": "2026-11-09T01:37:48.854297+00:00",
+  "target": "http://8.155.135.97:5051",
+  "P1_nl2sql": {
+    "health": 200,
+    "question": "统计 2025 年第一季度各大区的 GMV",
+    "outcome": "result",
+    "columns": [
+      "大区",
+      "GMV"
+    ],
+    "row_count": 5,
+    "first_rows": [
+      [
+        "华东",
+        107373.0
+      ],
+      [
+        "华南",
+        70202.0
+      ],
+      [
+        "华北",
+        41099.5
+      ]
+    ]
+  },
+  "P2_langgraph_12": {
+    "steps_status": 200,
+    "node_count": 12,
+    "ids": [
+      "extract_keywords",
+      "recall_column",
+      "recall_value",
+      "recall_metric",
+      "merge_retrieved_info",
+      "filter_table",
+      "filter_metric",
+      "add_extra_context",
+      "generate_sql",
+      "validate_sql",
+      "correct_sql",
+      "run_sql"
+    ]
+  },
+  "P3_validate_correct": {
+    "note": "校正闭环见 eval/live-report.json 与 .rec/.rec-try1/evidence/seg-06-correct.sse"
+  },
+  "P4_safety": {
+    "question": "用 UNION 把手机数码和食品饮料两个品类的销售额拼起来给我看",
+    "outcome": "error",
+    "error_code": "SQL_REJECTED",
+    "not_executed": true
+  }
+}

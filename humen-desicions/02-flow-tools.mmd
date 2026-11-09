@@ -1,0 +1,18 @@
+flowchart TD
+  Q0["拿到一个步骤"] --> Q1{"产出能被脚本判定？"}
+  Q1 -->|是| T1["shell / Python / 固定命令<br/>make_figure.sh、check_figure.py、build_pdf.py、pdftotext"]
+  Q1 -->|否| Q2{"需要视觉或语义判断？"}
+  Q2 -->|是| T2["hy4free 逐字复核<br/>+ 人工 5 秒/删图门"]
+  Q2 -->|否| Q3{"需要新读者独立验证？"}
+  Q3 -->|是| T3["student agent：独立 worktree<br/>只给 PDF + 任务<br/>medium / low effort"]
+  Q3 -->|否| Q4{"需要人工拍板？"}
+  Q4 -->|是| T4["question / 人工评审"]
+  Q4 -->|否| T5["回退：先补事实或先写脚本"]
+  T1 --> Q5{"门禁失败？"}
+  T2 --> Q5
+  T3 --> Q5
+  T4 --> Q5
+  T5 --> Q5
+  Q5 -->|是| Q6["读证据 → 改输入 → 重跑"]
+  Q6 --> Q0
+  Q5 -->|否| Q7["进入下一门"]

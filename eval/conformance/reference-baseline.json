@@ -1,0 +1,56 @@
+{
+  "generated_at": "2026-11-08T17:04:07.595517+00:00",
+  "target": "http://8.155.135.97:5051",
+  "checks": [
+    {
+      "gate": "C1_contract",
+      "pass": true,
+      "evidence": "12 nodes; match=True"
+    },
+    {
+      "gate": "C6_health",
+      "pass": true,
+      "evidence": "HTTP 200"
+    },
+    {
+      "gate": "C5_frontend",
+      "pass": true,
+      "evidence": "title_ok=True asset_ok=True"
+    },
+    {
+      "gate": "C2b_baseline",
+      "pass": true,
+      "evidence": "基线：10/10 通过（拒答 2）"
+    },
+    {
+      "gate": "C3d_detection",
+      "pass": true,
+      "evidence": "{\"total\": 20, \"mismatch\": 0}"
+    },
+    {
+      "gate": "C2r_recall",
+      "pass": true,
+      "evidence": "3 passed, 23 skipped in 0.15s"
+    },
+    {
+      "gate": "C3a_loop",
+      "pass": true,
+      "evidence": "30 passed in 3.37s"
+    },
+    {
+      "gate": "C4_stage5",
+      "pass": true,
+      "evidence": "S5 PASS"
+    }
+  ],
+  "all_pass": true,
+  "thresholds": {
+    "C1": "100%",
+    "C2": "baseline 10/10 + recall golden",
+    "C3": "detection 20/20 + loop",
+    "C4": "100%",
+    "C5": "title+asset",
+    "C6": "health 200"
+  },
+  "method": "clean worktree at 95ab5f6 (/tmp/opencode/ref-baseline), dirty main tree excluded"
+}

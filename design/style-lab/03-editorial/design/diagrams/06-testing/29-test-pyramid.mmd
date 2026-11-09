@@ -1,0 +1,38 @@
+%% 29 · 测试金字塔与三存储依赖
+%% 由下到上：单元 → 契约 → 场景 → 集成 → 端到端；右侧只标「要不要三存储」
+flowchart BT
+  classDef contract fill:#eff6ff,stroke:#1d4ed8,color:#1e3a8a
+  classDef store fill:#ecfdf5,stroke:#0f766e,color:#064e3b
+  classDef build fill:#fff7ed,stroke:#b45309,color:#7c2d12
+  classDef pass fill:#f0fdf4,stroke:#15803d,color:#14532d
+  classDef edge fill:#f9fafb,stroke:#6b7280,color:#374151
+
+  E2E["端到端<br/>stage0/6/7-ui · docker-smoke"]
+  INT["集成<br/>stage2 / stage3<br/>真实三存储"]
+  SCN["场景<br/>stage6 夹具<br/>假模型 + 假数据库"]
+  CON["契约<br/>stage0 / stage1 / stage7<br/>YAML · JSON · 生成物"]
+  UNIT["单元<br/>stage4 / stage5 / stage6<br/>纯函数 + 假连接"]
+
+  UNIT -->|范围扩大到| CON
+  CON -->|范围扩大到| SCN
+  SCN -->|范围扩大到| INT
+  INT -->|范围扩大到| E2E
+
+  NONE["三存储：不需要<br/>S0 / S1 / S4–S7"]
+  ALL["三存储：需要<br/>MySQL + ES + Qdrant"]
+  MYSQL["三存储：仅 MySQL<br/>stage5-live"]
+
+  UNIT -->|不依赖| NONE
+  CON -->|不依赖| NONE
+  SCN -->|不依赖| NONE
+  E2E -->|浏览器档不依赖| NONE
+  INT -->|依赖| ALL
+  E2E -->|Docker 档依赖| ALL
+  INT -->|派生实战变体| LIVE["S5 实战<br/>开通并验证只读账号"]
+  LIVE -->|依赖| MYSQL
+
+  class CON contract
+  class INT,ALL,MYSQL,LIVE store
+  class SCN build
+  class UNIT,NONE pass
+  class E2E edge

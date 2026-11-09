@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1600" height="900" viewBox="0 0 1600 900">
+<image x="0" y="0" width="1600" height="900" href="file:///home/zhensirong/VM-Share/DSWS-design/design/book-editorial/figures/ai-pilot/fig-3-0-ai-lite.png" xlink:href="file:///home/zhensirong/VM-Share/DSWS-design/design/book-editorial/figures/ai-pilot/fig-3-0-ai-lite.png"/>
+<text x="80" y="64" font-family="'Noto Sans CJK SC','Noto Sans CJK JP','Droid Sans Fallback',sans-serif" font-size="42" font-weight="bold" fill="#111111" text-anchor="start">一顿『成功』的晚餐</text>
+<text x="80" y="100" font-family="'Noto Sans CJK SC','Noto Sans CJK JP','Droid Sans Fallback',sans-serif" font-size="26" font-weight="normal" fill="#5B5B5B" text-anchor="start">生活类比 · 界面说上齐了，桌上却没有一道能吃的菜。</text>
+<text x="1445" y="62" font-family="'Noto Sans CJK SC','Noto Sans CJK JP','Droid Sans Fallback',sans-serif" font-size="18" font-weight="normal" fill="#C58B1B" text-anchor="middle">生活类比</text>
+<text x="98" y="188" font-family="'Noto Sans CJK SC','Noto Sans CJK JP','Droid Sans Fallback',sans-serif" font-size="24" font-weight="bold" fill="#1F4E9C" text-anchor="start">第一幕 · 纸条当菜</text>
+<text x="98" y="214" font-family="'Noto Sans CJK SC','Noto Sans CJK JP','Droid Sans Fallback',sans-serif" font-size="18" font-weight="normal" fill="#5B5B5B" text-anchor="start">根因 01 · 伪 SQL 被当成数据</text>
+<text x="330" y="497" font-family="'Noto Sans CJK SC','Noto Sans CJK JP','Droid Sans Fallback',sans-serif" font-size="18" font-weight="normal" fill="#111111" text-anchor="middle">错误说明</text>
+<text x="440" y="482" font-family="'Noto Sans CJK SC','Noto Sans CJK JP','Droid Sans Fallback',sans-serif" font-size="18" font-weight="normal" fill="#111111" text-anchor="middle">查询成功</text>
+<text x="173.0" y="347.0" font-family="'Noto Sans CJK SC','Noto Sans CJK JP','Droid Sans Fallback',sans-serif" font-size="22" font-weight="normal" fill="#111111" text-anchor="middle">这是菜？</text>
+<text x="450.0" y="335.0" font-family="'Noto Sans CJK SC','Noto Sans CJK JP','Droid Sans Fallback',sans-serif" font-size="22" font-weight="normal" fill="#111111" text-anchor="middle">您的菜来了</text>
+<text x="98" y="600" font-family="'Noto Sans CJK SC','Noto Sans CJK JP','Droid Sans Fallback',sans-serif" font-size="22" font-weight="bold" fill="#111111" text-anchor="start">用户看到：一张『查询成功』的账单</text>
+<text x="98" y="630" font-family="'Noto Sans CJK SC','Noto Sans CJK JP','Droid Sans Fallback',sans-serif" font-size="18" font-weight="normal" fill="#5B5B5B" text-anchor="start">实际：盘子里是一张『错误说明』</text>
+<text x="98" y="660" font-family="'Noto Sans CJK SC','Noto Sans CJK JP','Droid Sans Fallback',sans-serif" font-size="18" font-weight="bold" fill="#1F4E9C" text-anchor="start">S5 拒单 · S6 报错 · S7 止损</text>
+<text x="588" y="188" font-family="'Noto Sans CJK SC','Noto Sans CJK JP','Droid Sans Fallback',sans-serif" font-size="24" font-weight="bold" fill="#B24A2E" text-anchor="start">第二幕 · 空盘上齐</text>
+<text x="588" y="214" font-family="'Noto Sans CJK SC','Noto Sans CJK JP','Droid Sans Fallback',sans-serif" font-size="18" font-weight="normal" fill="#5B5B5B" text-anchor="start">根因 02 · 召回为空也算 success</text>
+<text x="673.0" y="335.0" font-family="'Noto Sans CJK SC','Noto Sans CJK JP','Droid Sans Fallback',sans-serif" font-size="22" font-weight="normal" fill="#111111" text-anchor="middle">是没有，</text>
+<text x="673.0" y="359.0" font-family="'Noto Sans CJK SC','Noto Sans CJK JP','Droid Sans Fallback',sans-serif" font-size="22" font-weight="normal" fill="#111111" text-anchor="middle">还是没找到？</text>
+<text x="950.0" y="335.0" font-family="'Noto Sans CJK SC','Noto Sans CJK JP','Droid Sans Fallback',sans-serif" font-size="22" font-weight="normal" fill="#111111" text-anchor="middle">上齐了</text>
+<text x="588" y="600" font-family="'Noto Sans CJK SC','Noto Sans CJK JP','Droid Sans Fallback',sans-serif" font-size="22" font-weight="bold" fill="#111111" text-anchor="start">用户看到：表格消失，像跑完了</text>
+<text x="588" y="630" font-family="'Noto Sans CJK SC','Noto Sans CJK JP','Droid Sans Fallback',sans-serif" font-size="18" font-weight="normal" fill="#5B5B5B" text-anchor="start">实际：空、召回失败、系统失败混在一起</text>
+<text x="588" y="660" font-family="'Noto Sans CJK SC','Noto Sans CJK JP','Droid Sans Fallback',sans-serif" font-size="18" font-weight="bold" fill="#B24A2E" text-anchor="start">S3 trace · S6 空态 · S7 空态卡</text>
+<text x="1078" y="188" font-family="'Noto Sans CJK SC','Noto Sans CJK JP','Droid Sans Fallback',sans-serif" font-size="24" font-weight="bold" fill="#2F5D46" text-anchor="start">第三幕 · 糊菜指不到灶台</text>
+<text x="1078" y="214" font-family="'Noto Sans CJK SC','Noto Sans CJK JP','Droid Sans Fallback',sans-serif" font-size="18" font-weight="normal" fill="#5B5B5B" text-anchor="start">根因 03 · 错误被吞掉</text>
+<text x="1425" y="272" font-family="'Noto Sans CJK SC','Noto Sans CJK JP','Droid Sans Fallback',sans-serif" font-size="18" font-weight="normal" fill="#5B5B5B" text-anchor="middle">后厨</text>
+<text x="1143.0" y="335.0" font-family="'Noto Sans CJK SC','Noto Sans CJK JP','Droid Sans Fallback',sans-serif" font-size="22" font-weight="normal" fill="#111111" text-anchor="middle">哪个灶？</text>
+<text x="1425.0" y="407.0" font-family="'Noto Sans CJK SC','Noto Sans CJK JP','Droid Sans Fallback',sans-serif" font-size="22" font-weight="normal" fill="#111111" text-anchor="middle">后厨出问题了</text>
+<text x="1078" y="600" font-family="'Noto Sans CJK SC','Noto Sans CJK JP','Droid Sans Fallback',sans-serif" font-size="22" font-weight="bold" fill="#111111" text-anchor="start">用户看到：红框亮了，却指不到灶台</text>
+<text x="1078" y="630" font-family="'Noto Sans CJK SC','Noto Sans CJK JP','Droid Sans Fallback',sans-serif" font-size="18" font-weight="normal" fill="#5B5B5B" text-anchor="start">实际：错误没有步骤归属</text>
+<text x="1078" y="660" font-family="'Noto Sans CJK SC','Noto Sans CJK JP','Droid Sans Fallback',sans-serif" font-size="18" font-weight="bold" fill="#2F5D46" text-anchor="start">S4 形状 · S6 分类 · S7 映射</text>
+<text x="80" y="758" font-family="'Noto Sans CJK SC','Noto Sans CJK JP','Droid Sans Fallback',sans-serif" font-size="30" font-weight="bold" fill="#111111" text-anchor="start">共同点：三盘都上了，但没有一盘能吃。</text>
+<text x="80" y="796" font-family="'Noto Sans CJK SC','Noto Sans CJK JP','Droid Sans Fallback',sans-serif" font-size="26" font-weight="normal" fill="#5B5B5B" text-anchor="start">新系统：让失败有名字、有位置、有通道。</text>
+<text x="80" y="846" font-family="'Noto Sans CJK SC','Noto Sans CJK JP','Droid Sans Fallback',sans-serif" font-size="18" font-weight="normal" fill="#5B5B5B" text-anchor="start">生活类比：餐厅三幕 · 事实来源：00-front.md §3.1–3.4 · contracts/errors.yaml · docs/S7-HANDOFF.md</text>
+</svg>

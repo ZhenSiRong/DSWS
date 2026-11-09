@@ -1,0 +1,29 @@
+// layout: neato-fixed
+// 30 · S0–S7 阶段门禁（4×2 蛇形，固定坐标）
+// 箭头 = 上一阶段 PASS 后才进入下一阶段；绿色两格需要三存储
+digraph G {
+  graph [bgcolor="white", pad=0.18, splines=true];
+  node [shape=box, style="rounded,filled", fillcolor="#eff6ff", color="#1d4ed8",
+        fontcolor="#1e3a8a", fontname="Noto Sans CJK SC", fontsize=14,
+        margin="0.14,0.08", width=1.62, height=0.64, pin=true];
+  edge [color="#6b7280", penwidth=1.3, arrowsize=0.75];
+
+  S0 [pos="90,270!", label="S0 契约\nmake stage0\n契约 + 构建"];
+  S1 [pos="270,270!", label="S1 DDL\nmake stage1\n旧系统 8 码红"];
+  S2 [pos="450,270!", label="S2 三存储\nmake stage2\nNOOP: 0 writes",
+      fillcolor="#ecfdf5", color="#0f766e", fontcolor="#064e3b"];
+  S3 [pos="630,270!", label="S3 检索\nmake stage3\n20 题黄金集",
+      fillcolor="#ecfdf5", color="#0f766e", fontcolor="#064e3b"];
+  S4 [pos="630,90!", label="S4 生成\nmake stage4\n10 题基线"];
+  S5 [pos="450,90!", label="S5 安全\nmake stage5\n注入全拒 + 零误杀"];
+  S6 [pos="270,90!", label="S6 失败\nmake stage6\n16 码 + 6 类失败"];
+  S7 [pos="90,90!", label="S7 前端\nmake stage7\nSSE 夹具全绿"];
+
+  S0 -> S1;
+  S1 -> S2;
+  S2 -> S3;
+  S3 -> S4;
+  S4 -> S5;
+  S5 -> S6;
+  S6 -> S7;
+}

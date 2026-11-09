@@ -19,3 +19,12 @@ frontend/dist/
 
 # 这个 config.py 是 S2 的构建配置模块，不是本地密钥
 !backend/app/build/config.py
+
+# 教材构建环境与本地录屏工作目录
+design/style-lab/.venv/
+.rec/
+*.bak.mp4
+
+# 私钥/证书绝不入库
+*.pem
+*.key
