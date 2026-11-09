@@ -28,3 +28,6 @@ design/style-lab/.venv/
 # 私钥/证书绝不入库
 *.pem
 *.key
+
+# 历史资产与录屏工作区
+backup/
