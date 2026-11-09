@@ -89,14 +89,7 @@
   </div>
   <ul class="toc-list">
 <li><a href="#0_2">0. 怎么用这套图</a></li>
-<li><a href="#1-0106">1. 架构角度（图 01–06）</a></li>
-<li><a href="#2-0713">2. 运行时角度（图 07–13）</a></li>
-<li><a href="#3-1419">3. 数据角度（图 14–19）</a></li>
-<li><a href="#4-2024">4. 安全角度（图 20–24）</a></li>
-<li><a href="#5-2528">5. 部署角度（图 25–28）</a></li>
-<li><a href="#6-2932">6. 测试角度（图 29–32）</a></li>
-<li><a href="#7_2">7. 图集没有回答的问题</a></li>
-<li><a href="#8">8. 图集小结</a></li>
+<li><a href="#1_1">1. 三十二个角度索引</a></li>
   </ul>
 </section>
 <section class="toc-part theme-ink">
@@ -113,8 +106,8 @@
 <li><a href="#4">4. 启动顺序与失败定位</a></li>
 <li><a href="#5-rebuild">5. 隔离：旧系统 / rebuild</a></li>
 <li><a href="#6_3">6. 测试金字塔与阶段门禁</a></li>
-<li><a href="#7_3">7. 失败注入矩阵</a></li>
-<li><a href="#8_1">8. 故障排查表</a></li>
+<li><a href="#7_2">7. 失败注入矩阵</a></li>
+<li><a href="#8">8. 故障排查表</a></li>
 <li><a href="#9">9. 本机边界与未验证清单</a></li>
 <li><a href="#10">10. 上线前检查清单</a></li>
 <li><a href="#11_1">11. 排障小结</a></li>
@@ -164,7 +157,7 @@
 <section class="sec theme-ink">
 <h2 id="2-dsws">2. 一分钟看懂 DSWS</h2>
 <p>DSWS 是一个电商问数智能体：用户用自然语言问「上个月华东的销售额是多少」，系统把它变成一条只读 SQL，在数仓上执行，再把结果按列类型渲染出来。它不做对话，也不是通用 BI 平台，边界只有四个词：单轮、单库、只读、可拒答。</p>
-<figure class="tall"><img src="file:///home/zhensirong/VM-Share/DSWS-design/design/book-editorial/generated/00-front-03.svg" alt="图 00-front"><figcaption>图 00-front</figcaption></figure>
+<figure class="tall"><img src="file:///home/zhensirong/VM-Share/DSWS-design/design/book-editorial/generated/00-front-04.svg" alt="图 00-front"><figcaption>图 00-front</figcaption></figure>
 <p>把这套系统压缩成五句话：</p>
 <ol>
 <li><strong>用户问数。</strong> 前端只做一件事：把一个自然语言问题、一个取消按钮和一条 SSE 流，组织成一次可观察的运行。它不猜 SQL，也不替后端补数据。</li>
@@ -3440,288 +3433,214 @@ make docker-smoke     # 8 步验收，输出 DOCKER SMOKE PASS
 
 </section>
 <section class="sec theme-ink">
-<h2 id="1-0106">1. 架构角度（图 01–06）</h2>
-<p class="lead">架构角度回答四件事：系统边界在哪、可部署单元是什么、代码模块如何分层、构建时与查询时如何切分。这一组图是全书的地基；后面运行时、数据、安全各章，都是在这张地基上放大某一处。</p>
-<p>最容易误读的是把 <code>contracts/</code> 当成普通数据表；它是事实源，图里的箭头只表示引用关系，不表示数据流。</p>
-<h3 id="01-c4-l1">图 01 · C4-L1 系统上下文</h3>
-<p><strong>一句话结论</strong>：DSWS 是一个边界很窄的系统：浏览器、FastAPI、三存储是主体，LLM 是可替换的边，旧系统只作为负向夹具存在。</p>
-<figure class="wide"><img src="file:///home/zhensirong/VM-Share/DSWS-design/design/diagrams/01-architecture/01-c4-context.svg" alt="图 01 · C4-L1 系统上下文"><figcaption><span class="fno">图 01</span> · C4-L1 系统上下文</figcaption></figure>
-
-<p><strong>回答什么问题</strong>：系统内外如何划分；LLM 与旧系统各处于什么位置；生产主链路读不读 ES 与 Qdrant。</p>
-<p><strong>关键元素</strong>：业务用户、浏览器 SPA；DSWS 内部的前端、FastAPI、S2 构建任务、S3 召回与 <code>contracts/</code>；MySQL、ES、Qdrant 三个存储；灰色边的 LLM 与旧系统。<code>contracts/</code> 居中，S2 与 S3 不是常驻查询路径。</p>
-<p><strong>证据与边界</strong>：它给全书划边界：S3 是阶段验收能力，不在线上主链路；LLM 默认不启用，配齐三个环境变量才切换。它不证明真实 LLM 效果，也不覆盖 S8。证据：图源 <code>design/diagrams/01-architecture/01-c4-context.svg</code>（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>）；<code>README.md</code>「核心设计」（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>）。</p>
-<h3 id="02-c4-l2">图 02 · C4-L2 容器图</h3>
-<p><strong>一句话结论</strong>：DSWS 由五个长驻服务加一个一次性 <code>init</code> 组成，<code>init</code> 是后端启动的前置闸门。</p>
-<figure class="wide"><img src="file:///home/zhensirong/VM-Share/DSWS-design/design/diagrams/01-architecture/02-c4-container.svg" alt="图 02 · C4-L2 容器图"><figcaption><span class="fno">图 02</span> · C4-L2 容器图</figcaption></figure>
-
-<p><strong>回答什么问题</strong>：进程边界如何划分；谁依赖谁；<code>init</code> 为什么不能省；一次问数的 SSE 要经过哪些进程。</p>
-<p><strong>关键元素</strong>：<code>frontend</code>（nginx 唯一入口，<code>/api/</code> 反代）、<code>backend</code>（uvicorn 单 worker）、<code>init</code>（建库、开只读账号、校验或重建 S2）、<code>mysql</code>、<code>elasticsearch</code>、<code>qdrant</code> 与默认网络。README 的「五服务 + init」与 <code>facts.md</code> 的 6 服务是同一组进程，只是计数口径不同。</p>
-<p><strong>证据与边界</strong>：它论证交付单元可复现，把图 01 落到可 <code>docker compose up</code> 的单元：<code>init</code> 非零退出会阻止 backend 启动，所以后端能起来就说明元知识已就绪。健康检查细节归图 27。证据：<code>compose.yaml</code>（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>）；<code>facts.md</code> §7（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>）；图 <svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>。</p>
-<h3 id="03">图 03 · 后端模块依赖图</h3>
-<p><strong>一句话结论</strong>：后端按阶段分目录，<code>build</code>、<code>recall</code> 偏构建时，<code>generate</code>、<code>security</code>、<code>agent</code> 偏查询时，<code>main.py</code> 只做装配。</p>
-<figure class="wide"><img src="file:///home/zhensirong/VM-Share/DSWS-design/design/diagrams/01-architecture/03-backend-modules.svg" alt="图 03 · 后端模块依赖图"><figcaption><span class="fno">图 03</span> · 后端模块依赖图</figcaption></figure>
-
-<p><strong>回答什么问题</strong>：模块允许的依赖方向是什么；查询请求会不会误入构建时代码。</p>
-<p><strong>关键元素</strong>：<code>main.py</code> 装配 HTTP/SSE；<code>build/</code> 计划、流水线与三存储客户端；<code>recall/</code> 关键词与批量召回；<code>generate/</code> 上下文、提示词、生成器、输出校验与 guard；<code>security/</code> 策略、执行器与只读账号；<code>agent/</code> 编排、校正、错误码与取消；<code>schema_contract.py</code>、<code>sqllex.py</code> 为共享底座。</p>
-<p><strong>证据与边界</strong>：它要证明「构建时/查询时」是依赖方向：<code>agent</code> 可调用 <code>security</code> 与 <code>generate</code>，反之不行；主链路不调用 <code>recall</code>。这是目录推导（<svg class="status-icon status-warn" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#B45309" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="推断"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>），不是 import 实测。证据：<code>backend/app/</code> 目录清单（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>）；各子目录的 <code>__init__.py</code> 与入口文件（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>）。</p>
-<h3 id="04">图 04 · 前端组件树</h3>
-<p><strong>一句话结论</strong>：前端五个组件各管一件事：输入、步骤、结果、失败、伪错误，界面语义由事件类别驱动。</p>
-<figure class="wide"><img src="file:///home/zhensirong/VM-Share/DSWS-design/design/diagrams/01-architecture/04-frontend-tree.svg" alt="图 04 · 前端组件树"><figcaption><span class="fno">图 04</span> · 前端组件树</figcaption></figure>
-
-<p><strong>回答什么问题</strong>：SSE 事件如何变成界面状态；契约生成物放在哪里；前端为何不自己维护错误码。</p>
-<p><strong>关键元素</strong>：<code>Composer</code>（提问与取消）、<code>StepRail</code>（12 步状态）、<code>ResultTable</code>（按列类型渲染）、<code>ErrorCard</code>（真失败）、<code>PseudoErrorCard</code>（伪结果）；<code>src/generated/</code> 是机器产物，<code>src/lib/</code> 负责 SSE 解析与结果语义。</p>
-<p><strong>证据与边界</strong>：它的论证责任是证明「界面语义来自契约与事件类别，而不是前端硬编码」：错误码只有 <code>contracts/errors.yaml</code> 一份，前端复制一份就等于制造第二个事实源。它不覆盖真实设备与可访问性；本轮也没有做浏览器验收（<svg class="status-icon status-unknown" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#6B7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="未验证"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>）。证据：<code>frontend/src/components/</code> 五个组件（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>）；<code>frontend/src/lib/result.ts</code>（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>）；图 <svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>。</p>
-<h3 id="05-s0s8">图 05 · 阶段演进图 S0–S8</h3>
-<p><strong>一句话结论</strong>：S0–S8 是「能力 + 新增不确定性」的叠加，每个阶段都有可停点，但不是上线点。</p>
-<figure class="wide"><img src="file:///home/zhensirong/VM-Share/DSWS-design/design/diagrams/01-architecture/05-stage-evolution.svg" alt="图 05 · 阶段演进图 S0–S8"><figcaption><span class="fno">图 05</span> · 阶段演进图 S0–S8</figcaption></figure>
-
-<p><strong>回答什么问题</strong>：为什么按这个顺序施工；每加一层能力多出什么风险；停在哪一步仍然可演示、可回退。</p>
-<p><strong>关键元素</strong>：S0 契约、S1 Schema、S2 三存储、S3 召回、S4 生成、S5 安全、S6 失败通道、S7 前端收口、S8 生产化；图应与 <code>00-front.md</code> §4 逐行对应，尤其「新增不确定性」一列。</p>
-<p><strong>证据与边界</strong>：它论证阶段顺序，并给全书提供目录与评审顺序：先契约、再构建、再查询、再失败。S8 只有方向没有实现，不得画成既成事实。证据：<code>README.md</code>「当前进度」表（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>）；<code>design/book/chapters/00-front.md</code> §4（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>）；图 <svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>。</p>
-<h3 id="06-vs">图 06 · 构建时 vs 查询时</h3>
-<p><strong>一句话结论</strong>：同一份契约，构建时写 241 条知识（<svg class="status-icon status-warn" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#B45309" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="推断"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> 公式推导），查询时只读不写；S2 退出后不参与请求。</p>
-<figure class="wide"><img src="file:///home/zhensirong/VM-Share/DSWS-design/design/diagrams/01-architecture/06-build-vs-query.svg" alt="图 06 · 构建时 vs 查询时"><figcaption><span class="fno">图 06</span> · 构建时 vs 查询时</figcaption></figure>
-
-<p><strong>回答什么问题</strong>：哪些工作只做一次；为什么没有三存储也能跑 S4–S7。</p>
-<p><strong>关键元素</strong>：构建时 CLI → <code>BuildPlan</code> → Meta 44 行 + ES 76 条 + Qdrant 98 + 22 点 + manifest；查询时 FastAPI → 8 阶段上下文 → 生成 → 校验 → 执行 → SSE。S3 召回是构建时旁支，不进查询主链路。</p>
-<p><strong>证据与边界</strong>：它论证时间切分，解释了「S0/S1/S4/S6/S7 离线」与「S2/S3 需要三存储」的差异；241 是公式推导而非实测，必须标 <svg class="status-icon status-warn" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#B45309" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="推断"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>。证据：<code>backend/app/build_meta_knowledge.py</code>、<code>backend/app/main.py</code>（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>）；<code>design/inventory/facts.md</code> §5（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>）。</p>
-
-</section>
-<section class="sec theme-ink">
-<h2 id="2-0713">2. 运行时角度（图 07–13）</h2>
-<p class="lead">运行时角度回答「一次构建或一次请求按什么顺序发生」。这一组图都从图 07 的主干上长出来：07 是整条链路，08–12 是各阶段的放大，13 是链路的出口如何被前端消费。</p>
-<p>最容易误读的是把时序图的先后当成性能承诺；图只保证顺序，不保证耗时。</p>
-<h3 id="07">图 07 · 端到端请求生命周期</h3>
-<p><strong>一句话结论</strong>：一次问数的骨架是「上下文 8 阶段 → 生成 → 校验 → 可选校正一次 → 执行 → result/error 收尾」。</p>
-<figure><img src="file:///home/zhensirong/VM-Share/DSWS-design/design/diagrams/02-runtime/07-end-to-end-request.svg" alt="图 07 · 端到端请求生命周期"><figcaption><span class="fno">图 07</span> · 端到端请求生命周期</figcaption></figure>
-
-<p><strong>回答什么问题</strong>：请求从哪里进来；SSE 与工作线程如何协作；0 行、失败、取消各走哪条分支。</p>
-<p><strong>关键元素</strong>：<code>Browser</code>、<code>FastAPI</code>、<code>SSE</code>、<code>AgentRunner</code>、<code>ContextBuilder</code>、<code>Generator</code>、<code>Guard</code>、<code>ReadOnlyExecutor</code>、<code>MySQL</code>；<code>request_id</code> 与 <code>CANCEL_REGISTRY</code>；<code>events()</code> 在工作线程跑；0 行 <code>EMPTY_RESULT</code>、执行失败 <code>SQL_EXECUTION_ERROR</code>、取消 <code>CANCELLED</code>。</p>
-<p><strong>证据与边界</strong>：它是运行时主干，其余图是局部放大；要证明「流一定以 <code>result</code> 或 <code>error</code> 收尾」。它不证明真实库延迟，也不覆盖并发。证据：图源与 SVG <code>design/diagrams/02-runtime/07-end-to-end-request.svg</code>（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>）；<code>backend/app/main.py</code>、<code>backend/app/agent/orchestrator.py</code>（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>）。</p>
-<h3 id="08-s2">图 08 · S2 构建流水线时序</h3>
-<p><strong>一句话结论</strong>：S2 把 <code>make stage2</code> 拆成 dry-run、构建、verify 三次调用，先计划后写入，manifest 最后登记。</p>
-<figure><img src="file:///home/zhensirong/VM-Share/DSWS-design/design/diagrams/02-runtime/08-s2-build-sequence.svg" alt="图 08 · S2 构建流水线时序"><figcaption><span class="fno">图 08</span> · S2 构建流水线时序</figcaption></figure>
-
-<p><strong>回答什么问题</strong>：三存储的写入顺序；<code>--fresh</code> 与增量的差别；<code>NOOP: 0 writes</code> 凭什么成立；计数从哪来。</p>
-<p><strong>关键元素</strong>：<code>Make</code>、CLI、<code>Plan</code>、<code>Embedder</code>、三存储；四个互斥开关；计划纯内存生成；写入顺序是 Meta 44 行 → ES 76 条 → Qdrant 98 + 22 点 → manifest；同配置二次构建应零写入。</p>
-<p><strong>证据与边界</strong>：它论证构建可重复，支撑第 3 部分「三存储等价」与部署章 <code>init</code> 的幂等承诺，也是 241 这个数字的出处。边界要说清：本机 Docker socket 无权限，<code>--fresh</code> 与真实写入未跑（<svg class="status-icon status-unknown" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#6B7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="未验证"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>）；计数来自 <code>--dry-run</code> 与 <code>plan.counts()</code>（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg> 2026-10-27）。证据：<code>design/diagrams/02-runtime/08-s2-build-sequence.svg</code>（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>）；<code>backend/app/build/pipeline.py</code>（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>）。</p>
-<h3 id="09-s3">图 09 · S3 召回流水线时序</h3>
-<p><strong>一句话结论</strong>：S3 一次只读快照，四路批量召回，再合并过滤；召回为空是一个可记录的 trace，不是一次成功。</p>
-<figure><img src="file:///home/zhensirong/VM-Share/DSWS-design/design/diagrams/02-runtime/09-s3-recall-sequence.svg" alt="图 09 · S3 召回流水线时序"><figcaption><span class="fno">图 09</span> · S3 召回流水线时序</figcaption></figure>
-
-<p><strong>回答什么问题</strong>：问题如何变成候选表、列、值与指标；召回为空在哪里被看见；S3 为什么不在线上主链路。</p>
-<p><strong>关键元素</strong>：S3 CLI、<code>RecallPipeline</code>、<code>Catalog</code>、Qdrant、ES、Meta；<code>load_snapshot()</code> 只读一次；关键词纯内存；列 <code>limit=12</code>、ES <code>size=5</code>、指标 <code>limit=8</code>；Qdrant 未召回时按 alias 词法补偿；最后 merge、filter 并补日期上下文。</p>
-<p><strong>证据与边界</strong>：它承担根因二的论证：旧系统把 <code>[]</code> 当成功，新系统至少把「候选数」记进 trace，让空召回可观察。它不证明哈希向量具备语义质量，召回质量属于 S8 的开放问题。证据：<code>design/diagrams/02-runtime/09-s3-recall-sequence.svg</code>（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>）；<code>backend/app/recall/pipeline.py</code>（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>）；<code>make stage3</code> 本轮未跑（<svg class="status-icon status-unknown" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#6B7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="未验证"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>）。</p>
-<h3 id="10-s4-sql">图 10 · S4 生成 SQL 流水线</h3>
-<p><strong>一句话结论</strong>：S4 先用输出 Schema 约束形状，再用 AST guard 约束语义；真实 LLM 只是 provider 的替换。</p>
-<figure><img src="file:///home/zhensirong/VM-Share/DSWS-design/design/diagrams/02-runtime/10-s4-generate-sequence.svg" alt="图 10 · S4 生成 SQL 流水线"><figcaption><span class="fno">图 10</span> · S4 生成 SQL 流水线</figcaption></figure>
-
-<p><strong>回答什么问题</strong>：模型输出如何被约束；形状与语义不合法分别怎么处理；为什么没有 LLM 也能跑。</p>
-<p><strong>关键元素</strong>：<code>AgentRunner</code>、<code>ContextBuilder</code>、<code>SlotBuilder</code>、<code>PromptRenderer</code>、<code>Generator</code>、LLM（可选）、<code>OutputSchema</code>、<code>Guard</code>；7 个槽位，缺槽抛 <code>PromptSlotError</code>；生成器二选一；输出只允许 <code>sql</code> 或 <code>refusal</code>；guard 不过则降级拒答。</p>
-<p><strong>证据与边界</strong>：它要证明「形状校验先于语义校验」，并解释为什么加 LLM 不改变架构：换的是 provider，不是流水线。真实模型效果、超时行为与成本不在图内。证据：<code>design/diagrams/02-runtime/10-s4-generate-sequence.svg</code>（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>）；<code>backend/app/generate/prompts.py</code>、<code>output_schema.py</code>、<code>guard.py</code>（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>）。</p>
-<h3 id="11-s5">图 11 · S5 安全校验与执行</h3>
-<p><strong>一句话结论</strong>：拒绝发生在连库之前，执行器只执行策略重新序列化后的那条 SQL，只读账号是最后一道门。</p>
-<figure><img src="file:///home/zhensirong/VM-Share/DSWS-design/design/diagrams/02-runtime/11-s5-security-sequence.svg" alt="图 11 · S5 安全校验与执行"><figcaption><span class="fno">图 11</span> · S5 安全校验与执行</figcaption></figure>
-
-<p><strong>回答什么问题</strong>：策略何时介入；执行器是否二次校验；执行的是原文还是改写后的 SQL；超时如何分类。</p>
-<p><strong>关键元素</strong>：<code>AgentRunner</code>、<code>Policy</code>、<code>ReadOnlyExecutor</code>、MySQL；<code>enforce(sql)</code> 查白名单、只读、单语句并产出 <code>PolicyDecision</code>；执行器再 enforce 一次，连只读账号、禁多语句、设 <code>max_execution_time</code>；结果分正常、<code>TIMEOUT</code>、<code>SQL_EXECUTION_ERROR</code>。</p>
-<p><strong>证据与边界</strong>：它的论证落在两处：拒绝发生在连接之前，执行器不信任上游。离线策略可验；真实只读账号缺密码，<code>stage5-live</code> 标 <svg class="status-icon status-unknown" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#6B7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="未验证"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>。证据：<code>design/diagrams/02-runtime/11-s5-security-sequence.svg</code>（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>）；<code>backend/app/security/policy.py</code>、<code>executor.py</code>（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>）。</p>
-<h3 id="12-s6">图 12 · S6 校正闭环状态机</h3>
-<p><strong>一句话结论</strong>：校正只对可重试错误、最多一次；空、失败、取消是三个不同终态，不共享界面语义。</p>
-<figure><img src="file:///home/zhensirong/VM-Share/DSWS-design/design/diagrams/02-runtime/12-s6-correction-state.svg" alt="图 12 · S6 校正闭环状态机"><figcaption><span class="fno">图 12</span> · S6 校正闭环状态机</figcaption></figure>
-
-<p><strong>回答什么问题</strong>：哪些失败会进入校正；循环靠什么终止；0 行为什么不算失败。</p>
-<p><strong>关键元素</strong>：<code>Init</code>、<code>Ctx</code>、<code>Gen</code>、<code>Val</code>、<code>Cor</code>、<code>Run</code>、<code>Ok</code>、<code>Empty</code>、<code>Err</code>、<code>Can</code>；<code>Val → Cor</code> 只在 <code>retryable=true</code> 且 <code>attempts=0</code> 时发生；<code>Cor → Val</code> 重新校验；<code>Run → Empty</code> 是 0 行；<code>SQL_REJECTED</code> 永不重试；取消只在步骤边界生效。</p>
-<p><strong>证据与边界</strong>：它论证失败分类的终止性：不会无限重试，也不会把被拒绝的 SQL 再拿去问模型。它不评估校正带来的额外风险，那属于真实 LLM 的开放问题。证据：<code>design/diagrams/02-runtime/12-s6-correction-state.svg</code>（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>）；<code>backend/app/agent/correct.py</code>、<code>errors.py</code>、<code>orchestrator.py</code>（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>）。</p>
-<h3 id="13-s7-sse">图 13 · S7 SSE 事件序列</h3>
-<p><strong>一句话结论</strong>：三种事件驱动三个组件；<code>class</code> 决定界面，<code>code</code> 只提供解释；未触发与等待中必须长得不一样。</p>
-<figure class="tall"><img src="file:///home/zhensirong/VM-Share/DSWS-design/design/diagrams/02-runtime/13-s7-sse-sequence.svg" alt="图 13 · S7 SSE 事件序列"><figcaption><span class="fno">图 13</span> · S7 SSE 事件序列</figcaption></figure>
-
-<p><strong>回答什么问题</strong>：前端如何消费协议；失败、空结果、取消分别长什么样；断连由谁负责。</p>
-<p><strong>关键元素</strong>：<code>AgentRunner</code>、<code>SSE</code>、<code>Browser</code>、<code>StepRail</code>、<code>ResultTable</code>、<code>ErrorCard</code>；<code>progress</code> 有 <code>running</code> / <code>success</code> / <code>skipped</code>；<code>result</code> 在 <code>rows=[]</code> 时给空态块；<code>error</code> 按 <code>failure</code> 红框、<code>empty</code> 虚线卡、<code>cancelled</code> 中性卡；断连由客户端 <code>AbortController</code> 与后端 <code>finally</code> 共同收尾。</p>
-<p><strong>证据与边界</strong>：它是 S7 收口的证据图，与图 24 配合证明「同一个错误码在不同 class 下界面不同」。它不证明真实浏览器下的视觉一致性，本轮未做 UI 验收（<svg class="status-icon status-unknown" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#6B7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="未验证"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>）。证据：<code>design/diagrams/02-runtime/13-s7-sse-sequence.svg</code>（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>）；<code>frontend/src/lib/result.ts</code>（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>）；<code>fixtures/sse/</code> 14 条夹具（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>）。</p>
-
-</section>
-<section class="sec theme-ink">
-<h2 id="3-1419">3. 数据角度（图 14–19）</h2>
-<p class="lead">数据角度回答「系统以为数据长什么样」与「数据实际长什么样」之间如何对齐。契约、三存储、manifest、值域决策，都是围绕这一个对齐问题展开的。</p>
-<p>最容易误读的是把三存储当成三份可各自修改的副本；它们必须由同一份契约生成。</p>
-<h3 id="14-er">图 14 · 数仓 ER 图</h3>
-<p><strong>一句话结论</strong>：五张表、四种粒度陷阱：<code>order_quantity</code> 是件数不是订单数，<code>region_name</code> 不是唯一键，商品无价格列，日期一行一天。</p>
-<figure class="wide"><img src="file:///home/zhensirong/VM-Share/DSWS-design/design/diagrams/03-data/14-er-diagram.svg" alt="图 14 · 数仓 ER 图"><figcaption><span class="fno">图 14</span> · 数仓 ER 图</figcaption></figure>
-
-<p><strong>回答什么问题</strong>：每张表一行代表什么；外键如何连；哪些列最容易被误用。</p>
-<p><strong>关键元素</strong>：<code>dim_region</code>（两级分组）、<code>dim_customer</code>、<code>dim_product</code>（无 <code>price</code>）、<code>dim_date</code>、<code>fact_order</code>（<code>order_id</code> 一单、<code>order_quantity</code> 件数、<code>order_amount</code> 整单金额）；四条逻辑外键。</p>
-<p><strong>证据与边界</strong>：它论证「语义陷阱」：订单量须 <code>COUNT(DISTINCT order_id)</code>，销量是 <code>SUM(order_quantity)</code>；平均件单价不能用 <code>order_amount</code> 除以订单数。演示数据是合成的，不证明真实分布。证据：<code>design/diagrams/03-data/14-er-diagram.svg</code>（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>）；<code>fixtures/dw.sql</code>、<code>contracts/schema.contract.yaml</code>（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>）。</p>
-<h3 id="15_2">图 15 · 契约模型</h3>
-<p><strong>一句话结论</strong>：契约是「表 / 列 / 指标 / 值域 / 列—指标」五类对象的数据模型，5 表、24 列、6 指标、9 条关系，不只是给人看的文档。</p>
-<figure><img src="file:///home/zhensirong/VM-Share/DSWS-design/design/diagrams/03-data/15-contract-model.svg" alt="图 15 · 契约模型"><figcaption><span class="fno">图 15</span> · 契约模型</figcaption></figure>
-
-<p><strong>回答什么问题</strong>：一列要被完整描述需要哪些字段；指标口径如何表达；列与指标如何关联。</p>
-<p><strong>关键元素</strong>：<code>SchemaContract</code>、<code>Table</code>（<code>role</code>、<code>grain</code>、主外键）、<code>Column</code>（类型、角色、别名、值域）、<code>Metric</code>（公式、相关列、期望值、易混反例）、<code>ValueDomain</code>（五种 <code>kind</code>）、<code>ColumnMetric</code>（9 条关系）。</p>
-<p><strong>证据与边界</strong>：它证明契约既能生成 DDL 校验，也能生成提示词上下文和三存储计划；<code>grain</code> 与 <code>rejected_values</code> 是防口径错误的两个关键字段。它不证明契约覆盖了所有业务问法，覆盖率属于开放问题。证据：<code>design/diagrams/03-data/15-contract-model.svg</code>（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>）；<code>contracts/schema.contract.yaml</code>、<code>backend/app/schema_contract.py</code>（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>）。</p>
-<h3 id="16_1">图 16 · 三存储知识布局</h3>
-<p><strong>一句话结论</strong>：一份契约落到三种表示：Meta 存结构，ES 存取值，Qdrant 存可检索文本；是否写 ES 由值域类型决定。</p>
-<figure class="wide"><img src="file:///home/zhensirong/VM-Share/DSWS-design/design/diagrams/03-data/16-three-store-layout.svg" alt="图 16 · 三存储知识布局"><figcaption><span class="fno">图 16</span> · 三存储知识布局</figcaption></figure>
-
-<p><strong>回答什么问题</strong>：同一列为何出现在三个存储；哪些列没有 ES 文档；Qdrant 点数为何远大于列数。</p>
-<p><strong>关键元素</strong>：<code>region_name</code>（<code>enum</code>，5 值）写 1 行 Meta、5 篇 ES、5 个 Qdrant 点；<code>order_amount</code>（<code>range</code>）写 1 行 Meta、0 篇 ES、5 个点。24 列合计 98 个 point，因为每列拆成名称、描述与别名多条文本。</p>
-<p><strong>证据与边界</strong>：它论证「同一事实、三种投影」，并解释 ES 只索引部分列：<code>range</code> 写取值索引无意义且昂贵。三份表示是否等价由 manifest 与 verify 保证。证据：<code>design/diagrams/03-data/16-three-store-layout.svg</code>（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>）；<code>backend/app/build/plan.py</code>（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>）；<code>facts.md</code> §5（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>）。</p>
-<h3 id="17-s2-lineage">图 17 · S2 数据 lineage</h3>
-<p><strong>一句话结论</strong>：契约提供语义、<code>dw.sql</code> 提供物理类型与真实值，两者一致才生成计划；任一存储失败则零写入，manifest 最后登记。</p>
-<figure class="wide"><img src="file:///home/zhensirong/VM-Share/DSWS-design/design/diagrams/03-data/17-s2-lineage.svg" alt="图 17 · S2 数据 lineage"><figcaption><span class="fno">图 17</span> · S2 数据 lineage</figcaption></figure>
-
-<p><strong>回答什么问题</strong>：每条元知识从哪里来；契约与 DDL 不一致会怎样；manifest 如何对账；失败为何不留半套数据。</p>
-<p><strong>关键元素</strong>：契约 + <code>dw.sql</code> → <code>check_contract</code> → <code>BuildPlan</code> → 76 条 ValueDoc、98 条列点、22 条指标点 → Meta 44 行、ES 76 篇、Qdrant 两个 collection → manifest → verify。</p>
-<p><strong>证据与边界</strong>：它论证可重建，把它变成顺序：先校验、再计划、后写入、最后登记。<code>--fresh</code> 实际写入未跑（<svg class="status-icon status-unknown" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#6B7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="未验证"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>）；计数来自 dry-run 与公式（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>/<svg class="status-icon status-warn" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#B45309" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="推断"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>）。证据：<code>design/diagrams/03-data/17-s2-lineage.svg</code>（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>）；<code>backend/app/build/pipeline.py</code>（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>）。</p>
-<h3 id="18-meta">图 18 · Meta 表结构</h3>
-<p><strong>一句话结论</strong>：Meta 用五张表描述知识，<code>examples</code> 只存前 10 条，完整值域在 ES；<code>build_manifest</code> 是构建的账本。</p>
-<figure class="tall"><img src="file:///home/zhensirong/VM-Share/DSWS-design/design/diagrams/03-data/18-meta-schema.svg" alt="图 18 · Meta 表结构"><figcaption><span class="fno">图 18</span> · Meta 表结构</figcaption></figure>
-
-<p><strong>回答什么问题</strong>：五类记录分别存在哪；<code>examples</code> 能否当全集；<code>sync_values</code> 表示什么；manifest 记了什么。</p>
-<p><strong>关键元素</strong>：<code>table_info</code>、<code>column_info</code>、<code>metric_info</code>、<code>column_metric</code>、<code>build_manifest</code>；前者分别带 <code>examples</code> / <code>alias</code> / <code>value_domain</code> 与 <code>formula</code> / <code>rejected_values</code>；manifest 记 <code>config_hash</code>、七项计数、<code>es_analyzer</code> 与 <code>status</code>。</p>
-<p><strong>证据与边界</strong>：它承担「样例不是值域」的论证：拿 <code>examples</code> 当全集会让生成器漏掉合法取值，完整值域必须查 ES 或契约。它不证明 manifest 在并发构建下的行为，当前是单次 CLI。证据：<code>design/diagrams/03-data/18-meta-schema.svg</code>（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>）；<code>backend/app/build/meta_store.py</code>（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>）。</p>
-<h3 id="19_2">图 19 · 值域分类决策树</h3>
-<p><strong>一句话结论</strong>：只有「维度列 + 枚举或低基数开放文本」才写 ES；主键、外键、度量、范围值一律不写。</p>
-<figure class="tall"><img src="file:///home/zhensirong/VM-Share/DSWS-design/design/diagrams/03-data/19-value-domain-decision.svg" alt="图 19 · 值域分类决策树"><figcaption><span class="fno">图 19</span> · 值域分类决策树</figcaption></figure>
-
-<p><strong>回答什么问题</strong>：76 篇 ES 文档怎么算出来；哪些列召回时可能缺值；<code>sync_values</code> 为何有 0 和 1。</p>
-<p><strong>关键元素</strong>：先判 <code>role=dimension</code>，再判 <code>kind</code>：<code>enum</code> 展开；<code>open</code> 且基数在阈值内才展开；<code>range</code> / <code>id</code> / <code>foreign_key</code> 不写；写 ES 的列 <code>sync_values=1</code>；<code>examples</code> 仍只留前 10 条。</p>
-<p><strong>证据与边界</strong>：它把「76」从一个数字变成一条可复核的规则，也解释了召回为何可能漏掉度量列。它不证明阈值对所有数据集都合适，阈值是工程折中。证据：<code>design/diagrams/03-data/19-value-domain-decision.svg</code>（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>）；<code>backend/app/build/plan.py</code>（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>）；ES 实际文档数本轮未测（<svg class="status-icon status-unknown" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#6B7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="未验证"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>）。</p>
-
-</section>
-<section class="sec theme-ink">
-<h2 id="4-2024">4. 安全角度（图 20–24）</h2>
-<p class="lead">安全角度回答「不信任从哪里开始、在哪一层被挡住、挡住之后用户看到什么」。这一组的五张图都应落在「连库之前」与「账号之后」两个硬边界上。</p>
-<p>最容易误读的是把「拒绝」当成错误；在 S5 里，拒绝是正确结果。</p>
-<h3 id="20">图 20 · 信任边界与攻击面</h3>
-<p><strong>一句话结论</strong>：不可信输入有三处：浏览器、模型输出、数据库返回；前两处必须在进入执行器之前被降级为契约内的形状。</p>
-<figure class="wide"><img src="file:///home/zhensirong/VM-Share/DSWS-design/design/diagrams/04-security/20-trust-boundary.svg" alt="图 20 · 信任边界与攻击面"><figcaption><span class="fno">图 20</span> · 信任边界与攻击面</figcaption></figure>
-
-<p><strong>回答什么问题</strong>：哪些输入不可信；信任边界画在哪；模型输出为何不能直接执行。</p>
-<p><strong>关键元素</strong>：浏览器/<code>/api/query</code>、提示词/模型输出、策略/执行器、只读账号/数仓四条边界；<code>contracts/</code> 与 <code>Policy</code> 在内侧，LLM 与浏览器在外侧。</p>
-<p><strong>证据与边界</strong>：它论证安全不能靠单点：任一处把模型输出当可信 SQL，后面的层只能补救。它不覆盖完整提示词注入与网络层攻击。证据：<code>README.md</code> §安全边界、<code>contracts/sql.policy.yaml</code>（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>）；图 <svg class="status-icon status-unknown" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#6B7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="未验证"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg> 未生成。</p>
-<h3 id="21_1">图 21 · 五层防御纵深</h3>
-<p><strong>一句话结论</strong>：纵深的意思是五层各自能独立失效，不是同一道检查写五遍：契约白名单、AST 策略、执行器二次校验、只读账号与超时、界面错误通道。</p>
-<figure class="tall"><img src="file:///home/zhensirong/VM-Share/DSWS-design/design/diagrams/04-security/21-defense-in-depth.svg" alt="图 21 · 五层防御纵深"><figcaption><span class="fno">图 21</span> · 五层防御纵深</figcaption></figure>
-
-<p><strong>回答什么问题</strong>：为什么同一件事要检查多次；哪层被绕过还有哪层；五层与「六道检查」是什么关系。</p>
-<p><strong>关键元素</strong>：契约白名单；AST 级单语句、只读、集合运算与危险函数检查；执行器再 enforce 并只执行重序列化后的 SQL；<code>dw_reader</code> 仅 <code>SELECT</code> 且带超时；界面按 <code>class</code> 区分失败与空结果。</p>
-<p><strong>证据与边界</strong>：它论证纵深防御的分层责任。WBS 标题是「五层防御纵深」，README 拆成六道，两者只是分组粒度不同。评审以 <code>sql.policy.yaml</code> 与 <code>policy.py</code> 的实际规则为准。证据：<code>README.md</code> §安全边界（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>）；<code>backend/app/security/policy.py</code>（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>）；图 <svg class="status-icon status-unknown" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#6B7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="未验证"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg> 未生成。</p>
-<h3 id="22-sql">图 22 · SQL 策略判定流程</h3>
-<p><strong>一句话结论</strong>：策略基于 AST 而不是正则；判定结果只有「拒绝并给码」或「放行并重序列化」两种。</p>
-<figure class="tall"><img src="file:///home/zhensirong/VM-Share/DSWS-design/design/diagrams/04-security/22-sql-policy-flow.svg" alt="图 22 · SQL 策略判定流程"><figcaption><span class="fno">图 22</span> · SQL 策略判定流程</figcaption></figure>
-
-<p><strong>回答什么问题</strong>：一条 SQL 依次过哪些规则；违规如何变成错误码；为何要重新序列化。</p>
-<p><strong>关键元素</strong>：解析 → 禁词 → 单语句 → 只读 → 集合运算/危险函数 → 契约白名单 → 去注释与补 <code>LIMIT</code> → <code>PolicyDecision</code>；违规产出 <code>SQL_REJECTED</code> 且不可重试。</p>
-<p><strong>证据与边界</strong>：它承担「策略可解释」的论证：每个拒绝都能指到一条规则与一个错误码，而不是「模型说不行」。它不证明策略覆盖所有方言与未来语法，策略覆盖度是持续维护项。证据：<code>backend/app/security/policy.py</code>（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>）；<code>contracts/sql.policy.yaml</code>（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>）；图 <svg class="status-icon status-unknown" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#6B7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="未验证"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg> 未生成。</p>
-<h3 id="23_2">图 23 · 只读账号权限模型</h3>
-<p><strong>一句话结论</strong>：应用账号与只读账号分离，<code>dw_reader</code> 只有 <code>SELECT</code>，密码只从环境变量来，执行器再叠加超时与禁多语句。</p>
-<figure><img src="file:///home/zhensirong/VM-Share/DSWS-design/design/diagrams/04-security/23-readonly-grants.svg" alt="图 23 · 只读账号权限模型"><figcaption><span class="fno">图 23</span> · 只读账号权限模型</figcaption></figure>
-
-<p><strong>回答什么问题</strong>：应用凭什么能查不能改；密码存在哪；账号权限与策略是什么关系。</p>
-<p><strong>关键元素</strong>：应用账号 <code>didilili</code>；只读账号 <code>dw_reader</code> 仅 <code>SELECT</code>；密码由 <code>REBUILD_DW_RO_PASSWORD</code> 注入；执行器禁多语句并设超时；策略拒绝在连接之前。</p>
-<p><strong>证据与边界</strong>：它证明「最后一道门不依赖应用代码」：即使策略被绕过，账号权限仍然只允许读。真实 GRANT 与两屏对比需要 MySQL 与密码，本机没有，标 <svg class="status-icon status-unknown" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#6B7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="未验证"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>；模型本身来自 <code>compose.yaml</code>、<code>scripts/</code> 与文档（<svg class="status-icon status-warn" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#B45309" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="推断"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>）。证据：<code>backend/app/security/account.py</code>（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>）；<code>docs/SETUP-FROM-SCRATCH.md</code> §4（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>）；图 <svg class="status-icon status-unknown" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#6B7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="未验证"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg> 未生成。</p>
-<h3 id="24-ui">图 24 · 错误码分类与 UI 映射</h3>
-<p><strong>一句话结论</strong>：16 个错误码归入 3 个类别，界面由类别决定：<code>failure</code> 红、<code>empty</code> 虚线、<code>cancelled</code> 中性。</p>
-<figure class="wide"><img src="file:///home/zhensirong/VM-Share/DSWS-design/design/diagrams/04-security/24-error-taxonomy.svg" alt="图 24 · 错误码分类与 UI 映射"><figcaption><span class="fno">图 24</span> · 错误码分类与 UI 映射</figcaption></figure>
-
-<p><strong>回答什么问题</strong>：一个码对应哪张卡；空结果为何不标红；哪些错误可重试；前端能否自己加码。</p>
-<p><strong>关键元素</strong>：16 个码、3 个 <code>class</code>、<code>retryable</code>；<code>SQL_REJECTED</code> 不可重试；<code>EMPTY_RESULT</code> 属 <code>empty</code> 且步骤保持绿；<code>CANCELLED</code> 属 <code>cancelled</code>；前端只消费契约。</p>
-<p><strong>证据与边界</strong>：它承担根因一与根因三的汇合论证：错误不能塞进结果行，也不能被压成一句通用文案；类别决定界面，码只提供解释。它不证明 16 个码已经穷尽所有失败，穷尽性是 S6 的开放问题。证据：<code>contracts/errors.yaml</code>（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>）；<code>fixtures/sse/</code> 14 条夹具（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>）；图 <svg class="status-icon status-unknown" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#6B7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="未验证"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg> 未生成。</p>
-
-</section>
-<section class="sec theme-ink">
-<h2 id="5-2528">5. 部署角度（图 25–28）</h2>
-<p class="lead">部署角度回答「这套系统怎么被装成一台机器」。它把架构图里的进程变成容器、端口、健康检查与隔离边界，也是运维排障的第一入口。</p>
-<p>最容易误读的是把 running 当成 healthy；进程在，不等于探针过。</p>
-<h3 id="25-docker-compose">图 25 · Docker Compose 拓扑</h3>
-<p><strong>一句话结论</strong>：六个服务、一个默认网络、三个命名卷、一个只读绑定；<code>fixtures/dw.sql</code> 只在首次初始化时导入。</p>
-<figure class="wide"><img src="file:///home/zhensirong/VM-Share/DSWS-design/design/diagrams/05-deployment/25-compose-topology.svg" alt="图 25 · Docker Compose 拓扑"><figcaption><span class="fno">图 25</span> · Docker Compose 拓扑</figcaption></figure>
-
-<p><strong>回答什么问题</strong>：服务之间怎么连；数据放在哪；<code>init</code> 与三存储、backend 的依赖方向；重启后什么会保留。</p>
-<p><strong>关键元素</strong>：<code>frontend</code>、<code>backend</code>、<code>init</code>、<code>mysql</code>、<code>elasticsearch</code>、<code>qdrant</code>；三个命名卷；<code>fixtures/dw.sql</code> 只读绑定；<code>init</code> 等三存储 healthy，backend 等 <code>init</code> 成功，frontend 等 backend healthy。</p>
-<p><strong>证据与边界</strong>：它承担「交付单元」的论证：一条 <code>make docker-up</code> 能复现整机，数据卷保留但可用 <code>make docker-reset</code> 显式删除。它不证明构建可离线，首次构建仍需网络。证据：图源 <code>design/diagrams/05-deployment/25-compose-topology.svg</code>（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>）；<code>compose.yaml</code>（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>）。</p>
-<h3 id="26_1">图 26 · 端口与网络暴露面</h3>
-<p><strong>一句话结论</strong>：只有 <code>8080</code> 对外，其余端口默认只绑 <code>127.0.0.1</code>；前端 nginx 是唯一入口。</p>
-<figure class="wide"><img src="file:///home/zhensirong/VM-Share/DSWS-design/design/diagrams/05-deployment/26-port-exposure.svg" alt="图 26 · 端口与网络暴露面"><figcaption><span class="fno">图 26</span> · 端口与网络暴露面</figcaption></figure>
-
-<p><strong>回答什么问题</strong>：哪些端口能从别的机器访问；后端 <code>8100</code> 通了为何不等于安全；本地与容器端口如何冲突。</p>
-<p><strong>关键元素</strong>：<code>8080 → 80</code> 对外；<code>8100</code>、<code>3306</code>、<code>9200</code>、<code>6333</code> 绑 <code>127.0.0.1</code>；Vite <code>5273</code>；临时验收 <code>8101–8103 / 5274–5276</code>；<code>FRONTEND_BIND</code> 默认 <code>0.0.0.0</code>。</p>
-<p><strong>证据与边界</strong>：它承担「攻击面收敛」的论证：把入口收成一个门，反向代理负责 <code>/api/</code> 与 SSE 不缓冲。它不覆盖 TLS、鉴权与公网暴露，这些不在 S0–S7。证据：<code>compose.yaml</code>、<code>design/inventory/facts.md</code> §2（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>）；图 <svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>。</p>
-<h3 id="27_2">图 27 · 启动顺序与健康检查</h3>
-<p><strong>一句话结论</strong>：三存储先健康，<code>init</code> 再成功，backend 才启动，frontend 最后放行；失败停在正确的位置。</p>
-<figure><img src="file:///home/zhensirong/VM-Share/DSWS-design/design/diagrams/05-deployment/27-startup-order.svg" alt="图 27 · 启动顺序与健康检查"><figcaption><span class="fno">图 27</span> · 启动顺序与健康检查</figcaption></figure>
-
-<p><strong>回答什么问题</strong>：谁等谁；<code>init</code> 失败会怎样；健康检查各查什么；为何 <code>restart</code> 不读新环境变量。</p>
-<p><strong>关键元素</strong>：MySQL <code>mysqladmin ping</code>、ES cluster health、Qdrant <code>/readyz</code>；<code>init</code> 以 <code>service_completed_successfully</code> 作为 backend 前置；backend healthy 作为 frontend 前置；改 <code>.env</code> 必须 <code>up -d</code>。</p>
-<p><strong>证据与边界</strong>：它承担「故障定位」的论证：启动失败时，看停在哪一层就知道是存储、初始化还是应用。它不证明健康检查能发现所有退化，检查项是粗粒度探针。证据：<code>compose.yaml</code> 健康检查与 <code>depends_on</code>（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>）；<code>docs/DOCKER-DEPLOY.md</code>（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>）；图 <svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>。</p>
-<h3 id="28-rebuild">图 28 · 旧系统 / rebuild 隔离</h3>
-<p><strong>一句话结论</strong>：rebuild 只写 <code>*_rebuild</code> 目标，旧系统冻结为只读夹具；两套系统可以并行，但端口与数据不共享。</p>
-<figure><img src="file:///home/zhensirong/VM-Share/DSWS-design/design/diagrams/05-deployment/28-legacy-isolation.svg" alt="图 28 · 旧系统 / rebuild 隔离"><figcaption><span class="fno">图 28</span> · 旧系统 / rebuild 隔离</figcaption></figure>
-
-<p><strong>回答什么问题</strong>：重建会不会污染旧系统；旧系统还能不能跑；负向夹具从哪来。</p>
-<p><strong>关键元素</strong>：旧系统与其 <code>8000/5173</code>；rebuild 的四个 <code>*_rebuild</code> 目标；<code>fixtures/legacy/</code> 冻结配置；只有 <code>make docker-reset</code> 删除本项目卷。</p>
-<p><strong>证据与边界</strong>：它承担「可回退」的论证：重建的每一步都不碰旧系统的库与索引，旧系统仍可作为对照与故障注入来源。它不证明旧系统本身可维护，旧系统只作反例库。证据：<code>fixtures/legacy/</code>（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>）；<code>README.md</code>「必须知道的约束」（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>）；图 <svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>。</p>
-
-</section>
-<section class="sec theme-ink">
-<h2 id="6-2932">6. 测试角度（图 29–32）</h2>
-<p class="lead">测试角度回答「凭什么说它对」。这一组图不描述功能，而描述证据如何被生产、如何被分层、如何被追溯；它们与 <code>inventory/facts.md</code> 的 <svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>/<svg class="status-icon status-warn" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#B45309" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="推断"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>/<svg class="status-icon status-unknown" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#6B7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="未验证"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg> 是同一套纪律。</p>
-<p>最容易误读的是把 <svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg> 当成「永远通过」；它只说明本机跑过或文件明确存在，不保证下次还过。</p>
-<h3 id="29_2">图 29 · 测试金字塔与阶段门禁</h3>
-<p><strong>一句话结论</strong>：测试按依赖分层：离线单测与契约测试为主，需要三存储的集成测试被显式跳过，浏览器验收独立成层。</p>
-<figure><img src="file:///home/zhensirong/VM-Share/DSWS-design/design/diagrams/06-testing/29-test-pyramid.svg" alt="图 29 · 测试金字塔与阶段门禁"><figcaption><span class="fno">图 29</span> · 测试金字塔与阶段门禁</figcaption></figure>
-
-<p><strong>回答什么问题</strong>：哪些测试不需要外部依赖；31 条 skip 是什么；前端测试覆盖什么；哪一层最容易被误当成端到端。</p>
-<p><strong>关键元素</strong>：后端单元与契约测试；S3 真实存储集成（23 条跳过）；S4/S5 按需跳过；前端协议 26 条与结果表 14 条；2 个无头浏览器用例；S7 的 14 条断言。README 声称后端 782 passed / 31 skipped，本机未跑（<svg class="status-icon status-warn" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#B45309" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="推断"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>）。</p>
-<p><strong>证据与边界</strong>：它承担「离线可验」的论证：S0/S1/S4/S6/S7 不依赖 MySQL、LLM 或 Key，读者在干净机器上也能得到大部分证据。它不证明 skip 掉的部分已经通过。证据：<code>Makefile</code> 阶段目标（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>）；<code>README.md</code> 当前验收数据（<svg class="status-icon status-warn" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#B45309" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="推断"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> 未实跑）；图源 <svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>，SVG 待渲染（<svg class="status-icon status-unknown" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#6B7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="未验证"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>）。</p>
-<h3 id="30-s0s8">图 30 · S0–S8 验收链路</h3>
-<p><strong>一句话结论</strong>：每个阶段都有独立命令与硬验收，阶段通过只证明该层能力，不等于整机可上线。</p>
-<figure class="wide"><img src="file:///home/zhensirong/VM-Share/DSWS-design/design/diagrams/06-testing/30-stage-gates.svg" alt="图 30 · S0–S7 阶段门禁链"><figcaption><span class="fno">图 30</span> · S0–S7 阶段门禁链</figcaption></figure>
-
-<p><strong>回答什么问题</strong>：S0–S7 各验什么；哪些阶段要三存储或浏览器；S3 通过为何不等于能真实问数。</p>
-<p><strong>关键元素</strong>：<code>make stage0</code>–<code>stage7</code>；<code>stage5-live</code> 与三个 <code>*-ui</code> 的额外依赖；S7 的生成物新鲜度、14 条夹具对账、前端契约与构建；图中把「代码级验收」与「整机验收」分成两条泳道。</p>
-<p><strong>证据与边界</strong>：它承担「验收不等于上线」的论证：S3 只说明召回流水线成立，S7 只说明协议与界面收口成立；真实召回、真实库、真实 LLM 属于 S8。证据：<code>docs/SETUP-FROM-SCRATCH.md</code> §0、§3（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>）；<code>Makefile</code>（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>）；图源 <svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>，SVG 待渲染（<svg class="status-icon status-unknown" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#6B7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="未验证"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>）。</p>
-<h3 id="31_1">图 31 · 失败注入矩阵</h3>
-<p><strong>一句话结论</strong>：失败按矩阵注入，不靠想象：6 类失败场景、36 条注入语料、14 条 SSE 夹具、13 条 F 缺陷各自可复现。</p>
-<figure class="wide"><img src="file:///home/zhensirong/VM-Share/DSWS-design/design/diagrams/06-testing/31-failure-injection.svg" alt="图 31 · 失败注入矩阵"><figcaption><span class="fno">图 31</span> · 失败注入矩阵</figcaption></figure>
-
-<p><strong>回答什么问题</strong>：每类失败由什么触发；在哪个阶段注入；哪些失败有界面用例。</p>
-<p><strong>关键元素</strong>：6 类失败场景；36 条注入语料（全拒）与 11 条正常查询（零误杀）；14 条 SSE 夹具；13 条 F 缺陷（F11 拆 5xx/422）；浏览器用例覆盖 6 类失败加取消。</p>
-<p><strong>证据与边界</strong>：它承担「失败可复现」的论证：错误码不是纸面分类，每一类都有触发物与期望输出。它不证明所有组合都被覆盖，矩阵是有限集合。证据：<code>fixtures/failures/scenarios.yaml</code>、<code>fixtures/injection/</code>、<code>fixtures/sse/</code>（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>）；图源 <svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>，SVG 待渲染（<svg class="status-icon status-unknown" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#6B7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="未验证"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>）。</p>
-<h3 id="32_2">图 32 · 证据台账（已验证 / 未验证）</h3>
-<p><strong>一句话结论</strong>：全书结论按 <svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>/<svg class="status-icon status-warn" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#B45309" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="推断"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>/<svg class="status-icon status-unknown" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#6B7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="未验证"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg> 三级登记，读者据此判断一句话是验收依据、设计假设还是待办。</p>
-<figure class="wide"><img src="file:///home/zhensirong/VM-Share/DSWS-design/design/diagrams/06-testing/32-evidence-ledger.svg" alt="图 32 · 证据台账"><figcaption><span class="fno">图 32</span> · 证据台账</figcaption></figure>
-
-<p><strong>回答什么问题</strong>：哪些结论本机跑过；哪些只是 README 声称；哪些完全没验；评审先补哪项。</p>
-<p><strong>关键元素</strong>：<code>facts.md</code> §9 的七行台账；<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg> 基线、<code>--dry-run</code> 计数；<svg class="status-icon status-warn" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#B45309" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="推断"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> 全量测试 782、写入总数 241；<svg class="status-icon status-unknown" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#6B7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="未验证"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg> <code>--fresh</code>、真实 LLM、浏览器验收、Compose 全栈。图按阶段分组，暴露空白集中处。</p>
-<p><strong>证据与边界</strong>：它承担「这本书可审计」的论证：没有这一页，前面的图与结论就无法区分事实与推断。它不替读者做环境验证，台账只记录本工作树的状态。证据：<code>design/inventory/facts.md</code> §9（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>）；<code>docs/SETUP-FROM-SCRATCH.md</code> §7（<svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>）；图源 <svg class="status-icon status-ok" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="已验证"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>，SVG 待渲染（<svg class="status-icon status-unknown" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#6B7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="未验证"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>）。</p>
-
-</section>
-<section class="sec theme-ink">
-<h2 id="7_2">7. 图集没有回答的问题</h2>
-<p>图集覆盖结构，不覆盖效果与运营。以下七个问题，三十二张图都答不了：</p>
-<ol>
-<li><strong>真实 LLM 的生成质量。</strong> 默认走确定性生成器；<code>HttpLlmGenerator</code> 与校正器存在，但本机无端点与 Key，准确率、拒答率、延迟与成本均未测（<svg class="status-icon status-unknown" viewBox="0 0 24 24" width="3.2mm" height="3.2mm" fill="none" stroke="#6B7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="未验证"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>）。</li>
-<li><strong>真实召回质量。</strong> S3 默认用 <code>hash-ngram-v1</code>，不是语义模型；20 题黄金集只说明流水线成立，不说明开放问法下的召回率。</li>
-<li><strong>容量与并发。</strong> 单 MySQL、单 ES、单 Qdrant、uvicorn 单 worker；没有压测、连接池上限、队列长度与超时预算的数据，S8 只给出方向。</li>
-<li><strong>多租户与权限体系。</strong> 当前没有用户、租户、行级权限与审计日志；<code>dw_reader</code> 是单一只读账号，不能回答「不同用户看不同数据」。</li>
-<li><strong>真实数据分布与 schema 演进。</strong> 演示数据是合成的；换真实数据要替换 <code>fixtures/dw.sql</code>、同步契约并重建 S2，不是配置项。</li>
-<li><strong>提示词注入与更广的威胁模型。</strong> 图 20–23 覆盖的是 SQL 侧边界；模型被诱导输出合规但语义错误的 SQL、密钥泄露、供应链与网络层攻击，都不在图内。</li>
-<li><strong>运维与高可用。</strong> 备份恢复、升级回滚、监控告警、日志与扩容均未设计；健康检查只是启动探针。</li>
-</ol>
-<p>这七条是边界，不是缺陷。图集只把想清楚的部分画到可复核，没想清楚的就留在这里——写进图里反而更不诚实。</p>
-
-</section>
-<section class="sec theme-ink">
-<h2 id="8">8. 图集小结</h2>
-<ul>
-<li>三十二张图，每张只回答一个问题。图 32 是入口：先看证据等级，再看论证。</li>
-<li>图号和图都在，但「有图」不等于「有证据」；引用前先看实际文件，再核对证据行。</li>
-<li>图里的颜色只表达角色：蓝是契约，青是存储，橙是构建，紫是查询，红是安全，绿是通过，灰是边界。</li>
-<li>如果一张图指不到文件或命令，它只是草图，不进结论。</li>
-</ul>
+<h2 id="1_1">1. 三十二个角度索引</h2>
+<blockquote>
+<p>完整的图页与读图地图见独立文档 <code>design/design-doc.pdf</code>。本节只保留索引，避免与设计文档重复。</p>
+</blockquote>
+<table class="tbl-dark">
+<thead>
+<tr>
+<th>图</th>
+<th>标题</th>
+<th>回答什么</th>
+<th>读图 1→2→3</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>01</td>
+<td>C4-L1 系统上下文</td>
+<td>DSWS 的系统边界在哪？哪些是外部依赖？生产问数主链路到底读哪几个外部系统？</td>
+<td>1 先看系统边界与参与者 → 2 再沿主箭头看模块/容器调用 → 3 最后看灰色边与单点：哪些不在主链路</td>
+</tr>
+<tr>
+<td>02</td>
+<td>C4-L2 容器图</td>
+<td>一次请求跨哪些容器或进程？S2 构建与 init 在容器拓扑里处于什么位置？</td>
+<td>1 先看系统边界与参与者 → 2 再沿主箭头看模块/容器调用 → 3 最后看灰色边与单点：哪些不在主链路</td>
+</tr>
+<tr>
+<td>03</td>
+<td>backend/app 模块依赖</td>
+<td>谁 import 谁？哪些依赖只发生在构建时，哪些发生在每次请求？安全层和生成层各自依赖什么？</td>
+<td>1 先看系统边界与参与者 → 2 再沿主箭头看模块/容器调用 → 3 最后看灰色边与单点：哪些不在主链路</td>
+</tr>
+<tr>
+<td>04</td>
+<td>前端文件树</td>
+<td>前端有哪些文件、谁调用谁？SSE 解析与契约类型分别住在哪？</td>
+<td>1 先看系统边界与参与者 → 2 再沿主箭头看模块/容器调用 → 3 最后看灰色边与单点：哪些不在主链路</td>
+</tr>
+<tr>
+<td>05</td>
+<td>阶段演进 S0→S8</td>
+<td>为什么按 S0–S8 顺序重建？每个阶段到底在验收哪一种「还不确定」？</td>
+<td>1 先看系统边界与参与者 → 2 再沿主箭头看模块/容器调用 → 3 最后看灰色边与单点：哪些不在主链路</td>
+</tr>
+<tr>
+<td>06</td>
+<td>构建时 vs 查询时</td>
+<td>S2 退出之后，查询时每个阶段各自直接读什么？有没有常驻构建进程？</td>
+<td>1 先看系统边界与参与者 → 2 再沿主箭头看模块/容器调用 → 3 最后看灰色边与单点：哪些不在主链路</td>
+</tr>
+<tr>
+<td>07</td>
+<td>端到端请求生命周期</td>
+<td>一次问数里谁把什么交给谁？失败、空结果、取消分别在哪一步分叉？为什么这条流一定会结束？</td>
+<td>1 先看触发者（谁发起） → 2 沿编号/箭头走一遍主路径 → 3 最后看失败分支与回退边</td>
+</tr>
+<tr>
+<td>08</td>
+<td>S2 构建流水线时序</td>
+<td>谁在读契约？谁在写三个存储？写序为什么是这个顺序？四个开关各改变了什么？</td>
+<td>1 先看触发者（谁发起） → 2 沿编号/箭头走一遍主路径 → 3 最后看失败分支与回退边</td>
+</tr>
+<tr>
+<td>09</td>
+<td>S3 召回流水线时序</td>
+<td>三存储各自被问了几次？候选怎么合并？哪些字段会被丢掉？</td>
+<td>1 先看触发者（谁发起） → 2 沿编号/箭头走一遍主路径 → 3 最后看失败分支与回退边</td>
+</tr>
+<tr>
+<td>10</td>
+<td>S4 生成 SQL 流水线</td>
+<td>上下文怎么进提示词？生成器有两种，怎么选？为什么形状校验必须在静态校验之前？</td>
+<td>1 先看触发者（谁发起） → 2 沿编号/箭头走一遍主路径 → 3 最后看失败分支与回退边</td>
+</tr>
+<tr>
+<td>11</td>
+<td>S5 安全校验与执行</td>
+<td>策略在哪两个地方各查一次？被拒绝时会不会连库？超时是怎么产生的？</td>
+<td>1 先看触发者（谁发起） → 2 沿编号/箭头走一遍主路径 → 3 最后看失败分支与回退边</td>
+</tr>
+<tr>
+<td>12</td>
+<td>S6 校正闭环状态机</td>
+<td>什么情况下会走 <code>correct_sql</code>？走完之后为什么必须重新校验？哪些失败是不可重试的？</td>
+<td>1 先看触发者（谁发起） → 2 沿编号/箭头走一遍主路径 → 3 最后看失败分支与回退边</td>
+</tr>
+<tr>
+<td>13</td>
+<td>S7 SSE 事件序列</td>
+<td>一条 <code>progress</code> 到哪个组件？<code>error.class</code> 三个取值各长什么样？取消为什么不算 done？</td>
+<td>1 先看触发者（谁发起） → 2 沿编号/箭头走一遍主路径 → 3 最后看失败分支与回退边</td>
+</tr>
+<tr>
+<td>14</td>
+<td>数仓 ER 图（5 表）</td>
+<td>每张表一行代表什么？主键是什么？事实表如何关联维度？哪些列是真实存在、哪些是常见误问（<code>city</code>、<code>price</code>）？</td>
+<td>1 先看实体与 grain（一行代表什么） → 2 再看主键/外键与关系 → 3 最后看约束、值域与口径</td>
+</tr>
+<tr>
+<td>15</td>
+<td>契约模型（表 / 列 / 指标 / 值域 / 列—指标）</td>
+<td>契约里到底有哪些对象？每个对象带哪些字段？<code>ValueDomain</code> 的 <code>kind</code> 有哪几种？<code>ColumnMetric</code> 为什么是派生表？</td>
+<td>1 先看实体与 grain（一行代表什么） → 2 再看主键/外键与关系 → 3 最后看约束、值域与口径</td>
+</tr>
+<tr>
+<td>16</td>
+<td>一份契约如何落到三存储（region_name / order_amount）</td>
+<td><code>region_name</code> 和 <code>order_amount</code> 分别变成什么？为什么一个进 ES、一个不进？Qdrant 的 98 个 point 是怎么来的？Meta 的 <code>examples</code> 能不能当全集？</td>
+<td>1 先看实体与 grain（一行代表什么） → 2 再看主键/外键与关系 → 3 最后看约束、值域与口径</td>
+</tr>
+<tr>
+<td>17</td>
+<td>S2 数据 lineage（契约 + 冻结数仓 → 三存储 + manifest）</td>
+<td>数据从哪来？在哪一步校验？三存储各写多少？<code>5/24/6/9/76/98/22</code> 分别是什么？manifest 为什么是构建成功的唯一凭据？</td>
+<td>1 先看实体与 grain（一行代表什么） → 2 再看主键/外键与关系 → 3 最后看约束、值域与口径</td>
+</tr>
+<tr>
+<td>18</td>
+<td>Meta 表结构（5 张元数据表）</td>
+<td>每张 Meta 表的字段和主键是什么？<code>column_info</code> 怎么指向表？<code>column_metric</code> 的复合主键是什么？manifest 记录哪些计数？</td>
+<td>1 先看实体与 grain（一行代表什么） → 2 再看主键/外键与关系 → 3 最后看约束、值域与口径</td>
+</tr>
+<tr>
+<td>19</td>
+<td>值域分类决策树（哪些列写 ES）</td>
+<td><code>enum</code> 和 <code>range</code> 分别怎么处理？<code>open</code> 文本为什么有的进 ES 有的不进？<code>sync_values</code> 到底记什么？Meta 的 <code>examples</code> 和 ES 的完整值域是什么关系？</td>
+<td>1 先看实体与 grain（一行代表什么） → 2 再看主键/外键与关系 → 3 最后看约束、值域与口径</td>
+</tr>
+<tr>
+<td>20</td>
+<td>信任边界与攻击面</td>
+<td>一次问数跨过哪些信任边界？谁持有数据库凭据？LLM 能拿到什么、拿不到什么？旧系统会不会被新系统写入？</td>
+<td>1 先看信任边界在哪 → 2 再按顺序看拦截点 → 3 最后看被拒绝的路径与出口</td>
+</tr>
+<tr>
+<td>21</td>
+<td>五层纵深防御</td>
+<td>一条 SQL 从模型出来到数据库要过几关？每关挡住什么？为什么说「策略被绕过也还有数据库权限兜底」？失败最终怎么到 UI？</td>
+<td>1 先看信任边界在哪 → 2 再按顺序看拦截点 → 3 最后看被拒绝的路径与出口</td>
+</tr>
+<tr>
+<td>22</td>
+<td>SQL 策略判定流程（六关 + 收尾）</td>
+<td>每一关拒绝什么？拒绝后会不会连库？为什么执行的不是模型返回的原文？guard 和 policy 的先后顺序是什么？</td>
+<td>1 先看信任边界在哪 → 2 再按顺序看拦截点 → 3 最后看被拒绝的路径与出口</td>
+</tr>
+<tr>
+<td>23</td>
+<td>只读账号权限模型（dw_reader 与应用账号分离）</td>
+<td><code>dw_reader</code> 是谁、怎么创建、怎么验证？执行器和构建任务用的是不是同一个账号？旧 <code>GRANT ALL</code> 为什么危险？应用账号与只读账号怎么分离？</td>
+<td>1 先看信任边界在哪 → 2 再按顺序看拦截点 → 3 最后看被拒绝的路径与出口</td>
+</tr>
+<tr>
+<td>24</td>
+<td>错误码分类（16 码 / 3 class / retryable）</td>
+<td>16 个错误码分别属于哪个 class？哪些能自动校正？空结果和用户取消为什么不算失败？失败最后怎么变成 SSE 事件？</td>
+<td>1 先看信任边界在哪 → 2 再按顺序看拦截点 → 3 最后看被拒绝的路径与出口</td>
+</tr>
+<tr>
+<td>25</td>
+<td>Docker Compose 拓扑</td>
+<td>哪六个服务？谁依赖谁？数据落在哪？<code>init</code> 为什么和另外五个不一样？</td>
+<td>1 先看服务与端口 → 2 再看启动依赖顺序 → 3 最后看健康检查与失败停点</td>
+</tr>
+<tr>
+<td>26</td>
+<td>宿主端口与容器端口暴露面</td>
+<td>谁能从局域网进来？哪些端口只能本机访问？容器之间走什么端口？</td>
+<td>1 先看服务与端口 → 2 再看启动依赖顺序 → 3 最后看健康检查与失败停点</td>
+</tr>
+<tr>
+<td>27</td>
+<td>启动顺序与失败停点</td>
+<td>谁在等谁？每级等多久？失败会停在哪一步？<code>init</code> 内部又做了什么？</td>
+<td>1 先看服务与端口 → 2 再看启动依赖顺序 → 3 最后看健康检查与失败停点</td>
+</tr>
+<tr>
+<td>28</td>
+<td>旧系统与 rebuild 的隔离边界</td>
+<td>旧系统的 <code>meta</code> / <code>value_index</code> / <code>5173</code> / <code>3306</code> 与 rebuild 的 <code>*_rebuild</code> / <code>5273</code> / <code>8100</code> 在哪一层分开？哪些东西其实是共用的？</td>
+<td>1 先看服务与端口 → 2 再看启动依赖顺序 → 3 最后看健康检查与失败停点</td>
+</tr>
+<tr>
+<td>29</td>
+<td>测试金字塔与三存储依赖</td>
+<td>五层测试各自覆盖什么？哪一层开始需要 MySQL / ES / Qdrant？哪些是「本机就能重复」的门禁？</td>
+<td>1 先看层级（单元/集成/端到端） → 2 再看阶段门禁顺序 → 3 最后看失败注入覆盖了哪些码</td>
+</tr>
+<tr>
+<td>30</td>
+<td>S0–S7 阶段门禁</td>
+<td>每个阶段跑什么？「通过」的判据是什么？哪两个阶段需要先起三存储？</td>
+<td>1 先看层级（单元/集成/端到端） → 2 再看阶段门禁顺序 → 3 最后看失败注入覆盖了哪些码</td>
+</tr>
+<tr>
+<td>31</td>
+<td>失败注入矩阵</td>
+<td>失败从哪里注入？落到哪个错误码？属于 <code>failure</code> / <code>empty</code> / <code>cancelled</code> 哪一类？哪些会触发校正闭环？界面上长什么样？</td>
+<td>1 先看层级（单元/集成/端到端） → 2 再看阶段门禁顺序 → 3 最后看失败注入覆盖了哪些码</td>
+</tr>
+<tr>
+<td>32</td>
+<td>证据台账：已验证 / 推断 / 未验证</td>
+<td>图里的结论从哪来？哪些能在本机复现？哪些只是引用他机记录？最终汇到哪里？</td>
+<td>1 先看层级（单元/集成/端到端） → 2 再看阶段门禁顺序 → 3 最后看失败注入覆盖了哪些码</td>
+</tr>
+</tbody>
+</table>
 
 </section>
 </section>
@@ -4233,7 +4152,7 @@ export REBUILD_ES_INDEX=value_index
 
 </section>
 <section class="sec theme-ink">
-<h2 id="7_3">7. 失败注入矩阵</h2>
+<h2 id="7_2">7. 失败注入矩阵</h2>
 <p>S6 要做的是让每一种失败都有名字，不是让系统不报错。图 31（<code>design/diagrams/06-testing/31-failure-injection.mmd</code>）是失败注入矩阵，表 5-6 把它落成可查的对应关系。</p>
 <figure class="wide"><img src="file:///home/zhensirong/VM-Share/DSWS-design/design/diagrams/06-testing/31-failure-injection.svg" alt="图 31 · 失败注入矩阵"><figcaption><span class="fno">图 31</span> · 失败注入矩阵</figcaption></figure>
 
@@ -4307,7 +4226,7 @@ export REBUILD_ES_INDEX=value_index
 
 </section>
 <section class="sec theme-ink">
-<h2 id="8_1">8. 故障排查表</h2>
+<h2 id="8">8. 故障排查表</h2>
 <p class="lead">排障的顺序应该是「先分层，再定位，最后才改」。先看是环境问题、启动问题、数据问题还是应用问题；不要一上来就改代码。表 5-7 按症状组织。</p>
 <p class="table-caption"><span class="tno">表 5-7</span> · 常见故障</p>
 <table>

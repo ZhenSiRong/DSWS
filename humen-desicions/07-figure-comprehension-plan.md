@@ -4,7 +4,7 @@
 
 ## 1. 目标
 
-除已试点的图 3-0 外，把全书 **32 张技术图**按“新读者能不能看懂”重做一遍。
+设计文档与开发教材是两份文档：本文的优化对象是 **design-doc.pdf 里的 32 张技术图**（图 3-0 属开发教材，另算）。
 不是“更漂亮”，而是三个问题都能答出来：
 
 1. 这张图回答什么问题？
@@ -84,7 +84,8 @@
 | 更新后的 SVG | `design/diagrams/**/*.svg` |
 | 6 张漫画 | `design/book-editorial/figures/` |
 | 审计与盲测报告 | `pilot/figure-audit.md` |
-| 新 PDF | `design/book-editorial/pdf/dsws-design-editorial.pdf` |
+| 设计文档 | `design/design-doc.pdf`（32 图 + 地图，78 页） |
+| 开发教材 | `design/book-editorial/pdf/dev-book.pdf`（163 页，图集章改为索引） |
 
 ## 8. 风险与回退
 

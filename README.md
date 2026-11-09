@@ -20,6 +20,13 @@
 
 > v2 的部署、验证与证据见 [`deliverable/v2/README-v2.md`](deliverable/v2/README-v2.md)。
 
+## 文档
+
+| 文档 | 内容 | 链接 |
+|---|---|---|
+| **设计文档** | 32 张设计图 + 每张图的读图地图（一图一页 + 一图一地图） | [design-doc.pdf](https://gcore.jsdelivr.net/gh/ZhenSiRong/DSWS@main/design/design-doc.pdf) |
+| **开发教材** | 163 页，S0–S8 的施工顺序与验收 | [dev-book.pdf](https://gcore.jsdelivr.net/gh/ZhenSiRong/DSWS@main/design/book-editorial/pdf/dev-book.pdf) |
+
 ## 当前进度
 
 | 阶段 | 产出 | 验收 |

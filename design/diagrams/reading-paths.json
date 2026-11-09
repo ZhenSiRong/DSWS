@@ -1,0 +1,482 @@
+[
+  {
+    "id": "01",
+    "title": "01 · C4-L1 系统上下文",
+    "track": "架构",
+    "one_liner": "DSWS 是契约驱动的问数系统，用户经浏览器提交问题，系统只对 MySQL 做只读取数；ES 与 Qdrant 由 S2 写入、仅由 S3 阶段验收读取，LLM 是可替换的可选项。",
+    "question": "DSWS 的系统边界在哪？哪些是外部依赖？生产问数主链路到底读哪几个外部系统？",
+    "path": [
+      "先看系统边界与参与者",
+      "再沿主箭头看模块/容器调用",
+      "最后看灰色边与单点：哪些不在主链路"
+    ],
+    "failure": "失败：箭头断开或灰色边表示不在主链路，不是故障；真正的失败回到对应章节看错误码。",
+    "md": "diagrams/01-architecture/01-c4-context.md",
+    "svg": "diagrams/01-architecture/01-c4-context.svg"
+  },
+  {
+    "id": "02",
+    "title": "02 · C4-L2 容器图",
+    "track": "架构",
+    "one_liner": "一次请求依次穿过浏览器 → nginx :8080 → FastAPI :8100 → AgentRunner → generate/security。S2 构建由 init 一次性容器调用 build CLI，写完三存储后退出。",
+    "question": "一次请求跨哪些容器或进程？S2 构建与 init 在容器拓扑里处于什么位置？",
+    "path": [
+      "先看系统边界与参与者",
+      "再沿主箭头看模块/容器调用",
+      "最后看灰色边与单点：哪些不在主链路"
+    ],
+    "failure": "失败：箭头断开或灰色边表示不在主链路，不是故障；真正的失败回到对应章节看错误码。",
+    "md": "diagrams/01-architecture/02-c4-container.md",
+    "svg": "diagrams/01-architecture/02-c4-container.svg"
+  },
+  {
+    "id": "03",
+    "title": "03 · backend/app 模块依赖",
+    "track": "架构",
+    "one_liner": "`backend/app` 分成构建时与查询时两条依赖链，共享 `schema_contract`、`sqllex` 和运行时内存目录 `recall.catalog + keywords`。",
+    "question": "谁 import 谁？哪些依赖只发生在构建时，哪些发生在每次请求？安全层和生成层各自依赖什么？",
+    "path": [
+      "先看系统边界与参与者",
+      "再沿主箭头看模块/容器调用",
+      "最后看灰色边与单点：哪些不在主链路"
+    ],
+    "failure": "失败：箭头断开或灰色边表示不在主链路，不是故障；真正的失败回到对应章节看错误码。",
+    "md": "diagrams/01-architecture/03-backend-modules.md",
+    "svg": "diagrams/01-architecture/03-backend-modules.svg"
+  },
+  {
+    "id": "04",
+    "title": "04 · 前端文件树",
+    "track": "架构",
+    "one_liner": "`App.tsx` 是唯一状态机，向下分发到 5 个组件；网络请求与 SSE 解析都在 `lib/api.ts` 的 `SseParser` 里。",
+    "question": "前端有哪些文件、谁调用谁？SSE 解析与契约类型分别住在哪？",
+    "path": [
+      "先看系统边界与参与者",
+      "再沿主箭头看模块/容器调用",
+      "最后看灰色边与单点：哪些不在主链路"
+    ],
+    "failure": "失败：箭头断开或灰色边表示不在主链路，不是故障；真正的失败回到对应章节看错误码。",
+    "md": "diagrams/01-architecture/04-frontend-tree.md",
+    "svg": "diagrams/01-architecture/04-frontend-tree.svg"
+  },
+  {
+    "id": "05",
+    "title": "05 · 阶段演进 S0→S8",
+    "track": "架构",
+    "one_liner": "S0–S8 每阶段只新增一类不确定性，并给出一个可停点。S0–S2 处理契约与构建，S3–S5 处理数据、生成与安全，S6–S8 处理失败、界面与性能。",
+    "question": "为什么按 S0–S8 顺序重建？每个阶段到底在验收哪一种「还不确定」？",
+    "path": [
+      "先看系统边界与参与者",
+      "再沿主箭头看模块/容器调用",
+      "最后看灰色边与单点：哪些不在主链路"
+    ],
+    "failure": "失败：箭头断开或灰色边表示不在主链路，不是故障；真正的失败回到对应章节看错误码。",
+    "md": "diagrams/01-architecture/05-stage-evolution.md",
+    "svg": "diagrams/01-architecture/05-stage-evolution.svg"
+  },
+  {
+    "id": "06",
+    "title": "06 · 构建时 vs 查询时",
+    "track": "架构",
+    "one_liner": "S2 是一次性 CLI，退出后不常驻；查询侧 S4 直接读 contracts、S5 只读 MySQL `dw`，只有阶段验收的 S3 读 ES/Qdrant。",
+    "question": "S2 退出之后，查询时每个阶段各自直接读什么？有没有常驻构建进程？",
+    "path": [
+      "先看系统边界与参与者",
+      "再沿主箭头看模块/容器调用",
+      "最后看灰色边与单点：哪些不在主链路"
+    ],
+    "failure": "失败：箭头断开或灰色边表示不在主链路，不是故障；真正的失败回到对应章节看错误码。",
+    "md": "diagrams/01-architecture/06-build-vs-query.md",
+    "svg": "diagrams/01-architecture/06-build-vs-query.svg"
+  },
+  {
+    "id": "07",
+    "title": "07 · 端到端请求生命周期",
+    "track": "运行时",
+    "one_liner": "一次 `POST /api/query` 由 FastAPI 建 `request_id` 与取消开关，交给 `AgentRunner` 在工作线程里跑「上下文 → 生成 → 校验 → 执行」，中间状态逐帧写成 SSE `progress`，最后**必**以 `result` 或 `error` 收尾。",
+    "question": "一次问数里谁把什么交给谁？失败、空结果、取消分别在哪一步分叉？为什么这条流一定会结束？",
+    "path": [
+      "先看触发者（谁发起）",
+      "沿编号/箭头走一遍主路径",
+      "最后看失败分支与回退边"
+    ],
+    "failure": "失败：看红色分支与回退边；没有回退边的步骤失败即终止。",
+    "md": "diagrams/02-runtime/07-end-to-end-request.md",
+    "svg": "diagrams/02-runtime/07-end-to-end-request.svg"
+  },
+  {
+    "id": "08",
+    "title": "08 · S2 构建流水线时序",
+    "track": "运行时",
+    "one_liner": "S2 是一条**一次性 CLI 任务**：解析四个互斥开关 → 在内存里生成 `BuildPlan` → 按 Meta → ES → Qdrant → manifest 的顺序写入 → 打印计数并退出，查询时不再运行。",
+    "question": "谁在读契约？谁在写三个存储？写序为什么是这个顺序？四个开关各改变了什么？",
+    "path": [
+      "先看触发者（谁发起）",
+      "沿编号/箭头走一遍主路径",
+      "最后看失败分支与回退边"
+    ],
+    "failure": "失败：看红色分支与回退边；没有回退边的步骤失败即终止。",
+    "md": "diagrams/02-runtime/08-s2-build-sequence.md",
+    "svg": "diagrams/02-runtime/08-s2-build-sequence.svg"
+  },
+  {
+    "id": "09",
+    "title": "09 · S3 召回流水线时序",
+    "track": "运行时",
+    "one_liner": "S3 用一次 `recall(query)` 把「关键词」变成「候选字段 / 取值 / 指标」，再按确定性规则裁剪成 `RecallState`；它**不生成 SQL、不调 LLM、不写任何存储**。",
+    "question": "三存储各自被问了几次？候选怎么合并？哪些字段会被丢掉？",
+    "path": [
+      "先看触发者（谁发起）",
+      "沿编号/箭头走一遍主路径",
+      "最后看失败分支与回退边"
+    ],
+    "failure": "失败：看红色分支与回退边；没有回退边的步骤失败即终止。",
+    "md": "diagrams/02-runtime/09-s3-recall-sequence.md",
+    "svg": "diagrams/02-runtime/09-s3-recall-sequence.svg"
+  },
+  {
+    "id": "10",
+    "title": "10 · S4 生成 SQL 流水线",
+    "track": "运行时",
+    "one_liner": "S4 把上下文压成 7 个提示词槽位交给生成器，拿到载荷后**先校验形状**（`sql_or_refusal` 契约）、**再校验内容**（sqlglot 静态规则）；两道关任一不过，产物都降级成「有名字的拒答」，不存在第三种状态。",
+    "question": "上下文怎么进提示词？生成器有两种，怎么选？为什么形状校验必须在静态校验之前？",
+    "path": [
+      "先看触发者（谁发起）",
+      "沿编号/箭头走一遍主路径",
+      "最后看失败分支与回退边"
+    ],
+    "failure": "失败：看红色分支与回退边；没有回退边的步骤失败即终止。",
+    "md": "diagrams/02-runtime/10-s4-generate-sequence.md",
+    "svg": "diagrams/02-runtime/10-s4-generate-sequence.svg"
+  },
+  {
+    "id": "11",
+    "title": "11 · S5 安全校验与执行",
+    "track": "运行时",
+    "one_liner": "一条 SQL 先过 `policy.enforce()` 的策略判定，过了才连只读账号执行；策略拒绝、超时、执行错误是三个**互不重叠**的出口，每个都有 `contracts/errors.yaml` 里的码。",
+    "question": "策略在哪两个地方各查一次？被拒绝时会不会连库？超时是怎么产生的？",
+    "path": [
+      "先看触发者（谁发起）",
+      "沿编号/箭头走一遍主路径",
+      "最后看失败分支与回退边"
+    ],
+    "failure": "失败：看红色分支与回退边；没有回退边的步骤失败即终止。",
+    "md": "diagrams/02-runtime/11-s5-security-sequence.md",
+    "svg": "diagrams/02-runtime/11-s5-security-sequence.svg"
+  },
+  {
+    "id": "12",
+    "title": "12 · S6 校正闭环状态机",
+    "track": "运行时",
+    "one_liner": "一次问数是一条**单向前进、只允许一次回退**的状态机：校验失败且 `retryable=true` 时回到「校验」重来一次；`retryable=false` 或次数用尽就直接终止，执行阶段的失败永不回退。",
+    "question": "什么情况下会走 `correct_sql`？走完之后为什么必须重新校验？哪些失败是不可重试的？",
+    "path": [
+      "先看触发者（谁发起）",
+      "沿编号/箭头走一遍主路径",
+      "最后看失败分支与回退边"
+    ],
+    "failure": "失败：看红色分支与回退边；没有回退边的步骤失败即终止。",
+    "md": "diagrams/02-runtime/12-s6-correction-state.md",
+    "svg": "diagrams/02-runtime/12-s6-correction-state.svg"
+  },
+  {
+    "id": "13",
+    "title": "13 · S7 SSE 事件序列",
+    "track": "运行时",
+    "one_liner": "后端只发三种事件（`progress` / `result` / `error`），前端按 `type` 与 `class` 分流到三个组件；`skipped` 和 `cancelled` 在界面上各占一个独立状态，不并入 pending 或失败。",
+    "question": "一条 `progress` 到哪个组件？`error.class` 三个取值各长什么样？取消为什么不算 done？",
+    "path": [
+      "先看触发者（谁发起）",
+      "沿编号/箭头走一遍主路径",
+      "最后看失败分支与回退边"
+    ],
+    "failure": "失败：看红色分支与回退边；没有回退边的步骤失败即终止。",
+    "md": "diagrams/02-runtime/13-s7-sse-sequence.md",
+    "svg": "diagrams/02-runtime/13-s7-sse-sequence.svg"
+  },
+  {
+    "id": "14",
+    "title": "14 · 数仓 ER 图（5 表）",
+    "track": "数据",
+    "one_liner": "数仓只有 5 张表；4 张维度表各由主键唯一确定一行，`fact_order` 一行一单，四个 `*_id` 是指向维度的逻辑外键。",
+    "question": "每张表一行代表什么？主键是什么？事实表如何关联维度？哪些列是真实存在、哪些是常见误问（`city`、`price`）？",
+    "path": [
+      "先看实体与 grain（一行代表什么）",
+      "再看主键/外键与关系",
+      "最后看约束、值域与口径"
+    ],
+    "failure": "失败：越界时间、缺列、错 grain 会在校验阶段被拒。",
+    "md": "diagrams/03-data/14-er-diagram.md",
+    "svg": "diagrams/03-data/14-er-diagram.svg"
+  },
+  {
+    "id": "15",
+    "title": "15 · 契约模型（表 / 列 / 指标 / 值域 / 列—指标）",
+    "track": "数据",
+    "one_liner": "`schema.contract.yaml` 把「表、列、指标、值域、列—指标关系」建模成五个对象；列—指标关系共 9 条，是 6 个指标 `relevant_columns` 的并集。",
+    "question": "契约里到底有哪些对象？每个对象带哪些字段？`ValueDomain` 的 `kind` 有哪几种？`ColumnMetric` 为什么是派生表？",
+    "path": [
+      "先看实体与 grain（一行代表什么）",
+      "再看主键/外键与关系",
+      "最后看约束、值域与口径"
+    ],
+    "failure": "失败：越界时间、缺列、错 grain 会在校验阶段被拒。",
+    "md": "diagrams/03-data/15-contract-model.md",
+    "svg": "diagrams/03-data/15-contract-model.svg"
+  },
+  {
+    "id": "16",
+    "title": "16 · 一份契约如何落到三存储（region_name / order_amount）",
+    "track": "数据",
+    "one_liner": "同一份契约列，Meta 得到 1 行结构描述，ES 按值域决定是否展开取值文档，Qdrant 把名称、描述、每个别名各变成一个可检索 point。",
+    "question": "`region_name` 和 `order_amount` 分别变成什么？为什么一个进 ES、一个不进？Qdrant 的 98 个 point 是怎么来的？Meta 的 `examples` 能不能当全集？",
+    "path": [
+      "先看实体与 grain（一行代表什么）",
+      "再看主键/外键与关系",
+      "最后看约束、值域与口径"
+    ],
+    "failure": "失败：越界时间、缺列、错 grain 会在校验阶段被拒。",
+    "md": "diagrams/03-data/16-three-store-layout.md",
+    "svg": "diagrams/03-data/16-three-store-layout.svg"
+  },
+  {
+    "id": "17",
+    "title": "17 · S2 数据 lineage（契约 + 冻结数仓 → 三存储 + manifest）",
+    "track": "数据",
+    "one_liner": "S2 先把契约与 DDL 校验成一份纯内存 `BuildPlan`，再按 Meta → ES → Qdrant → manifest 的顺序写入；任何一步失败都不会登记成功的 manifest。",
+    "question": "数据从哪来？在哪一步校验？三存储各写多少？`5/24/6/9/76/98/22` 分别是什么？manifest 为什么是构建成功的唯一凭据？",
+    "path": [
+      "先看实体与 grain（一行代表什么）",
+      "再看主键/外键与关系",
+      "最后看约束、值域与口径"
+    ],
+    "failure": "失败：越界时间、缺列、错 grain 会在校验阶段被拒。",
+    "md": "diagrams/03-data/17-s2-lineage.md",
+    "svg": "diagrams/03-data/17-s2-lineage.svg"
+  },
+  {
+    "id": "18",
+    "title": "18 · Meta 表结构（5 张元数据表）",
+    "track": "数据",
+    "one_liner": "Meta 用 5 张表描述「有哪些表、哪些列、什么指标、列和指标怎么关联、这次构建是否成功」；前 4 张是知识，`build_manifest` 是构建凭据。",
+    "question": "每张 Meta 表的字段和主键是什么？`column_info` 怎么指向表？`column_metric` 的复合主键是什么？manifest 记录哪些计数？",
+    "path": [
+      "先看实体与 grain（一行代表什么）",
+      "再看主键/外键与关系",
+      "最后看约束、值域与口径"
+    ],
+    "failure": "失败：越界时间、缺列、错 grain 会在校验阶段被拒。",
+    "md": "diagrams/03-data/18-meta-schema.md",
+    "svg": "diagrams/03-data/18-meta-schema.svg"
+  },
+  {
+    "id": "19",
+    "title": "19 · 值域分类决策树（哪些列写 ES）",
+    "track": "数据",
+    "one_liner": "只有「维度列 + `enum` 或低基数 `open`」会逐值写 ES 并置 `sync_values=1`；`range`、主键、外键、度量一律 `sync_values=0`，不写 ES。",
+    "question": "`enum` 和 `range` 分别怎么处理？`open` 文本为什么有的进 ES 有的不进？`sync_values` 到底记什么？Meta 的 `examples` 和 ES 的完整值域是什么关系？",
+    "path": [
+      "先看实体与 grain（一行代表什么）",
+      "再看主键/外键与关系",
+      "最后看约束、值域与口径"
+    ],
+    "failure": "失败：越界时间、缺列、错 grain 会在校验阶段被拒。",
+    "md": "diagrams/03-data/19-value-domain-decision.md",
+    "svg": "diagrams/03-data/19-value-domain-decision.svg"
+  },
+  {
+    "id": "20",
+    "title": "20 · 信任边界与攻击面",
+    "track": "安全",
+    "one_liner": "浏览器与 LLM 输出都不可信；前端不持有凭据；FastAPI 是可信计算基；三个存储与 `dw` 都只被只读访问；旧系统只作为夹具，不参与运行。",
+    "question": "一次问数跨过哪些信任边界？谁持有数据库凭据？LLM 能拿到什么、拿不到什么？旧系统会不会被新系统写入？",
+    "path": [
+      "先看信任边界在哪",
+      "再按顺序看拦截点",
+      "最后看被拒绝的路径与出口"
+    ],
+    "failure": "失败：策略拒绝不进入校正，直接 SQL_REJECTED。",
+    "md": "diagrams/04-security/20-trust-boundary.md",
+    "svg": "diagrams/04-security/20-trust-boundary.svg"
+  },
+  {
+    "id": "21",
+    "title": "21 · 五层纵深防御",
+    "track": "安全",
+    "one_liner": "安全由五层各自生效的关卡组成：契约白名单、静态 guard、策略判定、只读执行器、错误通道与审计。",
+    "question": "一条 SQL 从模型出来到数据库要过几关？每关挡住什么？为什么说「策略被绕过也还有数据库权限兜底」？失败最终怎么到 UI？",
+    "path": [
+      "先看信任边界在哪",
+      "再按顺序看拦截点",
+      "最后看被拒绝的路径与出口"
+    ],
+    "failure": "失败：策略拒绝不进入校正，直接 SQL_REJECTED。",
+    "md": "diagrams/04-security/21-defense-in-depth.md",
+    "svg": "diagrams/04-security/21-defense-in-depth.svg"
+  },
+  {
+    "id": "22",
+    "title": "22 · SQL 策略判定流程（六关 + 收尾）",
+    "track": "安全",
+    "one_liner": "候选 SQL 必须依次回答六个问题——单语句、只读、表白名单、列白名单、无常量投影、排名有 ORDER BY/LIMIT——全过才补 LIMIT 并执行重新序列化后的 SQL。",
+    "question": "每一关拒绝什么？拒绝后会不会连库？为什么执行的不是模型返回的原文？guard 和 policy 的先后顺序是什么？",
+    "path": [
+      "先看信任边界在哪",
+      "再按顺序看拦截点",
+      "最后看被拒绝的路径与出口"
+    ],
+    "failure": "失败：策略拒绝不进入校正，直接 SQL_REJECTED。",
+    "md": "diagrams/04-security/22-sql-policy-flow.md",
+    "svg": "diagrams/04-security/22-sql-policy-flow.svg"
+  },
+  {
+    "id": "23",
+    "title": "23 · 只读账号权限模型（dw_reader 与应用账号分离）",
+    "track": "安全",
+    "one_liner": "执行器只用 `dw_reader` 连 `dw`，该账号在 `dw` 上只有一条 `GRANT SELECT`；建库与写 Meta 用应用账号；旧系统的 `didilili` 拥有 `ALL PRIVILEGES`，是新系统明确不复用的负向入口。",
+    "question": "`dw_reader` 是谁、怎么创建、怎么验证？执行器和构建任务用的是不是同一个账号？旧 `GRANT ALL` 为什么危险？应用账号与只读账号怎么分离？",
+    "path": [
+      "先看信任边界在哪",
+      "再按顺序看拦截点",
+      "最后看被拒绝的路径与出口"
+    ],
+    "failure": "失败：策略拒绝不进入校正，直接 SQL_REJECTED。",
+    "md": "diagrams/04-security/23-readonly-grants.md",
+    "svg": "diagrams/04-security/23-readonly-grants.svg"
+  },
+  {
+    "id": "24",
+    "title": "24 · 错误码分类（16 码 / 3 class / retryable）",
+    "track": "安全",
+    "one_liner": "`contracts/errors.yaml` 给每一种失败一个名字，并按 `failure` / `empty` / `cancelled` 三类决定 UI；只有 6 个码允许一次 `correct_sql` 校正，`SQL_REJECTED` 永不可重试。",
+    "question": "16 个错误码分别属于哪个 class？哪些能自动校正？空结果和用户取消为什么不算失败？失败最后怎么变成 SSE 事件？",
+    "path": [
+      "先看信任边界在哪",
+      "再按顺序看拦截点",
+      "最后看被拒绝的路径与出口"
+    ],
+    "failure": "失败：策略拒绝不进入校正，直接 SQL_REJECTED。",
+    "md": "diagrams/04-security/24-error-taxonomy.md",
+    "svg": "diagrams/04-security/24-error-taxonomy.svg"
+  },
+  {
+    "id": "25",
+    "title": "25 · Docker Compose 拓扑",
+    "track": "部署",
+    "one_liner": "`compose.yaml` 用一条默认网络把六个服务连起来，三个命名卷承载状态，`init` 是唯一的一次性任务。",
+    "question": "哪六个服务？谁依赖谁？数据落在哪？`init` 为什么和另外五个不一样？",
+    "path": [
+      "先看服务与端口",
+      "再看启动依赖顺序",
+      "最后看健康检查与失败停点"
+    ],
+    "failure": "失败：前置服务未健康则后续不启动，停点写在健康检查里。",
+    "md": "diagrams/05-deployment/25-compose-topology.md",
+    "svg": "diagrams/05-deployment/25-compose-topology.svg"
+  },
+  {
+    "id": "26",
+    "title": "26 · 宿主端口与容器端口暴露面",
+    "track": "部署",
+    "one_liner": "默认只有 `frontend` 的 `8080 → 80` 监听所有网卡，其余四个发布端口全部锁在 `127.0.0.1`，`init` 没有宿主端口。",
+    "question": "谁能从局域网进来？哪些端口只能本机访问？容器之间走什么端口？",
+    "path": [
+      "先看服务与端口",
+      "再看启动依赖顺序",
+      "最后看健康检查与失败停点"
+    ],
+    "failure": "失败：前置服务未健康则后续不启动，停点写在健康检查里。",
+    "md": "diagrams/05-deployment/26-port-exposure.md",
+    "svg": "diagrams/05-deployment/26-port-exposure.svg"
+  },
+  {
+    "id": "27",
+    "title": "27 · 启动顺序与失败停点",
+    "track": "部署",
+    "one_liner": "`docker compose up` 是一道四级闸门——三存储 healthy → `init` 退出 0 → `backend` healthy → `frontend` 启动；任何一级不过，后面的服务都不会起来。",
+    "question": "谁在等谁？每级等多久？失败会停在哪一步？`init` 内部又做了什么？",
+    "path": [
+      "先看服务与端口",
+      "再看启动依赖顺序",
+      "最后看健康检查与失败停点"
+    ],
+    "failure": "失败：前置服务未健康则后续不启动，停点写在健康检查里。",
+    "md": "diagrams/05-deployment/27-startup-order.md",
+    "svg": "diagrams/05-deployment/27-startup-order.svg"
+  },
+  {
+    "id": "28",
+    "title": "28 · 旧系统与 rebuild 的隔离边界",
+    "track": "部署",
+    "one_liner": "旧系统与 rebuild 共用同一批存储进程，但靠库名、索引名、collection 名与向量维度隔离；S2/S3 的默认目标一律带 `_rebuild`。",
+    "question": "旧系统的 `meta` / `value_index` / `5173` / `3306` 与 rebuild 的 `*_rebuild` / `5273` / `8100` 在哪一层分开？哪些东西其实是共用的？",
+    "path": [
+      "先看服务与端口",
+      "再看启动依赖顺序",
+      "最后看健康检查与失败停点"
+    ],
+    "failure": "失败：前置服务未健康则后续不启动，停点写在健康检查里。",
+    "md": "diagrams/05-deployment/28-legacy-isolation.md",
+    "svg": "diagrams/05-deployment/28-legacy-isolation.svg"
+  },
+  {
+    "id": "29",
+    "title": "29 · 测试金字塔与三存储依赖",
+    "track": "测试",
+    "one_liner": "绝大多数测试离线可跑；需要三存储的只有 S2 构建、S3 召回和 Docker 全栈 smoke，S5 实战只要 MySQL。",
+    "question": "五层测试各自覆盖什么？哪一层开始需要 MySQL / ES / Qdrant？哪些是「本机就能重复」的门禁？",
+    "path": [
+      "先看层级（单元/集成/端到端）",
+      "再看阶段门禁顺序",
+      "最后看失败注入覆盖了哪些码"
+    ],
+    "failure": "失败：任一阶段门禁红，不能进入下一阶段。",
+    "md": "diagrams/06-testing/29-test-pyramid.md",
+    "svg": "diagrams/06-testing/29-test-pyramid.svg"
+  },
+  {
+    "id": "30",
+    "title": "30 · S0–S7 阶段门禁",
+    "track": "测试",
+    "one_liner": "每个阶段都有一条 `make stageN` 硬命令；命令最后打印 `S0 PASS`…`S7 PASS` 才算过，PASS 后才允许进入下一阶段。",
+    "question": "每个阶段跑什么？「通过」的判据是什么？哪两个阶段需要先起三存储？",
+    "path": [
+      "先看层级（单元/集成/端到端）",
+      "再看阶段门禁顺序",
+      "最后看失败注入覆盖了哪些码"
+    ],
+    "failure": "失败：任一阶段门禁红，不能进入下一阶段。",
+    "md": "diagrams/06-testing/30-stage-gates.md",
+    "svg": "diagrams/06-testing/30-stage-gates.svg"
+  },
+  {
+    "id": "31",
+    "title": "31 · 失败注入矩阵",
+    "track": "测试",
+    "one_liner": "六类失败只靠两个替身注入——假模型与假数据库；校验、安全策略、校正闭环和 SSE 都是真代码，所以每一类失败都能映射到一个确定的错误码。",
+    "question": "失败从哪里注入？落到哪个错误码？属于 `failure` / `empty` / `cancelled` 哪一类？哪些会触发校正闭环？界面上长什么样？",
+    "path": [
+      "先看层级（单元/集成/端到端）",
+      "再看阶段门禁顺序",
+      "最后看失败注入覆盖了哪些码"
+    ],
+    "failure": "失败：任一阶段门禁红，不能进入下一阶段。",
+    "md": "diagrams/06-testing/31-failure-injection.md",
+    "svg": "diagrams/06-testing/31-failure-injection.svg"
+  },
+  {
+    "id": "32",
+    "title": "32 · 证据台账：已验证 / 推断 / 未验证",
+    "track": "测试",
+    "one_liner": "每条结论只允许三种状态——本机跑过（✅）、从结构推导（🟡）、环境不具备（⚪）；三类证据都要写进图说明，缺口也要写出来。",
+    "question": "图里的结论从哪来？哪些能在本机复现？哪些只是引用他机记录？最终汇到哪里？",
+    "path": [
+      "先看层级（单元/集成/端到端）",
+      "再看阶段门禁顺序",
+      "最后看失败注入覆盖了哪些码"
+    ],
+    "failure": "失败：任一阶段门禁红，不能进入下一阶段。",
+    "md": "diagrams/06-testing/32-evidence-ledger.md",
+    "svg": "diagrams/06-testing/32-evidence-ledger.svg"
+  }
+]

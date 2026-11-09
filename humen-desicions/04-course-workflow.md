@@ -114,7 +114,7 @@
 
 | 要求 | 对应物 | 现状 |
 |---|---|---|
-| 设计文档 ≥30 页 | `dsws-design-editorial.pdf`（207 页） | 已满足 |
+| 设计文档 ≥30 页 | `design-doc.pdf`（78 页）+ `dev-book.pdf`（163 页） | 已满足 |
 | 源代码 1 套 | 本仓库 `main` | 已满足 |
 | 开发手册 1 套 | `docs/SETUP-FROM-SCRATCH.md`（1131 行）+ README | 需确认是否单独成册 |
 | 四项功能 | NL2SQL / LangGraph 12 节点 / 校正闭环 / React 19 + Tailwind | 线上已具备，需复验 |

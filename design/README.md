@@ -10,7 +10,9 @@
 | 看图的画法与证据规范 | `STYLEGUIDE.md` |
 | 查真实计数、端口、契约 | `inventory/facts.md` |
 | 看 32 张图的目录 | `inventory/diagram-catalog.md` |
-| 读手册正文 | `book/chapters/*.md` |
+| 读开发教材正文 | `book/chapters/*.md` |
+| 读设计文档（32 图 + 地图） | `design-doc.pdf` |
+| 读开发教材成书 | `book-editorial/pdf/dev-book.pdf` |
 | 生成 PDF | `python3 scripts/build_book.py` + `python3 scripts/build_pdf.py` |
 
 ## 一条命令重建

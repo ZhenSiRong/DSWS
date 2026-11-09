@@ -88,7 +88,7 @@ flowchart TD
 
 学生验收的详细流程见 `02-flow-student.mmd`。关键约束：
 
-- **只给 PDF**：学生只能读 `design/book-editorial/pdf/dsws-design-editorial.pdf`，不得读 `design/book/chapters/`、`figures/*.md`、审计 JSON。
+- **只给 PDF**：学生只能读 `design/book-editorial/pdf/dev-book.pdf`，不得读 `design/book/chapters/`、`figures/*.md`、审计 JSON。
 - **独立 worktree**：学生命令在单独 worktree 里执行，避免污染主工作区。
 - **低思考强度**：优先 CodeBuddy + Hy3，`--effort low`；再跑一次 `--effort medium` 做对照。
 - **任务可判定**：任务必须来自 PDF 的目录/章节，有明确完成标志和可复现命令。

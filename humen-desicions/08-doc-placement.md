@@ -22,7 +22,8 @@
 | 教材正文（章节） | `design/book/chapters/` |
 | 图源与图注 | `design/diagrams/`（`.mmd`/`.dot`/`.md`/`.svg`） |
 | 契约（步骤/错误/策略/Schema/SSE） | `contracts/` |
-| 成书 | `design/book-editorial/pdf/dsws-design-editorial.pdf` |
+| 设计文档成书 | `design/design-doc.pdf`（32 图 + 读图地图） |
+| 开发教材成书 | `design/book-editorial/pdf/dev-book.pdf` |
 | 教材样式与构建 | `design/book-editorial/`、`design/style-lab/` |
 
 ### 开发（过程）文档

@@ -10,7 +10,7 @@ from weasyprint import HTML
 ROOT = Path(__file__).resolve().parents[1]
 BOOK = ROOT / "book-editorial"
 SRC = BOOK / "book.html"
-OUT = BOOK / "pdf" / "dsws-design-editorial.pdf"
+OUT = BOOK / "pdf" / "dev-book.pdf"
 
 
 def main() -> int:
