@@ -104,3 +104,16 @@
 4. 6 张漫画，门禁 + 复核。
 5. 盲测 + 学生抽检，写 `pilot/figure-audit.md`。
 6. 推送并更新 `DECISIONS.md` 状态。
+
+---
+
+## 10. 执行状态（2026-11-09）
+
+| 项 | 状态 | 证据 |
+|---|---|---|
+| 32 张图读图地图 | ✅ | `design/diagrams/reading-paths.json`；`design/inventory/diagram-catalog.md` |
+| 32 张图读图带 | ✅ | `design/scripts/add_reading_band.py`；SVG 根节点 `data-reading-band` |
+| design-doc.pdf | ✅ 78 页 | `design/design-doc.pdf` |
+| dev-book.pdf | ✅ 162 页，图集章改为索引 | `design/book-editorial/pdf/dev-book.pdf` |
+| 6 张概念漫画 | ⬜ 待做 | B1：12/16/19/20/29/31 |
+| 三问盲测 + 学生抽检 | ⬜ 待做 | `pilot/figure-audit.md` |

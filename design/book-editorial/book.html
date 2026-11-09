@@ -157,7 +157,7 @@
 <section class="sec theme-ink">
 <h2 id="2-dsws">2. 一分钟看懂 DSWS</h2>
 <p>DSWS 是一个电商问数智能体：用户用自然语言问「上个月华东的销售额是多少」，系统把它变成一条只读 SQL，在数仓上执行，再把结果按列类型渲染出来。它不做对话，也不是通用 BI 平台，边界只有四个词：单轮、单库、只读、可拒答。</p>
-<figure class="tall"><img src="file:///home/zhensirong/VM-Share/DSWS-design/design/book-editorial/generated/00-front-04.svg" alt="图 00-front"><figcaption>图 00-front</figcaption></figure>
+<figure class="tall"><img src="file:///home/zhensirong/VM-Share/DSWS-design/design/book-editorial/generated/00-front-05.svg" alt="图 00-front"><figcaption>图 00-front</figcaption></figure>
 <p>把这套系统压缩成五句话：</p>
 <ol>
 <li><strong>用户问数。</strong> 前端只做一件事：把一个自然语言问题、一个取消按钮和一条 SSE 流，组织成一次可观察的运行。它不猜 SQL，也不替后端补数据。</li>
@@ -485,7 +485,7 @@
 <p>本章的证据标记分三级：已验证（本机跑过，或文件、测试记录明确存在）、推断（从代码或文档推导，未实跑）、未验证（环境不具备或未执行）。标记沿用基线，已验证不等于本轮复现，表后会注明覆盖范围；图例见 <code>design/STYLEGUIDE.md</code>。</p>
 <p>上面那张阶段表只覆盖 S0–S4。S5 讲安全执行，S6 讲失败通道与错误码，S7 讲前端收口，S8 讲生产化边界；本部分只在必要处提它们的名字，不展开。</p>
 <p>如果只有一节课，主线是 S0 → S1 → S4；S2 与 S3 可以课后自学，课内只保留它们留下的两条边界：三存储的分工，以及召回质量还没有被证明。</p>
-<figure><img src="file:///home/zhensirong/VM-Share/DSWS-design/design/diagrams/02-runtime/07-end-to-end-request.svg" alt="图 07 · 端到端请求生命周期"><figcaption><span class="fno">图 07</span> · 端到端请求生命周期</figcaption></figure>
+<figure class="tall"><img src="file:///home/zhensirong/VM-Share/DSWS-design/design/diagrams/02-runtime/07-end-to-end-request.svg" alt="图 07 · 端到端请求生命周期"><figcaption><span class="fno">图 07</span> · 端到端请求生命周期</figcaption></figure>
 
 <p>图 07 把五个阶段放回一次真实请求里看：S0 定义这条请求的语法，S1 提供上下文的事实，S2 与 S3 负责找材料，S4 负责写 SQL。图中 S3 是虚线可选路径，后面不少边界都从这条虚线来。</p>
 
@@ -2044,7 +2044,7 @@ S4 PASS
 </tr>
 </tbody>
 </table>
-<figure><img src="file:///home/zhensirong/VM-Share/DSWS-design/design/diagrams/02-runtime/07-end-to-end-request.svg" alt="图 07 · 端到端请求生命周期"><figcaption><span class="fno">图 07</span> · 端到端请求生命周期</figcaption></figure>
+<figure class="tall"><img src="file:///home/zhensirong/VM-Share/DSWS-design/design/diagrams/02-runtime/07-end-to-end-request.svg" alt="图 07 · 端到端请求生命周期"><figcaption><span class="fno">图 07</span> · 端到端请求生命周期</figcaption></figure>
 
 <p>图 07 把 S5–S7 放进同一条请求：S5 负责执行前的闸，S6 负责失败怎么变成事件，S7 负责事件怎么变成界面。三者共用一条 SSE 管道，任何一层的契约漂移都会在下一层显形。</p>
 <hr>

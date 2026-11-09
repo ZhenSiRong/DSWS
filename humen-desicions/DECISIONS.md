@@ -23,7 +23,8 @@
 | D15 | 概念类预算 | 6 张 Lite 漫画，Pro 0；其余加横幅 | 同上 §5 |
 | D16 | 文档分类 | 设计文档进 `design/`/`contracts/`；过程文档进 `humen-desicions/`/`pilot/`/`eval/` | `08-doc-placement.md` |
 | D17 | 视频结尾角标 | `DSWS · 验收完成` → `DSWS · 演示完成` | 已完成，commit `89611d9` |
-| D18 | 两份文档 | `design-doc.pdf`（32 图 + 地图）与 `dev-book.pdf`（163 页教材）分开；教材图集章改为索引 | `08-doc-placement.md`、`design/design-doc.pdf` |
+| D18 | 两份文档 | `design-doc.pdf`（32 图 + 地图）与 `dev-book.pdf` 分开；教材图集章改为索引 | `08-doc-placement.md`、`design/design-doc.pdf` |
+| D19 | 读图带 | 32 张 SVG 注入“回答什么 + 读图 1→2→3”；design-doc 78 页、dev-book 162 页 | `design/scripts/add_reading_band.py` |
 
 ## 2. 评审证据
 
