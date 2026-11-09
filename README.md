@@ -14,9 +14,9 @@
 > 国内网络常加载失败，所以这里用 jsDelivr CDN 预览（GIF 与 MP4 都在仓库 `deliverable/v2/`）。
 > 点击 GIF 即可跳到完整 MP4。
 
-[![v2 演示：原版界面 + LangGraph 12 节点 + 真实问数 + 右上角功能角标](https://gcore.jsdelivr.net/gh/ZhenSiRong/DSWS@main/deliverable/v2/screenshots/v2-demo-preview.gif)](https://cdn.jsdelivr.net/gh/ZhenSiRong/DSWS@main/deliverable/v2/DSWS-v2-original-ui-demo.mp4)
+[![v2 演示：原版界面 + LangGraph 12 节点 + 真实问数 + 右上角功能角标](https://gcore.jsdelivr.net/gh/ZhenSiRong/DSWS@main/deliverable/v2/screenshots/v2-demo-preview.gif)](https://gcore.jsdelivr.net/gh/ZhenSiRong/DSWS@bd5e096/deliverable/v2/DSWS-v2-original-ui-demo.mp4)
 
-[直接打开 GIF](https://gcore.jsdelivr.net/gh/ZhenSiRong/DSWS@main/deliverable/v2/screenshots/v2-demo-preview.gif) · [下载 / 全屏播放 MP4（61s：GMV 问数、商品级排名、校正回环、UNION 策略拒绝；右上角标注当前功能）](https://cdn.jsdelivr.net/gh/ZhenSiRong/DSWS@main/deliverable/v2/DSWS-v2-original-ui-demo.mp4)
+[直接打开 GIF](https://gcore.jsdelivr.net/gh/ZhenSiRong/DSWS@main/deliverable/v2/screenshots/v2-demo-preview.gif) · [下载 / 全屏播放 MP4（61s：GMV 问数、商品级排名、校正回环、UNION 策略拒绝；右上角标注当前功能）](https://gcore.jsdelivr.net/gh/ZhenSiRong/DSWS@bd5e096/deliverable/v2/DSWS-v2-original-ui-demo.mp4)
 
 > v2 的部署、验证与证据见 [`deliverable/v2/README-v2.md`](deliverable/v2/README-v2.md)。
 
