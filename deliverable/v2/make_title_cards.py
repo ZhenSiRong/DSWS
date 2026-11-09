@@ -63,7 +63,7 @@ def opening() -> Image.Image:
 def closing() -> Image.Image:
     im = Image.new("RGB", (W, H), BG)
     d = ImageDraw.Draw(im)
-    badge(d, "DSWS · 验收完成")
+    badge(d, "DSWS · 演示完成")
     bottom(d, "演示结束 · 感谢观看 · 欢迎验收指导")
     d.text((W / 2, 345), "DSWS · 电商问数", font=font(REG, 26), fill=GREEN, anchor="mm")
     d.text((W / 2, 435), "演示结束", font=font(BOLD, 86), fill=INK, anchor="mm")
