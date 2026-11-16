@@ -1,6 +1,6 @@
 # 第 3 页 · 让服务在 8000 端口回答问题
 
-## 这一页造什么
+## 这一页构建什么
 
 一个你自己的 HTTP 服务：跑在 `8000` 端口，只有一个接口 `GET /health`。用 `curl` 一问，它回 `{"ok":true}`。
 这是整套系统第一次对外说话。
@@ -15,7 +15,7 @@
 所有命令都在**仓库根目录**敲（`ls` 能看到 `backend`、`fixtures` 的那一层）。
 Python 用仓库里现成的 `backend/.venv/bin/python`，它已经装好 fastapi 和 uvicorn，**不要再用 pip 装新东西**。
 
-1. 在仓库根目录新建文件夹 `lab`，在 `lab` 里新建文件 `app.py`，把下面整段粘进去、保存：
+1. 在仓库根目录新建文件夹 `lab`，在 `lab` 里新建文件 `app.py`，把下面整段**粘贴**进去（口语常说“粘进去”）、保存：
 
 ```python
 # lab/app.py —— 你的第一个 HTTP 服务
@@ -67,7 +67,7 @@ INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
 
 - 你猜终端会退回吗？不会。到 `Uvicorn running on ...` 这行就不动了——它在**值班**等请求，直到你按 Ctrl+C。这就是“服务”和“跑完就退的脚本”的区别。
 - 你猜 curl 会看到什么？`{"ok":true}` 是服务端返回的 **JSON**，不是网页。`ok` 这个字段名、`/health` 这个路径都是你在代码里自己起的，没有标准答案；只要代码里的路径和 curl 里的路径一致，它就能通。
-- 如果 curl 报 `Connection refused`：服务没起来，或者你敲的端口不是 `8000`。如果启动命令报 `No module named lab.app`：你没站在仓库根目录，或者文件建成了 `lab/app.py.py`。
+- 如果 curl 报 `Connection refused`：服务没起来（= 没**启动**，口语常说“起服务”），或者你敲的端口不是 `8000`。如果启动命令报 `No module named lab.app`：你没站在仓库根目录，或者文件建成了 `lab/app.py.py`。
 
 ## 自己改一下
 

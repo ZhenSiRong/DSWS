@@ -1,6 +1,6 @@
 # 第 0 页 · 开课前准备
 
-## 这一页造什么
+## 这一页构建什么
 
 把克隆下来的仓库变成「能开始第 1 页」的状态：工具装齐、依赖装好、三个端口空着。这一页没有代码，也不讲业务概念，只补克隆后缺的东西。
 
@@ -8,7 +8,7 @@
 
 先确认你已经克隆好仓库，终端停在**仓库根目录**（`ls` 能看到 `Makefile`、`backend/`、`fixtures/` 的那一层），并且用的是 **bash**（Windows 用 Git Bash 或 WSL；macOS 默认是 zsh，先敲一下 `bash`）。以下命令都在这一层敲。
 
-装好五样（装法见官方安装页）：**Docker**（https://docs.docker.com/get-docker/ ，装完要让它跑起来）、**uv**（https://docs.astral.sh/uv/ ）、**Node.js LTS + npm**（https://nodejs.org/ ）、**GNU Make**（装好就是 `make` 命令）、**curl**（第 3–9 页全靠它，多数系统自带）。
+**安装**好五样（安装方法见官方安装页）：**Docker**（https://docs.docker.com/get-docker/ ；装完要让它**运行**起来，口语常说“跑起来”）、**uv**（https://docs.astral.sh/uv/ ）、**Node.js LTS + npm**（https://nodejs.org/ ）、**GNU Make**（装好就是 `make` 命令）、**curl**（第 3–9 页全靠它，多数系统自带）。
 
 `.env`、`backend/.venv`、`frontend/node_modules` 都被 `.gitignore` 忽略，克隆下来没有：`.env` 不用你建（第 1 页会从 `.env.example` 读），后两个由 `make install` 生成，**别手动 pip 装**。
 
@@ -104,6 +104,6 @@ ss -tln | grep -E ':(3307|8000|8081) ' || echo "端口全空"              # 验
 
 | 想回到 | 删掉 | 保留 |
 |---|---|---|
-| 第 3 页 | `lab-nginx`、整个 `lab/` | `lab-mysql`（数据不用重灌） |
+| 第 3 页 | `lab-nginx`、整个 `lab/` | `lab-mysql`（数据不用重新导入） |
 | 第 7 页 | `lab-nginx`，并把 `lab/app.py` 退回第 6 页的版本 | `lab-mysql`、`lab/` |
 | 只重第 9 页 | 只删 `lab-nginx` | `lab-mysql`、`lab/`（配置和页面直接重用） |
