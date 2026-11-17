@@ -46,3 +46,11 @@
 | [第 7 页](page-07.md) | A7 真执行 SQL | `rows[0].sales = 41099.5` |
 | [第 8 页](page-08.md) | A8 SSE 流式 | 12 条 progress + 1 条 result |
 | [第 9 页](page-09.md) | A9 nginx 反代 + 页面 | 浏览器出 `41099.5` |
+
+## 附录：换成双代号（AOA）会怎样
+
+![双代号网络图（AOA / 箭线图法 ADM）：10 个事件 e1–e10、10 条实箭线、0 条虚活动，橙色粗箭线为关键路径](images/flow-aoa.png)
+
+AOA 把**活动画在箭线上**（线上标活动编号 + 工期），**节点只是事件**（里程碑，不消耗时间）。本网络 **10 个事件 e1–e10、10 条实箭线、0 条虚活动**——因为它是串并联形状（汇聚点 e6 同时收 A2 与 A6），没撞上「两个活动共享同一对起止事件」「一个活动只依赖汇聚点上的部分活动」这两种必须加虚活动的情形。代价是事件要先编号、跨多列的依赖只能拉成一条长箭线（A2 从 e7 直连 e6）、CPM 的 ES/EF 要算在箭线（活动）上而不是节点上——所以主线仍用单代号（AON），AOA 只作对照。
+
+图源 [`flow-aoa.mmd`](flow-aoa.mmd)，PNG 由 [`shots/render_aoa.py`](shots/render_aoa.py) 用 mermaid 渲染；跑法：`python3 manual/shots/render_aoa.py`。
