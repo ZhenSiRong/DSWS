@@ -50,6 +50,7 @@
 | [第 9 页](page-09.md) | A9 nginx 反代 + 页面 | 浏览器出 `41099.5` |
 
 - [完备性证明海报](completeness/poster.md)：四层责任×证据矩阵，补齐即完备
+- [建成证明 · 可交互原型](completeness/explorer.html)：中分视图 + 多卡矩阵 + 空白/答案态实时判定（单文件离线；数据源 [`completeness/data.json`](completeness/data.json)，生成 `python3 manual/shots/build_explorer.py`）
 
 ## 附录：换成双代号（AOA）会怎样
 
