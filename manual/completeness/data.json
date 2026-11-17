@@ -3,15 +3,19 @@
   "title": "建成证明",
   "subtitle": "问数系统能力覆盖 · 交互原型",
   "kicker": "练本总装 · 第 0–9 页 · 依据 D38 / D39",
-  "lead": "左：L1 / L2 / L3 三层 + L0 地基，等大块 + 三态方框；右：点块开卡，可同时开多张；顶部按 D38 三条规则实时计算。",
+  "lead": "左：L1 / L2 / L3 三层 + L0 地基，等大块 + 三态徽章（由卡片状态派生，结构图只读）；右：点块开卡，空白态在卡片上点状态徽章循环 ▢ → ◧ → ■，可同时开多张；顶部按 D38 三条规则实时重算。",
   "source_refs": {
     "poster": "poster.md",
     "poster_image": "poster-answer.png",
-    "decision": "humen-desicions/09-ablation-course.md · D38 完备性视觉装置 / D39 交互版",
+    "decision": "humen-desicions/09-ablation-course.md · D38 完备性视觉装置 / D39 交互版 / D40 状态编辑方向",
     "activities": "manual/flow.mmd",
     "pages": "manual/page-00.md – manual/page-09.md（「你应该看到」）"
   },
-  "status_order": ["unbuilt", "unverified", "built"],
+  "status_order": [
+    "unbuilt",
+    "unverified",
+    "built"
+  ],
   "status_legend": [
     {
       "key": "unbuilt",
@@ -35,12 +39,44 @@
       "desc": "输出与页面「你应该看到」逐字一致；把命令 + 输出写进矩阵末列作证据。"
     }
   ],
-  "state_rule": "只允许 ▢ → ◧ → ■：做完 ≠ 通过；◧ 是最容易停住的状态，回页面把判据重跑一遍再涂黑。",
+  "state_rule": "只允许 ▢ → ◧ → ■：做完 ≠ 通过；◧ 是最容易停住的状态，回页面把判据重跑一遍再涂黑。编辑入口只在右侧卡片（空白态可点）；左侧结构图只读，徽章由卡片里的节点状态派生。",
+  "edit_model": {
+    "direction": "node→slot→diagram",
+    "source": "node",
+    "unit": "node",
+    "cycle": [
+      "unbuilt",
+      "unverified",
+      "built"
+    ],
+    "blank_initial": "unbuilt",
+    "answer_readonly": true,
+    "slot_derivation": "槽位状态由所属节点派生（slot.node → node.status）；A1·A2 同属 L0「数据（A1·A2）」节点，改这个节点会同步两个槽位。",
+    "diagram": "左侧结构图只读：每块一个徽章 = 该块对应节点的状态；点块只开卡，不能改状态。",
+    "persistence": "空白态手改进度存 localStorage（键 completeness-explorer/edit-v1），可一键重置。"
+  },
   "capability_columns": {
-    "L1": ["接收提问", "返回答案", "访问数据"],
-    "L2": ["静态与入口转发", "问答编排与 HTTP", "数据存储与查询"],
-    "L3": ["收问", "抽词", "生成 SQL", "执行", "流式推送"],
-    "L0": ["可运行环境", "可查询数据"]
+    "L1": [
+      "接收提问",
+      "返回答案",
+      "访问数据"
+    ],
+    "L2": [
+      "静态与入口转发",
+      "问答编排与 HTTP",
+      "数据存储与查询"
+    ],
+    "L3": [
+      "收问",
+      "抽词",
+      "生成 SQL",
+      "执行",
+      "流式推送"
+    ],
+    "L0": [
+      "可运行环境",
+      "可查询数据"
+    ]
   },
   "layers": [
     {
@@ -59,13 +95,30 @@
           "slot": null,
           "slots": [],
           "slot_ref": "A3–A9",
-          "derived_from_slots": ["A0", "A1", "A2", "A3", "A4", "A5", "A6", "A7", "A8", "A9"],
-          "derive_note": "派生自全部十个槽位（A0–A9）",
+          "mapped_slots": [
+            "A0",
+            "A1",
+            "A2",
+            "A3",
+            "A4",
+            "A5",
+            "A6",
+            "A7",
+            "A8",
+            "A9"
+          ],
+          "map_note": "映射槽位 A0–A9（结构图位置示意；状态在卡片上编辑）",
           "status": "built",
-          "capabilities": { "接收提问": true, "返回答案": true, "访问数据": false },
+          "capabilities": {
+            "接收提问": true,
+            "返回答案": true,
+            "访问数据": false
+          },
           "evidence": "浏览器 :8081 输入「华北销售额」→ 页面出 41099.5",
           "page": "page-09.md",
-          "pages": ["page-09.md"],
+          "pages": [
+            "page-09.md"
+          ],
           "duration_min": null,
           "note": "外部参与者 ↔ 系统边界（A9 入口）"
         },
@@ -77,13 +130,24 @@
           "slot": null,
           "slots": [],
           "slot_ref": "A1·A2",
-          "derived_from_slots": ["A1", "A2", "A7"],
-          "derive_note": "派生自 A1·A2·A7",
+          "mapped_slots": [
+            "A1",
+            "A2",
+            "A7"
+          ],
+          "map_note": "映射槽位 A1·A2·A7（结构图位置示意；状态在卡片上编辑）",
           "status": "built",
-          "capabilities": { "接收提问": false, "返回答案": false, "访问数据": true },
+          "capabilities": {
+            "接收提问": false,
+            "返回答案": false,
+            "访问数据": true
+          },
           "evidence": "真执行 SELECT（JOIN dim_region）→ rows[0].sales=41099.5",
           "page": "page-07.md",
-          "pages": ["page-07.md", "page-02.md"],
+          "pages": [
+            "page-07.md",
+            "page-02.md"
+          ],
           "duration_min": null,
           "note": "系统 → 外部 MySQL（A1·A2）"
         }
@@ -103,15 +167,21 @@
           "block_name": "nginx:8081",
           "layer": "L2",
           "slot": "A9",
-          "slots": ["A9"],
+          "slots": [
+            "A9"
+          ],
           "slot_ref": null,
-          "derived_from_slots": [],
-          "derive_note": null,
           "status": "built",
-          "capabilities": { "静态与入口转发": true, "问答编排与 HTTP": false, "数据存储与查询": false },
+          "capabilities": {
+            "静态与入口转发": true,
+            "问答编排与 HTTP": false,
+            "数据存储与查询": false
+          },
           "evidence": "GET :8081/ → 200；浏览器经 :8081 出 41099.5",
           "page": "page-09.md",
-          "pages": ["page-09.md"],
+          "pages": [
+            "page-09.md"
+          ],
           "duration_min": 8,
           "note": "静态页 · /api/ 反代"
         },
@@ -121,15 +191,22 @@
           "block_name": "backend:8000",
           "layer": "L2",
           "slot": "A3",
-          "slots": ["A3"],
+          "slots": [
+            "A3"
+          ],
           "slot_ref": null,
-          "derived_from_slots": [],
-          "derive_note": null,
           "status": "built",
-          "capabilities": { "静态与入口转发": false, "问答编排与 HTTP": true, "数据存储与查询": false },
+          "capabilities": {
+            "静态与入口转发": false,
+            "问答编排与 HTTP": true,
+            "数据存储与查询": false
+          },
           "evidence": "curl :8000/health → {\"ok\":true}；POST /api/query → rows[0].sales=41099.5",
           "page": "page-03.md",
-          "pages": ["page-03.md", "page-07.md"],
+          "pages": [
+            "page-03.md",
+            "page-07.md"
+          ],
           "duration_min": 5,
           "note": "内含 A4–A8（见 L3）"
         },
@@ -141,15 +218,25 @@
           "slot": null,
           "slots": [],
           "slot_ref": "A1·A2",
-          "derived_from_slots": ["A1", "A2"],
-          "derive_note": "派生自 A1·A2（状态见 L0）",
+          "mapped_slots": [
+            "A1",
+            "A2"
+          ],
+          "map_note": "映射槽位 A1·A2（数据状态另见 L0「数据」行；本节点状态在卡片上编辑）",
           "status": "built",
-          "capabilities": { "静态与入口转发": false, "问答编排与 HTTP": false, "数据存储与查询": true },
+          "capabilities": {
+            "静态与入口转发": false,
+            "问答编排与 HTTP": false,
+            "数据存储与查询": true
+          },
           "evidence": "SELECT VERSION()=8.0.46；COUNT(*)=115；华北 SUM=41099.5",
           "page": "page-02.md",
-          "pages": ["page-01.md", "page-02.md"],
+          "pages": [
+            "page-01.md",
+            "page-02.md"
+          ],
           "duration_min": null,
-          "note": "状态见 L0（A1·A2）"
+          "note": "映射 L0「数据（A1·A2）」"
         }
       ]
     },
@@ -167,15 +254,23 @@
           "block_name": "A4 接口",
           "layer": "L3",
           "slot": "A4",
-          "slots": ["A4"],
+          "slots": [
+            "A4"
+          ],
           "slot_ref": null,
-          "derived_from_slots": [],
-          "derive_note": null,
           "status": "built",
-          "capabilities": { "收问": true, "抽词": false, "生成 SQL": false, "执行": false, "流式推送": false },
+          "capabilities": {
+            "收问": true,
+            "抽词": false,
+            "生成 SQL": false,
+            "执行": false,
+            "流式推送": false
+          },
           "evidence": "POST /api/query → keywords=[]、sql=null、rows=[]（两次一字不差）",
           "page": "page-04.md",
-          "pages": ["page-04.md"],
+          "pages": [
+            "page-04.md"
+          ],
           "duration_min": 4,
           "note": "收 question"
         },
@@ -185,15 +280,23 @@
           "block_name": "A5 抽词",
           "layer": "L3",
           "slot": "A5",
-          "slots": ["A5"],
+          "slots": [
+            "A5"
+          ],
           "slot_ref": null,
-          "derived_from_slots": [],
-          "derive_note": null,
           "status": "built",
-          "capabilities": { "收问": false, "抽词": true, "生成 SQL": false, "执行": false, "流式推送": false },
+          "capabilities": {
+            "收问": false,
+            "抽词": true,
+            "生成 SQL": false,
+            "执行": false,
+            "流式推送": false
+          },
           "evidence": "keywords=[\"华北\",\"销售额\"]",
           "page": "page-05.md",
-          "pages": ["page-05.md"],
+          "pages": [
+            "page-05.md"
+          ],
           "duration_min": 8,
           "note": "问题 → 关键词"
         },
@@ -203,15 +306,23 @@
           "block_name": "A6 生成 SQL",
           "layer": "L3",
           "slot": "A6",
-          "slots": ["A6"],
+          "slots": [
+            "A6"
+          ],
           "slot_ref": null,
-          "derived_from_slots": [],
-          "derive_note": null,
           "status": "built",
-          "capabilities": { "收问": false, "抽词": false, "生成 SQL": true, "执行": false, "流式推送": false },
+          "capabilities": {
+            "收问": false,
+            "抽词": false,
+            "生成 SQL": true,
+            "执行": false,
+            "流式推送": false
+          },
           "evidence": "print 出 5 行 SELECT：SUM + JOIN dim_region + WHERE 华北",
           "page": "page-06.md",
-          "pages": ["page-06.md"],
+          "pages": [
+            "page-06.md"
+          ],
           "duration_min": 10,
           "note": "契约 → SELECT"
         },
@@ -221,15 +332,23 @@
           "block_name": "A7 执行",
           "layer": "L3",
           "slot": "A7",
-          "slots": ["A7"],
+          "slots": [
+            "A7"
+          ],
           "slot_ref": null,
-          "derived_from_slots": [],
-          "derive_note": null,
           "status": "built",
-          "capabilities": { "收问": false, "抽词": false, "生成 SQL": false, "执行": true, "流式推送": false },
+          "capabilities": {
+            "收问": false,
+            "抽词": false,
+            "生成 SQL": false,
+            "执行": true,
+            "流式推送": false
+          },
           "evidence": "rows[0].sales=41099.5（19 条华北订单求和）",
           "page": "page-07.md",
-          "pages": ["page-07.md"],
+          "pages": [
+            "page-07.md"
+          ],
           "duration_min": 6,
           "note": "pymysql → rows"
         },
@@ -239,15 +358,23 @@
           "block_name": "A8 流式",
           "layer": "L3",
           "slot": "A8",
-          "slots": ["A8"],
+          "slots": [
+            "A8"
+          ],
           "slot_ref": null,
-          "derived_from_slots": [],
-          "derive_note": null,
           "status": "built",
-          "capabilities": { "收问": false, "抽词": false, "生成 SQL": false, "执行": false, "流式推送": true },
+          "capabilities": {
+            "收问": false,
+            "抽词": false,
+            "生成 SQL": false,
+            "执行": false,
+            "流式推送": true
+          },
           "evidence": "progress=12 条 + result 1 条 → 41099.5",
           "page": "page-08.md",
-          "pages": ["page-08.md"],
+          "pages": [
+            "page-08.md"
+          ],
           "duration_min": 10,
           "note": "SSE 逐条推"
         }
@@ -267,15 +394,20 @@
           "block_name": "A0 环境",
           "layer": "L0",
           "slot": "A0",
-          "slots": ["A0"],
+          "slots": [
+            "A0"
+          ],
           "slot_ref": null,
-          "derived_from_slots": [],
-          "derive_note": null,
           "status": "built",
-          "capabilities": { "可运行环境": true, "可查询数据": false },
+          "capabilities": {
+            "可运行环境": true,
+            "可查询数据": false
+          },
           "evidence": "backend/.venv/bin/python -V → Python 3.14.8；3307/8000/8081 空闲",
           "page": "page-00.md",
-          "pages": ["page-00.md"],
+          "pages": [
+            "page-00.md"
+          ],
           "duration_min": 10,
           "note": "Docker/uv/Node + 依赖"
         },
@@ -285,15 +417,22 @@
           "block_name": "数据（A1·A2）",
           "layer": "L0",
           "slot": null,
-          "slots": ["A1", "A2"],
+          "slots": [
+            "A1",
+            "A2"
+          ],
           "slot_ref": null,
-          "derived_from_slots": [],
-          "derive_note": null,
           "status": "built",
-          "capabilities": { "可运行环境": false, "可查询数据": true },
+          "capabilities": {
+            "可运行环境": false,
+            "可查询数据": true
+          },
           "evidence": "SELECT VERSION()=8.0.46；SHOW TABLES → 5 行；COUNT(*)=115",
           "page": "page-02.md",
-          "pages": ["page-01.md", "page-02.md"],
+          "pages": [
+            "page-01.md",
+            "page-02.md"
+          ],
           "duration_min": 5,
           "duration_note": "A1 3 分钟 + A2 2 分钟",
           "note": "建表 + 灌数据"
@@ -404,19 +543,97 @@
     }
   ],
   "edges": [
-    { "id": "e01", "from": "l1-interact", "to": "nginx", "label": "A9 入口（浏览器 :8081）", "span": "L1→L2" },
-    { "id": "e02", "from": "nginx", "to": "backend", "label": "/api/ 反代", "span": "L2→L2" },
-    { "id": "e03", "from": "backend", "to": "mysql", "label": "pymysql :3307", "span": "L2→L2" },
-    { "id": "e04", "from": "l1-datasource", "to": "mysql", "label": "真执行 SELECT（JOIN dim_region）", "span": "L1→L2" },
-    { "id": "e05", "from": "backend", "to": "A4", "label": "内含 A4–A8", "span": "L2→L3" },
-    { "id": "e06", "from": "A4", "to": "A5", "label": "问句", "span": "L3→L3" },
-    { "id": "e07", "from": "A5", "to": "A6", "label": "关键词", "span": "L3→L3" },
-    { "id": "e08", "from": "A6", "to": "A7", "label": "SQL", "span": "L3→L3" },
-    { "id": "e09", "from": "A7", "to": "A8", "label": "rows", "span": "L3→L3" },
-    { "id": "e10", "from": "A7", "to": "mysql", "label": "真执行（:3307）", "span": "L3→L2" },
-    { "id": "e11", "from": "A8", "to": "l1-interact", "label": "SSE → 41099.5 回浏览器", "span": "L3→L1" },
-    { "id": "e12", "from": "env", "to": "backend", "label": "可运行环境", "span": "L0→L3" },
-    { "id": "e13", "from": "data", "to": "mysql", "label": "可查询数据（5 表 / 115 行）", "span": "L0→L2" }
+    {
+      "id": "e01",
+      "from": "l1-interact",
+      "to": "nginx",
+      "label": "A9 入口（浏览器 :8081）",
+      "span": "L1→L2"
+    },
+    {
+      "id": "e02",
+      "from": "nginx",
+      "to": "backend",
+      "label": "/api/ 反代",
+      "span": "L2→L2"
+    },
+    {
+      "id": "e03",
+      "from": "backend",
+      "to": "mysql",
+      "label": "pymysql :3307",
+      "span": "L2→L2"
+    },
+    {
+      "id": "e04",
+      "from": "l1-datasource",
+      "to": "mysql",
+      "label": "真执行 SELECT（JOIN dim_region）",
+      "span": "L1→L2"
+    },
+    {
+      "id": "e05",
+      "from": "backend",
+      "to": "A4",
+      "label": "内含 A4–A8",
+      "span": "L2→L3"
+    },
+    {
+      "id": "e06",
+      "from": "A4",
+      "to": "A5",
+      "label": "问句",
+      "span": "L3→L3"
+    },
+    {
+      "id": "e07",
+      "from": "A5",
+      "to": "A6",
+      "label": "关键词",
+      "span": "L3→L3"
+    },
+    {
+      "id": "e08",
+      "from": "A6",
+      "to": "A7",
+      "label": "SQL",
+      "span": "L3→L3"
+    },
+    {
+      "id": "e09",
+      "from": "A7",
+      "to": "A8",
+      "label": "rows",
+      "span": "L3→L3"
+    },
+    {
+      "id": "e10",
+      "from": "A7",
+      "to": "mysql",
+      "label": "真执行（:3307）",
+      "span": "L3→L2"
+    },
+    {
+      "id": "e11",
+      "from": "A8",
+      "to": "l1-interact",
+      "label": "SSE → 41099.5 回浏览器",
+      "span": "L3→L1"
+    },
+    {
+      "id": "e12",
+      "from": "env",
+      "to": "backend",
+      "label": "可运行环境",
+      "span": "L0→L3"
+    },
+    {
+      "id": "e13",
+      "from": "data",
+      "to": "mysql",
+      "label": "可查询数据（5 表 / 115 行）",
+      "span": "L0→L2"
+    }
   ],
   "completeness_rules": [
     {
@@ -467,15 +684,26 @@
     "slot_count": 10,
     "capability_column_count": 13,
     "edge_count": 13,
-    "row_plan": { "L1": 2, "L2": 3, "L3": 5, "L0": 2 },
-    "column_plan": { "L1": 3, "L2": 3, "L3": 5, "L0": 2 }
+    "row_plan": {
+      "L1": 2,
+      "L2": 3,
+      "L3": 5,
+      "L0": 2
+    },
+    "column_plan": {
+      "L1": 3,
+      "L2": 3,
+      "L3": 5,
+      "L0": 2
+    }
   },
   "notes": [
     "本文件是静态海报（poster-answer.png / poster-blank.png）与交互页（explorer.html）的唯一数据源；改数据只改这里。",
     "节点 = 该层「责任 × 证据」矩阵的一行（共 12 行）；capabilities 的键就是该层能力列名，true = 由该节点提供。",
-    "三态方框挂在槽位 A0–A9 上（共 10 个）：A1 与 A2 同属 L0「数据（A1·A2）」这一行，所以该行有两个独立可涂的方框。",
-    "无独立槽位的行（L1 两行、L2「MySQL:3307」）不单独涂色：slot_ref 标出它在海报里的映射槽位，状态由 derived_from_slots 派生（全部 ■ 才是 ■，任一 ▢ 就是 ▢，否则 ◧）。",
-    "空白态初始所有槽位为 ▢；点方框按 ▢ → ◧ → ■ → ▢ 循环，顶部状态条按三条规则实时重算。",
+    "状态以节点为唯一真源（卡片是编辑入口）：点卡片顶部状态徽章循环 ▢ → ◧ → ■；空白态（编辑态）可编辑，答案态只读。",
+    "槽位状态由所属节点派生：node.slots 里列出的槽位跟随该节点状态；A1·A2 同属 L0「数据（A1·A2）」节点，改该节点会同步两个槽位。",
+    "无独立槽位的行（L1 两行、L2「MySQL:3307」）状态直接在各自卡片上编辑；slot_ref / mapped_slots 只是结构图映射提示，不参与状态派生。",
+    "空白态初始全 ▢；左侧结构图 12 个块的徽章由卡片状态派生、不可点；顶部行 / 列 / 边判定与「建成证明 ✓」印章实时重算。",
     "证据文本逐字取自 poster.md 的矩阵末列；build_explorer.py 会用 poster.md 反向核对节点名、能力列名、■/— 与证据，避免两版漂移。"
   ]
 }
