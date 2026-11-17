@@ -1,0 +1,36 @@
+%% 单代号网络图（AON / 紧前关系法 PDM）：节点 = 构建活动，箭头 = FS（完成-开始）紧前关系
+%% 节点内：编号+活动名 / 工期 / ES EF LS LF（单位：分钟）/ 完成判据
+%% 关键路径：A0 → A3 → A4 → A5 → A6 → A7 → A8 → A9，总工期 61 分钟
+%% 数据层支线 A0 → A1 → A2 → A7 有 22 分钟总浮动，故不进关键路径
+%% 渲染成 PNG：python3 manual/shots/render_flow.py（同一份源文件供练本总览页与答辩共用）
+flowchart LR
+    A0["<b>A0 环境准备</b><br/>工期 10<br/>ES0 EF10 LS0 LF10<br/>判据：python -V<br/>有输出、三端口空闲"]
+    A1["<b>A1 创建 MySQL 容器</b><br/>工期 3<br/>ES10 EF13 LS32 LF35<br/>判据：容器 running<br/>SELECT VERSION()<br/>有输出"]
+    A2["<b>A2 导入 dw.sql</b><br/>工期 2<br/>ES13 EF15 LS35 LF37<br/>判据：5 张表<br/>COUNT(*)=115"]
+    A3["<b>A3 最小 HTTP 服务</b><br/>工期 5<br/>ES10 EF15 LS10 LF15<br/>判据：curl /health<br/>→ ok:true"]
+    A4["<b>A4 POST /api/query</b><br/>工期 4<br/>ES15 EF19 LS15 LF19<br/>判据：返回固定 JSON"]
+    A5["<b>A5 关键词抽取</b><br/>工期 8<br/>ES19 EF27 LS19 LF27<br/>判据：<br/>[#quot;华北#quot;,#quot;销售额#quot;]"]
+    A6["<b>A6 契约 + 生成 SQL</b><br/>工期 10<br/>ES27 EF37 LS27 LF37<br/>判据：打印带 JOIN 的<br/>SELECT"]
+    A7["<b>A7 真执行 SQL</b><br/>工期 6<br/>ES37 EF43 LS37 LF43<br/>判据：41099.5"]
+    A8["<b>A8 SSE 流式</b><br/>工期 10<br/>ES43 EF53 LS43 LF53<br/>判据：12 条 progress<br/>+ 1 条 result"]
+    A9["<b>A9 nginx 反代 + 页面</b><br/>工期 8<br/>ES53 EF61 LS53 LF61<br/>判据：浏览器出 41099.5"]
+
+    A0 -->|FS| A1
+    A0 -->|FS| A3
+    A1 -->|FS| A2
+    A2 -->|FS| A7
+    A3 -->|FS| A4
+    A4 -->|FS| A5
+    A5 -->|FS| A6
+    A6 -->|FS| A7
+    A7 -->|FS| A8
+    A8 -->|FS| A9
+
+    %% 关键路径（橙色粗边框 + 浅橙底 + 橙色粗箭头）：A0 A3 A4 A5 A6 A7 A8 A9
+    %% linkStyle 的序号 = 上面箭头的书写顺序（从 0 起）
+    classDef critical fill:#fff1e0,stroke:#e65100,stroke-width:5px,color:#333333
+    classDef normal fill:#f6f7f9,stroke:#b6bcc4,stroke-width:2px,color:#333333
+    class A0,A3,A4,A5,A6,A7,A8,A9 critical
+    class A1,A2 normal
+    linkStyle 1,4,5,6,7,8,9 stroke:#e65100,stroke-width:4px
+    linkStyle 0,2,3 stroke:#9aa0a6,stroke-width:2px

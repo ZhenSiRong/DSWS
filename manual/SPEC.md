@@ -28,8 +28,8 @@
 
 | 页 | 造什么 | 页末应见 | 关键约束 |
 |---|---|---|---|
-| 1 | 起 MySQL + 自动灌入 `fixtures/dw.sql` | `SHOW TABLES` 出 5 张表 | 容器名 `lab-mysql`；**必须** `-p 127.0.0.1:3307:3306`；挂载 `fixtures/dw.sql` 到 `/docker-entrypoint-initdb.d/` |
-| 2 | 验证 5 张表里有数据 | `COUNT(*) = 115`；一条 JOIN 查询 | 只读查询 |
+| 1 | 创建 MySQL 容器（**空库**） | `SELECT VERSION()` 有输出；`SHOW DATABASES` 里**没有** `dw` | 容器名 `lab-mysql`；**必须** `-p 127.0.0.1:3307:3306`；**不加** `-v` 挂载；镜像从 `.env.example` 读 |
+| 2 | 导入 `fixtures/dw.sql`（建表灌数据） | `SHOW TABLES` 5 行；`COUNT(*) = 115`；华北 19 | `docker exec -i … < fixtures/dw.sql`，**`-i` 必加**（少了静默不导入） |
 | 3 | 最小 HTTP 服务（FastAPI） | `curl /health` → `{"ok":true}` | 端口 **8000**；`python -m uvicorn`；依赖用已有的 `backend/.venv` |
 | 4 | `/api/query` 硬编码返回 | `curl -X POST` → 固定 JSON | 不连库 |
 | 5 | 从问题里抽关键词 | `["华北","销售额"]` | 纯字符串规则，不许用 LLM |

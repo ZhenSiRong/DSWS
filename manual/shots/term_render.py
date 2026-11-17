@@ -12,8 +12,9 @@
    拷入 `fixtures/dw.sql` 和 `.env.example`，写入每页 `lab/app.py`。
    页面命令里全是相对路径，在临时工作区里逐字执行，所以图里不会出现
    `/home/...` 这类绝对路径。
-2. 按**页序**在真 shell 里跑每页「动手」的命令：第 1 页起 MySQL（3307）并复用，
-   第 3 页起每页用新代码重启 uvicorn（8000），curl 的输出逐条捕获（不手抄）。
+2. 按**页序**在真 shell 里跑每页「动手」的命令：第 1 页创建 MySQL 容器（3307）
+   并复用，第 2 页把 `fixtures/dw.sql` 导入该容器，第 3 页起每页用新代码重启
+   uvicorn（8000），curl 的输出逐条捕获（不手抄）。
 3. 把捕获到的「命令 + 输出」拼成深色终端版式的 HTML，用
    `google-chrome --headless --screenshot` 截 1100px 宽、1:1 像素的图，
    再用 ImageMagick `convert -trim` 把高度裁到内容。
@@ -70,31 +71,33 @@ DOCKER_RUN = "\n".join(
         "  -e MYSQL_ROOT_PASSWORD=labpass \\",
         "  -e MYSQL_USER=didilili \\",
         "  -e MYSQL_PASSWORD=labpass \\",
-        '  -v "$PWD/fixtures/dw.sql:/docker-entrypoint-initdb.d/10-dw.sql:ro" \\',
         '  "$(grep \'^MYSQL_IMAGE=\' .env.example | cut -d= -f2)"',
     ]
 )
 
 WAIT_MYSQL = "until docker logs lab-mysql 2>&1 | grep -q 'port: 3306'; do sleep 2; done"
 
+# 第 1 页：空库，只验证能连上（版本 + 系统库）
+EXEC_VERSION_DBS = (
+    'docker exec lab-mysql mysql -uroot -plabpass -N -B '
+    '-e "SELECT VERSION(); SHOW DATABASES;"'
+)
+
+# 第 2 页：把 fixtures/dw.sql 导入空库（-i 让容器标准输入保持打开）
+IMPORT_DW = "docker exec -i lab-mysql mysql -uroot -plabpass < fixtures/dw.sql"
+
 EXEC_TABLES = (
     'docker exec lab-mysql mysql -uroot -plabpass -N -B dw -e "SHOW TABLES;"'
 )
 
-EXEC_COUNT = (
-    'docker exec lab-mysql mysql -uroot -plabpass -N -B dw '
-    '-e "SELECT COUNT(*) FROM fact_order;"'
-)
-
-EXEC_COUNT_JOIN = (
-    'docker exec lab-mysql mysql -uroot -plabpass -N -B dw -e '
-    '"SELECT COUNT(*) FROM fact_order f JOIN dim_region r ON f.region_id = r.region_id '
-    'WHERE r.region_name = \'华北\';"'
-)
-
-EXEC_SAMPLE = "\n".join(
+# 第 2 页第 3 条：总行数 + 华北单数 + 华北前 3 单
+EXEC_COUNTS = "\n".join(
     [
         'docker exec lab-mysql mysql -uroot -plabpass -N -B dw -e "',
+        "SELECT COUNT(*) FROM fact_order;",
+        "SELECT COUNT(*) FROM fact_order f",
+        "JOIN dim_region r ON f.region_id = r.region_id",
+        "WHERE r.region_name = '华北';",
         "SELECT f.order_id, r.province, r.region_name, f.order_amount",
         "FROM fact_order f",
         "JOIN dim_region r ON f.region_id = r.region_id",
@@ -459,7 +462,7 @@ PAGES = [
         "steps": [
             {"kind": "cmd", "cmd": DOCKER_RUN, "timeout": 180},
             {"kind": "cmd", "cmd": WAIT_MYSQL, "timeout": 180},
-            {"kind": "cmd", "cmd": EXEC_TABLES, "timeout": 60},
+            {"kind": "cmd", "cmd": EXEC_VERSION_DBS, "timeout": 60},
         ],
         "checks": [{"block": 0, "steps": [2]}],
         "shots": [
@@ -484,11 +487,11 @@ PAGES = [
         "id": "page-02",
         "code": None,
         "steps": [
-            {"kind": "cmd", "cmd": EXEC_COUNT, "timeout": 60},
-            {"kind": "cmd", "cmd": EXEC_COUNT_JOIN, "timeout": 60},
-            {"kind": "cmd", "cmd": EXEC_SAMPLE, "timeout": 60},
+            {"kind": "cmd", "cmd": IMPORT_DW, "timeout": 120},
+            {"kind": "cmd", "cmd": EXEC_TABLES, "timeout": 60},
+            {"kind": "cmd", "cmd": EXEC_COUNTS, "timeout": 60},
         ],
-        "checks": [{"block": 0, "steps": [0, 1, 2]}],
+        "checks": [{"block": 0, "steps": [2]}],
         "shots": [
             {
                 "file": "page-02-data-check.png",

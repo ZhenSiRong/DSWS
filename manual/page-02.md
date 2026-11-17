@@ -1,35 +1,43 @@
-# 第 2 页 · 证明数据真的在，而且能连起来
+# 第 2 页 · 导入 dw.sql：建表灌数据
 
 ## 这一页构建什么
 
-一行数据都不写，用三条只读查询给第 1 页的库验货：`fact_order` 里有 115 行；华北区有 19 单；一条 JOIN 能把订单连到区域表。
+把 `fixtures/dw.sql` 导入第 1 页那个空容器：一条命令建出 `dw` 库、5 张表和 115 行数据（口语常说“灌数据”）。页末你能看到 5 张表、115 单、华北 19 单。
 
 ## 猜一猜
 
-第 1 页你只做了三件事：起容器、等它初始化、`SHOW TABLES`。你没有手动 `INSERT` 过任何一行。
+先写下答案，再动手。
 
-先写下你的答案：`SELECT COUNT(*) FROM fact_order` 会返回几？（0 / 115 / 其他数字）
+第 1 条命令把 `dw.sql` 里几百行 `CREATE` / `INSERT` 送进 MySQL。终端会**逐条打印**每张表、每行数据，还是**什么都不打印**？导入完再数一次：`SELECT COUNT(*) FROM fact_order` 会回几？（0 / 115 / 其他数字）
 
 ## 动手
 
-第 1 页的 `lab-mysql` 要先在运行；报 `No such container: lab-mysql` 就回第 1 页重跑。三条命令全是 `SELECT`，只读，不改库。
+第 1 页的 `lab-mysql` 要先创建好、正在运行；报 `No such container: lab-mysql` 就回第 1 页重跑。以下命令仍在**仓库根目录**执行（`fixtures/dw.sql` 在这里）。
 
-**第 1 条：数总行数。**
-
-```bash
-docker exec lab-mysql mysql -uroot -plabpass -N -B dw -e "SELECT COUNT(*) FROM fact_order;"
-```
-
-**第 2 条：数华北的订单。** `fact_order` 里只存了 `region_id`，没有"华北"这两个字，得 JOIN 到区域表才筛得出来。
+**第 1 条：导入 `dw.sql`。**
 
 ```bash
-docker exec lab-mysql mysql -uroot -plabpass -N -B dw -e "SELECT COUNT(*) FROM fact_order f JOIN dim_region r ON f.region_id = r.region_id WHERE r.region_name = '华北';"
+docker exec -i lab-mysql mysql -uroot -plabpass < fixtures/dw.sql
 ```
 
-**第 3 条：看华北订单长什么样。** 一条 SQL，分行只为好读。
+`-i` 让容器的标准输入保持打开，`< fixtures/dw.sql` 是**宿主机** shell 的重定向（第 1 页讲过）：文件内容从你的终端接进容器的 `mysql`，容器里的 `mysql` 把它当脚本逐句执行。**少了 `-i` 会静默失败**：`mysql` 读到空输入，不建表也不报错，退出码还是 0。
+
+**第 2 条：看库里的表。**
+
+```bash
+docker exec lab-mysql mysql -uroot -plabpass -N -B dw -e "SHOW TABLES;"
+```
+
+`dw` 是库名；`-N -B` 让输出只留表名，方便逐行对。终端里照样会多一行密码 `Warning`，忽略它。
+
+**第 3 条：数行数、看华北订单。** 一条命令里写三条 SQL，按顺序回三段结果。
 
 ```bash
 docker exec lab-mysql mysql -uroot -plabpass -N -B dw -e "
+SELECT COUNT(*) FROM fact_order;
+SELECT COUNT(*) FROM fact_order f
+JOIN dim_region r ON f.region_id = r.region_id
+WHERE r.region_name = '华北';
 SELECT f.order_id, r.province, r.region_name, f.order_amount
 FROM fact_order f
 JOIN dim_region r ON f.region_id = r.region_id
@@ -37,11 +45,15 @@ WHERE r.region_name = '华北'
 LIMIT 3;"
 ```
 
-`-N -B` 的含义同第 1 页；那行 `Warning` 照样忽略。
+`fact_order` 里只存了 `region_id`，没有“华北”这两个字，第二段 SQL 得 JOIN 到区域表才筛得出来；第三段只取前 3 单，下一段拿它和对账。
 
 ## 你应该看到
 
-第 1 条回一个数，第 2 条回一个数，第 3 条回三行（列之间是 Tab）：
+第 1 条除了那行密码 `Warning`，什么都不打印——`CREATE` / `INSERT` 不回显，**一行业务输出都没有就是成功**。
+
+第 2 条回 5 行表名，按字母序：`dim_customer`、`dim_date`、`dim_product`、`dim_region`、`fact_order`。
+
+第 3 条回 5 行：115 是 `fact_order` 总行数，19 是其中华北的单数，最后三行是华北的前 3 单（列之间是 Tab）：
 
 ```text
 115
@@ -51,19 +63,19 @@ ORD20250109001	北京市	华北	599
 ORD20250114001	北京市	华北	75
 ```
 
-
-![第 2 页 · 行数与华北 JOIN 查询的真实输出](images/page-02-data-check.png)
+![第 2 页 · 导入 dw.sql 后 5 张表、115 行、华北 19 单的真实输出](images/page-02-data-check.png)
 
 ## 对账
 
-- 你写 0：打脸的地方在这里——115 行没人 `INSERT`，是第 1 页挂进去的 `dw.sql` 在容器第一次初始化时被 MySQL 自动执行**导入**进来的（口语常说“灌进来”）。建表和灌数据是同一份脚本干的。
-- 你写 115：对。总行数由 `dw.sql` 里的 `INSERT` 决定；这 115 行里华北（`region_id` 为 `R004`）有 19 单。
-- 第 3 条能出现"华北"两个字，靠的是 `JOIN dim_region r ON f.region_id = r.region_id`：订单里只有编号 `R004`，"华北"是从区域表连过去取到的。JOIN 条件写错，你会看到一行都没有。
-
-命令 3 只出 3 行，不是华北只有 3 单——`LIMIT 3` 只是先看前 3 单，下一段你就把它改掉。
+- 猜“会逐条打印”：不对。`mysql` 批量读脚本时不回显执行过程；除密码 `Warning` 外一行输出都没有。所以“没输出”不是没执行，**必须自己查表、数行数**（第 2、3 条）才算验完。
+- 猜 0：先看第 1 条是不是漏了 `-i`——那会“成功”退出但什么都没导入；如果文件路径写错，宿主机 shell 会直接报 `No such file or directory`。
+- 猜 115：对。这个数由 `fixtures/dw.sql` 里 `fact_order` 的 `INSERT` 决定；115 行里华北（`region_id` 为 `R004`）19 单。
+- 5 张表和 `dw` 库不是 MySQL 送的：`dw.sql` 开头 `CREATE DATABASE`，后面 5 段 `CREATE TABLE`；第 2 条列出的表名就来自这 5 段。
+- 第 3 条最后三行能出现“华北”两个字，靠的是 `JOIN dim_region r ON f.region_id = r.region_id`：订单里只有编号 `R004`，“华北”是从区域表连过去取到的。JOIN 条件写错，你会看到一行都没有。
+- 最后三行只出 3 单，不是华北只有 3 单——`LIMIT 3` 只限制显示；华北一共 19 单，第二段 SQL 已经数过。
 
 ## 自己改一下
 
-1. 把第 3 条的 `LIMIT 3` 改成 `LIMIT 100`，数一下：华北正好 19 行。
-2. 把 `'华北'` 换成 `'华南'`：订单号、省份、金额全换一批。
-3. 换成 `'东北'`：一行都没有——`dim_region` 里没有"东北"，0 行也是正确答案。
+1. 去掉第 2 条里的 `-N`：第一行会多出表头 `Tables_in_dw`。
+2. 把第 3 条第二个 `'华北'` 换成 `'华南'`：数会变成多少？再想想 `dim_region` 里“华南”对应哪个省。
+3. 再跑一遍第 1 条导入，再数一次第 3 条第一句：还是 115——每张表前的 `DROP TABLE IF EXISTS` 会先把旧表删掉，不会翻倍。

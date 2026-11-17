@@ -1,24 +1,24 @@
-# 第 1 页 · 创建一个会自己建库的 MySQL 容器
+# 第 1 页 · 创建 MySQL 容器（空库）
 
 ## 这一页构建什么
 
-**创建并启动**一个叫 `lab-mysql` 的 MySQL 容器，端口只开给本机 `127.0.0.1:3307`；把 `fixtures/dw.sql` **挂载**进它的初始化目录，让容器第一次启动时自动建出 `dw` 库和 5 张表（口语常说“起一个容器”“挂进去”）。
+**创建并启动**一个叫 `lab-mysql` 的 MySQL 容器，端口只开给本机 `127.0.0.1:3307`。这一页不建库、不导入数据：容器起来后是一个**空库**，只有 MySQL 自带的系统库，`dw` 库要到第 2 页才导入（口语常说“起一个容器”）。
 
 ## 猜一猜
 
 先写下答案，再动手。
 
-`dw.sql` 你没有手动执行过。下面三条命令跑完，`SHOW TABLES` 会列出几张表？
+容器起来、能连上之后，`SHOW DATABASES` 会列出哪些库？
 
-- A. 0 张（脚本根本没执行）
-- B. 5 张（脚本被自动执行了）
-- C. 100 多张（连 MySQL 自带的系统表一起列出来）
+- A. 有 `dw`（MySQL 启动时自动建好了）
+- B. 只有 MySQL 自带的系统库，没有 `dw`
+- C. 一个库都没有
 
 ## 动手
 
 以下命令都在**仓库根目录**执行（有 `fixtures/`、`backend/` 的那一层）。
 
-**第 1 条：起容器。**
+**第 1 条：创建并启动容器。**
 
 ```bash
 docker run -d --name lab-mysql \
@@ -27,58 +27,60 @@ docker run -d --name lab-mysql \
   -e MYSQL_ROOT_PASSWORD=labpass \
   -e MYSQL_USER=didilili \
   -e MYSQL_PASSWORD=labpass \
-  -v "$PWD/fixtures/dw.sql:/docker-entrypoint-initdb.d/10-dw.sql:ro" \
   "$(grep '^MYSQL_IMAGE=' .env.example | cut -d= -f2)"
 ```
 
 它会打印一长串容器 ID，看到它就说明容器起来了。这一长串参数你只要记住这几处：
 
 - `-p 127.0.0.1:3307:3306`：冒号左边是宿主机端口，右边是容器内端口。3306 常被本机已装的 MySQL 占着，所以这一课统一用 3307；3307 若也被占，换一个没被占的端口（比如 3308），后面写 3307 的页跟着改。
-- `-v`：把 `fixtures/dw.sql` 只读（`:ro`）挂进容器的 `/docker-entrypoint-initdb.d/`。MySQL 官方镜像**第一次初始化时**会把这个目录里的 `.sql` 全跑一遍，所以你不必手动 `source`。
-- `MYSQL_USER` / `MYSQL_PASSWORD`：`dw.sql` 里有 `GRANT ... TO 'didilili'@'%'`，而 MySQL 8 不会自动建这个用户，少了这两行容器会直接退出。
-- `LANG=C.UTF-8`：让容器里的 `mysql` 认 UTF-8，少了它，下一页按中文筛数据会一条也筛不到。
+- 这一页**故意不加 `-v`**：没有脚本挂载（mount）进容器的 `/docker-entrypoint-initdb.d/`，容器第一次启动时没有脚本自动执行，`dw` 库不会被建出来——空库就是这一页的产物。
+- `MYSQL_ROOT_PASSWORD=labpass`：设 root 账号的密码，后面所有 `mysql -uroot -plabpass` 都用它。
+- `MYSQL_USER` / `MYSQL_PASSWORD`：MySQL 不会自动建 `didilili` 这个用户；第 2 页导入的 `dw.sql` 里有一句 `GRANT ... TO 'didilili'@'%'`，用户不存在时导入会报错中断——所以这里先把它建好。
+- `LANG=C.UTF-8`：让容器里的 `mysql` 认 UTF-8，少了它，第 2 页按中文筛数据会一条也筛不到。
 - 最后一行不手抄镜像名，从仓库自带的 `.env.example` 里读 `MYSQL_IMAGE`（`.env` 是你本地的密钥配置，被 `.gitignore` 忽略，克隆下来没有）。这行一旦被改名或删除，命令会**静默传空**、拉不到镜像——所以别删它。
 
-**第 2 条：等它初始化完。它一行输出都没有，是在等。**
+**顺带把第 2 页要用的输入重定向认下来。** 第 2 页导入 `dw.sql` 的命令是 `docker exec -i lab-mysql mysql -uroot -plabpass < fixtures/dw.sql`。`<` 是**宿主机** shell 的重定向：在你的终端里打开 `fixtures/dw.sql`，把内容接到 `docker exec` 的标准输入；`-i` 让容器的标准输入保持打开，这些内容才能递进容器里的 `mysql`。**少了 `-i`，`mysql` 读到的是空输入：命令不建表、不报错，退出码还是 0**——“没报错”不等于“执行了”。
+
+**第 2 条：等它启动就绪。它一行输出都没有，是在等。**
 
 ```bash
 until docker logs lab-mysql 2>&1 | grep -q 'port: 3306'; do sleep 2; done
 ```
 
-正常 10–20 秒后光标才回来。超过 1 分钟还没回来，按 `Ctrl-C`，回看第 1 条有没有报错。
+正常 10 秒左右光标才回来（机器慢会到 20–30 秒）。超过 1 分钟还没回来，按 `Ctrl-C`，回看第 1 条有没有报错。
 
-**第 3 条：看表。**
+**第 3 条：连上它，问两件事。**
 
 ```bash
-docker exec lab-mysql mysql -uroot -plabpass -N -B dw -e "SHOW TABLES;"
+docker exec lab-mysql mysql -uroot -plabpass -N -B -e "SELECT VERSION(); SHOW DATABASES;"
 ```
 
-`dw` 是库名；`-N -B` 让输出只留表名，方便逐行对。终端里还会多一行 `mysql: [Warning] Using a password on the command line interface can be insecure.`——那是提醒你密码写在命令行上了，不是错误。
+`-N -B` 让输出只留值、一条一行，方便逐行对；`-e` 后面是一段 SQL，写几条都行，用分号隔开。终端里还会多一行 `mysql: [Warning] Using a password on the command line interface can be insecure.`——那是提醒你密码写在命令行上了，不是错误。
 
 ## 你应该看到
 
-命令 3 的输出，5 行，顺序固定：
+第 1 条回一长串容器 ID；第 2 条没有输出；第 3 条 5 行：第一行是 MySQL 版本号，后四行是它自带的 4 个库：
 
 ```text
-dim_customer
-dim_date
-dim_product
-dim_region
-fact_order
+8.0.46
+information_schema
+mysql
+performance_schema
+sys
 ```
 
+版本号是 `8.0.` 开头的一串数字，你的机器上可能不是 `8.0.46`；后四行固定。`dw` 不在里面——这一页只起容器，没有建库。
 
-![第 1 页 · 建库建表后 SHOW TABLES 的真实输出](images/page-01-mysql-tables.png)
+![第 1 页 · 空容器起来后 SELECT VERSION() 与 SHOW DATABASES 的真实输出](images/page-01-mysql-tables.png)
 
 ## 对账
 
-- 猜 A（0 张）：错。表是 `dw.sql` 建的，而它由 MySQL 在容器第一次初始化时自动执行——你没敲 `source`，不等于没执行。
-- 猜 C（100 多张）：也不对。第 3 条末尾那个 `dw` 指定了库，只在 `dw` 里找表；MySQL 自带的系统表在 `mysql` 等库里，不会被列出来。
-- 猜 B（5 张）：对。这 5 个名字就是 `dw.sql` 里的 5 个 `CREATE TABLE`，默认按字母顺序排。
-
-自动执行只发生在容器**第一次**启动。重起同一个容器不会再跑 `dw.sql`；想从零再来，得 `docker rm -f lab-mysql` 删掉，再重跑第 1 条。
+- 猜 A（有 `dw`）：错。第 1 条没有挂载 `dw.sql`，`/docker-entrypoint-initdb.d/` 是空的，容器第一次启动时没有脚本可自动执行；`dw` 要等第 2 页导入。
+- 猜 C（一个库都没有）：也不对。那 4 个系统库是 MySQL 自己建的，删不掉也不该删；你看到的库 = 系统库 + 你自己建的库。
+- 猜 B（只有系统库）：对。这一页的完成判据不是“有表”，而是“能连上、能读出 `SELECT VERSION()`”。
+- 这也是第 2 页为什么用 `docker exec -i` 手动导入：导入一次就是一次，看得见、查得到、能重跑；自动执行只在容器第一次启动时发生一次，脚本出没出错你没有现场。
 
 ## 自己改一下
 
-1. 去掉第 3 条里的 `-N` 再跑一次：第一行会多出表头 `Tables_in_dw`。
-2. 把 `SHOW TABLES;` 换成 `SHOW DATABASES;`：除了 `dw`，还会列出 4 个 MySQL 自己的库。
+1. 去掉第 3 条里的 `-N` 再跑一次：会多出两行表头 `VERSION()` 和 `Database`。
+2. 在第 3 条的 `mysql` 后面加上库名 `dw`（`... -N -B dw -e "SHOW TABLES;"`）：会报 `ERROR 1049 (42000): Unknown database 'dw'`——这一页只起容器，还没有库。

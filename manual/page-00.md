@@ -85,6 +85,7 @@ added 118 packages, and audited 125 packages in 3s
 - Linux 报 `permission denied ... docker.sock`：当前用户不在 docker 组，`sudo usermod -aG docker $USER` 后**重新登录**再试。
 - `uv sync` 卡在下载 Python：机器上没有 3.12+ 时 uv 会联网拉解释器，网络受限就会卡；先 `uv python list` 看本机有没有可用的 3.12+。
 - 端口显示「被占用」：`ss -tlnp | grep -E ':(3307|8000|8081) '` 列出占用者，把 PID 那列找出来停掉；看不到 PID 说明是 root 的进程（比如系统自带的 MySQL），加 `sudo` 再看：`sudo ss -tlnp | grep -E ':(3307|8000|8081) '`。第 1 页写死 3307、第 3 页写死 8000、第 9 页写死 8081，改端口要连带改后面命令。
+- 拿到 PID 后停掉它：`kill -15 <PID>`（先发 SIGTERM 让它自己收尾）；还不退再 `kill -9 <PID>`。
 
 ## 自己改一下
 
@@ -94,7 +95,7 @@ added 118 packages, and audited 125 packages in 3s
 一轮做完会留下 `lab-mysql`、`lab-nginx` 两个容器、仓库根目录的 `lab/`、终端 1 里的 uvicorn；先按 `Ctrl+C` 停终端 1，再敲（别用 `docker system prune`——会误删本机别的栈）：
 
 ```bash
-docker rm -f lab-nginx lab-mysql   # 数据随容器消失；重跑第 1 页会重新执行 fixtures/dw.sql
+docker rm -f lab-nginx lab-mysql   # 数据随容器消失；重跑第 1 页起容器、再跑第 2 页重新导入 fixtures/dw.sql
 rm -rf lab
 docker ps -a --format '{{.Names}}' | grep '^lab-' || echo "容器干净"   # 验证 1
 ss -tln | grep -E ':(3307|8000|8081) ' || echo "端口全空"              # 验证 2
