@@ -31,3 +31,16 @@ design/style-lab/.venv/
 
 # 历史资产与录屏工作区
 backup/
+
+# /teach 学习工作区（本地产物，不进交付仓库；要归档就删掉这几行）
+/MISSION.md
+/RESOURCES.md
+/NOTES.md
+/assets/
+/lessons/
+/reference/
+/learning-records/
+
+# 教学练本（学生工作区与本地存档，不进仓库）
+lab/
+.lab/
