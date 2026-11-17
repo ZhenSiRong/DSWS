@@ -2,12 +2,12 @@
   "schema": "completeness-explorer/1",
   "title": "建成证明",
   "subtitle": "问数系统能力覆盖 · 交互原型",
-  "kicker": "练本总装 · 第 0–9 页 · 依据 D38 / D39",
-  "lead": "左：L1 / L2 / L3 三层 + L0 地基，等大块 + 三态徽章（由卡片状态派生，结构图只读）；右：点块开卡，空白态在卡片上点状态徽章循环 ▢ → ◧ → ■，可同时开多张；顶部按 D38 三条规则实时重算。",
+  "kicker": "练本总装 · 第 0–9 页 · 依据 D38 / D39 / D41",
+  "lead": "左：L1 / L2 / L3 三层 + L0 地基，等大块 + 三态徽章（能力格 → 节点 → 结构图派生，结构图只读）；右：点块开卡，空白态在卡片里点能力格循环 ▢ → ◧ → ■，可同时开多张；卡片顶部徽章只读，由本卡能力格派生；顶部按 D38 三条规则按格实时重算。",
   "source_refs": {
     "poster": "poster.md",
     "poster_image": "poster-answer.png",
-    "decision": "humen-desicions/09-ablation-course.md · D38 完备性视觉装置 / D39 交互版 / D40 状态编辑方向",
+    "decision": "humen-desicions/09-ablation-course.md · D38 完备性视觉装置 / D39 交互版 / D40 状态编辑方向 / D41 状态粒度下沉到能力格",
     "activities": "manual/flow.mmd",
     "pages": "manual/page-00.md – manual/page-09.md（「你应该看到」）"
   },
@@ -39,11 +39,12 @@
       "desc": "输出与页面「你应该看到」逐字一致；把命令 + 输出写进矩阵末列作证据。"
     }
   ],
-  "state_rule": "只允许 ▢ → ◧ → ■：做完 ≠ 通过；◧ 是最容易停住的状态，回页面把判据重跑一遍再涂黑。编辑入口只在右侧卡片（空白态可点）；左侧结构图只读，徽章由卡片里的节点状态派生。",
+  "state_rule": "唯一真源是「节点 × 能力」矩阵格：空白态点格按 ▢ → ◧ → ■ → ▢ 循环，— 格（该节点不提供该能力）不可编辑；节点状态由本行可编辑格派生（全 ▢ ⇒ ▢、全 ■ ⇒ ■、其余 ⇒ ◧），槽位与结构图再随节点派生。做完 ≠ 通过：◧ 是最容易停住的状态，回页面把判据重跑一遍再涂黑。",
   "edit_model": {
-    "direction": "node→slot→diagram",
-    "source": "node",
-    "unit": "node",
+    "decision": "D41",
+    "direction": "cell→node→slot→diagram",
+    "source": "cell",
+    "unit": "cell",
     "cycle": [
       "unbuilt",
       "unverified",
@@ -51,9 +52,19 @@
     ],
     "blank_initial": "unbuilt",
     "answer_readonly": true,
-    "slot_derivation": "槽位状态由所属节点派生（slot.node → node.status）；A1·A2 同属 L0「数据（A1·A2）」节点，改这个节点会同步两个槽位。",
-    "diagram": "左侧结构图只读：每块一个徽章 = 该块对应节点的状态；点块只开卡，不能改状态。",
-    "persistence": "空白态手改进度存 localStorage（键 completeness-explorer/edit-v1），可一键重置。"
+    "answer_initial": "built",
+    "na": "na",
+    "cell_state_values": {
+      "built": "■ 提供且判据通过（答案态初始，只读）",
+      "unverified": "◧ 已建未验（空白态点一下）",
+      "unbuilt": "▢ 未建（空白态初始，可点）",
+      "na": "— 该节点不提供该能力，不可编辑（不参与节点派生）"
+    },
+    "node_derivation": "节点状态由本行所有可编辑格派生：全部 ▢ ⇒ ▢；全部 ■ ⇒ ■；其余（含任一 ◧ 或 ■▢ 混合）⇒ ◧。— 格不参与派生。",
+    "card_header": "卡片顶部徽章只读，显示派生结果；tooltip 写明「由本卡 N 项能力派生：x■ y◧ z▢」，旁边同文展示派生构成。编辑入口是下方能力格（仅空白态）。",
+    "slot_derivation": "槽位状态 = 所属节点状态（slot.node → 节点派生状态）；A1·A2 同属 L0「数据（A1·A2）」节点，该节点 ■ 时两个槽位同步 ■。",
+    "diagram": "左侧结构图只读：每块一个徽章 = 该块对应节点状态；点块只开卡，不能改任何状态。",
+    "persistence": "空白态手改进度存 localStorage（键 completeness-explorer/cells-v1），可一键重置。"
   },
   "capability_columns": {
     "L1": [
@@ -114,6 +125,11 @@
             "返回答案": true,
             "访问数据": false
           },
+          "cell_state": {
+            "接收提问": "built",
+            "返回答案": "built",
+            "访问数据": "na"
+          },
           "evidence": "浏览器 :8081 输入「华北销售额」→ 页面出 41099.5",
           "page": "page-09.md",
           "pages": [
@@ -141,6 +157,11 @@
             "接收提问": false,
             "返回答案": false,
             "访问数据": true
+          },
+          "cell_state": {
+            "接收提问": "na",
+            "返回答案": "na",
+            "访问数据": "built"
           },
           "evidence": "真执行 SELECT（JOIN dim_region）→ rows[0].sales=41099.5",
           "page": "page-07.md",
@@ -177,6 +198,11 @@
             "问答编排与 HTTP": false,
             "数据存储与查询": false
           },
+          "cell_state": {
+            "静态与入口转发": "built",
+            "问答编排与 HTTP": "na",
+            "数据存储与查询": "na"
+          },
           "evidence": "GET :8081/ → 200；浏览器经 :8081 出 41099.5",
           "page": "page-09.md",
           "pages": [
@@ -200,6 +226,11 @@
             "静态与入口转发": false,
             "问答编排与 HTTP": true,
             "数据存储与查询": false
+          },
+          "cell_state": {
+            "静态与入口转发": "na",
+            "问答编排与 HTTP": "built",
+            "数据存储与查询": "na"
           },
           "evidence": "curl :8000/health → {\"ok\":true}；POST /api/query → rows[0].sales=41099.5",
           "page": "page-03.md",
@@ -228,6 +259,11 @@
             "静态与入口转发": false,
             "问答编排与 HTTP": false,
             "数据存储与查询": true
+          },
+          "cell_state": {
+            "静态与入口转发": "na",
+            "问答编排与 HTTP": "na",
+            "数据存储与查询": "built"
           },
           "evidence": "SELECT VERSION()=8.0.46；COUNT(*)=115；华北 SUM=41099.5",
           "page": "page-02.md",
@@ -266,6 +302,13 @@
             "执行": false,
             "流式推送": false
           },
+          "cell_state": {
+            "收问": "built",
+            "抽词": "na",
+            "生成 SQL": "na",
+            "执行": "na",
+            "流式推送": "na"
+          },
           "evidence": "POST /api/query → keywords=[]、sql=null、rows=[]（两次一字不差）",
           "page": "page-04.md",
           "pages": [
@@ -291,6 +334,13 @@
             "生成 SQL": false,
             "执行": false,
             "流式推送": false
+          },
+          "cell_state": {
+            "收问": "na",
+            "抽词": "built",
+            "生成 SQL": "na",
+            "执行": "na",
+            "流式推送": "na"
           },
           "evidence": "keywords=[\"华北\",\"销售额\"]",
           "page": "page-05.md",
@@ -318,6 +368,13 @@
             "执行": false,
             "流式推送": false
           },
+          "cell_state": {
+            "收问": "na",
+            "抽词": "na",
+            "生成 SQL": "built",
+            "执行": "na",
+            "流式推送": "na"
+          },
           "evidence": "print 出 5 行 SELECT：SUM + JOIN dim_region + WHERE 华北",
           "page": "page-06.md",
           "pages": [
@@ -344,6 +401,13 @@
             "执行": true,
             "流式推送": false
           },
+          "cell_state": {
+            "收问": "na",
+            "抽词": "na",
+            "生成 SQL": "na",
+            "执行": "built",
+            "流式推送": "na"
+          },
           "evidence": "rows[0].sales=41099.5（19 条华北订单求和）",
           "page": "page-07.md",
           "pages": [
@@ -369,6 +433,13 @@
             "生成 SQL": false,
             "执行": false,
             "流式推送": true
+          },
+          "cell_state": {
+            "收问": "na",
+            "抽词": "na",
+            "生成 SQL": "na",
+            "执行": "na",
+            "流式推送": "built"
           },
           "evidence": "progress=12 条 + result 1 条 → 41099.5",
           "page": "page-08.md",
@@ -403,6 +474,10 @@
             "可运行环境": true,
             "可查询数据": false
           },
+          "cell_state": {
+            "可运行环境": "built",
+            "可查询数据": "na"
+          },
           "evidence": "backend/.venv/bin/python -V → Python 3.14.8；3307/8000/8081 空闲",
           "page": "page-00.md",
           "pages": [
@@ -426,6 +501,10 @@
           "capabilities": {
             "可运行环境": false,
             "可查询数据": true
+          },
+          "cell_state": {
+            "可运行环境": "na",
+            "可查询数据": "built"
           },
           "evidence": "SELECT VERSION()=8.0.46；SHOW TABLES → 5 行；COUNT(*)=115",
           "page": "page-02.md",
@@ -676,6 +755,9 @@
     "rows": "12/12",
     "columns": "13/13",
     "covered_cells": 13,
+    "editable_cells": 13,
+    "total_cells": 44,
+    "cells": "13/44",
     "edges": "13/13",
     "end_to_end": "41099.5"
   },
@@ -695,15 +777,24 @@
       "L2": 3,
       "L3": 5,
       "L0": 2
+    },
+    "cell_count": 44,
+    "provided_cell_count": 13,
+    "na_cell_count": 31,
+    "cells_plan": {
+      "L1": 6,
+      "L2": 9,
+      "L3": 25,
+      "L0": 4
     }
   },
   "notes": [
     "本文件是静态海报（poster-answer.png / poster-blank.png）与交互页（explorer.html）的唯一数据源；改数据只改这里。",
     "节点 = 该层「责任 × 证据」矩阵的一行（共 12 行）；capabilities 的键就是该层能力列名，true = 由该节点提供。",
-    "状态以节点为唯一真源（卡片是编辑入口）：点卡片顶部状态徽章循环 ▢ → ◧ → ■；空白态（编辑态）可编辑，答案态只读。",
-    "槽位状态由所属节点派生：node.slots 里列出的槽位跟随该节点状态；A1·A2 同属 L0「数据（A1·A2）」节点，改该节点会同步两个槽位。",
-    "无独立槽位的行（L1 两行、L2「MySQL:3307」）状态直接在各自卡片上编辑；slot_ref / mapped_slots 只是结构图映射提示，不参与状态派生。",
-    "空白态初始全 ▢；左侧结构图 12 个块的徽章由卡片状态派生、不可点；顶部行 / 列 / 边判定与「建成证明 ✓」印章实时重算。",
-    "证据文本逐字取自 poster.md 的矩阵末列；build_explorer.py 会用 poster.md 反向核对节点名、能力列名、■/— 与证据，避免两版漂移。"
+    "D41：唯一可变真源是能力格 cell_state（built = ■ / na = —，答案态初始值）；空白态由 build 统一生成 unbuilt（▢）。",
+    "节点状态由本行可编辑格派生（全 ▢ ⇒ ▢、全 ■ ⇒ ■、其余 ⇒ ◧）；— 格不参与派生、不可编辑。",
+    "槽位状态 = 所属节点状态；A1·A2 同属 L0「数据（A1·A2）」节点，该节点 ■ 时两个槽位同步 ■。",
+    "卡片顶部徽章只读（tooltip「由本卡 N 项能力派生：x■ y◧ z▢」）；左侧结构图徽章由节点派生、不可点；顶部行 / 列 / 边判定与「建成证明 ✓」印章按格实时重算。",
+    "证据文本逐字取自 poster.md 的矩阵末列；build_explorer.py 用 poster.md 反向核对节点名、能力列名、cell_state 的 ■/— 与证据，避免两版漂移。"
   ]
 }

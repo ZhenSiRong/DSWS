@@ -152,15 +152,15 @@ h1 .mid{font-weight:400;color:var(--mute);}
 .card-name{margin:0;font-size:16.5px;font-weight:900;line-height:1.18;}
 .card-status{display:flex;align-items:center;gap:7px;font-size:12px;flex-wrap:wrap;
              border-top:1px solid #dddddd;border-bottom:1px solid #dddddd;padding:5px 0;}
-.card-status .tri{font-family:"DejaVu Sans","Noto Sans CJK SC",sans-serif;font-size:22px;
-                  line-height:1;border:1.4px solid var(--ink);border-radius:5px;
-                  background:#fff;color:var(--ink);padding:1px 6px;cursor:pointer;}
-.card-status .tri:hover:not(:disabled){background:var(--ink);color:#fff;}
-.card-status .tri:focus-visible{outline:3px double var(--ink);outline-offset:2px;}
-.card-status .tri.is-locked{cursor:default;border-style:dashed;color:#444;background:#fbfbfb;}
+.card-status .derived-badge{font-family:"DejaVu Sans","Noto Sans CJK SC",sans-serif;
+                  font-size:22px;line-height:1;border:1.4px solid var(--ink);border-radius:5px;
+                  background:#fff;color:var(--ink);padding:1px 6px;cursor:default;}
 .card-status .tri-name{font-weight:800;font-size:12px;}
-.card-status .tri-next{font-size:10px;color:#666;border:1px dashed #aaa;
-                       border-radius:3px;padding:0 4px;white-space:nowrap;}
+.card-status .ro-tag{font-size:9.5px;color:#444;border:1px solid #999;border-radius:3px;
+                     padding:0 4px;background:#fff;white-space:nowrap;}
+.card-status .derive{font-size:10px;color:#333;border:1px dashed #aaa;border-radius:3px;
+                     padding:0 4px;white-space:nowrap;
+                     font-family:"DejaVu Sans Mono","Noto Sans CJK SC",monospace;}
 .card-status .cs-note{color:#666;font-size:10.5px;margin-left:auto;text-align:right;}
 .card-slots{display:flex;flex-direction:column;gap:3px;font-size:11px;}
 .slotrow{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
@@ -172,9 +172,14 @@ h1 .mid{font-weight:400;color:var(--mute);}
 .mini th,.mini td{border:1px solid #333;padding:2px 3px;font-size:9.5px;
                   text-align:center;line-height:1.15;}
 .mini thead th{background:#e9e9e9;font-weight:800;overflow-wrap:anywhere;}
-.mini td.mark{font-family:"DejaVu Sans","Noto Sans CJK SC",sans-serif;
-              font-size:15px;font-weight:700;height:24px;}
-.mini td.dash{color:#888;font-size:11.5px;}
+.mini td.cellwrap{padding:0;}
+.cell{display:block;width:100%;border:0;background:#fff;color:var(--ink);
+      font-family:"DejaVu Sans","Noto Sans CJK SC",sans-serif;font-size:15px;
+      line-height:1;height:24px;padding:0;cursor:pointer;}
+.cell:hover:not(:disabled){background:#e6e6e6;}
+.cell:focus-visible{outline:2px solid var(--ink);outline-offset:-2px;background:#fff;}
+.cell.is-locked{cursor:default;background:#fbfbfb;color:#333;}
+.mini td.dash{color:#888;font-size:11.5px;padding:0 2px;}
 .card-ev .ev{margin:0;font-size:10.4px;line-height:1.5;background:#f7f7f7;
              border-left:3px solid var(--ink);padding:5px 7px;overflow-wrap:anywhere;}
 .card-pg{font-size:10.5px;color:#444;display:flex;gap:6px;align-items:center;
@@ -221,7 +226,7 @@ a.pg:hover{background:var(--ink);color:#fff;}
     <div class="stat" id="stat-rows" title=""></div>
     <div class="stat" id="stat-cols" title=""></div>
     <div class="stat" id="stat-edges" title=""></div>
-    <div class="stat muted" title="十个槽位里 ■ 的个数（槽位状态由所属节点派生）"><span class="k">槽位 ■</span><b id="slot-count">—</b></div>
+    <div class="stat muted" title="十个槽位里 ■ 的个数（槽位状态由所属节点派生，节点状态再由本行能力格派生）"><span class="k">槽位 ■</span><b id="slot-count">—</b></div>
     <div class="stamp" id="stamp" hidden>建成证明 ✓</div>
   </section>
 
@@ -230,8 +235,8 @@ a.pg:hover{background:var(--ink);color:#fff;}
       <div class="left-head">
         <span class="lh-title">① 全局结构图</span>
         <span class="lh-note">L1 / L2 / L3 + L0 地基条 · 块等大（面积不编码任何维度）</span>
-        <span class="lh-ro">结构图只读 · 徽章由卡片派生</span>
-        <span class="lh-edit" id="edit-note" hidden>编辑态 · 点卡片状态徽章循环 ▢→◧→■ · 进度存在本机浏览器</span>
+        <span class="lh-ro">结构图只读 · 徽章由能力格 → 节点派生</span>
+        <span class="lh-edit" id="edit-note" hidden>编辑态 · 点卡片能力格循环 ▢→◧→■ · 进度存在本机浏览器</span>
         <span class="legend">
           <span class="lg"><span class="box">▢</span>未建</span>
           <span class="lg"><span class="box">◧</span>已建未验</span>
@@ -244,7 +249,7 @@ a.pg:hover{background:var(--ink);color:#fff;}
         <span class="df-t">端到端证据</span>
         <span class="chain" id="chain"></span>
       </div>
-      <div class="diag-cap">悬停块看工期 / 能力数；点块在右侧开卡，再点同一块关闭该卡；结构图只读，徽章由卡片状态派生；状态编辑入口在右侧卡片（仅空白态）。</div>
+      <div class="diag-cap">悬停块看工期 / 能力数；点块在右侧开卡，再点同一块关闭该卡；结构图只读，徽章由本行能力格 → 节点派生；状态编辑入口是右侧卡片里的能力格（仅空白态）。</div>
     </section>
 
     <aside class="right" aria-label="浮层侧栏">
@@ -263,12 +268,12 @@ a.pg:hover{background:var(--ink);color:#fff;}
   "schema": "completeness-explorer/1",
   "title": "建成证明",
   "subtitle": "问数系统能力覆盖 · 交互原型",
-  "kicker": "练本总装 · 第 0–9 页 · 依据 D38 / D39",
-  "lead": "左：L1 / L2 / L3 三层 + L0 地基，等大块 + 三态徽章（由卡片状态派生，结构图只读）；右：点块开卡，空白态在卡片上点状态徽章循环 ▢ → ◧ → ■，可同时开多张；顶部按 D38 三条规则实时重算。",
+  "kicker": "练本总装 · 第 0–9 页 · 依据 D38 / D39 / D41",
+  "lead": "左：L1 / L2 / L3 三层 + L0 地基，等大块 + 三态徽章（能力格 → 节点 → 结构图派生，结构图只读）；右：点块开卡，空白态在卡片里点能力格循环 ▢ → ◧ → ■，可同时开多张；卡片顶部徽章只读，由本卡能力格派生；顶部按 D38 三条规则按格实时重算。",
   "source_refs": {
     "poster": "poster.md",
     "poster_image": "poster-answer.png",
-    "decision": "humen-desicions/09-ablation-course.md · D38 完备性视觉装置 / D39 交互版 / D40 状态编辑方向",
+    "decision": "humen-desicions/09-ablation-course.md · D38 完备性视觉装置 / D39 交互版 / D40 状态编辑方向 / D41 状态粒度下沉到能力格",
     "activities": "manual/flow.mmd",
     "pages": "manual/page-00.md – manual/page-09.md（「你应该看到」）"
   },
@@ -300,11 +305,12 @@ a.pg:hover{background:var(--ink);color:#fff;}
       "desc": "输出与页面「你应该看到」逐字一致；把命令 + 输出写进矩阵末列作证据。"
     }
   ],
-  "state_rule": "只允许 ▢ → ◧ → ■：做完 ≠ 通过；◧ 是最容易停住的状态，回页面把判据重跑一遍再涂黑。编辑入口只在右侧卡片（空白态可点）；左侧结构图只读，徽章由卡片里的节点状态派生。",
+  "state_rule": "唯一真源是「节点 × 能力」矩阵格：空白态点格按 ▢ → ◧ → ■ → ▢ 循环，— 格（该节点不提供该能力）不可编辑；节点状态由本行可编辑格派生（全 ▢ ⇒ ▢、全 ■ ⇒ ■、其余 ⇒ ◧），槽位与结构图再随节点派生。做完 ≠ 通过：◧ 是最容易停住的状态，回页面把判据重跑一遍再涂黑。",
   "edit_model": {
-    "direction": "node→slot→diagram",
-    "source": "node",
-    "unit": "node",
+    "decision": "D41",
+    "direction": "cell→node→slot→diagram",
+    "source": "cell",
+    "unit": "cell",
     "cycle": [
       "unbuilt",
       "unverified",
@@ -312,9 +318,19 @@ a.pg:hover{background:var(--ink);color:#fff;}
     ],
     "blank_initial": "unbuilt",
     "answer_readonly": true,
-    "slot_derivation": "槽位状态由所属节点派生（slot.node → node.status）；A1·A2 同属 L0「数据（A1·A2）」节点，改这个节点会同步两个槽位。",
-    "diagram": "左侧结构图只读：每块一个徽章 = 该块对应节点的状态；点块只开卡，不能改状态。",
-    "persistence": "空白态手改进度存 localStorage（键 completeness-explorer/edit-v1），可一键重置。"
+    "answer_initial": "built",
+    "na": "na",
+    "cell_state_values": {
+      "built": "■ 提供且判据通过（答案态初始，只读）",
+      "unverified": "◧ 已建未验（空白态点一下）",
+      "unbuilt": "▢ 未建（空白态初始，可点）",
+      "na": "— 该节点不提供该能力，不可编辑（不参与节点派生）"
+    },
+    "node_derivation": "节点状态由本行所有可编辑格派生：全部 ▢ ⇒ ▢；全部 ■ ⇒ ■；其余（含任一 ◧ 或 ■▢ 混合）⇒ ◧。— 格不参与派生。",
+    "card_header": "卡片顶部徽章只读，显示派生结果；tooltip 写明「由本卡 N 项能力派生：x■ y◧ z▢」，旁边同文展示派生构成。编辑入口是下方能力格（仅空白态）。",
+    "slot_derivation": "槽位状态 = 所属节点状态（slot.node → 节点派生状态）；A1·A2 同属 L0「数据（A1·A2）」节点，该节点 ■ 时两个槽位同步 ■。",
+    "diagram": "左侧结构图只读：每块一个徽章 = 该块对应节点状态；点块只开卡，不能改任何状态。",
+    "persistence": "空白态手改进度存 localStorage（键 completeness-explorer/cells-v1），可一键重置。"
   },
   "capability_columns": {
     "L1": [
@@ -375,6 +391,11 @@ a.pg:hover{background:var(--ink);color:#fff;}
             "返回答案": true,
             "访问数据": false
           },
+          "cell_state": {
+            "接收提问": "built",
+            "返回答案": "built",
+            "访问数据": "na"
+          },
           "evidence": "浏览器 :8081 输入「华北销售额」→ 页面出 41099.5",
           "page": "page-09.md",
           "pages": [
@@ -402,6 +423,11 @@ a.pg:hover{background:var(--ink);color:#fff;}
             "接收提问": false,
             "返回答案": false,
             "访问数据": true
+          },
+          "cell_state": {
+            "接收提问": "na",
+            "返回答案": "na",
+            "访问数据": "built"
           },
           "evidence": "真执行 SELECT（JOIN dim_region）→ rows[0].sales=41099.5",
           "page": "page-07.md",
@@ -438,6 +464,11 @@ a.pg:hover{background:var(--ink);color:#fff;}
             "问答编排与 HTTP": false,
             "数据存储与查询": false
           },
+          "cell_state": {
+            "静态与入口转发": "built",
+            "问答编排与 HTTP": "na",
+            "数据存储与查询": "na"
+          },
           "evidence": "GET :8081/ → 200；浏览器经 :8081 出 41099.5",
           "page": "page-09.md",
           "pages": [
@@ -461,6 +492,11 @@ a.pg:hover{background:var(--ink);color:#fff;}
             "静态与入口转发": false,
             "问答编排与 HTTP": true,
             "数据存储与查询": false
+          },
+          "cell_state": {
+            "静态与入口转发": "na",
+            "问答编排与 HTTP": "built",
+            "数据存储与查询": "na"
           },
           "evidence": "curl :8000/health → {\"ok\":true}；POST /api/query → rows[0].sales=41099.5",
           "page": "page-03.md",
@@ -489,6 +525,11 @@ a.pg:hover{background:var(--ink);color:#fff;}
             "静态与入口转发": false,
             "问答编排与 HTTP": false,
             "数据存储与查询": true
+          },
+          "cell_state": {
+            "静态与入口转发": "na",
+            "问答编排与 HTTP": "na",
+            "数据存储与查询": "built"
           },
           "evidence": "SELECT VERSION()=8.0.46；COUNT(*)=115；华北 SUM=41099.5",
           "page": "page-02.md",
@@ -527,6 +568,13 @@ a.pg:hover{background:var(--ink);color:#fff;}
             "执行": false,
             "流式推送": false
           },
+          "cell_state": {
+            "收问": "built",
+            "抽词": "na",
+            "生成 SQL": "na",
+            "执行": "na",
+            "流式推送": "na"
+          },
           "evidence": "POST /api/query → keywords=[]、sql=null、rows=[]（两次一字不差）",
           "page": "page-04.md",
           "pages": [
@@ -552,6 +600,13 @@ a.pg:hover{background:var(--ink);color:#fff;}
             "生成 SQL": false,
             "执行": false,
             "流式推送": false
+          },
+          "cell_state": {
+            "收问": "na",
+            "抽词": "built",
+            "生成 SQL": "na",
+            "执行": "na",
+            "流式推送": "na"
           },
           "evidence": "keywords=[\"华北\",\"销售额\"]",
           "page": "page-05.md",
@@ -579,6 +634,13 @@ a.pg:hover{background:var(--ink);color:#fff;}
             "执行": false,
             "流式推送": false
           },
+          "cell_state": {
+            "收问": "na",
+            "抽词": "na",
+            "生成 SQL": "built",
+            "执行": "na",
+            "流式推送": "na"
+          },
           "evidence": "print 出 5 行 SELECT：SUM + JOIN dim_region + WHERE 华北",
           "page": "page-06.md",
           "pages": [
@@ -605,6 +667,13 @@ a.pg:hover{background:var(--ink);color:#fff;}
             "执行": true,
             "流式推送": false
           },
+          "cell_state": {
+            "收问": "na",
+            "抽词": "na",
+            "生成 SQL": "na",
+            "执行": "built",
+            "流式推送": "na"
+          },
           "evidence": "rows[0].sales=41099.5（19 条华北订单求和）",
           "page": "page-07.md",
           "pages": [
@@ -630,6 +699,13 @@ a.pg:hover{background:var(--ink);color:#fff;}
             "生成 SQL": false,
             "执行": false,
             "流式推送": true
+          },
+          "cell_state": {
+            "收问": "na",
+            "抽词": "na",
+            "生成 SQL": "na",
+            "执行": "na",
+            "流式推送": "built"
           },
           "evidence": "progress=12 条 + result 1 条 → 41099.5",
           "page": "page-08.md",
@@ -664,6 +740,10 @@ a.pg:hover{background:var(--ink);color:#fff;}
             "可运行环境": true,
             "可查询数据": false
           },
+          "cell_state": {
+            "可运行环境": "built",
+            "可查询数据": "na"
+          },
           "evidence": "backend/.venv/bin/python -V → Python 3.14.8；3307/8000/8081 空闲",
           "page": "page-00.md",
           "pages": [
@@ -687,6 +767,10 @@ a.pg:hover{background:var(--ink);color:#fff;}
           "capabilities": {
             "可运行环境": false,
             "可查询数据": true
+          },
+          "cell_state": {
+            "可运行环境": "na",
+            "可查询数据": "built"
           },
           "evidence": "SELECT VERSION()=8.0.46；SHOW TABLES → 5 行；COUNT(*)=115",
           "page": "page-02.md",
@@ -937,6 +1021,9 @@ a.pg:hover{background:var(--ink);color:#fff;}
     "rows": "12/12",
     "columns": "13/13",
     "covered_cells": 13,
+    "editable_cells": 13,
+    "total_cells": 44,
+    "cells": "13/44",
     "edges": "13/13",
     "end_to_end": "41099.5"
   },
@@ -956,16 +1043,25 @@ a.pg:hover{background:var(--ink);color:#fff;}
       "L2": 3,
       "L3": 5,
       "L0": 2
+    },
+    "cell_count": 44,
+    "provided_cell_count": 13,
+    "na_cell_count": 31,
+    "cells_plan": {
+      "L1": 6,
+      "L2": 9,
+      "L3": 25,
+      "L0": 4
     }
   },
   "notes": [
     "本文件是静态海报（poster-answer.png / poster-blank.png）与交互页（explorer.html）的唯一数据源；改数据只改这里。",
     "节点 = 该层「责任 × 证据」矩阵的一行（共 12 行）；capabilities 的键就是该层能力列名，true = 由该节点提供。",
-    "状态以节点为唯一真源（卡片是编辑入口）：点卡片顶部状态徽章循环 ▢ → ◧ → ■；空白态（编辑态）可编辑，答案态只读。",
-    "槽位状态由所属节点派生：node.slots 里列出的槽位跟随该节点状态；A1·A2 同属 L0「数据（A1·A2）」节点，改该节点会同步两个槽位。",
-    "无独立槽位的行（L1 两行、L2「MySQL:3307」）状态直接在各自卡片上编辑；slot_ref / mapped_slots 只是结构图映射提示，不参与状态派生。",
-    "空白态初始全 ▢；左侧结构图 12 个块的徽章由卡片状态派生、不可点；顶部行 / 列 / 边判定与「建成证明 ✓」印章实时重算。",
-    "证据文本逐字取自 poster.md 的矩阵末列；build_explorer.py 会用 poster.md 反向核对节点名、能力列名、■/— 与证据，避免两版漂移。"
+    "D41：唯一可变真源是能力格 cell_state（built = ■ / na = —，答案态初始值）；空白态由 build 统一生成 unbuilt（▢）。",
+    "节点状态由本行可编辑格派生（全 ▢ ⇒ ▢、全 ■ ⇒ ■、其余 ⇒ ◧）；— 格不参与派生、不可编辑。",
+    "槽位状态 = 所属节点状态；A1·A2 同属 L0「数据（A1·A2）」节点，该节点 ■ 时两个槽位同步 ■。",
+    "卡片顶部徽章只读（tooltip「由本卡 N 项能力派生：x■ y◧ z▢」）；左侧结构图徽章由节点派生、不可点；顶部行 / 列 / 边判定与「建成证明 ✓」印章按格实时重算。",
+    "证据文本逐字取自 poster.md 的矩阵末列；build_explorer.py 用 poster.md 反向核对节点名、能力列名、cell_state 的 ■/— 与证据，避免两版漂移。"
   ]
 }</script>
 <script>
@@ -991,15 +1087,18 @@ a.pg:hover{background:var(--ink);color:#fff;}
   DATA.status_order.forEach(function (key) { STATUS_SET[key] = true; });
 
   var GLYPH = { unbuilt: '▢', unverified: '◧', built: '■' };
+  var NA = 'na';
+  var NA_GLYPH = '—';
   var ORDER = (DATA.edit_model && DATA.edit_model.cycle)
     ? DATA.edit_model.cycle.slice() : DATA.status_order.slice();
   var CYCLE = {};
   ORDER.forEach(function (key, index) {
     CYCLE[key] = ORDER[(index + 1) % ORDER.length];
   });
+  var BLANK_INITIAL = (DATA.edit_model && DATA.edit_model.blank_initial) || 'unbuilt';
 
   // 编辑态进度存本机浏览器；不可用（隐私模式 / 某些 file:// 策略）时降级为不持久化。
-  var STORAGE_KEY = 'completeness-explorer/edit-v1';
+  var STORAGE_KEY = 'completeness-explorer/cells-v1';
   var STORAGE_OK = (function () {
     try {
       window.localStorage.setItem('__explorer_probe__', '1');
@@ -1008,8 +1107,8 @@ a.pg:hover{background:var(--ink);color:#fff;}
     } catch (err) { return false; }
   })();
 
-  // 唯一可变状态：mode（答案态 / 空白态）、edit（节点状态）、open（打开的卡片）
-  var state = { mode: 'answer', edit: {}, open: [] };
+  // 唯一可变状态（D41）：mode（答案态 / 空白态）、cells（格级真源）、open（打开的卡片）
+  var state = { mode: 'answer', cells: {}, open: [] };
 
   function esc(value) {
     return String(value === null || value === undefined ? '' : value)
@@ -1018,10 +1117,25 @@ a.pg:hover{background:var(--ink);color:#fff;}
       });
   }
 
-  function resetEditMap() {
-    state.edit = {};
-    NODES.forEach(function (node) { state.edit[node.id] = 'unbuilt'; });
+  function layerCols(node) { return DATA.capability_columns[node.layer]; }
+
+  function isProvided(node, col) { return node.capabilities[col] === true; }
+
+  function editableCols(node) {
+    return layerCols(node).filter(function (col) { return node.capabilities[col] === true; });
   }
+
+  function blankCellsMap() {
+    var map = {};
+    NODES.forEach(function (node) {
+      var cells = {};
+      editableCols(node).forEach(function (col) { cells[col] = BLANK_INITIAL; });
+      map[node.id] = cells;
+    });
+    return map;
+  }
+
+  function resetCellMap() { state.cells = blankCellsMap(); }
 
   function readSaved() {
     if (!STORAGE_OK) { return null; }
@@ -1029,13 +1143,17 @@ a.pg:hover{background:var(--ink);color:#fff;}
       var raw = window.localStorage.getItem(STORAGE_KEY);
       if (!raw) { return null; }
       var obj = JSON.parse(raw);
-      if (!obj || obj.v !== 1 || obj.mode !== 'blank' || !obj.edit) { return null; }
-      var edit = {};
+      if (!obj || obj.v !== 2 || obj.mode !== 'blank' || !obj.cells) { return null; }
+      var cells = blankCellsMap();
       NODES.forEach(function (node) {
-        var value = obj.edit[node.id];
-        edit[node.id] = STATUS_SET[value] ? value : 'unbuilt';
+        var saved = obj.cells[node.id];
+        if (!saved || typeof saved !== 'object') { return; }
+        editableCols(node).forEach(function (col) {
+          var value = saved[col];
+          if (STATUS_SET[value]) { cells[node.id][col] = value; }
+        });
       });
-      return edit;
+      return cells;
     } catch (err) { return null; }
   }
 
@@ -1047,7 +1165,7 @@ a.pg:hover{background:var(--ink);color:#fff;}
         return;
       }
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify({
-        v: 1, mode: 'blank', edit: state.edit, ts: Date.now()
+        v: 2, mode: 'blank', cells: state.cells, ts: Date.now()
       }));
     } catch (err) { /* 存不了就只在本页内存里编辑 */ }
   }
@@ -1057,22 +1175,48 @@ a.pg:hover{background:var(--ink);color:#fff;}
     try { window.localStorage.removeItem(STORAGE_KEY); } catch (err) {}
   }
 
-  // ---------- 状态派生链（D40）：节点 → 槽位 → 结构图 ----------
+  // ---------- 派生链（D41）：能力格 → 节点 → 槽位 → 结构图 ----------
+  function cellStatus(node, col) {
+    if (!node || !isProvided(node, col)) { return NA; }
+    if (state.mode === 'answer') { return node.cell_state[col]; }
+    var nodeCells = state.cells[node.id];
+    var value = nodeCells ? nodeCells[col] : null;
+    return STATUS_SET[value] ? value : BLANK_INITIAL;
+  }
+
+  function cellCounts(node) {
+    var counts = { editable: 0, built: 0, unverified: 0, unbuilt: 0, na: 0 };
+    layerCols(node).forEach(function (col) {
+      var status = cellStatus(node, col);
+      if (status === NA) { counts.na += 1; return; }
+      counts.editable += 1;
+      counts[status] += 1;
+    });
+    return counts;
+  }
+
+  // 节点状态 = 本行可编辑格派生：全 ▢ ⇒ ▢；全 ■ ⇒ ■；其余 ⇒ ◧（— 格不参与）
   function nodeStatus(node) {
-    if (state.mode === 'answer') { return node.status; }
-    return state.edit[node.id] || 'unbuilt';
+    var counts = cellCounts(node);
+    if (!counts.editable) { return BLANK_INITIAL; }
+    if (counts.unbuilt === counts.editable) { return 'unbuilt'; }
+    if (counts.built === counts.editable) { return 'built'; }
+    return 'unverified';
+  }
+
+  function deriveLine(node) {
+    var counts = cellCounts(node);
+    return '由本卡 ' + counts.editable + ' 项能力派生：' +
+      counts.built + '■ ' + counts.unverified + '◧ ' + counts.unbuilt + '▢';
   }
 
   function slotStatus(slotId) {
     var slot = SLOT_BY_ID[slotId];
-    if (!slot) { return 'unbuilt'; }
+    if (!slot) { return BLANK_INITIAL; }
     return nodeStatus(NODE_BY_ID[slot.node]);
   }
 
-  function capCount(node) {
-    var cols = DATA.capability_columns[node.layer];
-    return cols.filter(function (col) { return node.capabilities[col] === true; }).length;
-  }
+  function capCount(node) { return editableCols(node).length; }
 
   function compute() {
     var perLayer = DATA.layers.map(function (layer) {
@@ -1081,10 +1225,9 @@ a.pg:hover{background:var(--ink);color:#fff;}
       cols.forEach(function (col) { colDone[col] = false; });
       var rowsPass = 0;
       layer.nodes.forEach(function (node) {
-        var st = nodeStatus(node);
-        if (st === 'built') { rowsPass += 1; }
+        if (nodeStatus(node) === 'built') { rowsPass += 1; }
         cols.forEach(function (col) {
-          if (node.capabilities[col] === true && st === 'built') { colDone[col] = true; }
+          if (cellStatus(node, col) === 'built') { colDone[col] = true; }
         });
       });
       var colsPass = cols.filter(function (col) { return colDone[col]; }).length;
@@ -1139,20 +1282,20 @@ a.pg:hover{background:var(--ink);color:#fff;}
     setStat('stat-rows', '行覆盖', result.rowsPass, result.rowsTotal,
       result.rowsPass === result.rowsTotal,
       'D38 ① 每层矩阵每行 ≥ 1 个 ■（节点不是空壳）：' + rowDetail +
-      '（节点状态由右侧卡片编辑派生）');
+      '（节点状态由本行能力格派生：全部可编辑格 ■ 才算节点 ■）');
 
     var colDetail = result.perLayer.map(function (part) {
       return part.id + ' ' + part.colsPass + '/' + part.colsTotal;
     }).join(' · ');
     setStat('stat-cols', '列覆盖', result.colsPass, result.colsTotal,
       result.colsPass === result.colsTotal,
-      'D38 ② 每层矩阵每列 ≥ 1 个 ■（能力没有漏）：' + colDetail);
+      'D38 ② 每层矩阵每列 ≥ 1 个 ■（能力没有漏，按能力格计）：' + colDetail);
 
     var failed = result.edges.filter(function (item) { return !item.pass; })
       .map(function (item) { return item.edge.span + ' ' + item.edge.label; });
     setStat('stat-edges', '跨层边通', result.edgesPass, result.edgesTotal,
       result.edgesPass === result.edgesTotal,
-      failed.length ? ('未通的边：' + failed.join(' / '))
+      failed.length ? ('未通的边（两端节点都 ■ 才算通）：' + failed.join(' / '))
         : 'D38 ③ 跨层边都通，端到端证据 41099.5');
 
     document.getElementById('slot-count').textContent =
@@ -1166,6 +1309,7 @@ a.pg:hover{background:var(--ink);color:#fff;}
 
     var chain = document.getElementById('chain');
     if (chain) { chain.classList.toggle('pass', result.all); }
+
     return result;
   }
 
@@ -1173,27 +1317,28 @@ a.pg:hover{background:var(--ink);color:#fff;}
     if (node.slots && node.slots.length) {
       return node.slots.map(function (slotId) {
         var slot = SLOT_BY_ID[slotId];
-        var st = slotStatus(slotId);
+        var derived = slotStatus(slotId);
         var tip = '槽位 ' + slotId + ' ' + slot.name + ' · 派生状态 ' +
-          GLYPH[st] + ' ' + LEGEND[st].name + '（结构图只读，跟着节点走）';
-        return '<span class="chip slot" data-slot="' + esc(slotId) + '" data-status="' + esc(st) +
+          GLYPH[derived] + ' ' + LEGEND[derived].name +
+          '（由所属节点「' + node.name + '」派生；节点状态再由本行能力格派生，结构图只读）';
+        return '<span class="chip slot" data-slot="' + esc(slotId) + '" data-status="' + esc(derived) +
           '" title="' + esc(tip) + '">' + esc(slotId) + '</span>';
       }).join('');
     }
     var refs = node.mapped_slots || [];
     var label = node.slot_ref || (refs.length ? refs.join('·') : '—');
-    var refTip = '映射槽位 ' + label + '（仅示意位置；该节点状态在右侧卡片上编辑）';
+    var refTip = '映射槽位 ' + label + '（仅示意位置；状态由本卡能力格派生）';
     return '<span class="chip ref" data-mapped="' + esc(refs.join(' ')) +
       '" title="' + esc(refTip) + '">' + esc(label) + '</span>';
   }
 
   function blockHTML(node) {
     var layer = LAYER_BY_ID[node.layer];
-    var cols = DATA.capability_columns[node.layer];
+    var cols = layerCols(node);
     var st = nodeStatus(node);
     var open = state.open.indexOf(node.id) >= 0;
     var badgeTip = '结构图只读 · 节点「' + node.name + '」状态 ' + GLYPH[st] + ' ' +
-      LEGEND[st].name + '（由右侧卡片派生，点块只开卡）';
+      LEGEND[st].name + '（由本行能力格 → 节点派生，点块只开卡）';
     var tip = node.name + ' · ' + layer.code + ' ' + layer.name +
       ' · 状态 ' + GLYPH[st] + ' ' + LEGEND[st].name +
       (node.duration_min === null || node.duration_min === undefined
@@ -1234,30 +1379,53 @@ a.pg:hover{background:var(--ink);color:#fff;}
     host.innerHTML = parts.join('<span class="arw">→</span>');
   }
 
+  function cellHTML(node, col, editable) {
+    if (!isProvided(node, col)) {
+      return '<td class="dash" data-na="' + esc(col) + '" title="该节点不提供「' +
+        esc(col) + '」：— 格不可编辑，也不参与节点派生">' + NA_GLYPH + '</td>';
+    }
+    var cell = cellStatus(node, col);
+    var next = CYCLE[cell];
+    var tip = editable
+      ? ('当前：' + GLYPH[cell] + ' ' + LEGEND[cell].name + ' · 点一下切下一态 → ' +
+         GLYPH[next] + ' ' + LEGEND[next].name + '（循环 ▢ → ◧ → ■ → ▢）')
+      : ('答案态只读：' + GLYPH[cell] + ' ' + LEGEND[cell].name +
+         ' · 切到「空白态」后点格可编辑');
+    var locked = editable ? '' : ' is-locked';
+    var disabled = editable ? '' : ' disabled aria-disabled="true"';
+    return '<td class="cellwrap"><button type="button" class="cell' + locked + '"' +
+      ' data-cell="' + esc(node.id) + '" data-col="' + esc(col) + '"' +
+      ' data-status="' + esc(cell) + '"' + disabled +
+      ' title="' + esc(tip) + '"' +
+      ' aria-label="' + esc('能力格「' + col + '」：' + LEGEND[cell].name +
+        (editable ? '，点一下切下一态' : '，答案态只读')) + '">' +
+      GLYPH[cell] + '</button></td>';
+  }
+
   function cardHTML(node) {
     var layer = LAYER_BY_ID[node.layer];
-    var cols = DATA.capability_columns[node.layer];
+    var cols = layerCols(node);
     var st = nodeStatus(node);
+    var counts = cellCounts(node);
     var editable = state.mode === 'blank';
-    var next = CYCLE[st];
+    var derived = deriveLine(node);
     var thead = cols.map(function (col) {
-      return '<th>' + esc(col) + '</th>';
+      var cls = isProvided(node, col) ? '' : ' class="th-na"';
+      return '<th' + cls + '>' + esc(col) + '</th>';
     }).join('');
-    var cells = cols.map(function (col) {
-      if (node.capabilities[col] !== true) { return '<td class="dash">—</td>'; }
-      return '<td class="mark" data-status="' + esc(st) + '">' + GLYPH[st] + '</td>';
-    }).join('');
+    var cells = cols.map(function (col) { return cellHTML(node, col, editable); }).join('');
 
     var slotRows = '';
     if (node.slots && node.slots.length) {
       slotRows = node.slots.map(function (slotId) {
         var slot = SLOT_BY_ID[slotId];
         var ss = slotStatus(slotId);
-        return '<div class="slotrow" data-slot="' + esc(slotId) + '" data-status="' + esc(ss) + '">' +
+        return '<div class="slotrow" data-slot="' + esc(slotId) + '" data-status="' + esc(ss) + '"' +
+          ' title="槽位 ' + esc(slotId) + ' 状态由所属节点「' + esc(node.name) + '」派生；' +
+          '节点状态由本行能力格派生">' +
           '<span class="mono">' + esc(slotId) + '</span>' +
           '<span>' + esc(slot.name) + '</span>' +
-          '<span class="box" data-status="' + esc(ss) + '" title="槽位状态由所属节点「' +
-          esc(node.name) + '」派生">' + GLYPH[ss] + '</span>' +
+          '<span class="box" data-status="' + esc(ss) + '">' + GLYPH[ss] + '</span>' +
           '<span class="dim">' + esc(slot.duration_min) + ' 分钟</span></div>';
       }).join('');
     } else {
@@ -1273,19 +1441,12 @@ a.pg:hover{background:var(--ink);color:#fff;}
 
     var stNote = (node.slots && node.slots.length)
       ? ('槽位 ' + node.slots.join(' · '))
-      : ('映射 ' + (node.slot_ref || '') + ' · 状态在卡片编辑');
+      : ('映射 ' + (node.slot_ref || '') + ' · 能力格决定节点状态');
 
-    var triTitle = editable
-      ? ('当前：' + GLYPH[st] + ' ' + LEGEND[st].name + ' · 点一下切到 ' +
-         GLYPH[next] + ' ' + LEGEND[next].name + '（循环 ▢ → ◧ → ■，仅空白态可编辑）')
-      : ('答案态只读：' + GLYPH[st] + ' ' + LEGEND[st].name +
-         ' · 点顶部「空白态」后可在卡片上编辑');
-    var triAria = node.name + ' 状态 ' + LEGEND[st].name +
-      (editable ? '，点一下切到 ' + LEGEND[next].name : '，答案态只读');
-    var triLocked = editable ? '' : ' disabled aria-disabled="true"';
-    var nextText = editable
-      ? ('点一下 → ' + GLYPH[next] + ' ' + esc(LEGEND[next].short))
-      : '只读';
+    var badgeTitle = derived + '（只读派生徽章：在下方能力格上点，节点状态自动重算）';
+    var capNote = editable
+      ? '本行能力格（点格循环 ▢ → ◧ → ■ → ▢ · — 不提供、不可点）'
+      : '本行能力格（答案态只读 · ■ 提供且判据通过 · — 不提供）';
 
     return '<article class="card" data-card="' + esc(node.id) + '">' +
       '<header class="card-h">' +
@@ -1296,15 +1457,18 @@ a.pg:hover{background:var(--ink);color:#fff;}
       '</header>' +
       '<h2 class="card-name">' + esc(node.name) + '</h2>' +
       '<div class="card-status">' +
-      '<button type="button" class="tri' + (editable ? '' : ' is-locked') + '"' +
-      ' data-tri="' + esc(node.id) + '" data-status="' + esc(st) + '"' + triLocked +
-      ' title="' + esc(triTitle) + '" aria-label="' + esc(triAria) + '">' + GLYPH[st] + '</button>' +
+      '<span class="derived-badge" data-derived-card="' + esc(node.id) + '"' +
+      ' data-status="' + esc(st) + '" title="' + esc(badgeTitle) + '"' +
+      ' aria-label="' + esc(node.name + ' 的派生状态：' + LEGEND[st].name +
+        '；' + derived) + '">' + GLYPH[st] + '</span>' +
       '<span class="tri-name">' + esc(LEGEND[st].name) + '</span>' +
-      '<span class="tri-next">' + nextText + '</span>' +
+      '<span class="ro-tag">只读派生</span>' +
+      '<span class="derive" title="' + esc(derived) + '">派生 ' +
+      counts.built + '■ ' + counts.unverified + '◧ ' + counts.unbuilt + '▢</span>' +
       '<span class="cs-note">' + esc(stNote) + '</span>' +
       '</div>' +
       '<div class="card-slots">' + slotRows + '</div>' +
-      '<div class="card-mtx"><div class="card-cap">该行能力（列 = 该层能力）　■ 提供且通过 · — 不提供</div>' +
+      '<div class="card-mtx"><div class="card-cap">' + esc(capNote) + '</div>' +
       '<table class="mini"><thead><tr>' + thead + '</tr></thead>' +
       '<tbody><tr>' + cells + '</tr></tbody></table></div>' +
       '<div class="card-ev"><div class="card-cap">证据（实跑判据）</div>' +
@@ -1318,8 +1482,8 @@ a.pg:hover{background:var(--ink);color:#fff;}
     host.classList.toggle('is-empty', state.open.length === 0);
     if (!state.open.length) {
       host.innerHTML = '<div class="empty">点左侧任意块 → 在这里开一张「责任 × 证据」卡<br>' +
-        '可同时开多张；空白态下点卡片顶部状态徽章循环 ▢ → ◧ → ■，' +
-        '结构图与顶部判定实时派生。</div>';
+        '可同时开多张；空白态下点卡片里的能力格按 ▢ → ◧ → ■ → ▢ 循环，' +
+        '节点状态由本卡能力格派生，结构图与顶部判定实时重算。</div>';
     } else {
       host.innerHTML = state.open.map(function (id) {
         return cardHTML(NODE_BY_ID[id]);
@@ -1343,21 +1507,25 @@ a.pg:hover{background:var(--ink);color:#fff;}
     renderAll();
   }
 
-  function cycleNode(id) {
-    if (state.mode !== 'blank' || !NODE_BY_ID[id]) { return; }
-    state.edit[id] = CYCLE[state.edit[id]] || 'unbuilt';
+  function cycleCell(nodeId, col) {
+    if (state.mode !== 'blank') { return false; }
+    var node = NODE_BY_ID[nodeId];
+    if (!node || !isProvided(node, col)) { return false; }
+    var current = cellStatus(node, col);
+    state.cells[nodeId][col] = CYCLE[current] || BLANK_INITIAL;
     saveSaved();
     renderAll();
-    var btn = document.querySelector('.card[data-card="' + id + '"] .tri');
+    var btn = document.querySelector('.card[data-card="' + nodeId + '"] .cell[data-col="' + col + '"]');
     if (btn && !btn.disabled) { btn.focus(); }
+    return true;
   }
 
   function resetEdits() {
     if (state.mode !== 'blank') { return; }
-    resetEditMap();
+    resetCellMap();
     saveSaved();
     renderAll();
-    showToast('已重置：编辑态恢复为全 ▢，手改进度已清空。');
+    showToast('已重置：所有能力格恢复 ▢（节点随之 ▢），本机手改进度已清空。');
   }
 
   function showToast(msg) {
@@ -1382,22 +1550,23 @@ a.pg:hover{background:var(--ink);color:#fff;}
     });
     var hint = document.getElementById('mode-hint');
     if (mode === 'answer') {
-      hint.textContent = '答案态（参考答案）：12 个节点全 ■、只读预览；点左侧块开卡对照证据。';
+      hint.textContent = '答案态（参考答案）：13 个能力格全 ■ → 12 个节点全 ■、只读；' +
+        '点左侧块开卡对照证据，卡片顶部徽章是派生结果。';
     } else {
-      hint.textContent = '空白态（编辑态）：点右侧卡片顶部的状态徽章，按 ▢ → ◧ → ■ 循环；' +
-        '结构图徽章与顶部三条判据实时派生。' +
+      hint.textContent = '空白态（编辑态）：点卡片里的能力格，按 ▢ → ◧ → ■ → ▢ 循环；' +
+        '卡片顶部徽章只读、由本卡能力格派生；结构图徽章与顶部三条判据实时派生。' +
         (STORAGE_OK ? '进度存在本机浏览器（localStorage），可点「重置」清空。'
                     : '本机浏览器不允许存进度，刷新会丢；点「重置」可清空。');
     }
     var reset = document.getElementById('reset');
     reset.disabled = mode !== 'blank';
     reset.title = mode === 'blank'
-      ? '把编辑态恢复为全 ▢（清空本机手改进度）'
+      ? '把所有能力格恢复 ▢（清空本机手改进度）'
       : '答案态无需重置；先切到空白态';
     var note = document.getElementById('edit-note');
     if (note) {
       note.hidden = mode !== 'blank';
-      note.textContent = '编辑态 · 点卡片状态徽章循环 ▢→◧→■ · ' +
+      note.textContent = '编辑态 · 点卡片能力格循环 ▢→◧→■ · ' +
         (STORAGE_OK ? '进度存在本机浏览器' : '本机不存进度');
     }
   }
@@ -1405,26 +1574,21 @@ a.pg:hover{background:var(--ink);color:#fff;}
   function switchMode(mode) {
     if (mode !== 'answer' && mode !== 'blank') { return; }
     if (mode === state.mode) { return; }
-    var hadEdits = NODES.some(function (node) {
-      return state.edit[node.id] !== 'unbuilt';
+    var hadEdits = false;
+    NODES.forEach(function (node) {
+      editableCols(node).forEach(function (col) {
+        if (state.cells[node.id] && state.cells[node.id][col] !== BLANK_INITIAL) { hadEdits = true; }
+      });
     });
-    if (mode === 'blank') {
-      // 空白态 = 全 ▢ 且卡片可编辑；从答案态进来总是全新一轮
-      state.mode = 'blank';
-      resetEditMap();
-      saveSaved();
-      applyModeUI();
-      renderAll();
-    } else {
-      // 答案态 = 全 ■ 只读；切回来丢弃手改
-      state.mode = 'answer';
-      resetEditMap();
-      discardSaved();
-      applyModeUI();
-      renderAll();
+    state.mode = mode;
+    resetCellMap();
+    if (mode === 'blank') { saveSaved(); } else { discardSaved(); }
+    applyModeUI();
+    renderAll();
+    if (mode === 'answer') {
       showToast(hadEdits
-        ? '已切回答案态：手动改的状态已丢弃，恢复全 ■。'
-        : '已切回答案态：12 个节点全 ■、只读预览。');
+        ? '已切回答案态：手动改的能力格已丢弃，恢复全 ■。'
+        : '已切回答案态：13 个能力格全 ■、只读预览。');
     }
   }
 
@@ -1445,8 +1609,8 @@ a.pg:hover{background:var(--ink);color:#fff;}
   var cardsHost = document.getElementById('cards');
   cardsHost.addEventListener('click', function (ev) {
     var target = ev.target;
-    var tri = target.closest ? target.closest('[data-tri]') : null;
-    if (tri) { cycleNode(tri.getAttribute('data-tri')); return; }
+    var cell = target.closest ? target.closest('[data-cell]') : null;
+    if (cell) { cycleCell(cell.getAttribute('data-cell'), cell.getAttribute('data-col')); return; }
     var close = target.closest ? target.closest('[data-close]') : null;
     if (close) { toggleCard(close.getAttribute('data-close')); }
   });
@@ -1475,10 +1639,27 @@ a.pg:hover{background:var(--ink);color:#fff;}
     legend: LEGEND,
     storageKey: STORAGE_KEY,
     storageOk: STORAGE_OK,
+    blankInitial: BLANK_INITIAL,
+    editableCols: function (idOrNode) {
+      var node = (typeof idOrNode === 'string') ? NODE_BY_ID[idOrNode] : idOrNode;
+      return node ? editableCols(node) : [];
+    },
+    statusOfCell: function (nodeId, col) {
+      var node = NODE_BY_ID[nodeId];
+      return node ? cellStatus(node, col) : NA;
+    },
+    countsOfNode: function (nodeId) {
+      var node = NODE_BY_ID[nodeId];
+      return node ? cellCounts(node) : null;
+    },
+    deriveLine: function (nodeId) {
+      var node = NODE_BY_ID[nodeId];
+      return node ? deriveLine(node) : '';
+    },
     statusOfSlot: slotStatus,
     statusOfNode: function (idOrNode) {
       var node = (typeof idOrNode === 'string') ? NODE_BY_ID[idOrNode] : idOrNode;
-      return node ? nodeStatus(node) : 'unbuilt';
+      return node ? nodeStatus(node) : BLANK_INITIAL;
     },
     compute: compute,
     openCard: function (id) {
@@ -1486,7 +1667,7 @@ a.pg:hover{background:var(--ink);color:#fff;}
     },
     closeAll: function () { state.open = []; renderAll(); },
     setMode: switchMode,
-    cycleNode: cycleNode,
+    cycleCell: cycleCell,
     resetEdits: resetEdits,
     toggleCard: toggleCard,
     render: renderAll,
@@ -1496,13 +1677,13 @@ a.pg:hover{background:var(--ink);color:#fff;}
   };
 
   // ---------- 启动：有空白态进度就恢复，否则答案态 ----------
-  var savedEdit = readSaved();
-  if (savedEdit) {
+  var savedCells = readSaved();
+  if (savedCells) {
     state.mode = 'blank';
-    state.edit = savedEdit;
+    state.cells = savedCells;
   } else {
     state.mode = 'answer';
-    resetEditMap();
+    resetCellMap();
   }
   applyModeUI();
   renderAll();

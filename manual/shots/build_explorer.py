@@ -6,25 +6,29 @@
 
     python3 manual/shots/build_explorer.py
 
-它做五件事：
+它做五件事（依据 D38 / D39 / D40 / D41，D41 = 状态粒度下沉到「能力格」）：
 
 1. **读单源**：`manual/completeness/data.json`（12 个节点 = 四层「责任 × 证据」矩阵的
    12 行；10 个槽位 A0–A9；13 项能力列；13 条链路边；D38 三条完备性判据；
-   D40 编辑方向 = 卡片可编辑、结构图派生）。
+   D41 能力格真源 = 每节点每能力的 `cell_state`）。
 2. **反向核对**（防止两版漂移）：
    - 解析 `manual/completeness/poster.md` 的四张矩阵，逐行核对「节点名 / 能力列名 /
-     ■ 与 — / 证据文本」，要求与 data.json 一字一致；
+     `cell_state` 的 ■ 与 — / 证据文本」，要求与 data.json 一字一致；
    - 解析 `manual/flow.mmd`，核对槽位 A0–A9 的活动名与工期；
    - 核对槽位↔节点归属（每个槽位有且只有一个所属节点；节点拥有的槽位合计 10 个）、
-     答案态自检（10/10 槽位、12/12 行、13/13 列、13/13 边）。
+     答案态自检（10/10 槽位、12/12 行、13/13 列、13/13 边、13■ + 31— 能力格）。
 3. **内联**：把 data.json 原样内联进 HTML 模板的 `<script type="application/json">`，
    产物是**单文件、零依赖、离线可双击打开**的 explorer.html（不引 CDN / 外部字体 / 图片）。
 4. **自检产物**：HTML 里必须出现 `Noto Sans CJK SC`；不许出现 URL / `<link` / `src=` /
-   `@import` / `url(` / `fetch(` 等外部资源痕迹；不许出现用户名或绝对路径。
-5. **DOM 链路自检**（D40）：把产物复制一份、注入一段验收脚本，用本机 `google-chrome
-   --headless --dump-dom` 真跑一遍「卡片点状态徽章 → 左侧结构图徽章派生 → 顶部判定重算
-   → 重置 → 切回答案态恢复全 ■」；断言结果写进 `<title>`，本脚本读回。找不到 Chrome 时
-   跳过该步并打印警告（静态断言仍然生效）。
+   `@import` / `url(` / `fetch(` 等外部资源痕迹；不许出现用户名或绝对路径；
+   必须含 D41 构件（能力格 `data-cell=`、卡片顶部只读派生徽章 `data-derived-card=`），
+   且不得再出现卡片顶部节点控件（`data-tri=`）。
+5. **DOM 链路自检**（D41）：把产物复制一份、注入一段验收脚本，用本机 `google-chrome
+   --headless --dump-dom` 真跑一遍「空白态点一格 → 节点派生 ◧ → 结构图徽章派生 →
+   行/列/边计数重算 → 其余格也点 ■ 才变节点 ■ → 再点另一张卡演示槽位同源 →
+   重置 → 切回答案态恢复全 ■」，并做负向对照（— 格不可编辑、卡片徽章只读、
+   结构图点块不改状态、边要两端节点都 ■、答案态点格无效）。断言结果写进 `<title>`，
+   本脚本读回。找不到 Chrome 时跳过该步并打印警告（静态断言仍然生效）。
 
 依赖：python3；DOM 自检需要本机 `google-chrome`（或 `chromium`），截图见
 manual/review/explorer-shots/（由本机 playwright-core + 系统 Chrome 生成）。
@@ -105,20 +109,30 @@ def validate_data(data: dict) -> None:
         if key not in data:
             fail("data.json 缺字段 %r" % key)
 
-    # 编辑方向（D40）：状态真源是节点，槽位与结构图都由节点派生
+    # 编辑模型（D41）：唯一真源是「节点 × 能力」矩阵格，节点/槽位/结构图全部派生
     edit_model = data["edit_model"]
     if not isinstance(edit_model, dict):
         fail("edit_model 必须是对象")
-    if edit_model.get("source") != "node" or edit_model.get("unit") != "node":
-        fail("edit_model.source / unit 必须是 node（D40：卡片/节点状态为唯一真源）")
-    if edit_model.get("direction") != "node→slot→diagram":
-        fail("edit_model.direction 应为 node→slot→diagram")
+    if edit_model.get("source") != "cell" or edit_model.get("unit") != "cell":
+        fail("edit_model.source / unit 必须是 cell（D41：能力格为唯一真源）")
+    if edit_model.get("direction") != "cell→node→slot→diagram":
+        fail("edit_model.direction 应为 cell→node→slot→diagram")
     if edit_model.get("cycle") != list(STATUS):
         fail("edit_model.cycle 必须等于 status_order：%s" % (list(STATUS),))
     if edit_model.get("blank_initial") != "unbuilt":
         fail("edit_model.blank_initial 必须是 unbuilt（空白态全 ▢）")
+    if edit_model.get("answer_initial") != "built" or edit_model.get("na") != "na":
+        fail("edit_model.answer_initial 必须是 built、na 必须是 na（答案态：提供格 ■、不提供格 —）")
     if edit_model.get("answer_readonly") is not True:
         fail("edit_model.answer_readonly 必须是 true（答案态只读）")
+    for key in ("cell_state_values", "node_derivation", "card_header",
+                "slot_derivation", "diagram", "persistence"):
+        if not edit_model.get(key):
+            fail("edit_model 缺 D41 字段 %r" % key)
+    if set(edit_model["cell_state_values"]) != {"built", "unverified", "unbuilt", "na"}:
+        fail("edit_model.cell_state_values 必须覆盖 built/unverified/unbuilt/na 四值")
+    if "全部 ■" not in edit_model["node_derivation"]:
+        fail("edit_model.node_derivation 必须写清「全部 ■ ⇒ 节点 ■」派生规则")
 
     # 层：四层、顺序固定
     layers = data["layers"]
@@ -168,6 +182,20 @@ def validate_data(data: dict) -> None:
                 fail("节点 %s 的能力键必须正好是该层列名 %s" % (nid, cols))
             if any(not isinstance(v, bool) for v in node["capabilities"].values()):
                 fail("节点 %s 的 capabilities 值必须是布尔" % nid)
+            if not any(node["capabilities"].values()):
+                fail("节点 %s 至少要提供一项能力（否则节点状态无法派生）" % nid)
+
+            # D41：每节点每能力都有初始态 cell_state；答案态 提供→built、不提供→na
+            cell_state = node.get("cell_state")
+            if not isinstance(cell_state, dict):
+                fail("节点 %s 缺 cell_state（D41：每节点每能力要有初始态）" % nid)
+            if set(cell_state) != set(cols):
+                fail("节点 %s 的 cell_state 键必须正好是该层列名 %s" % (nid, cols))
+            for col in cols:
+                want = "built" if node["capabilities"][col] else "na"
+                if cell_state[col] != want:
+                    fail("节点 %s 的 cell_state[%r] 应为 %r（答案态：提供→built / 不提供→na），实际 %r"
+                         % (nid, col, want, cell_state[col]))
 
             pages = node.get("pages") or [node["page"]]
             if node["page"] not in pages:
@@ -259,22 +287,46 @@ def validate_data(data: dict) -> None:
 
     rows = sum(len(layer["nodes"]) for layer in layers)
     cols = sum(len(data["capability_columns"][layer["id"]]) for layer in layers)
-    covered = sum(1 for node in nodes.values() for cid, provided in node["capabilities"].items() if provided)
+    cells_total = sum(len(data["capability_columns"][layer["id"]]) * len(layer["nodes"])
+                      for layer in layers)
+    provided = sum(1 for node in nodes.values() for cid, given in node["capabilities"].items() if given)
+    answer_cells = {"built": 0, "na": 0}
+    for node in nodes.values():
+        for state in node["cell_state"].values():
+            if state not in answer_cells:
+                fail("cell_state 只允许 built / na，节点 %s 出现 %r" % (node["id"], state))
+            answer_cells[state] += 1
     selfcheck = data["answer_selfcheck"]
-    if rows != 12 or cols != 13 or covered != 13:
-        fail("答案态自检应为 12 行 / 13 列 / 13 个 ■，实际 %d/%d/%d" % (rows, cols, covered))
+    meta = data["meta"]
+    if rows != 12 or cols != 13 or cells_total != 44 or provided != 13:
+        fail("答案态自检应为 12 行 / 13 列 / 44 格 / 13 个提供格，实际 %d/%d/%d/%d"
+             % (rows, cols, cells_total, provided))
+    if answer_cells["built"] != 13 or answer_cells["na"] != 31:
+        fail("答案态能力格应为 13 个 ■ + 31 个 —，实际 %d + %d"
+             % (answer_cells["built"], answer_cells["na"]))
     if selfcheck.get("rows") != "12/12" or selfcheck.get("columns") != "13/13":
         fail("answer_selfcheck 的 rows/columns 口径不对")
-    if len(slots_by_id) != 10 or len(data["edges"]) != data["meta"]["edge_count"]:
+    if selfcheck.get("cells") != "13/44" or selfcheck.get("total_cells") != 44:
+        fail("answer_selfcheck 的能力格口径应为 13/44")
+    if meta.get("cell_count") != 44 or meta.get("provided_cell_count") != 13 \
+            or meta.get("na_cell_count") != 31:
+        fail("meta 的能力格统计应为 44 / 13 / 31")
+    # 答案态节点状态必须能由能力格派生为 ■（全 ■ 派生）
+    for node in nodes.values():
+        for col in data["capability_columns"][node["layer"]]:
+            if node["capabilities"][col]:
+                if node["cell_state"][col] != "built":
+                    fail("答案态节点 %s 的提供格 %r 不是 built" % (node["id"], col))
+    if len(slots_by_id) != 10 or len(data["edges"]) != meta["edge_count"]:
         fail("槽位/边数量与 meta 不符")
     all_evidence = [n["evidence"] for n in nodes.values()]
     for needle in EVIDENCE_MUST:
         if not any(needle in ev for ev in all_evidence):
             fail("证据里缺少点名判据 %r" % needle)
 
-    ok("data.json 结构：12 节点 / 10 槽位 / 13 能力列 / 13 条边 / 3 条判据")
-    ok("D40 编辑方向：节点为唯一真源 · 10 槽位归属 9 个节点（A1·A2 同源）· 3 行仅映射")
-    ok("答案态自检：A0–A9 10/10 · 行 12/12 · 列 13/13 · ■ 13 个")
+    ok("data.json 结构：12 节点 / 10 槽位 / 13 能力列 / 44 能力格 / 13 条边 / 3 条判据")
+    ok("D41 编辑模型：能力格为唯一真源 · 节点/槽位/结构图全部派生 · 卡片顶部只读徽章")
+    ok("答案态自检：A0–A9 10/10 · 行 12/12 · 列 13/13 · 能力格 13■ + 31—")
 
 
 def data_slot_owner(data: dict, slot_id: str) -> str:
@@ -356,9 +408,9 @@ def check_poster(data: dict) -> None:
             for col, mark in zip(want_cols, marks):
                 if mark not in ("■", "—"):
                     fail("poster.md %s「%s」矩阵格 %r 不是 ■/—" % (code, label, mark))
-                provided = node["capabilities"][col]
-                if provided != (mark == "■"):
-                    fail("poster.md %s「%s」%s 的 ■/— 与 data.json 不一致"
+                want = "built" if mark == "■" else "na"
+                if node["cell_state"][col] != want:
+                    fail("poster.md %s「%s」%s 的 ■/— 与 data.json 的 cell_state 不一致"
                          % (code, label, col))
     ok("poster.md 反向核对：4 张矩阵 · 12 行 · 13 列 · 证据逐条一字一致")
 
@@ -542,15 +594,15 @@ h1 .mid{font-weight:400;color:var(--mute);}
 .card-name{margin:0;font-size:16.5px;font-weight:900;line-height:1.18;}
 .card-status{display:flex;align-items:center;gap:7px;font-size:12px;flex-wrap:wrap;
              border-top:1px solid #dddddd;border-bottom:1px solid #dddddd;padding:5px 0;}
-.card-status .tri{font-family:"DejaVu Sans","Noto Sans CJK SC",sans-serif;font-size:22px;
-                  line-height:1;border:1.4px solid var(--ink);border-radius:5px;
-                  background:#fff;color:var(--ink);padding:1px 6px;cursor:pointer;}
-.card-status .tri:hover:not(:disabled){background:var(--ink);color:#fff;}
-.card-status .tri:focus-visible{outline:3px double var(--ink);outline-offset:2px;}
-.card-status .tri.is-locked{cursor:default;border-style:dashed;color:#444;background:#fbfbfb;}
+.card-status .derived-badge{font-family:"DejaVu Sans","Noto Sans CJK SC",sans-serif;
+                  font-size:22px;line-height:1;border:1.4px solid var(--ink);border-radius:5px;
+                  background:#fff;color:var(--ink);padding:1px 6px;cursor:default;}
 .card-status .tri-name{font-weight:800;font-size:12px;}
-.card-status .tri-next{font-size:10px;color:#666;border:1px dashed #aaa;
-                       border-radius:3px;padding:0 4px;white-space:nowrap;}
+.card-status .ro-tag{font-size:9.5px;color:#444;border:1px solid #999;border-radius:3px;
+                     padding:0 4px;background:#fff;white-space:nowrap;}
+.card-status .derive{font-size:10px;color:#333;border:1px dashed #aaa;border-radius:3px;
+                     padding:0 4px;white-space:nowrap;
+                     font-family:"DejaVu Sans Mono","Noto Sans CJK SC",monospace;}
 .card-status .cs-note{color:#666;font-size:10.5px;margin-left:auto;text-align:right;}
 .card-slots{display:flex;flex-direction:column;gap:3px;font-size:11px;}
 .slotrow{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
@@ -562,9 +614,14 @@ h1 .mid{font-weight:400;color:var(--mute);}
 .mini th,.mini td{border:1px solid #333;padding:2px 3px;font-size:9.5px;
                   text-align:center;line-height:1.15;}
 .mini thead th{background:#e9e9e9;font-weight:800;overflow-wrap:anywhere;}
-.mini td.mark{font-family:"DejaVu Sans","Noto Sans CJK SC",sans-serif;
-              font-size:15px;font-weight:700;height:24px;}
-.mini td.dash{color:#888;font-size:11.5px;}
+.mini td.cellwrap{padding:0;}
+.cell{display:block;width:100%;border:0;background:#fff;color:var(--ink);
+      font-family:"DejaVu Sans","Noto Sans CJK SC",sans-serif;font-size:15px;
+      line-height:1;height:24px;padding:0;cursor:pointer;}
+.cell:hover:not(:disabled){background:#e6e6e6;}
+.cell:focus-visible{outline:2px solid var(--ink);outline-offset:-2px;background:#fff;}
+.cell.is-locked{cursor:default;background:#fbfbfb;color:#333;}
+.mini td.dash{color:#888;font-size:11.5px;padding:0 2px;}
 .card-ev .ev{margin:0;font-size:10.4px;line-height:1.5;background:#f7f7f7;
              border-left:3px solid var(--ink);padding:5px 7px;overflow-wrap:anywhere;}
 .card-pg{font-size:10.5px;color:#444;display:flex;gap:6px;align-items:center;
@@ -611,7 +668,7 @@ a.pg:hover{background:var(--ink);color:#fff;}
     <div class="stat" id="stat-rows" title=""></div>
     <div class="stat" id="stat-cols" title=""></div>
     <div class="stat" id="stat-edges" title=""></div>
-    <div class="stat muted" title="十个槽位里 ■ 的个数（槽位状态由所属节点派生）"><span class="k">槽位 ■</span><b id="slot-count">—</b></div>
+    <div class="stat muted" title="十个槽位里 ■ 的个数（槽位状态由所属节点派生，节点状态再由本行能力格派生）"><span class="k">槽位 ■</span><b id="slot-count">—</b></div>
     <div class="stamp" id="stamp" hidden>建成证明 ✓</div>
   </section>
 
@@ -620,8 +677,8 @@ a.pg:hover{background:var(--ink);color:#fff;}
       <div class="left-head">
         <span class="lh-title">① 全局结构图</span>
         <span class="lh-note">L1 / L2 / L3 + L0 地基条 · 块等大（面积不编码任何维度）</span>
-        <span class="lh-ro">结构图只读 · 徽章由卡片派生</span>
-        <span class="lh-edit" id="edit-note" hidden>编辑态 · 点卡片状态徽章循环 ▢→◧→■ · 进度存在本机浏览器</span>
+        <span class="lh-ro">结构图只读 · 徽章由能力格 → 节点派生</span>
+        <span class="lh-edit" id="edit-note" hidden>编辑态 · 点卡片能力格循环 ▢→◧→■ · 进度存在本机浏览器</span>
         <span class="legend">
           <span class="lg"><span class="box">▢</span>未建</span>
           <span class="lg"><span class="box">◧</span>已建未验</span>
@@ -634,7 +691,7 @@ a.pg:hover{background:var(--ink);color:#fff;}
         <span class="df-t">端到端证据</span>
         <span class="chain" id="chain"></span>
       </div>
-      <div class="diag-cap">悬停块看工期 / 能力数；点块在右侧开卡，再点同一块关闭该卡；结构图只读，徽章由卡片状态派生；状态编辑入口在右侧卡片（仅空白态）。</div>
+      <div class="diag-cap">悬停块看工期 / 能力数；点块在右侧开卡，再点同一块关闭该卡；结构图只读，徽章由本行能力格 → 节点派生；状态编辑入口是右侧卡片里的能力格（仅空白态）。</div>
     </section>
 
     <aside class="right" aria-label="浮层侧栏">
@@ -673,15 +730,18 @@ a.pg:hover{background:var(--ink);color:#fff;}
   DATA.status_order.forEach(function (key) { STATUS_SET[key] = true; });
 
   var GLYPH = { unbuilt: '▢', unverified: '◧', built: '■' };
+  var NA = 'na';
+  var NA_GLYPH = '—';
   var ORDER = (DATA.edit_model && DATA.edit_model.cycle)
     ? DATA.edit_model.cycle.slice() : DATA.status_order.slice();
   var CYCLE = {};
   ORDER.forEach(function (key, index) {
     CYCLE[key] = ORDER[(index + 1) % ORDER.length];
   });
+  var BLANK_INITIAL = (DATA.edit_model && DATA.edit_model.blank_initial) || 'unbuilt';
 
   // 编辑态进度存本机浏览器；不可用（隐私模式 / 某些 file:// 策略）时降级为不持久化。
-  var STORAGE_KEY = 'completeness-explorer/edit-v1';
+  var STORAGE_KEY = 'completeness-explorer/cells-v1';
   var STORAGE_OK = (function () {
     try {
       window.localStorage.setItem('__explorer_probe__', '1');
@@ -690,8 +750,8 @@ a.pg:hover{background:var(--ink);color:#fff;}
     } catch (err) { return false; }
   })();
 
-  // 唯一可变状态：mode（答案态 / 空白态）、edit（节点状态）、open（打开的卡片）
-  var state = { mode: 'answer', edit: {}, open: [] };
+  // 唯一可变状态（D41）：mode（答案态 / 空白态）、cells（格级真源）、open（打开的卡片）
+  var state = { mode: 'answer', cells: {}, open: [] };
 
   function esc(value) {
     return String(value === null || value === undefined ? '' : value)
@@ -700,10 +760,25 @@ a.pg:hover{background:var(--ink);color:#fff;}
       });
   }
 
-  function resetEditMap() {
-    state.edit = {};
-    NODES.forEach(function (node) { state.edit[node.id] = 'unbuilt'; });
+  function layerCols(node) { return DATA.capability_columns[node.layer]; }
+
+  function isProvided(node, col) { return node.capabilities[col] === true; }
+
+  function editableCols(node) {
+    return layerCols(node).filter(function (col) { return node.capabilities[col] === true; });
   }
+
+  function blankCellsMap() {
+    var map = {};
+    NODES.forEach(function (node) {
+      var cells = {};
+      editableCols(node).forEach(function (col) { cells[col] = BLANK_INITIAL; });
+      map[node.id] = cells;
+    });
+    return map;
+  }
+
+  function resetCellMap() { state.cells = blankCellsMap(); }
 
   function readSaved() {
     if (!STORAGE_OK) { return null; }
@@ -711,13 +786,17 @@ a.pg:hover{background:var(--ink);color:#fff;}
       var raw = window.localStorage.getItem(STORAGE_KEY);
       if (!raw) { return null; }
       var obj = JSON.parse(raw);
-      if (!obj || obj.v !== 1 || obj.mode !== 'blank' || !obj.edit) { return null; }
-      var edit = {};
+      if (!obj || obj.v !== 2 || obj.mode !== 'blank' || !obj.cells) { return null; }
+      var cells = blankCellsMap();
       NODES.forEach(function (node) {
-        var value = obj.edit[node.id];
-        edit[node.id] = STATUS_SET[value] ? value : 'unbuilt';
+        var saved = obj.cells[node.id];
+        if (!saved || typeof saved !== 'object') { return; }
+        editableCols(node).forEach(function (col) {
+          var value = saved[col];
+          if (STATUS_SET[value]) { cells[node.id][col] = value; }
+        });
       });
-      return edit;
+      return cells;
     } catch (err) { return null; }
   }
 
@@ -729,7 +808,7 @@ a.pg:hover{background:var(--ink);color:#fff;}
         return;
       }
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify({
-        v: 1, mode: 'blank', edit: state.edit, ts: Date.now()
+        v: 2, mode: 'blank', cells: state.cells, ts: Date.now()
       }));
     } catch (err) { /* 存不了就只在本页内存里编辑 */ }
   }
@@ -739,22 +818,48 @@ a.pg:hover{background:var(--ink);color:#fff;}
     try { window.localStorage.removeItem(STORAGE_KEY); } catch (err) {}
   }
 
-  // ---------- 状态派生链（D40）：节点 → 槽位 → 结构图 ----------
+  // ---------- 派生链（D41）：能力格 → 节点 → 槽位 → 结构图 ----------
+  function cellStatus(node, col) {
+    if (!node || !isProvided(node, col)) { return NA; }
+    if (state.mode === 'answer') { return node.cell_state[col]; }
+    var nodeCells = state.cells[node.id];
+    var value = nodeCells ? nodeCells[col] : null;
+    return STATUS_SET[value] ? value : BLANK_INITIAL;
+  }
+
+  function cellCounts(node) {
+    var counts = { editable: 0, built: 0, unverified: 0, unbuilt: 0, na: 0 };
+    layerCols(node).forEach(function (col) {
+      var status = cellStatus(node, col);
+      if (status === NA) { counts.na += 1; return; }
+      counts.editable += 1;
+      counts[status] += 1;
+    });
+    return counts;
+  }
+
+  // 节点状态 = 本行可编辑格派生：全 ▢ ⇒ ▢；全 ■ ⇒ ■；其余 ⇒ ◧（— 格不参与）
   function nodeStatus(node) {
-    if (state.mode === 'answer') { return node.status; }
-    return state.edit[node.id] || 'unbuilt';
+    var counts = cellCounts(node);
+    if (!counts.editable) { return BLANK_INITIAL; }
+    if (counts.unbuilt === counts.editable) { return 'unbuilt'; }
+    if (counts.built === counts.editable) { return 'built'; }
+    return 'unverified';
+  }
+
+  function deriveLine(node) {
+    var counts = cellCounts(node);
+    return '由本卡 ' + counts.editable + ' 项能力派生：' +
+      counts.built + '■ ' + counts.unverified + '◧ ' + counts.unbuilt + '▢';
   }
 
   function slotStatus(slotId) {
     var slot = SLOT_BY_ID[slotId];
-    if (!slot) { return 'unbuilt'; }
+    if (!slot) { return BLANK_INITIAL; }
     return nodeStatus(NODE_BY_ID[slot.node]);
   }
 
-  function capCount(node) {
-    var cols = DATA.capability_columns[node.layer];
-    return cols.filter(function (col) { return node.capabilities[col] === true; }).length;
-  }
+  function capCount(node) { return editableCols(node).length; }
 
   function compute() {
     var perLayer = DATA.layers.map(function (layer) {
@@ -763,10 +868,9 @@ a.pg:hover{background:var(--ink);color:#fff;}
       cols.forEach(function (col) { colDone[col] = false; });
       var rowsPass = 0;
       layer.nodes.forEach(function (node) {
-        var st = nodeStatus(node);
-        if (st === 'built') { rowsPass += 1; }
+        if (nodeStatus(node) === 'built') { rowsPass += 1; }
         cols.forEach(function (col) {
-          if (node.capabilities[col] === true && st === 'built') { colDone[col] = true; }
+          if (cellStatus(node, col) === 'built') { colDone[col] = true; }
         });
       });
       var colsPass = cols.filter(function (col) { return colDone[col]; }).length;
@@ -821,20 +925,20 @@ a.pg:hover{background:var(--ink);color:#fff;}
     setStat('stat-rows', '行覆盖', result.rowsPass, result.rowsTotal,
       result.rowsPass === result.rowsTotal,
       'D38 ① 每层矩阵每行 ≥ 1 个 ■（节点不是空壳）：' + rowDetail +
-      '（节点状态由右侧卡片编辑派生）');
+      '（节点状态由本行能力格派生：全部可编辑格 ■ 才算节点 ■）');
 
     var colDetail = result.perLayer.map(function (part) {
       return part.id + ' ' + part.colsPass + '/' + part.colsTotal;
     }).join(' · ');
     setStat('stat-cols', '列覆盖', result.colsPass, result.colsTotal,
       result.colsPass === result.colsTotal,
-      'D38 ② 每层矩阵每列 ≥ 1 个 ■（能力没有漏）：' + colDetail);
+      'D38 ② 每层矩阵每列 ≥ 1 个 ■（能力没有漏，按能力格计）：' + colDetail);
 
     var failed = result.edges.filter(function (item) { return !item.pass; })
       .map(function (item) { return item.edge.span + ' ' + item.edge.label; });
     setStat('stat-edges', '跨层边通', result.edgesPass, result.edgesTotal,
       result.edgesPass === result.edgesTotal,
-      failed.length ? ('未通的边：' + failed.join(' / '))
+      failed.length ? ('未通的边（两端节点都 ■ 才算通）：' + failed.join(' / '))
         : 'D38 ③ 跨层边都通，端到端证据 41099.5');
 
     document.getElementById('slot-count').textContent =
@@ -848,6 +952,7 @@ a.pg:hover{background:var(--ink);color:#fff;}
 
     var chain = document.getElementById('chain');
     if (chain) { chain.classList.toggle('pass', result.all); }
+
     return result;
   }
 
@@ -855,27 +960,28 @@ a.pg:hover{background:var(--ink);color:#fff;}
     if (node.slots && node.slots.length) {
       return node.slots.map(function (slotId) {
         var slot = SLOT_BY_ID[slotId];
-        var st = slotStatus(slotId);
+        var derived = slotStatus(slotId);
         var tip = '槽位 ' + slotId + ' ' + slot.name + ' · 派生状态 ' +
-          GLYPH[st] + ' ' + LEGEND[st].name + '（结构图只读，跟着节点走）';
-        return '<span class="chip slot" data-slot="' + esc(slotId) + '" data-status="' + esc(st) +
+          GLYPH[derived] + ' ' + LEGEND[derived].name +
+          '（由所属节点「' + node.name + '」派生；节点状态再由本行能力格派生，结构图只读）';
+        return '<span class="chip slot" data-slot="' + esc(slotId) + '" data-status="' + esc(derived) +
           '" title="' + esc(tip) + '">' + esc(slotId) + '</span>';
       }).join('');
     }
     var refs = node.mapped_slots || [];
     var label = node.slot_ref || (refs.length ? refs.join('·') : '—');
-    var refTip = '映射槽位 ' + label + '（仅示意位置；该节点状态在右侧卡片上编辑）';
+    var refTip = '映射槽位 ' + label + '（仅示意位置；状态由本卡能力格派生）';
     return '<span class="chip ref" data-mapped="' + esc(refs.join(' ')) +
       '" title="' + esc(refTip) + '">' + esc(label) + '</span>';
   }
 
   function blockHTML(node) {
     var layer = LAYER_BY_ID[node.layer];
-    var cols = DATA.capability_columns[node.layer];
+    var cols = layerCols(node);
     var st = nodeStatus(node);
     var open = state.open.indexOf(node.id) >= 0;
     var badgeTip = '结构图只读 · 节点「' + node.name + '」状态 ' + GLYPH[st] + ' ' +
-      LEGEND[st].name + '（由右侧卡片派生，点块只开卡）';
+      LEGEND[st].name + '（由本行能力格 → 节点派生，点块只开卡）';
     var tip = node.name + ' · ' + layer.code + ' ' + layer.name +
       ' · 状态 ' + GLYPH[st] + ' ' + LEGEND[st].name +
       (node.duration_min === null || node.duration_min === undefined
@@ -916,30 +1022,53 @@ a.pg:hover{background:var(--ink);color:#fff;}
     host.innerHTML = parts.join('<span class="arw">→</span>');
   }
 
+  function cellHTML(node, col, editable) {
+    if (!isProvided(node, col)) {
+      return '<td class="dash" data-na="' + esc(col) + '" title="该节点不提供「' +
+        esc(col) + '」：— 格不可编辑，也不参与节点派生">' + NA_GLYPH + '</td>';
+    }
+    var cell = cellStatus(node, col);
+    var next = CYCLE[cell];
+    var tip = editable
+      ? ('当前：' + GLYPH[cell] + ' ' + LEGEND[cell].name + ' · 点一下切下一态 → ' +
+         GLYPH[next] + ' ' + LEGEND[next].name + '（循环 ▢ → ◧ → ■ → ▢）')
+      : ('答案态只读：' + GLYPH[cell] + ' ' + LEGEND[cell].name +
+         ' · 切到「空白态」后点格可编辑');
+    var locked = editable ? '' : ' is-locked';
+    var disabled = editable ? '' : ' disabled aria-disabled="true"';
+    return '<td class="cellwrap"><button type="button" class="cell' + locked + '"' +
+      ' data-cell="' + esc(node.id) + '" data-col="' + esc(col) + '"' +
+      ' data-status="' + esc(cell) + '"' + disabled +
+      ' title="' + esc(tip) + '"' +
+      ' aria-label="' + esc('能力格「' + col + '」：' + LEGEND[cell].name +
+        (editable ? '，点一下切下一态' : '，答案态只读')) + '">' +
+      GLYPH[cell] + '</button></td>';
+  }
+
   function cardHTML(node) {
     var layer = LAYER_BY_ID[node.layer];
-    var cols = DATA.capability_columns[node.layer];
+    var cols = layerCols(node);
     var st = nodeStatus(node);
+    var counts = cellCounts(node);
     var editable = state.mode === 'blank';
-    var next = CYCLE[st];
+    var derived = deriveLine(node);
     var thead = cols.map(function (col) {
-      return '<th>' + esc(col) + '</th>';
+      var cls = isProvided(node, col) ? '' : ' class="th-na"';
+      return '<th' + cls + '>' + esc(col) + '</th>';
     }).join('');
-    var cells = cols.map(function (col) {
-      if (node.capabilities[col] !== true) { return '<td class="dash">—</td>'; }
-      return '<td class="mark" data-status="' + esc(st) + '">' + GLYPH[st] + '</td>';
-    }).join('');
+    var cells = cols.map(function (col) { return cellHTML(node, col, editable); }).join('');
 
     var slotRows = '';
     if (node.slots && node.slots.length) {
       slotRows = node.slots.map(function (slotId) {
         var slot = SLOT_BY_ID[slotId];
         var ss = slotStatus(slotId);
-        return '<div class="slotrow" data-slot="' + esc(slotId) + '" data-status="' + esc(ss) + '">' +
+        return '<div class="slotrow" data-slot="' + esc(slotId) + '" data-status="' + esc(ss) + '"' +
+          ' title="槽位 ' + esc(slotId) + ' 状态由所属节点「' + esc(node.name) + '」派生；' +
+          '节点状态由本行能力格派生">' +
           '<span class="mono">' + esc(slotId) + '</span>' +
           '<span>' + esc(slot.name) + '</span>' +
-          '<span class="box" data-status="' + esc(ss) + '" title="槽位状态由所属节点「' +
-          esc(node.name) + '」派生">' + GLYPH[ss] + '</span>' +
+          '<span class="box" data-status="' + esc(ss) + '">' + GLYPH[ss] + '</span>' +
           '<span class="dim">' + esc(slot.duration_min) + ' 分钟</span></div>';
       }).join('');
     } else {
@@ -955,19 +1084,12 @@ a.pg:hover{background:var(--ink);color:#fff;}
 
     var stNote = (node.slots && node.slots.length)
       ? ('槽位 ' + node.slots.join(' · '))
-      : ('映射 ' + (node.slot_ref || '') + ' · 状态在卡片编辑');
+      : ('映射 ' + (node.slot_ref || '') + ' · 能力格决定节点状态');
 
-    var triTitle = editable
-      ? ('当前：' + GLYPH[st] + ' ' + LEGEND[st].name + ' · 点一下切到 ' +
-         GLYPH[next] + ' ' + LEGEND[next].name + '（循环 ▢ → ◧ → ■，仅空白态可编辑）')
-      : ('答案态只读：' + GLYPH[st] + ' ' + LEGEND[st].name +
-         ' · 点顶部「空白态」后可在卡片上编辑');
-    var triAria = node.name + ' 状态 ' + LEGEND[st].name +
-      (editable ? '，点一下切到 ' + LEGEND[next].name : '，答案态只读');
-    var triLocked = editable ? '' : ' disabled aria-disabled="true"';
-    var nextText = editable
-      ? ('点一下 → ' + GLYPH[next] + ' ' + esc(LEGEND[next].short))
-      : '只读';
+    var badgeTitle = derived + '（只读派生徽章：在下方能力格上点，节点状态自动重算）';
+    var capNote = editable
+      ? '本行能力格（点格循环 ▢ → ◧ → ■ → ▢ · — 不提供、不可点）'
+      : '本行能力格（答案态只读 · ■ 提供且判据通过 · — 不提供）';
 
     return '<article class="card" data-card="' + esc(node.id) + '">' +
       '<header class="card-h">' +
@@ -978,15 +1100,18 @@ a.pg:hover{background:var(--ink);color:#fff;}
       '</header>' +
       '<h2 class="card-name">' + esc(node.name) + '</h2>' +
       '<div class="card-status">' +
-      '<button type="button" class="tri' + (editable ? '' : ' is-locked') + '"' +
-      ' data-tri="' + esc(node.id) + '" data-status="' + esc(st) + '"' + triLocked +
-      ' title="' + esc(triTitle) + '" aria-label="' + esc(triAria) + '">' + GLYPH[st] + '</button>' +
+      '<span class="derived-badge" data-derived-card="' + esc(node.id) + '"' +
+      ' data-status="' + esc(st) + '" title="' + esc(badgeTitle) + '"' +
+      ' aria-label="' + esc(node.name + ' 的派生状态：' + LEGEND[st].name +
+        '；' + derived) + '">' + GLYPH[st] + '</span>' +
       '<span class="tri-name">' + esc(LEGEND[st].name) + '</span>' +
-      '<span class="tri-next">' + nextText + '</span>' +
+      '<span class="ro-tag">只读派生</span>' +
+      '<span class="derive" title="' + esc(derived) + '">派生 ' +
+      counts.built + '■ ' + counts.unverified + '◧ ' + counts.unbuilt + '▢</span>' +
       '<span class="cs-note">' + esc(stNote) + '</span>' +
       '</div>' +
       '<div class="card-slots">' + slotRows + '</div>' +
-      '<div class="card-mtx"><div class="card-cap">该行能力（列 = 该层能力）　■ 提供且通过 · — 不提供</div>' +
+      '<div class="card-mtx"><div class="card-cap">' + esc(capNote) + '</div>' +
       '<table class="mini"><thead><tr>' + thead + '</tr></thead>' +
       '<tbody><tr>' + cells + '</tr></tbody></table></div>' +
       '<div class="card-ev"><div class="card-cap">证据（实跑判据）</div>' +
@@ -1000,8 +1125,8 @@ a.pg:hover{background:var(--ink);color:#fff;}
     host.classList.toggle('is-empty', state.open.length === 0);
     if (!state.open.length) {
       host.innerHTML = '<div class="empty">点左侧任意块 → 在这里开一张「责任 × 证据」卡<br>' +
-        '可同时开多张；空白态下点卡片顶部状态徽章循环 ▢ → ◧ → ■，' +
-        '结构图与顶部判定实时派生。</div>';
+        '可同时开多张；空白态下点卡片里的能力格按 ▢ → ◧ → ■ → ▢ 循环，' +
+        '节点状态由本卡能力格派生，结构图与顶部判定实时重算。</div>';
     } else {
       host.innerHTML = state.open.map(function (id) {
         return cardHTML(NODE_BY_ID[id]);
@@ -1025,21 +1150,25 @@ a.pg:hover{background:var(--ink);color:#fff;}
     renderAll();
   }
 
-  function cycleNode(id) {
-    if (state.mode !== 'blank' || !NODE_BY_ID[id]) { return; }
-    state.edit[id] = CYCLE[state.edit[id]] || 'unbuilt';
+  function cycleCell(nodeId, col) {
+    if (state.mode !== 'blank') { return false; }
+    var node = NODE_BY_ID[nodeId];
+    if (!node || !isProvided(node, col)) { return false; }
+    var current = cellStatus(node, col);
+    state.cells[nodeId][col] = CYCLE[current] || BLANK_INITIAL;
     saveSaved();
     renderAll();
-    var btn = document.querySelector('.card[data-card="' + id + '"] .tri');
+    var btn = document.querySelector('.card[data-card="' + nodeId + '"] .cell[data-col="' + col + '"]');
     if (btn && !btn.disabled) { btn.focus(); }
+    return true;
   }
 
   function resetEdits() {
     if (state.mode !== 'blank') { return; }
-    resetEditMap();
+    resetCellMap();
     saveSaved();
     renderAll();
-    showToast('已重置：编辑态恢复为全 ▢，手改进度已清空。');
+    showToast('已重置：所有能力格恢复 ▢（节点随之 ▢），本机手改进度已清空。');
   }
 
   function showToast(msg) {
@@ -1064,22 +1193,23 @@ a.pg:hover{background:var(--ink);color:#fff;}
     });
     var hint = document.getElementById('mode-hint');
     if (mode === 'answer') {
-      hint.textContent = '答案态（参考答案）：12 个节点全 ■、只读预览；点左侧块开卡对照证据。';
+      hint.textContent = '答案态（参考答案）：13 个能力格全 ■ → 12 个节点全 ■、只读；' +
+        '点左侧块开卡对照证据，卡片顶部徽章是派生结果。';
     } else {
-      hint.textContent = '空白态（编辑态）：点右侧卡片顶部的状态徽章，按 ▢ → ◧ → ■ 循环；' +
-        '结构图徽章与顶部三条判据实时派生。' +
+      hint.textContent = '空白态（编辑态）：点卡片里的能力格，按 ▢ → ◧ → ■ → ▢ 循环；' +
+        '卡片顶部徽章只读、由本卡能力格派生；结构图徽章与顶部三条判据实时派生。' +
         (STORAGE_OK ? '进度存在本机浏览器（localStorage），可点「重置」清空。'
                     : '本机浏览器不允许存进度，刷新会丢；点「重置」可清空。');
     }
     var reset = document.getElementById('reset');
     reset.disabled = mode !== 'blank';
     reset.title = mode === 'blank'
-      ? '把编辑态恢复为全 ▢（清空本机手改进度）'
+      ? '把所有能力格恢复 ▢（清空本机手改进度）'
       : '答案态无需重置；先切到空白态';
     var note = document.getElementById('edit-note');
     if (note) {
       note.hidden = mode !== 'blank';
-      note.textContent = '编辑态 · 点卡片状态徽章循环 ▢→◧→■ · ' +
+      note.textContent = '编辑态 · 点卡片能力格循环 ▢→◧→■ · ' +
         (STORAGE_OK ? '进度存在本机浏览器' : '本机不存进度');
     }
   }
@@ -1087,26 +1217,21 @@ a.pg:hover{background:var(--ink);color:#fff;}
   function switchMode(mode) {
     if (mode !== 'answer' && mode !== 'blank') { return; }
     if (mode === state.mode) { return; }
-    var hadEdits = NODES.some(function (node) {
-      return state.edit[node.id] !== 'unbuilt';
+    var hadEdits = false;
+    NODES.forEach(function (node) {
+      editableCols(node).forEach(function (col) {
+        if (state.cells[node.id] && state.cells[node.id][col] !== BLANK_INITIAL) { hadEdits = true; }
+      });
     });
-    if (mode === 'blank') {
-      // 空白态 = 全 ▢ 且卡片可编辑；从答案态进来总是全新一轮
-      state.mode = 'blank';
-      resetEditMap();
-      saveSaved();
-      applyModeUI();
-      renderAll();
-    } else {
-      // 答案态 = 全 ■ 只读；切回来丢弃手改
-      state.mode = 'answer';
-      resetEditMap();
-      discardSaved();
-      applyModeUI();
-      renderAll();
+    state.mode = mode;
+    resetCellMap();
+    if (mode === 'blank') { saveSaved(); } else { discardSaved(); }
+    applyModeUI();
+    renderAll();
+    if (mode === 'answer') {
       showToast(hadEdits
-        ? '已切回答案态：手动改的状态已丢弃，恢复全 ■。'
-        : '已切回答案态：12 个节点全 ■、只读预览。');
+        ? '已切回答案态：手动改的能力格已丢弃，恢复全 ■。'
+        : '已切回答案态：13 个能力格全 ■、只读预览。');
     }
   }
 
@@ -1127,8 +1252,8 @@ a.pg:hover{background:var(--ink);color:#fff;}
   var cardsHost = document.getElementById('cards');
   cardsHost.addEventListener('click', function (ev) {
     var target = ev.target;
-    var tri = target.closest ? target.closest('[data-tri]') : null;
-    if (tri) { cycleNode(tri.getAttribute('data-tri')); return; }
+    var cell = target.closest ? target.closest('[data-cell]') : null;
+    if (cell) { cycleCell(cell.getAttribute('data-cell'), cell.getAttribute('data-col')); return; }
     var close = target.closest ? target.closest('[data-close]') : null;
     if (close) { toggleCard(close.getAttribute('data-close')); }
   });
@@ -1157,10 +1282,27 @@ a.pg:hover{background:var(--ink);color:#fff;}
     legend: LEGEND,
     storageKey: STORAGE_KEY,
     storageOk: STORAGE_OK,
+    blankInitial: BLANK_INITIAL,
+    editableCols: function (idOrNode) {
+      var node = (typeof idOrNode === 'string') ? NODE_BY_ID[idOrNode] : idOrNode;
+      return node ? editableCols(node) : [];
+    },
+    statusOfCell: function (nodeId, col) {
+      var node = NODE_BY_ID[nodeId];
+      return node ? cellStatus(node, col) : NA;
+    },
+    countsOfNode: function (nodeId) {
+      var node = NODE_BY_ID[nodeId];
+      return node ? cellCounts(node) : null;
+    },
+    deriveLine: function (nodeId) {
+      var node = NODE_BY_ID[nodeId];
+      return node ? deriveLine(node) : '';
+    },
     statusOfSlot: slotStatus,
     statusOfNode: function (idOrNode) {
       var node = (typeof idOrNode === 'string') ? NODE_BY_ID[idOrNode] : idOrNode;
-      return node ? nodeStatus(node) : 'unbuilt';
+      return node ? nodeStatus(node) : BLANK_INITIAL;
     },
     compute: compute,
     openCard: function (id) {
@@ -1168,7 +1310,7 @@ a.pg:hover{background:var(--ink);color:#fff;}
     },
     closeAll: function () { state.open = []; renderAll(); },
     setMode: switchMode,
-    cycleNode: cycleNode,
+    cycleCell: cycleCell,
     resetEdits: resetEdits,
     toggleCard: toggleCard,
     render: renderAll,
@@ -1178,13 +1320,13 @@ a.pg:hover{background:var(--ink);color:#fff;}
   };
 
   // ---------- 启动：有空白态进度就恢复，否则答案态 ----------
-  var savedEdit = readSaved();
-  if (savedEdit) {
+  var savedCells = readSaved();
+  if (savedCells) {
     state.mode = 'blank';
-    state.edit = savedEdit;
+    state.cells = savedCells;
   } else {
     state.mode = 'answer';
-    resetEditMap();
+    resetCellMap();
   }
   applyModeUI();
   renderAll();
@@ -1210,13 +1352,20 @@ def check_html(text: str) -> None:
     for bad in EXTERNAL:
         if bad in text:
             fail("产物里出现外部资源痕迹 %r（必须离线可用）" % bad)
-    # D40 链路构件：卡片三态控件 / 结构图只读派生 / 重置 / 本机进度说明
-    for needle in ("data-tri=", "data-derived-node=", 'id="reset"', "localStorage",
-                   "cycleNode", "本机浏览器"):
+    # D41 链路构件：能力格编辑 / 卡片顶部只读派生徽章 / 结构图只读派生 / 重置 / 本机进度
+    for needle in ("data-cell=", "data-derived-card=", "data-derived-node=",
+                   "点一下切下一态", "由本卡", "cycleCell", 'id="reset"',
+                   "localStorage", "本机浏览器"):
         if needle not in text:
-            fail("产物缺少 D40 链路构件 %r" % needle)
+            fail("产物缺少 D41 链路构件 %r" % needle)
+    if "data-tri=" in text:
+        fail("产物里仍有卡片顶部节点控件 data-tri（D41 要求移除，改为只读派生徽章）")
+    if re.search(r"<button[^>]*data-derived-card=", text):
+        fail("卡片顶部派生徽章仍是按钮（D41 要求只读）")
+    if 'class="cell' not in text or "cellwrap" not in text:
+        fail("产物缺少能力格按钮（D41：每节点每提供能力一格可点）")
     if re.search(r"<button[^>]*data-slot=", text):
-        fail("结构图槽位仍被渲染成可点按钮（D40 要求结构图只读、状态由卡片派生）")
+        fail("结构图槽位仍被渲染成可点按钮（要求结构图只读、状态由能力格 → 节点派生）")
     if text.count("<script") != 2:
         fail("应只有两段内联 script（数据 + 逻辑），实际 %d" % text.count("<script"))
     if "<style" not in text or "<style" in text.split("<body>")[-1]:
@@ -1247,6 +1396,8 @@ DOM_CHECK_JS = r"""
   function q(sel) { return document.querySelector(sel); }
   function qa(sel) { return Array.prototype.slice.call(document.querySelectorAll(sel)); }
   function text(sel) { var el = q(sel); return el ? el.textContent.trim() : '<missing ' + sel + '>'; }
+  function api() { return window.__EXPLORER__; }
+
   function blockState(nodeId) {
     var block = q('#diagram .block[data-node="' + nodeId + '"]');
     if (!block) { return null; }
@@ -1259,18 +1410,36 @@ DOM_CHECK_JS = r"""
       })
     };
   }
-  function cardState(nodeId) {
+  function cardBadge(nodeId) {
     var card = q('.card[data-card="' + nodeId + '"]');
     if (!card) { return null; }
-    var tri = card.querySelector('.tri');
+    var badge = card.querySelector('[data-derived-card]');
+    var derive = card.querySelector('.derive');
+    var ro = card.querySelector('.ro-tag');
     return {
-      status: tri ? tri.getAttribute('data-status') : null,
-      glyph: tri ? tri.textContent.trim() : '',
-      disabled: tri ? tri.disabled : null,
+      tag: badge ? badge.tagName : null,
+      status: badge ? badge.getAttribute('data-status') : null,
+      glyph: badge ? badge.textContent.trim() : '',
+      title: badge ? (badge.getAttribute('title') || '') : '',
+      deriveText: derive ? derive.textContent.trim() : '',
+      roText: ro ? ro.textContent.trim() : '',
       slots: Array.prototype.map.call(card.querySelectorAll('.slotrow[data-slot]'), function (row) {
         var box = row.querySelector('.box');
         return row.getAttribute('data-slot') + '=' + row.getAttribute('data-status') + ':' + (box ? box.textContent.trim() : '');
+      }),
+      cells: Array.prototype.map.call(card.querySelectorAll('.cell[data-cell]'), function (btn) {
+        return btn.getAttribute('data-col') + '=' + btn.getAttribute('data-status') + ':' + btn.textContent.trim();
       })
+    };
+  }
+  function cellState(nodeId, col) {
+    var btn = q('.card[data-card="' + nodeId + '"] .cell[data-col="' + col + '"]');
+    if (!btn) { return null; }
+    return {
+      status: btn.getAttribute('data-status'),
+      glyph: btn.textContent.trim(),
+      disabled: btn.disabled,
+      title: btn.getAttribute('title') || ''
     };
   }
   function stats() {
@@ -1281,150 +1450,264 @@ DOM_CHECK_JS = r"""
       blockCount: qa('#diagram .block').length,
       diagramButtons: qa('#diagram button').length,
       diagramTri: qa('#diagram [data-tri]').length,
-      cards: qa('.card').length
+      cardTri: qa('.card [data-tri]').length,
+      cards: qa('.card').length,
+      badges: qa('.card [data-derived-card]').length,
+      cellButtons: qa('.card .cell[data-cell]').length,
+      dashCells: qa('.card td.dash').length
     };
   }
-  function api() { return window.__EXPLORER__; }
+  function counts(label) {
+    var s = stats();
+    return label + '：行 ' + s.rows + ' · 列 ' + s.cols + ' · 边 ' + s.edges + ' · 槽位 ' + s.slots;
+  }
+  function expectCounts(label, rows, cols, edges, slots) {
+    var s = stats();
+    check(s.rows === rows && s.cols === cols && s.edges === edges && s.slots === slots,
+      label + ' 应为 行 ' + rows + ' · 列 ' + cols + ' · 边 ' + edges + ' · 槽位 ' + slots +
+      '，实际 ' + [s.rows, s.cols, s.edges, s.slots].join(' · '));
+  }
   function clickBlock(nodeId) {
     var block = q('#diagram .block[data-node="' + nodeId + '"]');
     if (!block) { fails.push('找不到结构块 ' + nodeId); return; }
     block.click();
   }
-  function clickCardTri(nodeId, times) {
-    for (var i = 0; i < times; i += 1) {
-      var btn = q('.card[data-card="' + nodeId + '"] .tri');
-      if (!btn) { fails.push('找不到卡片 ' + nodeId + ' 的状态控件'); return; }
-      btn.click();
-    }
+  function clickCell(nodeId, col) {
+    var btn = q('.card[data-card="' + nodeId + '"] .cell[data-col="' + col + '"]');
+    if (!btn) { fails.push('找不到能力格 ' + nodeId + ' · ' + col); return; }
+    btn.click();
+  }
+  function cellsSnapshot() { return JSON.stringify(api().state.cells); }
+  function allBlockGlyphs(expected, label) {
+    qa('#diagram .blk-status').forEach(function (badge) {
+      check(badge.getAttribute('data-status') === expected && badge.textContent.trim() === api().glyph[expected],
+        label + '：结构图徽章应统一 ' + api().glyph[expected] + '，实际 ' +
+        badge.getAttribute('data-derived-node') + '=' + badge.textContent.trim());
+    });
   }
   function run() {
-    var s = stats();
     var ref = api();
     check(!!ref, '缺少 __EXPLORER__ 验收句柄');
+    if (!ref) { return; }
+
+    // ===== 1) 答案态：13 个能力格全 ■、只读、派生徽章只读、计数全绿 =====
+    check(ref.state.mode === 'answer', '初始应为答案态');
+    var s = stats();
     check(s.blockCount === 12, '结构图应有 12 个块，实际 ' + s.blockCount);
-    check(s.diagramButtons === 0, '结构图里不应有可点按钮（徽章只读），实际 ' + s.diagramButtons);
-    check(s.diagramTri === 0, '结构图里不应出现卡片三态控件');
-
-    // 1) 答案态：全 ■、只读、印章出现
-    qa('#diagram .blk-status').forEach(function (badge) {
-      check(badge.getAttribute('data-status') === 'built' && badge.textContent.trim() === '■',
-        '答案态结构图徽章应全 ■：' + badge.getAttribute('data-derived-node'));
-    });
-    check(s.rows === '12/12' && s.cols === '13/13' && s.edges === '13/13' && s.slots === '10/10',
-      '答案态计数应为 12/12 · 13/13 · 13/13 · 10/10，实际 ' + [s.rows, s.cols, s.edges, s.slots].join(' · '));
+    check(s.diagramButtons === 0, '结构图里不应有可点按钮（只读），实际 ' + s.diagramButtons);
+    check(s.diagramTri === 0 && s.cardTri === 0, 'D41 要求移除卡片顶部节点控件，[data-tri] 应为 0');
+    expectCounts('答案态计数', '12/12', '13/13', '13/13', '10/10');
     check(s.stamp === true, '答案态应显示建成证明印章');
+    allBlockGlyphs('built', '答案态');
 
-    // 2) 答案态开两张卡：状态控件 disabled（只读）
-    clickBlock('data');
-    clickBlock('A7');
-    check(stats().cards === 2, '答案态点块应能开 2 张卡');
-    var dataCard = cardState('data');
-    var a7Card = cardState('A7');
-    check(dataCard && dataCard.disabled === true, '答案态 data 卡片状态控件应 disabled');
-    check(a7Card && a7Card.disabled === true, '答案态 A7 卡片状态控件应 disabled');
-    check(dataCard && dataCard.glyph === '■', '答案态 data 卡片应显示 ■');
+    qa('#diagram .block').map(function (block) {
+      return block.getAttribute('data-node');
+    }).forEach(clickBlock);
+    s = stats();
+    check(s.cards === 12, '点 12 个块应开 12 张卡，实际 ' + s.cards);
+    check(s.badges === 12, '每张卡应有一个只读派生徽章，实际 ' + s.badges);
+    check(s.cellButtons === 13, '答案态应有 13 个能力格按钮（可编辑格），实际 ' + s.cellButtons);
+    check(s.dashCells === 31, '— 格应有 31 个，实际 ' + s.dashCells);
+    qa('.card [data-derived-card]').forEach(function (badge) {
+      check(badge.tagName !== 'BUTTON', '卡片顶部派生徽章不应是按钮（只读），实际 ' + badge.tagName);
+      check(badge.getAttribute('data-status') === 'built' && badge.textContent.trim() === '■',
+        '答案态卡片派生徽章应 ■：' + badge.getAttribute('data-derived-card'));
+    });
+    var l1 = cardBadge('l1-interact');
+    check(l1 && l1.status === 'built' && l1.glyph === '■', '答案态 l1-interact 派生徽章应 ■');
+    check(l1 && l1.title.indexOf('由本卡 2 项能力派生：2■ 0◧ 0▢') === 0,
+      '派生徽章 tooltip 应写「由本卡 2 项能力派生：2■ 0◧ 0▢」，实际 ' + (l1 ? l1.title : ''));
+    check(l1 && l1.roText === '只读派生', '卡片应标注「只读派生」，实际 ' + (l1 ? l1.roText : ''));
+    check(l1 && l1.cells.join(' ') === '接收提问=built:■ 返回答案=built:■',
+      '答案态 l1-interact 能力格组合不对：' + (l1 ? l1.cells.join(' / ') : ''));
+    qa('.card .cell[data-cell]').forEach(function (btn) {
+      check(btn.disabled === true, '答案态能力格应只读（disabled）：' + btn.getAttribute('data-col'));
+      check(btn.getAttribute('data-status') === 'built' && btn.textContent.trim() === '■',
+        '答案态能力格应 ■：' + btn.getAttribute('data-col'));
+      check((btn.getAttribute('title') || '').indexOf('答案态只读') >= 0,
+        '答案态能力格 tooltip 应写明只读：' + (btn.getAttribute('title') || ''));
+    });
 
-    // 3) 空白态：全 ▢、卡片可编辑、重置可用、标题旁有本机进度说明
+    // 负向对照：答案态点格 / 点徽章都不改真源
+    var before = cellsSnapshot();
+    clickCell('l1-interact', '接收提问');
+    check(cellsSnapshot() === before, '负向对照：答案态点能力格不应改变格状态');
+    check(ref.statusOfCell('l1-interact', '接收提问') === 'built', '答案态点格后仍是 ■');
+
+    // ===== 2) 空白态：全 ▢、可编辑 =====
     q('.mode-btn[data-mode="blank"]').click();
     s = stats();
-    qa('#diagram .blk-status').forEach(function (badge) {
-      check(badge.getAttribute('data-status') === 'unbuilt' && badge.textContent.trim() === '▢',
-        '空白态结构图徽章应全 ▢：' + badge.getAttribute('data-derived-node'));
-    });
-    check(s.rows === '0/12' && s.cols === '0/13' && s.edges === '0/13' && s.slots === '0/10',
-      '空白态初始计数应全 0，实际 ' + [s.rows, s.cols, s.edges, s.slots].join(' · '));
+    check(ref.state.mode === 'blank', '应切到空白态');
+    expectCounts('空白态初始计数', '0/12', '0/13', '0/13', '0/10');
     check(s.stamp === false, '空白态印章应隐藏');
-    dataCard = cardState('data');
-    a7Card = cardState('A7');
-    check(dataCard && dataCard.disabled === false, '空白态 data 卡片状态控件应可点');
-    check(a7Card && a7Card.disabled === false, '空白态 A7 卡片状态控件应可点');
-    check(q('#reset').disabled === false, '空白态「重置」按钮应可用');
-    check(q('#edit-note') && !q('#edit-note').hidden, '空白态应在标题旁显示编辑态 / 本机进度说明');
+    allBlockGlyphs('unbuilt', '空白态');
+    check(q('#reset').disabled === false, '空白态「重置」应可用');
+    check(q('#edit-note') && !q('#edit-note').hidden, '空白态应显示编辑态说明');
     check(q('#edit-note') && q('#edit-note').textContent.indexOf('本机浏览器') >= 0,
-      '空白态说明应注明「进度存在本机浏览器」');
-
-    // 4) 卡片编辑：data 点两下 → ■（A1·A2 同步）；A7 点一下 → ◧
-    clickCardTri('data', 2);
-    s = stats();
-    dataCard = cardState('data');
-    check(dataCard && dataCard.status === 'built' && dataCard.glyph === '■',
-      'data 卡片点两下应变 ■');
-    check(dataCard && dataCard.slots.indexOf('A1=built:■') >= 0 && dataCard.slots.indexOf('A2=built:■') >= 0,
-      'data 节点 ■ 应同步槽位 A1·A2，实际 ' + (dataCard ? dataCard.slots.join(' / ') : ''));
-    var dataBlock = blockState('data');
-    check(dataBlock && dataBlock.status === 'built' && dataBlock.glyph === '■',
-      '结构图 data 块徽章应由卡片派生为 ■');
-    check(dataBlock && dataBlock.chips.indexOf('A1=built') >= 0 && dataBlock.chips.indexOf('A2=built') >= 0,
-      '结构图 data 块槽位 chip 应同步 A1·A2');
-    check(s.rows === '1/12', '行覆盖应由 0/12 变 1/12，实际 ' + s.rows);
-    check(s.slots === '2/10', '槽位 ■ 应由 0/10 变 2/10，实际 ' + s.slots);
-    check(s.stamp === false, '只有一张 ■ 时印章应仍隐藏');
-
-    clickCardTri('A7', 1);
-    s = stats();
-    a7Card = cardState('A7');
-    check(a7Card && a7Card.status === 'unverified' && a7Card.glyph === '◧', 'A7 卡片点一下应变 ◧');
-    check(a7Card && a7Card.slots.indexOf('A7=unverified:◧') >= 0, 'A7 节点 ◧ 应同步槽位 A7');
-    var a7Block = blockState('A7');
-    check(a7Block && a7Block.status === 'unverified' && a7Block.glyph === '◧',
-      '结构图 A7 块徽章应派生为 ◧');
-    check(s.rows === '1/12' && s.slots === '2/10',
-      '◧ 不应算进 ■ 口径：行 ' + s.rows + ' · 槽位 ' + s.slots);
-    check(s.stamp === false, '部分完成时印章应隐藏');
-
-    // 5) 真源一致性：节点 → 槽位（A1·A2 同源），DOM 与 API 一致
-    check(ref.statusOfNode('data') === 'built' && ref.statusOfNode('A7') === 'unverified',
-      '节点真源状态不对');
-    check(ref.statusOfSlot('A1') === 'built' && ref.statusOfSlot('A2') === 'built',
-      '槽位 A1/A2 应由 data 节点派生为 ■');
-    check(ref.statusOfSlot('A7') === 'unverified', '槽位 A7 应由 A7 节点派生为 ◧');
-    check(ref.statusOfNode('l1-interact') === 'unbuilt', '无槽位节点也应由自身卡片状态驱动（l1-interact 应 ▢）');
+      '编辑态说明应注明「进度存在本机浏览器」');
+    check(q('#mode-hint').textContent.indexOf('能力格') >= 0, '空白态提示应说明点能力格编辑');
+    l1 = cardBadge('l1-interact');
+    check(l1 && l1.status === 'unbuilt' && l1.glyph === '▢', '空白态 l1-interact 派生徽章应 ▢');
+    check(l1 && l1.title.indexOf('由本卡 2 项能力派生：0■ 0◧ 2▢') === 0,
+      '空白态派生 tooltip 应为「由本卡 2 项能力派生：0■ 0◧ 2▢」，实际 ' + (l1 ? l1.title : ''));
+    check(l1 && l1.cells.join(' ') === '接收提问=unbuilt:▢ 返回答案=unbuilt:▢',
+      '空白态 l1-interact 能力格应全 ▢：' + (l1 ? l1.cells.join(' / ') : ''));
+    var enabled = qa('.card .cell[data-cell]').filter(function (btn) { return !btn.disabled; });
+    check(enabled.length === 13, '空白态 13 个可编辑格都可点，实际 ' + enabled.length);
+    var tip = cellState('l1-interact', '接收提问').title;
+    check(tip.indexOf('点一下切下一态') >= 0, '空白态能力格 tooltip 应写「点一下切下一态」，实际 ' + tip);
+    check(tip.indexOf('▢') >= 0 && tip.indexOf('◧') >= 0, '空白态能力格 tooltip 应写当前态与下一态：' + tip);
     if (ref.storageOk) {
-      var saved = ref.savedRaw();
-      check(typeof saved === 'string' && saved.indexOf('"built"') >= 0,
-        '空白态编辑进度应写入 localStorage');
+      var savedBlank = ref.savedRaw();
+      check(typeof savedBlank === 'string' && savedBlank.indexOf('"mode":"blank"') >= 0,
+        '切到空白态应写入 localStorage 进度');
     }
 
-    // 6) 结构图只读：点块只开卡，不改节点状态
-    var beforeEdit = JSON.stringify(ref.state.edit);
+    // ===== 3) 负向对照：— 格 / 卡片徽章 / 结构图都改不了状态 =====
+    var dash = q('.card[data-card="l1-interact"] td.dash');
+    check(!!dash, '应能找到 — 不提供格（不可编辑）');
+    var beforeNeg = cellsSnapshot();
+    if (dash) { dash.click(); }
+    check(cellsSnapshot() === beforeNeg, '负向对照：点 — 格不应改变任何格状态');
+    check(ref.statusOfCell('l1-interact', '访问数据') === 'na', '— 格状态应恒为 na');
+    check(ref.cycleCell('l1-interact', '访问数据') === false, '负向对照：直接调用也不能编辑 — 格');
+    check(ref.cycleCell('l1-interact', '不存在的列') === false, '负向对照：未知能力列应被拒绝');
+    var badgeEl = q('.card[data-card="l1-interact"] [data-derived-card]');
+    check(badgeEl && badgeEl.tagName === 'SPAN', '卡片顶部派生徽章应为 span（只读）');
+    if (badgeEl) { badgeEl.click(); }
+    check(cellsSnapshot() === beforeNeg, '负向对照：点卡片顶部派生徽章不应改变格状态');
+    check(ref.statusOfNode('l1-interact') === 'unbuilt', '负向对照后 l1-interact 仍是 ▢');
+    expectCounts('负向对照后计数', '0/12', '0/13', '0/13', '0/10');
+
+    // 结构图只读：点块只开卡，不改格状态
+    ref.closeAll();
+    clickBlock('l1-interact');
+    check(qa('.card').length === 1, '点结构块应开 1 张卡');
+    var beforeBlock = cellsSnapshot();
     clickBlock('A4');
-    check(JSON.stringify(ref.state.edit) === beforeEdit, '点结构图不应改变节点状态');
-    check(stats().cards === 3, '点结构图只应开卡（应新增第 3 张卡）');
+    check(cellsSnapshot() === beforeBlock, '负向对照：点结构图块不应改变格状态');
+    ref.closeAll();
 
-    // 7) 重置：编辑态恢复全 ▢
+    // ===== 4) 主链路：改一格 → 节点 ◧ → 结构图徽章派生 → 计数变化 → 其余格 ■ 才变节点 ■ =====
+    clickBlock('l1-interact');
+    clickCell('l1-interact', '接收提问');          // ▢ → ◧
+    var c1 = cellState('l1-interact', '接收提问');
+    var c2 = cellState('l1-interact', '返回答案');
+    check(c1 && c1.status === 'unverified' && c1.glyph === '◧', '第 1 格点一下应 ◧');
+    check(c2 && c2.status === 'unbuilt' && c2.glyph === '▢', '第 2 格应仍 ▢');
+    check(ref.statusOfNode('l1-interact') === 'unverified', '一格 ◧ 时节点应派生 ◧');
+    var blk = blockState('l1-interact');
+    check(blk && blk.status === 'unverified' && blk.glyph === '◧', '结构图徽章应派生 ◧');
+    l1 = cardBadge('l1-interact');
+    check(l1 && l1.title.indexOf('由本卡 2 项能力派生：0■ 1◧ 1▢') === 0,
+      '派生 tooltip 应为 0■ 1◧ 1▢，实际 ' + (l1 ? l1.title : ''));
+    expectCounts('一格 ◧ 时', '0/12', '0/13', '0/13', '0/10');
+
+    clickCell('l1-interact', '接收提问');          // ◧ → ■
+    check(cellState('l1-interact', '接收提问').status === 'built', '第 1 格再点应 ■');
+    check(ref.statusOfNode('l1-interact') === 'unverified', '只有一格 ■、另一格 ▢ 时节点仍 ◧');
+    blk = blockState('l1-interact');
+    check(blk && blk.status === 'unverified', '结构图徽章仍 ◧（节点未全 ■）');
+    expectCounts('一格 ■ 一格 ▢ 时', '0/12', '1/13', '0/13', '0/10');
+    l1 = cardBadge('l1-interact');
+    check(l1 && l1.title.indexOf('由本卡 2 项能力派生：1■ 0◧ 1▢') === 0,
+      '派生 tooltip 应为 1■ 0◧ 1▢，实际 ' + (l1 ? l1.title : ''));
+
+    clickCell('l1-interact', '返回答案');          // ▢ → ◧
+    check(ref.statusOfNode('l1-interact') === 'unverified', '两格 ■◧ 混合时节点仍 ◧');
+    expectCounts('两格 ■◧ 时', '0/12', '1/13', '0/13', '0/10');
+
+    clickCell('l1-interact', '返回答案');          // ◧ → ■ → 节点 ■
+    check(cellState('l1-interact', '返回答案').status === 'built', '第 2 格再点应 ■');
+    check(ref.statusOfNode('l1-interact') === 'built', '两格全 ■ 时节点应 ■');
+    blk = blockState('l1-interact');
+    check(blk && blk.status === 'built' && blk.glyph === '■', '结构图徽章应派生 ■');
+    l1 = cardBadge('l1-interact');
+    check(l1 && l1.title.indexOf('由本卡 2 项能力派生：2■ 0◧ 0▢') === 0,
+      '派生 tooltip 应为 2■ 0◧ 0▢，实际 ' + (l1 ? l1.title : ''));
+    expectCounts('两格都 ■ 后', '1/12', '2/13', '0/13', '0/10');
+    check(ref.statusOfSlot('A0') === 'unbuilt', 'l1-interact 无独立槽位，槽位计数不受它影响');
+    if (ref.storageOk) {
+      var savedEdit = ref.savedRaw();
+      check(typeof savedEdit === 'string' && savedEdit.indexOf('l1-interact') >= 0 &&
+        savedEdit.indexOf('"built"') >= 0, '空白态编辑应写入 localStorage');
+    }
+
+    // ===== 5) 槽位同源（A1·A2）与边计数 =====
+    clickBlock('data');
+    clickCell('data', '可查询数据');               // ▢ → ◧
+    check(ref.statusOfNode('data') === 'unverified', 'data 一格 ◧ 时节点应 ◧');
+    check(ref.statusOfSlot('A1') === 'unverified' && ref.statusOfSlot('A2') === 'unverified',
+      'data 节点 ◧ 时槽位 A1·A2 应同步 ◧');
+    expectCounts('data ◧ 时', '1/12', '2/13', '0/13', '0/10');
+
+    clickCell('data', '可查询数据');               // ◧ → ■
+    check(ref.statusOfNode('data') === 'built', 'data 唯一能力格 ■ 后节点应 ■');
+    check(ref.statusOfSlot('A1') === 'built' && ref.statusOfSlot('A2') === 'built',
+      'data 节点 ■ 时槽位 A1·A2 应同源同步 ■');
+    var dataBadge = cardBadge('data');
+    check(dataBadge && dataBadge.slots.indexOf('A1=built:■') >= 0 &&
+      dataBadge.slots.indexOf('A2=built:■') >= 0,
+      'data 卡片槽位行应 A1·A2 都 ■：' + (dataBadge ? dataBadge.slots.join(' / ') : ''));
+    blk = blockState('data');
+    check(blk && blk.status === 'built', '结构图 data 块应 ■');
+    check(blk && blk.chips.indexOf('A1=built') >= 0 && blk.chips.indexOf('A2=built') >= 0,
+      '结构图 data 块槽位 chip 应同步 A1·A2 ■');
+    expectCounts('data ■ 后', '2/12', '3/13', '0/13', '2/10');
+    check(ref.compute().edges.filter(function (e) { return e.edge.id === 'e13'; })[0].pass === false,
+      'data→mysql 边在 mysql 未 ■ 时不应通（负向对照）');
+
+    clickBlock('mysql');
+    clickCell('mysql', '数据存储与查询');          // ▢ → ◧
+    check(ref.statusOfNode('mysql') === 'unverified', 'mysql 一格 ◧ 时节点应 ◧');
+    expectCounts('mysql ◧ 时', '2/12', '3/13', '0/13', '2/10');
+    check(ref.compute().edges.filter(function (e) { return e.edge.id === 'e13'; })[0].pass === false,
+      '边要两端节点都 ■：mysql ◧ 时 data→mysql 仍不通');
+
+    clickCell('mysql', '数据存储与查询');          // ◧ → ■
+    check(ref.statusOfNode('mysql') === 'built', 'mysql 唯一能力格 ■ 后节点应 ■');
+    expectCounts('mysql ■ 后', '3/12', '4/13', '1/13', '2/10');
+    var passes = ref.compute().edges.filter(function (e) { return e.pass; })
+      .map(function (e) { return e.edge.id; });
+    check(passes.indexOf('e13') >= 0, '两端节点都 ■ 后 data→mysql 边应通，实际通的边 ' + passes.join(','));
+    check(passes.indexOf('e03') < 0, '负向对照：backend 未 ■，backend→mysql 边不应通');
+    var mysqlBlk = blockState('mysql');
+    check(mysqlBlk && mysqlBlk.status === 'built', '结构图 mysql 块应由节点派生 ■');
+
+    // ===== 6) 重置：全部回 ▢ =====
     q('#reset').click();
-    s = stats();
-    qa('#diagram .blk-status').forEach(function (badge) {
-      check(badge.getAttribute('data-status') === 'unbuilt',
-        '重置后结构图应全 ▢：' + badge.getAttribute('data-derived-node'));
-    });
-    check(s.rows === '0/12' && s.slots === '0/10',
-      '重置后计数应归零，实际 行 ' + s.rows + ' · 槽位 ' + s.slots);
-    check(ref.state.edit.data === 'unbuilt' && ref.state.edit.A7 === 'unbuilt',
-      '重置后节点状态应全 unbuilt');
+    expectCounts('重置后计数', '0/12', '0/13', '0/13', '0/10');
+    allBlockGlyphs('unbuilt', '重置后');
+    check(ref.statusOfCell('data', '可查询数据') === 'unbuilt', '重置后 data 能力格应 ▢');
+    check(ref.statusOfCell('l1-interact', '接收提问') === 'unbuilt', '重置后 l1-interact 能力格应 ▢');
+    check(ref.state.cells.data['可查询数据'] === 'unbuilt', '重置后格级真源应全 unbuilt');
 
-    // 8) 再编辑 → 切回答案态：恢复全 ■、丢弃手改、提示一句
-    clickCardTri('data', 2);
-    check(ref.statusOfNode('data') === 'built', '重置后应能再次编辑');
+    // ===== 7) 再编辑 → 切回答案态：恢复全 ■、丢弃手改 =====
+    clickCell('data', '可查询数据');
+    check(ref.statusOfNode('data') === 'unverified', '重置后应能再次编辑');
     q('.mode-btn[data-mode="answer"]').click();
-    s = stats();
-    qa('#diagram .blk-status').forEach(function (badge) {
-      check(badge.getAttribute('data-status') === 'built',
-        '切回答案态结构图应恢复全 ■：' + badge.getAttribute('data-derived-node'));
-    });
-    check(s.rows === '12/12' && s.cols === '13/13' && s.edges === '13/13' && s.slots === '10/10',
-      '切回答案态计数应恢复 12/12 · 13/13 · 13/13 · 10/10，实际 ' +
-      [s.rows, s.cols, s.edges, s.slots].join(' · '));
-    check(s.stamp === true, '切回答案态应显示建成证明印章');
-    check(ref.state.edit.data === 'unbuilt', '切回答案态应丢弃手改（data 回 unbuilt）');
-    qa('.card .tri').forEach(function (tri) {
-      check(tri.disabled === true, '切回答案态后卡片状态控件应全部只读');
-    });
+    expectCounts('切回答案态计数', '12/12', '13/13', '13/13', '10/10');
+    allBlockGlyphs('built', '切回答案态');
+    check(ref.state.mode === 'answer', '应切回答案态');
+    check(sStatsDisabled() === 0, '答案态应没有可点的能力格');
     check(q('#toast') && !q('#toast').hidden && q('#toast').textContent.indexOf('丢弃') >= 0,
-      '切回答案态应提示一句「丢弃手改」');
+      '切回答案态应提示「丢弃手改」');
+    if (ref.storageOk) {
+      check(ref.savedRaw() === null, '切回答案态应清掉 localStorage 进度');
+    }
+    var l1Answer = cardBadge('l1-interact');
+    check(l1Answer && l1Answer.title.indexOf('由本卡 2 项能力派生：2■ 0◧ 0▢') === 0,
+      '切回答案态 l1-interact 派生 tooltip 应 2■ 0◧ 0▢');
 
-    info = { rows: s.rows, cols: s.cols, edges: s.edges, slots: s.slots,
-             blocks: s.blockCount, cards: s.cards };
+    info = {
+      rows: text('#stat-rows b'), cols: text('#stat-cols b'),
+      edges: text('#stat-edges b'), slots: text('#slot-count'),
+      blocks: stats().blockCount, cards: stats().cards,
+      cells: qa('.card .cell[data-cell]').length
+    };
+  }
+  function sStatsDisabled() {
+    return qa('.card .cell[data-cell]').filter(function (btn) { return !btn.disabled; }).length;
   }
   function finish() {
     var pass = fails.length === 0;
@@ -1473,7 +1756,7 @@ def check_dom(html: str) -> None:
         dom = proc.stdout or ""
         if ("DOM_SELFCHECK_PASS" in dom
                 and '<pre id="explorer-dom-selfcheck">PASS' in dom):
-            ok("DOM 链路自检：卡片点状态 → 结构图徽章派生 → 顶部判定重算 → 重置 → 答案态恢复 全通过")
+            ok("DOM 链路自检：点一格 → 节点 ◧ → 结构图徽章派生 → 行列边重算 → 其余格 ■ 才变节点 ■ → 重置/答案态 全通过（含负向对照）")
             return
         match = re.search(r"<title>(DOM_SELFCHECK_FAIL[^<]*)</title>", dom)
         detail = match.group(1) if match else ((proc.stderr or dom or "")[-2000:])
@@ -1501,7 +1784,7 @@ def build() -> None:
     if size < 20000:
         fail("产物只有 %d 字节，像是模板没渲染" % size)
     ok("产物自检：无外链 / 无外字体 / 无图片 / 无用户名与绝对路径")
-    ok("D40 产物构件：卡片三态控件 · 结构图只读派生徽章 · 重置按钮 · 本机进度说明")
+    ok("D41 产物构件：能力格可点 · 卡片顶部只读派生徽章 · 结构图只读派生 · 重置按钮 · 本机进度说明")
     ok("内联 JSON 与 data.json 逐字节等价（%d 字节数据）" % len(payload.encode("utf-8")))
     print("  输出：%s  %d 字节（%.1f KB）  sha256 %s"
           % (OUT_PATH.relative_to(REPO), size, size / 1024.0, digest[:16]))
