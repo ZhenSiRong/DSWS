@@ -49,6 +49,8 @@
 | [第 8 页](page-08.md) | A8 SSE 流式 | 12 条 progress + 1 条 result |
 | [第 9 页](page-09.md) | A9 nginx 反代 + 页面 | 浏览器出 `41099.5` |
 
+- [完备性证明海报](completeness/poster.md)：四层责任×证据矩阵，补齐即完备
+
 ## 附录：换成双代号（AOA）会怎样
 
 ![双代号网络图（AOA / 箭线图法 ADM）：10 个事件 e1–e10、10 条实箭线、0 条虚活动，橙色粗箭线为关键路径](images/flow-aoa.png)
