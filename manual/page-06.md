@@ -70,7 +70,9 @@ GROUP BY dim_region.region_name
 - SQL 是**照契约拼**的，不是让 AI 直接写的：表名、列名、指标公式都能在 `CONTRACT` 里逐字对上，错了你能查出来。`print` 出来说明拼接成功；这条 SQL 到第 7 页才交给数据库执行。
 - 服务没起也正常：`print` 在 `if __name__ == "__main__":` 里，只有命令行直接运行这个文件时才执行；uvicorn 导入 `lab.app` 时不会执行它。
 
+> **你现在拥有**：一个照着契约把关键词拼成带 `JOIN` 的 `SELECT` 的 `build_sql`；它是第 7 页交给 MySQL 执行的那条命令，拼得对不对，在这一页就能逐字核对。
+
 ## 自己改一下
 
-把最后一行里的 `"华北销售额"` 换成 `"华东销售额"`，再跑一次，看 5 行里哪一行变了。
-再换成 `"华南订单量"`：`SELECT` 那行里的 `SUM(fact_order.order_amount)` 变成了什么？
+把最后一行里的 `"华北销售额"` 换成 `"华东销售额"`，再跑一次，看 5 行里哪一行变了。（参考：只有第 4 行 `WHERE dim_region.region_name = '华北'` 变成 `'华东'`，其余 4 行一字不变。）
+再换成 `"华南订单量"`：`SELECT` 那行里的 `SUM(fact_order.order_amount)` 变成了什么？（参考：变成 `COUNT(DISTINCT fact_order.order_id)`；同一行末尾的 `AS sales` 不变，`WHERE` 那行同时变成 `'华南'`。）

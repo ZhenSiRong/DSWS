@@ -15,7 +15,7 @@
 
 ## 动手
 
-要改的文件还是 `lab/app.py`，三处。
+要改的文件还是 `lab/app.py`，三处。`pymysql` 已经在 `backend/.venv` 里（第 0 页 `make install` 装好的），不用再 `pip install`。
 
 1. 在文件开头的 import 区加一行，放在 `from fastapi import FastAPI` 上面：
 
@@ -78,11 +78,13 @@ curl -s -X POST http://127.0.0.1:8000/api/query -H 'Content-Type: application/js
 
 - 你猜数字还是字符串？`41099.5` 两边没有引号，是 JSON 数字；`rows` 是列表，里面一条字典 `{"region_name": "华北", "sales": 41099.5}`。第 4 页空着的 `"rows": []` 现在被真实数据填上了。
 - 这个数不是写死的：41099.5 是库里 19 条华北订单的 `order_amount` 相加。第 2 页你用 `LIMIT 3` 看到的那 3 条（899、599、75）只是其中前 3 条，剩下 16 条也在这个和里。
-- 你猜 MySQL 没起会怎样？`curl` 只回一句 `Internal Server Error`，终端 1 的日志里是 `"POST /api/query HTTP/1.1" 500 Internal Server Error`，前面还有一段 pymysql 的报错。HTTP 只把错误翻成状态码 500，具体原因在服务端日志里——以后看到 500，先看终端 1。
+- 你猜 MySQL 没起会怎样？`curl` 只回一句 `Internal Server Error`，终端 1 的日志里是 `"POST /api/query HTTP/1.1" 500 Internal Server Error`，**下面**才是 pymysql 的 traceback，而且比那行晚一两秒才落盘。HTTP 只把错误翻成状态码 500，具体原因在服务端日志里——以后看到 500，先看终端 1。
 - 为什么改完要 `Ctrl+C` 再重启：uvicorn 启动时把 `lab/app.py` 读进内存，不重启跑的还是旧代码。
 - 为什么拼和执行分成两个函数：`build_sql` 只拼字符串、不碰数据库，`run_sql` 只执行、不拼；错了能分开查。第 6 页敢只 `print`，就是因为执行是这一页的事。
 
+> **你现在拥有**：一条把 SQL 真交给 MySQL、再把结果填进 `rows` 的执行链路；它是整条问答链路里唯一碰数据库的地方，`41099.5` 从这里开始是真的。
+
 ## 自己改一下
 
-把 `-d` 里的问题换成 `{"question":"华东销售额"}` 再发一次：`rows` 里的 `sales` 变成多少？SQL 里 `WHERE` 那一行跟着变了吗？
-再换成 `{"question":"华南订单量"}`：`SELECT` 那行里的 `SUM(...)` 变成了什么？`sales` 这个字段名没变，可它的值变成什么了？
+把 `-d` 里的问题换成 `{"question":"华东销售额"}` 再发一次：`rows` 里的 `sales` 变成多少？SQL 里 `WHERE` 那一行跟着变了吗？（参考：`sales` 是 `107373.0`，`WHERE` 那行变成 `dim_region.region_name = '华东'`。）
+再换成 `{"question":"华南订单量"}`：`SELECT` 那行里的 `SUM(...)` 变成了什么？`sales` 这个字段名没变，可它的值变成什么了？（参考：`SELECT` 行变成 `COUNT(DISTINCT fact_order.order_id) AS sales`；字段名还是 `sales`，值变成 `26`。）

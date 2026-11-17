@@ -5,8 +5,7 @@
 ## 这一页构建什么
 
 三样：一个 8 行的 nginx 配置（把 `/api/` 转给 8000）、一个 17 行的页面（输入框 + 结果区，用浏览器自带的 `EventSource` 接第 8 页的流）、一条 `docker run` 把 nginx 跑起来。
-页末浏览器打开 `http://127.0.0.1:8081`，点“问一句”，页面上最后停着 `41099.5`：浏览器 → nginx:8081 → uvicorn:8000 → MySQL:3307。
-然后拆一刀：删掉 nginx 容器，浏览器打不开，`curl` 直连 8000 照样拿得到答案——入口可以拆，主干还在。
+这一页给系统加一个浏览器入口，让浏览器能接上第 8 页那条流。
 
 ## 猜一猜
 
@@ -59,6 +58,8 @@ function ask(question) {
 </script>
 ```
 
+两个文件建好后确认可读：`chmod 644 lab/index.html lab/default.conf`（有的编辑器会存成 600，nginx 读不到）。
+
 3. 新开一个终端，仍在仓库根目录，把 nginx 跑起来：
 
 ```bash
@@ -99,8 +100,11 @@ docker rm -f lab-nginx && curl -sN -G 'http://127.0.0.1:8000/api/stream' --data-
 - 页面不是魔法：`index.html` 里那 9 行 JS 只干三件事——把问题拼进 URL、`new EventSource` 收流、把 `rows[0].sales` 写进 `<pre>`。浏览器看到的，就是第 8 页 `curl` 看到的。
 - 如果浏览器显示 `502 Bad Gateway`：nginx 活着但到不了后端。先确认第 1 步带了 `--host 0.0.0.0`，再确认 `docker run` 里带了 `--add-host`。
 - 如果 `docker run` 报 `unknown flag` 或 `invalid IP address: host-gateway`：`--add-host host.docker.internal:host-gateway` 里的 `host-gateway` 需要 Docker ≥ 20.10；升级 Docker，或把宿主机名换成宿主机的 IP。
+- 如果打 `8081` 回 `403 Forbidden`：nginx 活着、页面文件也在，但 nginx 的 worker 进程不是 root，读不了权限太严的 `lab/index.html`；按“动手”第 2 步那句 `chmod 644 lab/index.html lab/default.conf` 改完再刷新，就回 200。
+
+> **你现在拥有**：一个浏览器里能问完整一句话的系统（页面 → nginx:8081 → uvicorn:8000 → MySQL:3307）；nginx 和页面只是入口，真正干活的是前八页造出来的 Python 服务和 MySQL 数据库。
 
 ## 自己改一下
 
 先把 nginx 起回来：把第 3 步那条 `docker run` 一个字不改重敲一遍，浏览器刷新，页面就回来了——同一份配置能重建同一层。
-再在页面输入框里把问题换成 `华东销售额`，按回车：结果变成多少？（第 7 页你刚查过这个问题的 `sales`。）
+再在页面输入框里把问题换成 `华东销售额`，按回车：结果变成多少？（参考：页面上显示 `107373`；第 7 页 JSON 里是 `107373.0`——浏览器把它当数字显示，末尾的 `.0` 省掉了。）

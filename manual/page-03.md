@@ -69,7 +69,9 @@ INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
 - 你猜 curl 会看到什么？`{"ok":true}` 是服务端返回的 **JSON**，不是网页。`ok` 这个字段名、`/health` 这个路径都是你在代码里自己起的，没有标准答案；只要代码里的路径和 curl 里的路径一致，它就能通。
 - 如果 curl 报 `Connection refused`：服务没起来（= 没**启动**，口语常说“起服务”），或者你敲的端口不是 `8000`。如果启动命令报 `No module named lab.app`：你没站在仓库根目录，或者文件建成了 `lab/app.py.py`。
 
+> **你现在拥有**：一个在 8000 端口值班、能回 JSON 的 HTTP 服务；它是浏览器和数据库之间唯一会说话的东西。
+
 ## 自己改一下
 
 把 `@app.get("/health")` 改成 `@app.get("/healthz")`，Ctrl+C 重启服务，再 `curl -s http://127.0.0.1:8000/healthz`。
-旧的 `/health` 现在通吗？（会回一行 `{"detail":"Not Found"}`）
+旧的 `/health` 现在通吗？（参考：`/healthz` 回 `{"ok":true}`；旧 `/health` 回 `{"detail":"Not Found"}`，HTTP 状态码 404。）

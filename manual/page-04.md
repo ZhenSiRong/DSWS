@@ -5,7 +5,7 @@
 ## 这一页构建什么
 
 在同一个服务里加 `POST /api/query`：你发过去一个 JSON `{"question": "..."}`，它回给你一个 JSON。
-注意：这一页它**不查库、不生成 SQL**（口语常说“拼 SQL”），回的内容是写死的。先把“收发 JSON”这条路修通。
+这一页先让接口能收到问题：**不查库、不生成 SQL**（口语常说“拼 SQL”），只把“收发 JSON”这条路修通。
 
 ## 猜一猜
 
@@ -75,6 +75,8 @@ curl -s -X POST http://127.0.0.1:8000/api/query -H 'Content-Type: application/js
 - 这一页能验收的只有一件事：接口通了、JSON 能收能发。你发的问题确实进了 `q.question`，只是这一页没有用它。
 - 记住这四个字段：`question` 是问题、`keywords` 是关键词、`sql` 要执行的 SQL、`rows` 查出来的行。第 5 页填 `keywords`，第 7 页填 `sql` 和 `rows`。
 
+> **你现在拥有**：一个能收问题、能回 JSON 的 `POST /api/query` 接口；它是整条问答链路的第一段，第 5 页往里填关键词、第 7 页填 SQL 和结果。
+
 ## 自己改一下
 
-把返回里的 `"sql": None` 改成 `"sql": "SELECT 1"`，重启服务，再发第一条 curl，看 `"sql"` 从 `null` 变成了什么。
+把返回里的 `"sql": None` 改成 `"sql": "SELECT 1"`，重启服务，再发第一条 curl，看 `"sql"` 从 `null` 变成了什么。（参考：`{"question":"华北销售额","keywords":[],"sql":"SELECT 1","rows":[]}`，`question` 仍是写死的 `"华北销售额"`。）
