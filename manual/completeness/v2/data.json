@@ -1,10 +1,10 @@
 {
   "schema": "completeness-v2/1",
   "decision": "D42",
-  "status": "sample",
+  "status": "production",
   "title": "建成证明 v2 · 物料清单 + 检验单",
   "subtitle": "行=交付物，勾满一行=这件东西建成；12 行全满=系统完备",
-  "kicker": "D42 · 单页样例 · 供确认后再全量替换 v1",
+  "kicker": "D43 · v2 物料清单式 · 行=交付物（12 件）· 格=检验点（24 个）",
   "field_map": {
     "location": "位置（容器名 / 端口映射 / 库表 / 文件路径 / API 路径）",
     "command": "命令",
@@ -389,5 +389,5 @@
     "版本号、包数量、耗时随机器不同：看到同类的行就算对上（第 0/1 页已声明）。",
     "库内 SQL 检验点（#2–#4）用第 1/2 页的 `docker exec lab-mysql mysql … -e \"<SQL>\"` 执行；账号口令按第 1 页输入，本图不印。"
   ],
-  "rerun": "python3 manual/shots/render_v2_sample.py"
+  "rerun": "python3 manual/shots/render_completeness.py（海报）· python3 manual/shots/build_explorer.py --shots（交互页+截图）"
 }

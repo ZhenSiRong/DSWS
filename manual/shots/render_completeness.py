@@ -1,43 +1,53 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""render_completeness.py —— 渲染「完备性证明」海报的两张 A4 PNG。
+"""render_completeness.py —— 《建成证明》v2 海报（A4 一页 ×2：答案版 + 空白版）。
 
-在仓库根目录一条命令重跑（同时出两张图）：
+在仓库根目录一条命令重跑（同时出两张 PNG，README 里的链接不变）：
 
     python3 manual/shots/render_completeness.py
 
-输出：
+读：`manual/completeness/v2/data.json`（**单源数据**：12 件交付物 × 1–3 个检验点，共 24 个）
+写：`manual/completeness/poster-answer.png`  答案版，全部检验点 ■
+    `manual/completeness/poster-blank.png`   空白版，检验点方框留空，打印后自己涂
 
-    manual/completeness/poster-blank.png    空白可打印版：槽位方框 ▢、矩阵格与证据列留空，供学生勾/涂
-    manual/completeness/poster-answer.png   答案版：A0–A9 全 ■，矩阵填 ■/—，末列写第 0–9 页判据
+依据 `humen-desicions/09-ablation-course.md`：
 
-依据 `humen-desicions/09-ablation-course.md` 的 **D38**：
-C4 的 L1 上下文 / L2 容器 / L3 组件三层 + L0（环境、数据）底部地基横条；
-每层一张「责任 × 证据」矩阵；三态图例 ▢ / ◧ / ■；完备判据三条
-（每行 ≥ 1 个 ■、每列 ≥ 1 个 ■、跨层边都通且有端到端证据）。
+- **D42**：行 = 具体交付物（container / db / data / process / endpoint / function / chain），
+  每行显式写「位置」，1–3 个检验点，每点给「命令 + 期望输出」；
+  勾满一行 = 这件东西建成，12 行全满 = 系统完备（AON 只作顺序提示，不参与勾选）。
+- **D43**：海报直读 v2 数据、输出仍为 `completeness/poster-*.png`，并还掉 D39 遗留的
+  「海报硬编码、非单源」债；v1（行=架构节点的四层矩阵）已归档到 `completeness/archive-v1/`。
 
-它做四件事：
+版式沿用 v2 单页样例（`manual/shots/render_v2_sample.py` 的模板与校验逻辑）：一张
+「零件 | 位置 | 检验点（命令 → 期望输出）| 页」表 + 页眉 + 底部三条完备判据 + 生成命令脚注；
+A4 竖向、黑白灰、Noto Sans CJK，命令与输出用等宽。
 
-1. **组版**：把海报内容（结构图 / 四张矩阵 / 图例 / 判定规则）写成 HTML+CSS，
-   A4 纵向、白底黑字、`@page size A4`，设计画布 1240×1754（= A4 @ 150dpi）。
-2. **量高**：先用 `google-chrome --headless --dump-dom` 读回
-   `#poster` 内容宽度与页脚底边位置，**超过 A4 画布就报错退出**（不会悄悄裁掉内容）。
-3. **截图**：`--window-size=1240,1754 --force-device-scale-factor=2`，
-   于是成品 PNG 是 2480×3508（= A4 @ 300dpi），打印尺寸正好一页。
-4. **核对**：PNG 必须是 2480×3508；HTML 与 PNG 字节里都不许出现
-   用户名 / 绝对路径（`/home/`、`/Users/`、`zhensirong` 等）。
+脚本做四件事：
 
-字体：本机已装 `Noto Sans CJK SC`（中文字形）与 `DejaVu Sans`（▢/◧/■ 几何符号），
-CSS 显式写字体栈，不联网、不装新依赖。证据全部取自 `manual/page-00…09.md`
-的「你应该看到」（真跑输出），不在本脚本里另造数值。
+1. **逐条溯源校验**：每个检验点的「期望输出」必须能在 `evidence_source` 指向的
+   `manual/page-0X.md` 正文里逐字 grep 到（多行逐行查），并标出命中的页内段落
+   （「你应该看到」/「对账」/「重来一遍」等）。任一 FAIL 就退出码 1 ——
+   **FAIL 只许修 `completeness/v2/data.json`，不许改十页正文**。
+   同时核对结构：12–14 件交付物、每件 1–3 个检验点、依赖 id 存在、页面存在、计数自洽。
+2. **组版**：HTML + CSS，设计画布 1240×1754（= A4 @150dpi），`@page size A4`。
+3. **量高**：headless Chrome 读回 `#poster` 内容宽度、内容自然高度与页脚底边，
+   超过 A4 画布（1240×1754）就报错退出，不悄悄裁切。
+4. **截图 + 核对**：`--window-size=1240,1754 --force-device-scale-factor=2`，
+   成品 2480×3508（= A4 @300dpi）；再核对 PNG 尺寸、内容高度，以及 HTML / PNG / 数据里
+   没有用户名 / 绝对路径 / 口令；成品也不许出现 v1 或「单页样例」口径的字样。
 
-依赖：本机已有的 python3 / google-chrome / Noto Sans CJK SC。
-不改 `term_render.py` / `web_shots.py` / `render_flow.py` / `render_aoa.py`。
+确定性：除页脚印的「生成时间」外，两张 PNG 完全由 `v2/data.json` 决定（同一分钟内重跑，
+字节一致）。测试/打印可放心缓存。
+
+依赖：本机已有的 python3 / google-chrome / Noto Sans CJK SC / DejaVu Sans(Mono)。
+不改 `v2/data.json`、`explorer.html`、`build_explorer.py`、十页正文、flow 文件与历史截图。
 """
 
 from __future__ import annotations
 
+import datetime as dt
 import html
+import json
 import re
 import struct
 import subprocess
@@ -45,468 +55,493 @@ import sys
 import tempfile
 from pathlib import Path
 
-HERE = Path(__file__).resolve().parent        # manual/shots
-REPO = HERE.parents[1]                        # 仓库根目录
-OUT_DIR = REPO / "manual" / "completeness"
+HERE = Path(__file__).resolve().parent          # manual/shots
+REPO = HERE.parents[1]                          # 仓库根目录
+COMPLETENESS_DIR = REPO / "manual" / "completeness"
+V2_DIR = COMPLETENESS_DIR / "v2"
+DATA_PATH = V2_DIR / "data.json"
+ANSWER_PNG = COMPLETENESS_DIR / "poster-answer.png"
+BLANK_PNG = COMPLETENESS_DIR / "poster-blank.png"
+PAGES_DIR = REPO / "manual"
+
 CHROME = "google-chrome"
+PAGE_W, PAGE_H = 1240, 1754                     # A4 竖向 @150dpi
+SHOT_W, SHOT_H = PAGE_W * 2, PAGE_H * 2         # A4 竖向 @300dpi
 
-# A4 竖向：设计画布 1240×1754（150dpi），截图 ×2 → 2480×3508（300dpi）
-PAGE_W, PAGE_H = 1240, 1754
-SHOT_W, SHOT_H = PAGE_W * 2, PAGE_H * 2
-
-# 成图里不许出现的字符串（用户名 / 绝对路径）
-FORBIDDEN = ["/home/", "/Users/", "/tmp/", "zhensirong", "root@", ".dsh"]
-
-GLYPH = {"answer": "■", "blank": "▢"}
-DASH = "—"
-
-
-# ------------------------------------------------------------------ 内容数据
-
-# 四张矩阵：行 = 该层节点（责任），列 = 该层必须提供的能力；最后一列证据。
-# 证据全部对应 manual/page-0X.md「你应该看到」的真跑输出。
-MATRICES = [
-    {
-        "key": "l1",
-        "title": "L1 · 上下文",
-        "tag": "C4 L1",
-        "cols": ["接收提问", "返回答案", "访问数据"],
-        "rows": [
-            ("人 → 系统交互", ["■", "■", DASH],
-             "浏览器 :8081 输入「华北销售额」→ 页面出 41099.5"),
-            ("系统 → 数据源访问", [DASH, DASH, "■"],
-             "真执行 SELECT（JOIN dim_region）→ rows[0].sales=41099.5"),
-        ],
-        "widths": [200, 160, 160, 160, 480],
-    },
-    {
-        "key": "l2",
-        "title": "L2 · 容器",
-        "tag": "C4 L2",
-        "cols": ["静态与入口转发", "问答编排与 HTTP", "数据存储与查询"],
-        "rows": [
-            ("nginx:8081（A9）", ["■", DASH, DASH],
-             "浏览器打开 :8081 → 页面出 41099.5；删 nginx → ERR_CONNECTION_REFUSED"),
-            ("backend:8000（A3）", [DASH, "■", DASH],
-             'curl :8000/health → {"ok":true}；POST /api/query → rows[0].sales=41099.5'),
-            ("MySQL:3307（A1·A2）", [DASH, DASH, "■"],
-             "SELECT VERSION()=8.0.46；COUNT(*)=115；华北 19 单"),
-        ],
-        "widths": [230, 150, 170, 150, 460],
-    },
-    {
-        "key": "l3",
-        "title": "L3 · 组件（backend:8000 内）",
-        "tag": "C4 L3",
-        "cols": ["收问", "抽词", "生成 SQL", "执行", "流式推送"],
-        "rows": [
-            ("A4 接口", ["■", DASH, DASH, DASH, DASH],
-             'POST /api/query → keywords=[]、sql=null、rows=[]（两次一字不差）'),
-            ("A5 抽词", [DASH, "■", DASH, DASH, DASH],
-             'keywords=["华北","销售额"]'),
-            ("A6 生成 SQL", [DASH, DASH, "■", DASH, DASH],
-             "print 出 5 行 SELECT：SUM + JOIN dim_region + WHERE 华北"),
-            ("A7 执行", [DASH, DASH, DASH, "■", DASH],
-             "rows[0].sales=41099.5（19 条华北订单求和）"),
-            ("A8 流式", [DASH, DASH, DASH, DASH, "■"],
-             "progress=12 条 + result 1 条 → 41099.5"),
-        ],
-        "widths": [150, 82, 82, 96, 82, 82, 600],
-    },
-    {
-        "key": "l0",
-        "title": "L0 · 地基（非 C4）",
-        "tag": "非 C4",
-        "cols": ["工具", "依赖", "端口", "可查询数据"],
-        "rows": [
-            ("环境（A0）", ["■", "■", "■", DASH],
-             "make doctor → 12/12 通过（工具 6 项 + 依赖 3 项 + 端口 3 项全 ✓）"),
-            ("数据（A1·A2）", [DASH, DASH, DASH, "■"],
-             "SELECT VERSION()=8.0.46；SHOW TABLES → 5 行；COUNT(*)=115"),
-        ],
-        "widths": [196, 112, 112, 112, 172, 448],
-    },
-]
-
-# 结构图的节点（槽位状态方框只挂在「主位置」：A0–A2 在 L0、A3 在 L2 backend、
-# A4–A8 在 L3、A9 在 L2 nginx。L1/L2 里其余标签只做映射，避免同一个槽位两处状态。
-L1_NODES = [
-    {"kind": "user", "name": "👤 用户", "note": "外部参与者"},
-    {"kind": "sys", "name": "问数系统", "ref": "A3–A9", "note": "系统边界（构建范围）"},
-    {"kind": "ext", "name": "MySQL（外部）", "ref": "A1·A2", "note": "外部依赖 · 数据源"},
-]
-
-L2_NODES = [
-    {"name": "nginx:8081", "slot": "A9", "note": "静态页 · /api/ 反代"},
-    {"name": "backend:8000", "slot": "A3", "note": "内含 A4–A8（见 L3）"},
-    {"name": "MySQL:3307", "ref": "A1·A2", "note": "状态见 L0"},
-]
-
-L3_NODES = [
-    {"name": "A4 接口", "slot": "A4", "note": "收 question"},
-    {"name": "A5 抽词", "slot": "A5", "note": "问题 → 关键词"},
-    {"name": "A6 生成 SQL", "slot": "A6", "note": "契约 → SELECT"},
-    {"name": "A7 执行", "slot": "A7", "note": "pymysql → rows"},
-    {"name": "A8 流式", "slot": "A8", "note": "SSE 逐条推"},
-]
-
-L0_NODES = [
-    {"name": "A0 环境", "slot": "A0", "note": "Docker/uv/Node + 依赖"},
-    {"name": "A1 建容器", "slot": "A1", "note": "lab-mysql · :3307"},
-    {"name": "A2 导入数据", "slot": "A2", "note": "建表 + 灌数据"},
-]
+# 页眉 kicker 与脚注「重跑命令」的回退值：v2/data.json 里的 kicker / rerun 仍是
+# D42「单页样例」口径（“…供确认后再全量替换 v1” / “render_v2_sample.py”），而
+# v2/data.json 不在本脚本的改动范围；成品海报必须写 D43 的生产口径与真实生成命令。
+# （数据升为生产口径后，effective_kicker / effective_rerun 会自动改用数据里的值。）
+KICKER = "D43 · v2 单源 · 12 件交付物 × 24 个检验点"
+RERUN = "python3 manual/shots/render_completeness.py"
 
 
-# ------------------------------------------------------------------ 小组件
-
-def esc(text: str) -> str:
-    return html.escape(text, quote=False)
-
-
-def state(mode: str) -> str:
-    return GLYPH[mode]
+def effective_kicker(data: dict) -> tuple[str, bool]:
+    """页眉 kicker：data.json 若已是生产口径就用它；否则用 D43 口径（当前是 D42 样例口径）。"""
+    raw = str(data.get("kicker") or "").strip()
+    if raw and "样例" not in raw:
+        return raw, False
+    return KICKER, True
 
 
-def node_html(mode: str, name: str, note: str = "", slot: str = "", ref: str = "",
-              cls: str = "") -> str:
-    """结构图节点：槽位编号 + 三态方框（slot），或只是映射标签（ref）。"""
-    top = ""
-    if slot:
-        top = (f'<div class="ntop"><span class="slot">{esc(slot)}</span>'
-               f'<span class="st">{state(mode)}</span></div>')
-    elif ref:
-        top = f'<div class="ntop"><span class="slot ref">{esc(ref)}</span></div>'
-    note_html = f'<div class="nnote">{esc(note)}</div>' if note else ""
-    return (f'<div class="node {cls}">{top}<div class="nname">{esc(name)}</div>'
-            f'{note_html}</div>')
+def effective_rerun(data: dict) -> tuple[str, bool]:
+    """脚注重跑命令：data.json 若已指向本脚本就用它；否则固定为本脚本命令（当前指 v2 样例脚本）。"""
+    raw = str(data.get("rerun") or "").strip()
+    if raw and "render_v2_sample" not in raw:
+        return raw, False
+    return RERUN, True
+
+# 成图 / HTML / 数据里不许出现的字符串（本机用户名、绝对路径、口令）
+HOST_USER = Path.home().name          # 不在源码里写死本机用户名
+FORBIDDEN = ["/home/", "/Users/", "/tmp/", HOST_USER, "root@", ".dsh",
+             "-uroot", "-plab", "labpass", "MYSQL_ROOT_PASSWORD"]
+# 目视/OCR 抽查必须能在图上辨认的关键值
+REQUIRED_TOKENS = ["41099.5", "COUNT(*)", "12/12", "ERR_CONNECTION_REFUSED",
+                   "8.0.46", "115"]
+# 成品海报不许残留的 v1 / 样例口径字样（数据单源里这两处由上面的 KICKER / RERUN 覆盖）
+STALE_TERMS = ["四层", "15 列", "责任 × 证据", "单页样例", "样例", "render_v2_sample"]
+
+BOX = {"answer": "■", "blank": "▢"}
+PAGE_REF = re.compile(r"page-(\d{2})\.md:(\d+)(?:[-,–](\d+))?")
+HEADING = re.compile(r"^##\s+(.+?)\s*$")
+INLINE_CODE = re.compile(r"`([^`]+)`")
+
+REQUIRED_TOP_KEYS = ("schema", "title", "subtitle", "counts", "legend",
+                     "completeness_criteria", "notes", "artifacts")
 
 
-def arrow_html(label: str) -> str:
-    return f'<div class="arrow"><span class="al">{esc(label)}</span><span class="ag">→</span></div>'
+# ------------------------------------------------------------------ 小工具
+
+def esc(text: object) -> str:
+    return html.escape(str(text), quote=False)
 
 
-def layer_html(code: str, name: str, tag: str, lane: str) -> str:
-    return (f'<div class="layer"><div class="lname"><b>{esc(code)}</b>'
-            f'<span>{esc(name)}</span><small>{esc(tag)}</small></div>'
-            f'<div class="lane {code.lower()}lane">{lane}</div></div>')
+def rich(text: str) -> str:
+    """把 `code` 渲染成等宽小标签，其余部分做 HTML 转义。"""
+    out: list[str] = []
+    pos = 0
+    for m in INLINE_CODE.finditer(text):
+        out.append(esc(text[pos:m.start()]))
+        out.append(f'<code>{esc(m.group(1))}</code>')
+        pos = m.end()
+    out.append(esc(text[pos:]))
+    return "".join(out)
 
 
-# ------------------------------------------------------------------ 结构图
-
-def diagram_html(mode: str) -> str:
-    l1 = (node_html(mode, "👤 用户", "外部参与者", cls="user")
-          + arrow_html("A9 入口")
-          + node_html(mode, "问数系统", "系统边界（构建范围）", ref="A3–A9", cls="sys")
-          + arrow_html("A7 执行")
-          + node_html(mode, "MySQL（外部）", "外部依赖 · 数据源", ref="A1·A2", cls="ext"))
-
-    l2 = (node_html(mode, "nginx:8081", "静态页 · /api/ 反代", slot="A9", cls="nginx")
-          + arrow_html("/api/ 反代")
-          + node_html(mode, "backend:8000", "内含 A4–A8（见 L3）", slot="A3", cls="backend")
-          + arrow_html("pymysql :3307")
-          + node_html(mode, "MySQL:3307", "状态见 L0", ref="A1·A2", cls="mysql"))
-
-    l3 = ""
-    for i, n in enumerate(L3_NODES):
-        if i:
-            l3 += arrow_html(["问句", "关键词", "SQL", "rows"][i - 1])
-        l3 += node_html(mode, n["name"], n["note"], slot=n["slot"], cls="comp")
-
-    l0 = ""
-    for i, n in enumerate(L0_NODES):
-        if i:
-            l0 += '<span class="sep">｜</span>'
-        l0 += node_html(mode, n["name"], n["note"], slot=n["slot"], cls="base")
-
-    if mode == "answer":
-        foot = ('<span class="tick">■ 槽位 A0–A9：10/10 已建且判据通过</span>'
-                '<span class="tick">端到端：浏览器 :8081 → :8000 → A4–A8 → MySQL:3307 → 41099.5 ✓</span>')
-    else:
-        foot = ('<span class="todo">▢ 槽位 A0–A9：__/10 已勾</span>'
-                '<span class="todo">端到端：浏览器 :____ → :8000 → …… → :3307 → 结果 ________</span>')
-
-    return (layer_html("L1", "上下文", "C4", l1)
-            + layer_html("L2", "容器", "C4", l2)
-            + layer_html("L3", "组件", "C4", l3)
-            + layer_html("L0", "地基", "非 C4", l0)
-            + f'<div class="diag-foot">{foot}</div>')
+def plain(text: str) -> str:
+    return INLINE_CODE.sub(r"\1", text)
 
 
-# ------------------------------------------------------------------ 矩阵
+def code_text(text: str) -> str:
+    """期望输出：转义后加 <wbr>，让长 JSON 优先在逗号 / 分号 / 管道 / 键值冒号后断行。"""
+    out = esc(text)
+    for ch in (",", ";", "|"):
+        out = out.replace(ch, ch + "<wbr>")
+    out = out.replace('":', '":<wbr>')
+    return out
 
-def matrix_html(mode: str, m: dict) -> str:
-    nrow, ncol = len(m["rows"]), len(m["cols"])
-    if mode == "answer":
-        cov = f'行 {nrow}/{nrow} ✓　列 {ncol}/{ncol} ✓'
-    else:
-        cov = f'行 __/{nrow}　列 __/{ncol}'
 
-    colgroup = "".join(f'<col style="width:{w}px">' for w in m["widths"])
-    head = ('<tr><th class="rh">责任 ↓　能力 →</th>'
-            + "".join(f"<th>{esc(c)}</th>" for c in m["cols"])
-            + '<th class="evh">证据（实跑判据）</th></tr>')
+def command_html(text: str) -> str:
+    """命令：按空格切成 token，token 内不许断行（避免把 --data-urlencode、中文参数拆开）。"""
+    parts = [p for p in text.split(" ") if p]
+    return " ".join(f'<span class="tok">{esc(p)}</span>' for p in parts)
 
-    body = ""
-    for label, marks, ev in m["rows"]:
-        cells = ""
-        for mark in marks:
-            if mode == "answer":
-                cls = "mark dash" if mark == DASH else "mark"
-                cells += f'<td class="{cls}">{esc(mark)}</td>'
+
+def normalize(text: str) -> str:
+    return re.sub(r"\s+", " ", text).strip()
+
+
+def page_filename(page_id: str) -> Path:
+    return PAGES_DIR / f"{page_id}.md"
+
+
+def page_label(pages: list[str]) -> str:
+    labels = []
+    for pid in pages:
+        num = pid.split("-", 1)[1].lstrip("0") or "0"
+        labels.append(f"第 {num} 页")
+    return "、".join(labels)
+
+
+def sections_of(lines: list[str]) -> list[tuple[int, str]]:
+    secs: list[tuple[int, str]] = []
+    for idx, line in enumerate(lines, 1):
+        m = HEADING.match(line)
+        if m:
+            secs.append((idx, m.group(1)))
+    return secs
+
+
+def section_at(line_no: int, secs: list[tuple[int, str]]) -> str:
+    title = "（页首）"
+    for start, name in secs:
+        if start <= line_no:
+            title = name
+        else:
+            break
+    return title
+
+
+# ------------------------------------------------------------------ 读数据 / 结构校验
+
+def load_data() -> dict:
+    if not DATA_PATH.exists():
+        raise SystemExit(f"找不到数据文件 {DATA_PATH}（应在 manual/completeness/v2/data.json）")
+    try:
+        data = json.loads(DATA_PATH.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        raise SystemExit(f"data.json 不是合法 JSON：{exc}") from exc
+    return data
+
+
+def validate_structure(data: dict) -> None:
+    errs: list[str] = []
+
+    missing = [k for k in REQUIRED_TOP_KEYS if k not in data]
+    if missing:
+        errs.append(f"data.json 缺顶层字段：{', '.join(missing)}")
+    if not str(data.get("schema", "")).startswith("completeness-v2"):
+        errs.append(f"schema={data.get('schema')!r}，应为 completeness-v2/…")
+    if len(data.get("legend") or []) != 3:
+        errs.append(f"legend 必须三条（▢/◧/■），实际 {len(data.get('legend') or [])} 条")
+    if len(data.get("completeness_criteria") or []) != 3:
+        errs.append("completeness_criteria 必须三条（D42 完备判据）")
+    if not data.get("notes"):
+        errs.append("notes 为空：脚注至少写清判据出处与机器差异")
+
+    arts = data.get("artifacts") or []
+    if not (12 <= len(arts) <= 14):
+        errs.append(f"交付物件数 {len(arts)}，D42 要求 12–14 件")
+    ids = {a.get("id") for a in arts}
+    total_cp = 0
+    for a in arts:
+        no = a.get("no", "?")
+        for key in ("id", "name", "kind", "location", "pages", "checkpoints", "depends_on"):
+            if key not in a:
+                errs.append(f"#{no} 缺字段 {key}")
+        pages = a.get("pages") or []
+        if not pages:
+            errs.append(f"#{no} 没有 pages")
+        for pid in pages:
+            if not page_filename(pid).exists():
+                errs.append(f"#{no} 的页面 {pid}.md 不存在")
+        cps = a.get("checkpoints") or []
+        if not (1 <= len(cps) <= 3):
+            errs.append(f"#{no} 检验点 {len(cps)} 个，D42 要求每行 1–3 个")
+        total_cp += len(cps)
+        for i, cp in enumerate(cps, 1):
+            for key in ("criterion", "command", "expected_output", "evidence_source"):
+                if not str(cp.get(key, "")).strip():
+                    errs.append(f"#{no} 第 {i} 个检验点缺 {key}")
+            m = PAGE_REF.search(cp.get("evidence_source", ""))
+            if not m:
+                errs.append(f"#{no} 第 {i} 个检验点 evidence_source 里没有 page-XX.md:行号")
+            elif f"page-{m.group(1)}" not in pages:
+                errs.append(f"#{no} 第 {i} 个检验点的溯源页 page-{m.group(1)} 不在 pages 里")
+            if m and not page_filename(f"page-{m.group(1)}").exists():
+                errs.append(f"#{no} 第 {i} 个检验点的页面 page-{m.group(1)}.md 不存在")
+        for dep in a.get("depends_on") or []:
+            if dep not in ids:
+                errs.append(f"#{no} 的 depends_on 指向不存在的 id {dep!r}")
+            elif dep == a.get("id"):
+                errs.append(f"#{no} 依赖自己")
+    counts = data.get("counts") or {}
+    if counts.get("artifacts") not in (None, len(arts)):
+        errs.append(f"counts.artifacts={counts.get('artifacts')} 与实际 {len(arts)} 不符")
+    if counts.get("checkpoints") not in (None, total_cp):
+        errs.append(f"counts.checkpoints={counts.get('checkpoints')} 与实际 {total_cp} 不符")
+    if errs:
+        print("✗ 数据结构校验失败：")
+        for e in errs:
+            print(f"  - {e}")
+        raise SystemExit(1)
+    print(f"✓ 数据结构：{len(arts)} 件交付物 / {total_cp} 个检验点 / "
+          f"每件 {min(len(a['checkpoints']) for a in arts)}–"
+          f"{max(len(a['checkpoints']) for a in arts)} 个检验点")
+
+
+# ------------------------------------------------------------------ 逐条溯源校验
+
+def trace_check(data: dict) -> int:
+    total = ok = fails = 0
+    print("\n逐条溯源校验（期望输出必须能在对应页正文 grep 到）")
+    for art in data["artifacts"]:
+        cps = art["checkpoints"]
+        print(f"\n#{art['no']:02d} {plain(art['name'])}  "
+              f"[{page_label(art['pages'])}]  {len(cps)} 个检验点")
+        for i, cp in enumerate(cps, 1):
+            total += 1
+            expected_lines = [ln for ln in cp["expected_output"].split("\n") if ln.strip()]
+            m = PAGE_REF.search(cp["evidence_source"])
+            problems: list[str] = []
+            hits: list[tuple[int, str]] = []
+            outside: list[int] = []
+            if not m:
+                problems.append("evidence_source 里没有 page-XX.md:行号")
             else:
-                cells += '<td class="mark empty"></td>'
-        ev_html = esc(ev) if mode == "answer" else ""
-        body += (f'<tr><th class="rh">{esc(label)}</th>{cells}'
-                 f'<td class="ev{" blank" if mode == "blank" else ""}">{ev_html}</td></tr>')
+                page_file = page_filename(f"page-{m.group(1)}")
+                lines = page_file.read_text(encoding="utf-8").splitlines()
+                norm_lines = [normalize(ln) for ln in lines]
+                secs = sections_of(lines)
+                lo, hi = int(m.group(2)), int(m.group(3) or m.group(2))
+                for exp in expected_lines:
+                    needle = normalize(exp)
+                    all_hits = [n for n, nl in enumerate(norm_lines, 1) if needle in nl]
+                    if not all_hits:
+                        problems.append(f"页内 grep 不到期望输出：{exp!r}")
+                        continue
+                    in_range = [n for n in all_hits if lo <= n <= hi]
+                    chosen = in_range[0] if in_range else all_hits[0]
+                    if not in_range:
+                        outside.append(chosen)
+                    hits.append((chosen, section_at(chosen, secs)))
+            if problems:
+                fails += 1
+                print(f"  [{i}] FAIL  {plain(cp['criterion'])}")
+                for p in problems:
+                    print(f"        - {p}")
+                continue
+            ok += 1
+            cited = f"page-{m.group(1)}.md:{m.group(2)}"
+            if m.group(3):
+                cited += f"-{m.group(3)}"
+            sec_names = []
+            for _, name in hits:
+                if name not in sec_names:
+                    sec_names.append(name)
+            where = " / ".join(f"「{s}」" for s in sec_names)
+            extra = ""
+            if outside:
+                extra = f"（页内实际命中 {'、'.join(f':{n}' for n in outside)}，不在引用行段，仍算页内原文）"
+            print(f"  [{i}] PASS  {plain(cp['criterion'])}  ·  {cited} {where}{extra}")
+    print(f"\n汇总：{ok}/{total} 检验点溯源 PASS · FAIL {fails}")
+    return fails
 
-    return (f'<div class="mtitle"><b>{esc(m["title"])}</b>'
-            f'<span class="c4">{esc(m["tag"])}</span>'
-            f'<span class="cov">{cov}</span></div>'
-            f'<table class="mtx {m["key"]}"><colgroup>{colgroup}</colgroup>'
-            f'<thead>{head}</thead><tbody>{body}</tbody></table>')
 
+# ------------------------------------------------------------------ HTML 组版
 
-# ------------------------------------------------------------------ 图例 + 规则
-
-def legend_html() -> str:
-    items = [
-        ("▢", "未建", "还没动手，或没跑通。按对应页从头做，做到该页「你应该看到」。"),
-        ("◧", "已建未验", "做完了但没对判据。回该页重跑命令 / 刷新页面，看到判据才算数。"),
-        ("■", "已建且判据通过", "输出与页面「你应该看到」逐字一致；把命令 + 输出写进矩阵末列。"),
-    ]
-    cards = "".join(
-        f'<div class="lg-item"><span class="lgbox">{g}</span>'
-        f'<div><b>{esc(t)}</b><p>{esc(d)}</p></div></div>'
-        for g, t, d in items)
-    return (f'<div class="lg">{cards}</div>'
-            '<div class="lg-note">只允许 ▢ → ◧ → ■：做完 ≠ 通过；◧ 是最容易停住的状态，'
-            '回页面把判据重跑一遍再涂黑。</div>')
-
-
-def rules_html(mode: str) -> str:
+def header_html(data: dict, mode: str, total_cp: int, total_art: int) -> str:
+    kicker, _ = effective_kicker(data)
     if mode == "answer":
-        rows = [
-            ("✓", "① 每行 ≥ 1 个 ■",
-             "12 个节点行全部有 ■（节点不是空壳）"),
-            ("✓", "② 每列 ≥ 1 个 ■",
-             "15 项能力列全部有 ■（能力没有漏项）"),
-            ("✓", "③ 跨层边都通 + 端到端证据",
-             "浏览器 :8081 → nginx → :8000 → A4–A8 → MySQL:3307 → 41099.5"),
-        ]
-        final = ('<div class="final-text">四层全通过 ⇒ <b>系统能力完备</b></div>'
-                 '<div class="final-sub">A0–A9 10/10 ■ · 12 行 × 15 列全绿 · 端到端 41099.5</div>'
-                 '<div class="stamp">完备 ✓</div>')
+        badge = f"{BOX['answer']} {total_cp}/{total_cp} · {total_art}/{total_art} 行"
+        badge_note = "答案版 · 全部检验点 ■（供对照）"
     else:
-        rows = [
-            ("□", "① 每行 ≥ 1 个 ■", "行 __/12 有 ■（节点不是空壳）"),
-            ("□", "② 每列 ≥ 1 个 ■", "列 __/15 有 ■（能力没有漏项）"),
-            ("□", "③ 跨层边都通 + 端到端证据", "端到端最后一格看到的数：________"),
-        ]
-        final = ('<div class="final-text">四层全通过 ⇒ <b>系统能力完备</b></div>'
-                 '<div class="final-sub">自己数一遍：■ 满 10 个、行/列都不留空、端到端出数</div>'
-                 '<div class="stamp blank">待自检 □</div>')
-
-    row_html = "".join(
-        f'<div class="rrow"><span class="chk">{esc(c)}</span>'
-        f'<b>{esc(t)}</b><span class="rt">{esc(d)}</span></div>'
-        for c, t, d in rows)
-    return row_html + f'<div class="final">{final}</div>'
-
-
-# ------------------------------------------------------------------ 整页
-
-def header_html(mode: str) -> str:
-    if mode == "answer":
-        badge, note = "答案版", "参考答案（空白版见 poster-blank.png）"
-        lead = ("依据 D38：C4 三层 + L0 地基，每层一张「责任 × 证据」矩阵；"
-                "每格要么 ■ 要么 —，末列写实跑判据。")
-    else:
-        badge, note = "空白版", "打印后勾三态 / 填矩阵（答案版见 poster-answer.png）"
-        lead = ("依据 D38：C4 三层 + L0 地基，每层一张「责任 × 证据」矩阵；"
-                "做完 ≠ 通过：把实跑判据填进末列。")
-    return (f'<div class="hdr"><div class="hdr-left">'
-            f'<div class="kicker">练本总装 · 第 0–9 页 · 依据 D38</div>'
-            f'<h1>完备性证明 <span class="middot">·</span> 问数系统能力覆盖</h1>'
-            f'<div class="sub">C4 三层：L1 上下文 / L2 容器 / L3 组件 ＋ L0 地基'
-            f'<span class="bar">｜</span>槽位 A0–A9<span class="bar">｜</span>'
-            f'四层全部通过 ⇒ 系统能力完备</div>'
-            f'<div class="lead">{esc(lead)}</div></div>'
-            f'<div class="hdr-right"><div class="badge {mode}">{esc(badge)}</div>'
-            f'<div class="badge-note">{esc(note)}</div></div></div>')
+        badge = f"{BOX['blank']} 0/{total_cp} · 0/{total_art} 行"
+        badge_note = "空白版 · 打印后自己涂：▢ → ◧ → ■"
+    return (
+        '<div class="hdr">'
+        '<div class="hdr-left">'
+        f'<div class="kicker">{rich(kicker)}</div>'
+        f'<h1>{rich(data["title"])}</h1>'
+        f'<div class="sub">{rich(data["subtitle"])}</div>'
+        f'<div class="meta">判据出处：{rich("`manual/page-00…09.md` 的「你应该看到」真跑输出（脚本逐条溯源校验）")}</div>'
+        f'<div class="meta">{rich(data["order_hint"])}</div>'
+        '</div>'
+        '<div class="hdr-right">'
+        f'<div class="badge {mode}">{badge}</div>'
+        f'<div class="badge-note">{badge_note}</div>'
+        '</div></div>'
+    )
 
 
-def footer_html() -> str:
-    return ('<div class="foot">判据出处：第 0–9 页「你应该看到」（真跑输出）；'
-            '槽位编号与活动名见 flow.mmd；端口 3307 / 8000 / 8081 按 SPEC。'
-            '版本号、包数量随机器不同，看到同类输出即算对上。</div>')
+def checkpoint_html(cp: dict, mode: str) -> str:
+    expected_lines = [ln for ln in cp["expected_output"].split("\n") if ln.strip()]
+    expected = "<br>".join(code_text(ln) for ln in expected_lines)
+    return (
+        '<div class="cp">'
+        f'<div class="cp-h"><span class="box {mode}">{BOX[mode]}</span>'
+        f'<span class="crit">{rich(cp["criterion"])}</span></div>'
+        f'<div class="cmd">{command_html(cp["command"])}</div>'
+        f'<div class="exp"><span class="arrow">→</span> {expected}</div>'
+        '</div>'
+    )
 
+
+def artifact_row_html(art: dict, mode: str) -> str:
+    cps = art["checkpoints"]
+    cols = f"cols-{len(cps)}"
+    checks = "".join(checkpoint_html(cp, mode) for cp in cps)
+    return (
+        '<tr>'
+        f'<td class="art"><div class="ano">{art["no"]:02d}</div>'
+        f'<div class="aname">{rich(art["name"])}</div>'
+        f'<div class="akind">{rich(art["kind"])}</div></td>'
+        f'<td class="loc">{rich(art["location"])}</td>'
+        f'<td class="chk"><div class="cps {cols}">{checks}</div></td>'
+        f'<td class="pg">{page_label(art["pages"])}</td>'
+        '</tr>'
+    )
+
+
+def table_html(data: dict, mode: str, total_cp: int) -> str:
+    rows = "".join(artifact_row_html(a, mode) for a in data["artifacts"])
+    return (
+        '<table class="main">'
+        '<colgroup><col style="width:158px"><col style="width:214px">'
+        '<col><col style="width:60px"></colgroup>'
+        '<thead><tr><th class="th-art">零件</th><th class="th-loc">位置</th>'
+        '<th class="th-chk">检验点（命令 → 期望输出）'
+        f'<span class="th-count">{total_cp} 格</span></th>'
+        '<th class="th-pg">页</th></tr></thead>'
+        f'<tbody>{rows}</tbody></table>'
+    )
+
+
+def footer_html(data: dict, mode: str, now: str) -> str:
+    rerun, _ = effective_rerun(data)
+    criteria = []
+    for item in data["completeness_criteria"]:
+        criteria.append(
+            '<div class="cr">'
+            f'<span class="box {mode}">{BOX[mode]}</span>'
+            f'<div class="cr-t"><b>{rich(item["text"])}</b>'
+            f'<span>{rich(item["hint"])}</span></div>'
+            '</div>'
+        )
+    legend_line = " · ".join(f"{item['mark']} {item['name']}" for item in data["legend"])
+    notes = "".join(f'<div class="note">{rich(n)}</div>' for n in data.get("notes", []))
+    return (
+        '<div class="foot">'
+        '<div class="cr-h">完备判据（三条全 ■ 才算完备）</div>'
+        f'<div class="criteria">{"".join(criteria)}</div>'
+        '<div class="foot-meta">'
+        f'<span><b>生成时间</b> {esc(now)}</span>'
+        '<span class="sep">·</span>'
+        f'<span><b>重跑命令</b> <code>{esc(rerun)}</code></span>'
+        '<span class="sep">·</span>'
+        f'<span><b>图例</b> {esc(legend_line)}</span>'
+        '</div>'
+        f'<div class="notes">{notes}</div>'
+        '</div>'
+    )
+
+
+def build_html(data: dict, mode: str, now: str) -> str:
+    total_cp = sum(len(a["checkpoints"]) for a in data["artifacts"])
+    total_art = len(data["artifacts"])
+    body = (
+        header_html(data, mode, total_cp, total_art)
+        + table_html(data, mode, total_cp)
+        + footer_html(data, mode, now)
+    )
+    return (
+        '<!doctype html>\n<html lang="zh-CN"><head><meta charset="utf-8">'
+        f'<title>建成证明 v2 海报 {mode}</title>'
+        f'<style>{CSS}</style></head><body>'
+        f'<div class="poster {mode}" id="poster">{body}</div>'
+        '<script>'
+        'window.addEventListener("load", function () {'
+        'var p = document.getElementById("poster");'
+        'var t = document.querySelector("table.main");'
+        'var f = document.querySelector(".foot");'
+        'var pr = p.getBoundingClientRect(), tr = t.getBoundingClientRect(),'
+        '    fr = f.getBoundingClientRect();'
+        'var natural = Math.round(tr.bottom - pr.top) + 12'
+        '  + Math.round(fr.height) + Math.round(parseFloat(getComputedStyle(p).paddingBottom));'
+        'document.title = "DIM " + p.scrollWidth + " " + p.scrollHeight + " "'
+        '  + Math.round(fr.bottom - pr.top) + " " + natural;'
+        '});'
+        '</script></body></html>\n'
+    )
+
+
+# ------------------------------------------------------------------ CSS
 
 CSS = """
 @page { size: A4; margin: 0; }
 * { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; background: #ffffff; }
-body {
-  width: 1240px; min-height: 1754px;
-  font-family: "Noto Sans CJK SC", "Source Han Sans SC", "Microsoft YaHei", sans-serif;
-  color: #111111;
-  -webkit-font-smoothing: antialiased;
-}
+body { width: 1240px; min-height: 1754px; }
 .poster {
-  width: 1240px; min-height: 1754px; padding: 30px 44px 22px;
+  width: 1240px; min-height: 1754px; padding: 24px 38px 26px;
   display: flex; flex-direction: column;
+  font-family: "Noto Sans CJK SC", "Source Han Sans SC", "Microsoft YaHei", sans-serif;
+  color: #111; -webkit-font-smoothing: antialiased;
 }
-.mono, .ev, .slot, .cov, .chk, .foot { font-family: "DejaVu Sans Mono", "Noto Sans CJK SC", monospace; }
+code, .cmd, .exp, .loc code, .note code, .foot-meta code {
+  font-family: "DejaVu Sans Mono", "Noto Sans CJK SC", monospace;
+}
 
 /* ---------- 页眉 ---------- */
 .hdr { display: flex; justify-content: space-between; align-items: flex-start;
        border-bottom: 3.5px solid #111; padding-bottom: 9px; }
-.kicker { font-size: 13px; letter-spacing: .8px; color: #555; margin-bottom: 4px; }
-h1 { margin: 0; font-size: 41px; line-height: 1.1; letter-spacing: .5px; font-weight: 900; }
-h1 .middot { font-weight: 400; }
-.sub { margin-top: 5px; font-size: 15.5px; color: #222; }
-.sub .bar { color: #999; padding: 0 5px; }
-.lead { margin-top: 4px; font-size: 13.5px; color: #555; }
-.hdr-right { text-align: right; padding-left: 18px; flex: 0 0 auto; }
+.hdr-left { flex: 1 1 auto; min-width: 0; }
+.kicker { font-size: 12px; letter-spacing: .6px; color: #555; }
+h1 { margin: 2px 0 0; font-size: 35px; line-height: 1.12; font-weight: 900; letter-spacing: .3px; }
+.sub { margin-top: 3px; font-size: 15px; color: #111; }
+.sub b { font-weight: 900; }
+.meta { margin-top: 3px; font-size: 10.6px; color: #555; line-height: 1.32; }
+.hdr-right { flex: 0 0 auto; text-align: right; padding-left: 16px; }
 .badge { display: inline-block; border: 2.5px solid #111; border-radius: 5px;
-         padding: 4px 14px; font-size: 19px; font-weight: 900; letter-spacing: 2px; }
-.badge.blank { background: #fff; }
+         padding: 4px 13px; font-size: 19px; font-weight: 900; letter-spacing: 1.5px;
+         font-family: "DejaVu Sans", "Noto Sans CJK SC", sans-serif; }
 .badge.answer { background: #111; color: #fff; }
-.badge-note { margin-top: 5px; font-size: 11.5px; color: #555; }
+.badge.blank { background: #fff; color: #111; }
+.badge-note { margin-top: 4px; font-size: 11px; color: #555; }
 
-/* ---------- 分区标题 ---------- */
-.sec { margin-top: 15px; }
-.sec-h { display: flex; align-items: baseline; gap: 9px; margin-bottom: 6px; }
-.sec-h .num { display: inline-block; background: #111; color: #fff; border-radius: 4px;
-              width: 24px; height: 24px; line-height: 24px; text-align: center;
-              font-size: 15px; font-weight: 700; flex: 0 0 auto; align-self: center; }
-.sec-title { font-size: 21px; font-weight: 900; letter-spacing: .3px; }
-.sec-hint { font-size: 12.5px; color: #555; }
+/* ---------- 物料清单表 ---------- */
+table.main { width: 100%; border-collapse: collapse; table-layout: fixed;
+             margin-top: 9px; border: 1.6px solid #111; }
+.main th, .main td { border-bottom: 1px solid #b9b9b9; vertical-align: top;
+                     padding: 6px 7px; }
+.main thead th { background: #e7e7e7; border-bottom: 2px solid #111;
+                 font-size: 13px; font-weight: 900; text-align: left;
+                 padding: 5px 7px; }
+.main tbody tr:last-child td { border-bottom: none; }
+.th-chk .th-count { float: right; font-size: 10.2px; color: #555; font-weight: 600; }
+.th-pg { text-align: center !important; }
 
-/* ---------- ① 结构图 ---------- */
-.diagram { border: 2px solid #111; border-radius: 8px; padding: 8px 12px 6px; }
-.layer { display: flex; align-items: stretch; gap: 12px; padding: 7px 0; }
-.layer + .layer { border-top: 1px dashed #b9b9b9; }
-.lname { flex: 0 0 98px; display: flex; flex-direction: column; justify-content: center;
-         border-right: 2.5px solid #111; padding-right: 10px; line-height: 1.25; }
-.lname b { font-size: 19px; font-weight: 900; }
-.lname span { font-size: 13px; color: #333; }
-.lname small { font-size: 10.5px; color: #777; }
-.lane { flex: 1; display: flex; align-items: center; justify-content: space-between;
-        gap: 9px; padding: 0 6px; }
-.node { border: 1.7px solid #111; border-radius: 6px; background: #fff;
-        padding: 6px 11px 7px; text-align: left; }
-.node .ntop { display: flex; align-items: center; gap: 6px; margin-bottom: 2px; }
-.slot { display: inline-block; font-size: 11.5px; line-height: 17px; padding: 0 5px;
-        background: #ededed; border: 1px solid #888; border-radius: 3px; color: #222; }
-.slot.ref { background: #fff; border-style: dashed; color: #555; }
-.st { font-family: "DejaVu Sans", sans-serif; font-size: 19px; line-height: 1; }
-.nname { font-size: 17px; font-weight: 800; line-height: 1.2; }
-.nnote { font-size: 11.5px; color: #555; line-height: 1.25; margin-top: 2px; }
-.arrow { display: flex; flex-direction: column; align-items: center; flex: 0 0 auto; }
-.arrow .al { font-size: 10.5px; color: #555; line-height: 1.1; }
-.arrow .ag { font-size: 25px; line-height: 1; font-family: "DejaVu Sans", sans-serif; }
-.l1lane .node.user { min-width: 150px; }
-.l1lane .node.sys { min-width: 270px; }
-.l1lane .node.ext { min-width: 250px; }
-.l1lane .node.user .nname { filter: grayscale(1); }
-.l2lane .node { min-width: 245px; }
-.l2lane .node.backend { min-width: 285px; }
-.l3lane .node { min-width: 168px; padding-left: 9px; padding-right: 9px; }
-.l3lane .nname { font-size: 15px; }
-.l3lane .nnote { font-size: 11px; }
-.sep { font-size: 20px; color: #999; }
-.l0lane .node { min-width: 300px; }
-.diag-foot { display: flex; gap: 18px; flex-wrap: wrap; border-top: 1.5px solid #111;
-             margin-top: 6px; padding-top: 6px; font-size: 12.5px; }
-.diag-foot .tick { font-weight: 700; }
-.diag-foot .todo { color: #666; }
+.art { border-right: 1px solid #b9b9b9; }
+.ano { display: inline-block; background: #111; color: #fff; border-radius: 2px;
+       font-family: "DejaVu Sans Mono", monospace; font-size: 10.5px; line-height: 15px;
+       padding: 0 4px; font-weight: 700; }
+.aname { margin-top: 2px; font-size: 14.6px; font-weight: 900; line-height: 1.18;
+         word-break: keep-all; }
+.aname code { font-size: 12.2px; font-weight: 700; background: #ededed;
+              border-radius: 2px; padding: 0 2px; }
+.akind { margin-top: 2px; font-size: 10.2px; color: #666; line-height: 1.25; }
 
-/* ---------- ② 矩阵 ---------- */
-.mtitle { display: flex; align-items: center; gap: 8px; margin: 11px 0 4px; }
-.mtitle b { font-size: 16px; font-weight: 900; }
-.c4 { font-size: 10.5px; color: #555; border: 1px solid #999; border-radius: 3px; padding: 0 5px; }
-.cov { margin-left: auto; font-size: 12px; color: #333; }
-table.mtx { width: 100%; border-collapse: collapse; table-layout: fixed; }
-.mtx th, .mtx td { border: 1px solid #333; padding: 4px 9px; vertical-align: middle; }
-.mtx thead th { background: #e8e8e8; font-size: 14px; font-weight: 800;
-                text-align: center; line-height: 1.2; }
-.mtx thead th.rh, .mtx thead th.evh { text-align: left; }
-.mtx tbody th { background: #f5f5f5; text-align: left; font-size: 14px;
-                font-weight: 800; line-height: 1.2; }
-.mtx td { height: 31px; }
-.mtx td.mark { text-align: center; font-family: "DejaVu Sans", sans-serif;
-               font-size: 19px; line-height: 1; font-weight: 700; }
-.mtx td.mark.dash { color: #666; font-weight: 400; font-size: 16px; }
-.mtx td.ev { font-size: 12.5px; line-height: 1.32; color: #111;
-             overflow-wrap: anywhere; }
-.mtx td.ev.blank { background: #fcfcfc; }
-.poster.blank .mtx td { height: 35px; }
-.poster.blank .mtx td.ev {
-  background-image: linear-gradient(#cfcfcf, #cfcfcf);
-  background-size: 100% 1px;
-  background-position: 0 calc(100% - 8px);
-  background-repeat: no-repeat;
-}
+.loc { border-right: 1px solid #b9b9b9; font-size: 10.9px; line-height: 1.34; color: #222; }
+.loc code { font-size: 10.4px; background: #f0f0f0; border-radius: 2px; padding: 0 2px; }
 
-/* ---------- ③ 图例 ---------- */
-.lg { display: flex; gap: 12px; }
-.lg-item { flex: 1 1 0; display: flex; gap: 10px; align-items: flex-start;
-           border: 1.6px solid #111; border-radius: 6px; padding: 7px 11px; }
-.lgbox { font-family: "DejaVu Sans", sans-serif; font-size: 31px; line-height: 1; }
-.lg-item b { display: block; font-size: 15px; }
-.lg-item p { margin: 2px 0 0; font-size: 12px; line-height: 1.4; color: #333; }
-.lg-note { margin-top: 6px; font-size: 12px; color: #444; }
+.chk { border-right: 1px solid #b9b9b9; }
+.cps { display: flex; gap: 6px; align-items: stretch; }
+.cp { flex: 1 1 0; min-width: 0; border: 1px solid #b3b3b3; border-radius: 4px;
+      padding: 3px 6px 4px; background: #fff; }
+.cp-h { display: flex; align-items: flex-start; gap: 3px; }
+.box { font-family: "DejaVu Sans", "Noto Sans CJK SC", sans-serif;
+       font-size: 16px; line-height: 1; flex: 0 0 auto; width: 16px; text-align: center; }
+.box.answer { color: #111; }
+.box.blank { color: #111; }
+.crit { font-size: 11.9px; font-weight: 700; line-height: 1.22; }
+.crit code { font-size: 10.9px; background: #ededed; border-radius: 2px; padding: 0 1px; }
+.cmd { margin: 3px 0 2px; padding: 2px 5px; background: #f1f1f1;
+       border-left: 2px solid #999; font-size: 10.1px; line-height: 1.28; color: #222;
+       overflow-wrap: break-word; }
+.exp { font-size: 11.9px; font-weight: 700; line-height: 1.28;
+       overflow-wrap: break-word; word-break: keep-all; }
+.tok { white-space: nowrap; }
+.exp .arrow { font-weight: 400; }
+.pg { text-align: center; font-size: 11.8px; font-weight: 900; line-height: 1.3; }
 
-/* ---------- ④ 判定规则 ---------- */
-.rrow { display: flex; align-items: baseline; gap: 9px; border: 1.2px solid #aaa;
-        border-radius: 5px; padding: 5px 11px; margin-bottom: 5px; font-size: 13.5px; }
-.rrow .chk { font-size: 17px; font-weight: 700; flex: 0 0 auto; }
-.rrow b { flex: 0 0 auto; font-size: 14px; }
-.rrow .rt { color: #333; }
-.final { margin-top: 8px; display: flex; align-items: center; gap: 14px;
-         border: 2.5px solid #111; border-radius: 6px; padding: 8px 14px; }
-.final-text { font-size: 18px; font-weight: 800; flex: 0 0 auto; }
-.final-sub { font-size: 12.5px; color: #333; flex: 1 1 auto; }
-.stamp { flex: 0 0 auto; border: 3px double #111; padding: 1px 14px;
-         font-size: 20px; font-weight: 900; letter-spacing: 2px; transform: rotate(-5deg); }
-.stamp.blank { border: 2px dashed #888; color: #777; font-size: 15px;
-               letter-spacing: 1px; transform: none; }
-.foot { margin-top: 14px; padding-top: 6px; border-top: 1px solid #bbb;
-        font-size: 11px; color: #555; line-height: 1.35; }
+/* ---------- 页脚 ---------- */
+.foot { margin-top: auto; padding-top: 9px; border-top: 3px solid #111; }
+.cr-h { font-size: 11.8px; font-weight: 900; letter-spacing: .5px; margin-bottom: 4px; }
+.criteria { display: flex; gap: 7px; }
+.cr { flex: 1 1 0; display: flex; align-items: flex-start; gap: 5px;
+      border: 1.4px solid #111; border-radius: 4px; padding: 4px 8px; }
+.cr-t { min-width: 0; }
+.cr-t b { display: block; font-size: 12px; font-weight: 900; line-height: 1.2; }
+.cr-t span { display: block; margin-top: 1px; font-size: 10px; line-height: 1.28; color: #333; }
+.cr-t code { font-size: 9.8px; background: #ededed; border-radius: 2px; padding: 0 1px; }
+.foot-meta { margin-top: 7px; font-size: 10.4px; color: #333; }
+.foot-meta b { font-weight: 900; }
+.foot-meta code { font-size: 10px; background: #ededed; border-radius: 2px; padding: 0 2px; }
+.foot-meta .sep { color: #999; padding: 0 4px; }
+.notes { margin-top: 5px; }
+.note { font-size: 9.2px; color: #555; line-height: 1.32; }
+.note code { font-size: 9px; background: #f0f0f0; border-radius: 2px; padding: 0 1px; }
 """
-
-
-def build_html(mode: str) -> str:
-    body = (header_html(mode)
-            + '<div class="sec"><div class="sec-h"><span class="num">①</span>'
-              '<span class="sec-title">叠层结构图</span>'
-              '<span class="sec-hint">从上到下 = C4 抽象层级；槽位 A0–A9 各一个三态方框（主位置）；虚线槽位 = 映射；L4 代码不上图</span></div>'
-              f'<div class="diagram">{diagram_html(mode)}</div></div>'
-            + '<div class="sec"><div class="sec-h"><span class="num">②</span>'
-              '<span class="sec-title">四张「责任 × 证据」矩阵</span>'
-              '<span class="sec-hint">行 = 该层节点，列 = 从运行时需求倒推的能力；■ = 由它提供且判据通过，— = 不由它提供</span></div>'
-            + "".join(matrix_html(mode, m) for m in MATRICES)
-            + '</div>'
-            + '<div class="sec"><div class="sec-h"><span class="num">③</span>'
-              '<span class="sec-title">三态图例</span>'
-              '<span class="sec-hint">每个槽位、每个矩阵格只认三种状态</span></div>'
-              f'{legend_html()}</div>'
-            + '<div class="sec"><div class="sec-h"><span class="num">④</span>'
-              '<span class="sec-title">判定规则</span>'
-              '<span class="sec-hint">三条全绿才敢说「完备」；四层全通过 ⇒ 系统能力完备</span></div>'
-              f'{rules_html(mode)}</div>'
-            + footer_html())
-    return ("<!doctype html>\n<html lang=\"zh-CN\"><head><meta charset=\"utf-8\">"
-            "<title>完备性证明海报</title>"
-            f"<style>{CSS}</style></head><body>"
-            f'<div class="poster {mode}" id="poster">{body}</div>'
-            "<script>"
-            "window.addEventListener('load', function(){"
-            "var p=document.getElementById('poster');"
-            "var f=document.querySelector('.foot');"
-            "document.title='DIM '+p.scrollWidth+' '+Math.ceil(f.getBoundingClientRect().bottom);"
-            "});"
-            "</script></body></html>\n")
 
 
 # ------------------------------------------------------------------ Chrome
@@ -517,17 +552,17 @@ def chrome(args: list[str]) -> subprocess.CompletedProcess:
     return subprocess.run(cmd + args, capture_output=True, text=True, timeout=180)
 
 
-def measure(page_html: Path, work: Path) -> tuple[int, int]:
+def measure(page_html: Path, work: Path) -> tuple[int, int, int, int]:
     proc = chrome([
         f"--window-size={PAGE_W},{PAGE_H}",
         "--virtual-time-budget=5000",
         f"--user-data-dir={work / 'chrome-measure'}",
         "--dump-dom", page_html.as_uri(),
     ])
-    m = re.search(r"<title>DIM (\d+) (\d+)</title>", proc.stdout)
+    m = re.search(r"<title>DIM (\d+) (\d+) (\d+) (\d+)</title>", proc.stdout)
     if not m:
         raise SystemExit(f"量高失败：chrome 没回 DIM 标记\n{proc.stderr[-1500:]}")
-    return int(m.group(1)), int(m.group(2))
+    return int(m.group(1)), int(m.group(2)), int(m.group(3)), int(m.group(4))
 
 
 def screenshot(page_html: Path, png: Path, work: Path) -> None:
@@ -552,27 +587,45 @@ def png_size(png: Path) -> tuple[int, int]:
 
 def check_forbidden(text: str, where: str) -> None:
     for bad in FORBIDDEN:
-        if bad in text:
-            raise SystemExit(f"{where} 里出现禁用字符串 {bad!r}（不许出现用户名 / 绝对路径）")
+        if bad and bad in text:
+            raise SystemExit(f"{where} 里出现禁用字符串 {bad!r}"
+                             "（不许出现用户名 / 绝对路径 / 口令）")
 
 
-def render(mode: str, out_png: Path) -> None:
-    page = build_html(mode)
+# ------------------------------------------------------------------ 渲染
+
+def render(data: dict, mode: str, out_png: Path, now: str) -> tuple[int, int, int]:
+    total_cp = sum(len(a["checkpoints"]) for a in data["artifacts"])
+    page = build_html(data, mode, now)
     check_forbidden(page, f"{mode} HTML")
+    for stale in STALE_TERMS:
+        if stale in page:
+            raise SystemExit(f"{mode} HTML 里残留 v1/样例口径字样 {stale!r}"
+                             "（成品不许自称样例；kicker / 重跑命令应已覆盖）")
     if "Noto Sans CJK SC" not in page:
         raise SystemExit("CSS 没有指定中文字体 Noto Sans CJK SC")
+    for token in REQUIRED_TOKENS:
+        if token not in page:
+            raise SystemExit(f"{mode} HTML 里缺少关键值 {token!r}（OCR 抽查会找不到）")
+    boxes = total_cp + len(data["completeness_criteria"])
+    odd = 'class="box blank"' if mode == "answer" else 'class="box answer"'
+    own = f'class="box {mode}"'
+    if page.count(own) != boxes:
+        raise SystemExit(f"{mode} 版方框数 {page.count(own)}，应为 {boxes}"
+                         "（24 个检验点 + 3 条完备判据）")
+    if odd in page:
+        raise SystemExit(f"{mode} 版混进了另一版的方框样式")
 
-    with tempfile.TemporaryDirectory(prefix="poster-") as tmp:
+    with tempfile.TemporaryDirectory(prefix="poster-v2-") as tmp:
         work = Path(tmp)
         html_path = work / f"poster-{mode}.html"
         html_path.write_text(page, encoding="utf-8")
-
-        w, h = measure(html_path, work)
+        w, h, foot_bottom, natural = measure(html_path, work)
         if w > PAGE_W:
             raise SystemExit(f"{mode} 版内容宽度 {w}px 超过 A4 画布 {PAGE_W}px（会横向裁切）")
-        if h > PAGE_H:
-            raise SystemExit(f"{mode} 版内容高度 {h}px 超过 A4 画布 {PAGE_H}px（会超出一页）")
-
+        if h > PAGE_H or foot_bottom > PAGE_H or natural > PAGE_H:
+            raise SystemExit(f"{mode} 版内容高度 {max(h, foot_bottom, natural)}px 超过 A4 画布 "
+                             f"{PAGE_H}px（会超出一页），页脚底边 {foot_bottom} / 自然高度 {natural}")
         raw = work / f"poster-{mode}.raw.png"
         screenshot(html_path, raw, work)
         png_bytes = raw.read_bytes()
@@ -582,17 +635,44 @@ def render(mode: str, out_png: Path) -> None:
 
     pw, ph = png_size(out_png)
     if (pw, ph) != (SHOT_W, SHOT_H):
-        raise SystemExit(f"{out_png} 尺寸 {pw}x{ph}，应为 {SHOT_W}x{SHOT_H}（A4 @300dpi）")
-    check_forbidden(out_png.read_bytes().decode("latin-1", "ignore"), f"{out_png.name} 字节")
-    print(f"  {out_png.relative_to(REPO)}  {pw}x{ph}  "
-          f"（内容 {w}x{h} / 画布 {PAGE_W}x{PAGE_H}）")
+        raise SystemExit(f"{out_png.name} 尺寸 {pw}x{ph}，应为 {SHOT_W}x{SHOT_H}（A4 @300dpi）")
+    check_forbidden(png_bytes.decode("latin-1", "ignore"), f"{out_png.name} 字节")
+    print(f"  ✓ {out_png.relative_to(REPO)}  {pw}x{ph}  "
+          f"（内容 {w}x{max(foot_bottom, natural)} / 画布 {PAGE_W}x{PAGE_H}，"
+          f"页脚底边 {foot_bottom}）")
+    return w, foot_bottom, natural
 
 
-def main() -> None:
-    print("「完备性证明」海报：从 HTML+CSS 渲染两张 A4 PNG")
-    for mode, filename in (("blank", "poster-blank.png"), ("answer", "poster-answer.png")):
-        render(mode, OUT_DIR / filename)
-    print("完成：空白版 + 答案版均为 2480×3508（A4 竖向 / 300dpi），可 100% 打印。")
+def main() -> int:
+    print("《建成证明》v2 海报：manual/completeness/v2/data.json → 两张 A4 PNG")
+    data = load_data()
+    total_cp = sum(len(a["checkpoints"]) for a in data.get("artifacts") or [])
+    print(f"  数据：{DATA_PATH.relative_to(REPO)}"
+          f"（schema={data.get('schema')}，status={data.get('status')}，"
+          f"{len(data.get('artifacts') or [])} 件 × {total_cp} 个检验点）")
+    kicker, kicker_fallback = effective_kicker(data)
+    rerun, rerun_fallback = effective_rerun(data)
+    print(f"  页眉/脚注：kicker={kicker!r}；重跑命令={rerun!r}")
+    if kicker_fallback or rerun_fallback:
+        print("  注：data.json 的 kicker / rerun 仍是 D42「单页样例」口径（不在本脚本改动范围），"
+              "已分别回退到 D43 口径 / 本脚本命令；数据升为生产口径后会自动跟随。")
+    check_forbidden(DATA_PATH.read_text(encoding="utf-8"), "data.json")
+    validate_structure(data)
+    failures = trace_check(data)
+    if failures:
+        print(f"\n✗ 溯源校验有 {failures} 条 FAIL：只许修 v2/data.json，不许改十页正文。")
+        return 1
+
+    now = dt.datetime.now().strftime("%Y-%m-%d %H:%M")
+    print("\n渲染（A4 竖向 1240×1754 设计画布，截图 ×2 = 2480×3508）")
+    render(data, "answer", ANSWER_PNG, now)
+    render(data, "blank", BLANK_PNG, now)
+
+    total_cp = sum(len(a["checkpoints"]) for a in data["artifacts"])
+    print(f"\n完成：{len(data['artifacts'])} 件交付物 · {total_cp}/{total_cp} 溯源 PASS；"
+          f"两张 PNG 均为 {SHOT_W}×{SHOT_H}（A4 竖向 / 300dpi），内容高度 ≤ {PAGE_H}px，"
+          "可 100% 打印。")
+    return 0
 
 
 if __name__ == "__main__":

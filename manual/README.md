@@ -49,8 +49,9 @@
 | [第 8 页](page-08.md) | A8 SSE 流式 | 12 条 progress + 1 条 result |
 | [第 9 页](page-09.md) | A9 nginx 反代 + 页面 | 浏览器出 `41099.5` |
 
-- [完备性证明海报](completeness/poster.md)：四层责任×证据矩阵，补齐即完备
-- [建成证明 · 可交互原型](completeness/explorer.html)：中分视图 + 多卡矩阵 + 空白/答案态实时判定（单文件离线；数据源 [`completeness/data.json`](completeness/data.json)，生成 `python3 manual/shots/build_explorer.py`）
+- [建成证明海报 · 物料清单 + 检验单](completeness/poster-answer.png)：**12 件交付物 × 24 个检验点**，勾满一行 = 这件东西建成、12 行全满 = 系统完备；空白打印版 [poster-blank.png](completeness/poster-blank.png)。判据全部取自第 0–9 页「你应该看到」，渲染 `python3 manual/shots/render_completeness.py`。
+- 单源数据 [`completeness/v2/data.json`](completeness/v2/data.json)：海报与交互页共用同一份（v1「行=架构节点的四层矩阵」已按 D43 归档到 [`completeness/archive-v1/`](completeness/archive-v1/README.md)，仅作历史证据）。
+- [建成证明 · 可交互原型](completeness/explorer.html)：行=交付物，检验点级三态 ▢/◧/■ 可编辑、行状态由检验点派生、空白/答案态实时判定（单文件离线；数据源同上，生成 `python3 manual/shots/build_explorer.py`）。
 
 ## 附录：换成双代号（AOA）会怎样
 
