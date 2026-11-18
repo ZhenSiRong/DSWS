@@ -14,6 +14,8 @@
 
 ## 动手
 
+要改的文件是 `lab/app.py`：改完先按 **Ctrl+S 保存**，再回终端 1 重启；不保存就重启，服务还在跑旧代码（实测会回 `{"detail":"Not Found"}` 或上一页的旧 JSON，跟下面的期望输出完全不同）。
+
 1. 把 `lab/app.py` **整个替换**成下面这段（第 3 页的代码全部删掉，不要留）：
 
 ```python
@@ -49,7 +51,7 @@ def query(q: Query):
 backend/.venv/bin/python -m uvicorn lab.app:app --port 8000
 ```
 
-3. 在终端 2 连着发两个请求，第二个故意换个问题：
+3. 在终端 2 连着发两个请求，第二个故意换个问题（地址里的端口沿用你第 3 页实际启动的那个，默认 `8000`）：
 
 ```bash
 curl -s -X POST http://127.0.0.1:8000/api/query -H 'Content-Type: application/json' -d '{"question":"华北销售额"}'
@@ -73,9 +75,9 @@ curl -s -X POST http://127.0.0.1:8000/api/query -H 'Content-Type: application/js
 - 你猜 `question` 会跟着输入变吗？不会。代码里把它写死成了 `"华北销售额"`，你发什么进去都不影响返回值。
 - `keywords`、`sql`、`rows` 也是空壳：`[]` 是空列表，`null` 是 Python 的 `None` 写进 JSON 的样子（不是字符串 `"null"`）。
 - 这一页能验收的只有一件事：接口通了、JSON 能收能发。你发的问题确实进了 `q.question`，只是这一页没有用它。
-- 记住这四个字段：`question` 是问题、`keywords` 是关键词、`sql` 要执行的 SQL、`rows` 查出来的行。第 5 页填 `keywords`，第 7 页填 `sql` 和 `rows`。
+- 记住这四个字段：`question` 是问题、`keywords` 是关键词、`sql` 要执行的 SQL、`rows` 查出来的行。第 5 页填 `keywords`，第 6 页生成 SQL、第 7 页执行。
 
-> **你现在拥有**：一个能收问题、能回 JSON 的 `POST /api/query` 接口；它是整条问答链路的第一段，第 5 页往里填关键词、第 7 页填 SQL 和结果。
+> **你现在拥有**：一个能收问题、能回 JSON 的 `POST /api/query` 接口；它是整条问答链路的第一段，第 5 页往里填关键词、第 6 页生成 SQL、第 7 页执行出结果。
 
 ## 自己改一下
 
