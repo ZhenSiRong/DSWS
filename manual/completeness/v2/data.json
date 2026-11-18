@@ -1,0 +1,393 @@
+{
+  "schema": "completeness-v2/1",
+  "decision": "D42",
+  "status": "sample",
+  "title": "建成证明 v2 · 物料清单 + 检验单",
+  "subtitle": "行=交付物，勾满一行=这件东西建成；12 行全满=系统完备",
+  "kicker": "D42 · 单页样例 · 供确认后再全量替换 v1",
+  "field_map": {
+    "location": "位置（容器名 / 端口映射 / 库表 / 文件路径 / API 路径）",
+    "command": "命令",
+    "expected_output": "期望输出（来源页原文原值）",
+    "evidence_source": "溯源（页:行 / 页内段）"
+  },
+  "source_refs": {
+    "decision": "humen-desicions/09-ablation-course.md · D42（行=交付物、显式位置、1–3 检验点、命令+期望输出、单页样例先行）",
+    "pages": "manual/page-00.md – manual/page-09.md（唯一事实标准：「你应该看到」）",
+    "order": "manual/flow.mmd（A0–A9 活动名 / 工期 / AON 紧前关系）",
+    "style": "manual/completeness/poster-answer.png（v1 视觉：黑白灰 + Noto Sans CJK）"
+  },
+  "counts": {
+    "artifacts": 12,
+    "checkpoints": 24
+  },
+  "legend": [
+    {
+      "mark": "▢",
+      "name": "未建",
+      "desc": "还没动手，或没跑通"
+    },
+    {
+      "mark": "◧",
+      "name": "已建未验",
+      "desc": "做完了但没对判据：回页重跑命令，看到判据再涂黑"
+    },
+    {
+      "mark": "■",
+      "name": "已建且判据通过",
+      "desc": "输出与页面「你应该看到」逐字对上"
+    }
+  ],
+  "order_hint": "顺序按 manual/flow.mmd 的 AON 紧前关系：A0→A3→A4→A5→A6→A7→A8→A9；数据支线 A0→A1→A2→A7 有浮动。顺序只作提示，不参与勾选。",
+  "artifacts": [
+    {
+      "no": 1,
+      "id": "env",
+      "name": "开发机环境（工具 + venv + 端口）",
+      "kind": "工具 + venv + 端口",
+      "location": "本机 · `docker` / `uv` / `node` / `make` / `curl` + `backend/.venv`；3307 / 8000 / 8081 空着",
+      "pages": [
+        "page-00"
+      ],
+      "depends_on": [],
+      "checkpoints": [
+        {
+          "criterion": "工具 / 依赖 / 端口三件事全过（末行是结论）",
+          "command": "make doctor",
+          "expected_output": "12/12 通过",
+          "evidence_source": "page-00.md:54（「你应该看到」第 2 条末行；:48 结论句）"
+        },
+        {
+          "criterion": "依赖装好：`backend/.venv` + `frontend/node_modules`",
+          "command": "make install",
+          "expected_output": "Creating virtual environment at: .venv\nadded 118 packages, and audited 125 packages in 3s",
+          "evidence_source": "page-00.md:36-46（「你应该看到」第 1 条真跑输出）"
+        },
+        {
+          "criterion": "三个端口都空着（3307 / 8000 / 8081）",
+          "command": "ss -tln | grep -E ':(3307|8000|8081) ' || echo \"端口全空\"",
+          "expected_output": "端口全空",
+          "evidence_source": "page-00.md:98-101（重来一遍·验证 2：「你应该看到…端口全空」）"
+        }
+      ]
+    },
+    {
+      "no": 2,
+      "id": "mysql-container",
+      "name": "容器 `lab-mysql`",
+      "kind": "容器",
+      "location": "`lab-mysql` · `127.0.0.1:3307 → 3306`（只开给本机）",
+      "pages": [
+        "page-01"
+      ],
+      "depends_on": [
+        "env"
+      ],
+      "checkpoints": [
+        {
+          "criterion": "容器连得上、能跑 SQL：版本号 `8.0` 开头",
+          "command": "SELECT VERSION();",
+          "expected_output": "8.0.46",
+          "evidence_source": "page-01.md:65（「你应该看到」第 3 条第 1 行）"
+        },
+        {
+          "criterion": "空库：只有 MySQL 自带 4 个系统库，没有 `dw`",
+          "command": "SHOW DATABASES;",
+          "expected_output": "information_schema\nmysql\nperformance_schema\nsys",
+          "evidence_source": "page-01.md:66-69（「你应该看到」第 3 条后四行；:72 说明无 `dw`）"
+        }
+      ]
+    },
+    {
+      "no": 3,
+      "id": "dw-tables",
+      "name": "库 `dw` + 5 张表",
+      "kind": "数据库对象",
+      "location": "容器内 `dw`：`fact_order` / `dim_region` / `dim_customer` / `dim_product` / `dim_date`",
+      "pages": [
+        "page-02"
+      ],
+      "depends_on": [
+        "mysql-container"
+      ],
+      "checkpoints": [
+        {
+          "criterion": "`dw` 里 5 张表都在，按字母序列出",
+          "command": "SHOW TABLES;",
+          "expected_output": "dim_customer\ndim_date\ndim_product\ndim_region\nfact_order",
+          "evidence_source": "page-02.md:54（「你应该看到」第 2 条 5 行表名）"
+        }
+      ]
+    },
+    {
+      "no": 4,
+      "id": "dw-data",
+      "name": "数据 115 行",
+      "kind": "数据行",
+      "location": "`dw.fact_order`（由 `fixtures/dw.sql` 灌入）",
+      "pages": [
+        "page-02"
+      ],
+      "depends_on": [
+        "dw-tables"
+      ],
+      "checkpoints": [
+        {
+          "criterion": "`fact_order` 总行数 = 115",
+          "command": "SELECT COUNT(*) FROM fact_order;",
+          "expected_output": "115",
+          "evidence_source": "page-02.md:59（「你应该看到」第 3 条第 1 段）"
+        },
+        {
+          "criterion": "华北 19 单（要 JOIN `dim_region` 才筛得出）",
+          "command": "SELECT COUNT(*) FROM fact_order f JOIN dim_region r ON f.region_id = r.region_id WHERE r.region_name = '华北';",
+          "expected_output": "19",
+          "evidence_source": "page-02.md:60（「你应该看到」第 3 条第 2 段；:72 行「华北 19 单」）"
+        }
+      ]
+    },
+    {
+      "no": 5,
+      "id": "service",
+      "name": "服务进程",
+      "kind": "进程（uvicorn）",
+      "location": "`127.0.0.1:8000`（uvicorn `lab.app:app`）",
+      "pages": [
+        "page-03"
+      ],
+      "depends_on": [
+        "env"
+      ],
+      "checkpoints": [
+        {
+          "criterion": "服务回 JSON：`/health` 通",
+          "command": "curl -s http://127.0.0.1:8000/health",
+          "expected_output": "{\"ok\":true}",
+          "evidence_source": "page-03.md:60（「你应该看到」终端 2）"
+        },
+        {
+          "criterion": "uvicorn 真的在 8000 值班（不退出）",
+          "command": "看终端 1 的启动日志",
+          "expected_output": "Uvicorn running on http://127.0.0.1:8000",
+          "evidence_source": "page-03.md:52（「你应该看到」终端 1 第 4 行；:63 复述）"
+        }
+      ]
+    },
+    {
+      "no": 6,
+      "id": "api-query",
+      "name": "端点 `POST /api/query`",
+      "kind": "HTTP 端点",
+      "location": "`http://127.0.0.1:8000/api/query`（第 7 页真执行同端点）",
+      "pages": [
+        "page-04"
+      ],
+      "depends_on": [
+        "service"
+      ],
+      "checkpoints": [
+        {
+          "criterion": "能收 JSON、回 JSON（`sql` / `rows` 还是空壳）",
+          "command": "curl -s -X POST http://127.0.0.1:8000/api/query -H 'Content-Type: application/json' -d '{\"question\":\"华北销售额\"}'",
+          "expected_output": "{\"question\":\"华北销售额\",\"keywords\":[],\"sql\":null,\"rows\":[]}",
+          "evidence_source": "page-04.md:62（「你应该看到」第 1 条）"
+        },
+        {
+          "criterion": "换一个问题，回的还是这一串（`question` 写死，两次一字不差）",
+          "command": "curl -s -X POST http://127.0.0.1:8000/api/query -H 'Content-Type: application/json' -d '{\"question\":\"华南订单量\"}'",
+          "expected_output": "{\"question\":\"华北销售额\",\"keywords\":[],\"sql\":null,\"rows\":[]}",
+          "evidence_source": "page-04.md:63,66（「你应该看到」第 2 条 + 两次一字不差）"
+        }
+      ]
+    },
+    {
+      "no": 7,
+      "id": "keywords-fn",
+      "name": "函数 `extract_keywords`",
+      "kind": "纯函数（纯字符串规则）",
+      "location": "文件 `lab/app.py`",
+      "pages": [
+        "page-05"
+      ],
+      "depends_on": [
+        "api-query"
+      ],
+      "checkpoints": [
+        {
+          "criterion": "短问题抽出「地区 + 指标」两个词",
+          "command": "curl -s -X POST http://127.0.0.1:8000/api/query -H 'Content-Type: application/json' -d '{\"question\":\"华北销售额\"}'",
+          "expected_output": "\"keywords\":[\"华北\",\"销售额\"]",
+          "evidence_source": "page-05.md:74（「你应该看到」第 1 条）"
+        },
+        {
+          "criterion": "长问题只留词表命中的词（`的` / `多少` 不进）",
+          "command": "curl -s -X POST http://127.0.0.1:8000/api/query -H 'Content-Type: application/json' -d '{\"question\":\"华东的销售额是多少\"}'",
+          "expected_output": "\"keywords\":[\"华东\",\"销售额\"]",
+          "evidence_source": "page-05.md:75（「你应该看到」第 2 条）"
+        }
+      ]
+    },
+    {
+      "no": 8,
+      "id": "sql-fn",
+      "name": "函数 `build_sql` + 契约 `CONTRACT`",
+      "kind": "函数 + 契约",
+      "location": "文件 `lab/app.py`",
+      "pages": [
+        "page-06"
+      ],
+      "depends_on": [
+        "keywords-fn"
+      ],
+      "checkpoints": [
+        {
+          "criterion": "照契约拼出 `SELECT`：指标 = `SUM(fact_order.order_amount)`，带 `JOIN`",
+          "command": "backend/.venv/bin/python -m lab.app",
+          "expected_output": "SELECT dim_region.region_name, SUM(fact_order.order_amount) AS sales\nFROM fact_order\nJOIN dim_region ON fact_order.region_id = dim_region.region_id",
+          "evidence_source": "page-06.md:56-58（「你应该看到」第 1–3 行）"
+        },
+        {
+          "criterion": "地区和 `GROUP BY` 来自关键词：等号右边是 `'华北'`",
+          "command": "backend/.venv/bin/python -m lab.app",
+          "expected_output": "WHERE dim_region.region_name = '华北'\nGROUP BY dim_region.region_name",
+          "evidence_source": "page-06.md:59-60（「你应该看到」第 4–5 行）"
+        }
+      ]
+    },
+    {
+      "no": 9,
+      "id": "exec-chain",
+      "name": "执行链路",
+      "kind": "运行时链路",
+      "location": "`POST /api/query` → `pymysql` → `MySQL:3307`",
+      "pages": [
+        "page-07"
+      ],
+      "depends_on": [
+        "sql-fn",
+        "dw-data"
+      ],
+      "checkpoints": [
+        {
+          "criterion": "`rows[0].sales` 是从 MySQL 算出来的数字（不带引号）",
+          "command": "curl -s -X POST http://127.0.0.1:8000/api/query -H 'Content-Type: application/json' -d '{\"question\":\"华北销售额\"}'",
+          "expected_output": "\"rows\":[{\"region_name\":\"华北\",\"sales\":41099.5}]",
+          "evidence_source": "page-07.md:69（「你应该看到」rows 段）"
+        },
+        {
+          "criterion": "响应里的 `sql` 就是第 6 页拼的那条（真交给数据库）",
+          "command": "同上（看返回 JSON 的 `sql` 字段）",
+          "expected_output": "\"sql\":\"SELECT dim_region.region_name, SUM(fact_order.order_amount) AS sales",
+          "evidence_source": "page-07.md:69（「你应该看到」sql 字段）"
+        }
+      ]
+    },
+    {
+      "no": 10,
+      "id": "stream-endpoint",
+      "name": "端点 `GET /api/stream`",
+      "kind": "HTTP 端点（SSE）",
+      "location": "`http://127.0.0.1:8000/api/stream`",
+      "pages": [
+        "page-08"
+      ],
+      "depends_on": [
+        "exec-chain",
+        "api-query"
+      ],
+      "checkpoints": [
+        {
+          "criterion": "12 条 `progress`（一步一条，逐条推送）",
+          "command": "curl -sN -G 'http://127.0.0.1:8000/api/stream' --data-urlencode 'q=华北销售额' | grep -c progress",
+          "expected_output": "12",
+          "evidence_source": "page-08.md:68（「你应该看到」共 12 条）+ :90（`grep -c` 参考 12）"
+        },
+        {
+          "criterion": "最后 1 条 `result` 里的 `sales` 还是 `41099.5`",
+          "command": "curl -sN -G 'http://127.0.0.1:8000/api/stream' --data-urlencode 'q=华北销售额' | grep result",
+          "expected_output": "data: {\"type\": \"result\", \"data\": {\"rows\": [{\"region_name\": \"华北\", \"sales\": 41099.5}]}}",
+          "evidence_source": "page-08.md:69（「你应该看到」最后一条 result）"
+        }
+      ]
+    },
+    {
+      "no": 11,
+      "id": "nginx-page",
+      "name": "容器 `lab-nginx` + 页面",
+      "kind": "容器 + 静态页",
+      "location": "`lab-nginx`，`127.0.0.1:8081 → 80`；页面 `lab/index.html`",
+      "pages": [
+        "page-09"
+      ],
+      "depends_on": [
+        "stream-endpoint",
+        "service"
+      ],
+      "checkpoints": [
+        {
+          "criterion": "浏览器入口活着：`http://127.0.0.1:8081` 打开就回 `200`",
+          "command": "curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8081/",
+          "expected_output": "200",
+          "evidence_source": "page-09.md:103（对账·403 排障：「就回 200」；:74 浏览器打开）"
+        },
+        {
+          "criterion": "页面点「问一句」出端到端结果",
+          "command": "浏览器打开 http://127.0.0.1:8081，点「问一句」",
+          "expected_output": "41099.5",
+          "evidence_source": "page-09.md:79（「你应该看到」；:84 图注）"
+        }
+      ]
+    },
+    {
+      "no": 12,
+      "id": "e2e-chain",
+      "name": "端到端链路",
+      "kind": "端到端链路",
+      "location": "浏览器 `:8081` → nginx → `:8000` → A4–A8 → MySQL `:3307`",
+      "pages": [
+        "page-09"
+      ],
+      "depends_on": [
+        "nginx-page",
+        "exec-chain"
+      ],
+      "checkpoints": [
+        {
+          "criterion": "拆掉入口：nginx 删了，主干直连 `:8000` 仍出 `41099.5`",
+          "command": "docker rm -f lab-nginx && curl -sN -G 'http://127.0.0.1:8000/api/stream' --data-urlencode 'q=华北销售额' | grep result",
+          "expected_output": "41099.5",
+          "evidence_source": "page-09.md:94-97（对账·拆一刀：删 nginx 后主干仍出 41099.5）"
+        },
+        {
+          "criterion": "入口真的没了：刷新 `:8081` 打不开",
+          "command": "浏览器刷新 http://127.0.0.1:8081",
+          "expected_output": "ERR_CONNECTION_REFUSED",
+          "evidence_source": "page-09.md:98（对账·刷新 8081 报 ERR_CONNECTION_REFUSED；:85 图注）"
+        }
+      ]
+    }
+  ],
+  "completeness_criteria": [
+    {
+      "mark": "■",
+      "text": "每行检验点全 ■",
+      "hint": "该零件建成；◧ 不算（做完 ≠ 通过），回页重跑判据"
+    },
+    {
+      "mark": "■",
+      "text": "12 行全 ■",
+      "hint": "系统完备（A0–A9 全部交付）"
+    },
+    {
+      "mark": "■",
+      "text": "端到端链路跑出 `41099.5`",
+      "hint": "浏览器 `:8081` → nginx → `:8000` → A4–A8 → MySQL `:3307` 真的通"
+    }
+  ],
+  "notes": [
+    "判据出处：第 0–9 页「你应该看到」的真跑输出；个别判据在「对账 / 重来一遍 / 图注」里写明同等值（如 `GET :8081/ → 200`、`ERR_CONNECTION_REFUSED`），脚本逐条溯源校验。",
+    "版本号、包数量、耗时随机器不同：看到同类的行就算对上（第 0/1 页已声明）。",
+    "库内 SQL 检验点（#2–#4）用第 1/2 页的 `docker exec lab-mysql mysql … -e \"<SQL>\"` 执行；账号口令按第 1 页输入，本图不印。"
+  ],
+  "rerun": "python3 manual/shots/render_v2_sample.py"
+}
