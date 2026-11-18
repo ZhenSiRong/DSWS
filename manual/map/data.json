@@ -1,0 +1,111 @@
+{
+  "schema": "manual-map/1",
+  "title": "全书地图 · 我们不是在发明系统，是在把一栋毛坯房盖到能开门接客",
+  "kicker": "全书地图 · 一页图看懂十页",
+  "one_liner": "先立骨架、再通水电、最后精装与安防——软件也是这么盖起来的。",
+  "image": "images/map-house-vs-pages.png",
+  "rerun": "python3 manual/shots/render_map.py",
+  "note": "页标题与页码由渲染脚本从 manual/page-0X.md 的 H1 提取并同步；本文件只存工地动作 / 比喻句 / 「这一页造什么」，页标题不在这里手写。",
+  "rows": [
+    {
+      "page": "page-00",
+      "site_action": "三通一平",
+      "metaphor": "开工前先三通一平：Docker 通、依赖通、端口通，场地干净",
+      "build": "装 Docker/uv/Node/curl + make install + make doctor"
+    },
+    {
+      "page": "page-01",
+      "site_action": "打地基",
+      "metaphor": "地基一浇，后面所有重量都压在它上面",
+      "build": "docker run 起一个空库，先不导入数据"
+    },
+    {
+      "page": "page-02",
+      "site_action": "隔墙 + 材料进场",
+      "metaphor": "先隔出房间，再把材料搬进去",
+      "build": "导入 dw.sql：5 张表 + 115 行"
+    },
+    {
+      "page": "page-03",
+      "site_action": "装锅炉（常驻）",
+      "metaphor": "锅炉一点着火就不熄——服务进程就是那台常驻锅炉",
+      "build": "最小 HTTP 服务 /health"
+    },
+    {
+      "page": "page-04",
+      "site_action": "装门铃/对讲",
+      "metaphor": "门口先装对讲机：外面喊话，屋里听得见",
+      "build": "POST /api/query 能收问题"
+    },
+    {
+      "page": "page-05",
+      "site_action": "装感应器（耳朵）",
+      "metaphor": "听见“华北销售额”，能分辨出“华北”和“销售额”",
+      "build": "extract_keywords"
+    },
+    {
+      "page": "page-06",
+      "site_action": "照图纸接线",
+      "metaphor": "接线不能凭手感，得照图纸；契约是图纸，SQL 是接出来的线",
+      "build": "契约 + build_sql（只 print）"
+    },
+    {
+      "page": "page-07",
+      "site_action": "接市政水管 + 装水表",
+      "metaphor": "接上市政管网才真的有水；水表只许你量，不许倒灌",
+      "build": "pymysql 真执行 → 41099.5"
+    },
+    {
+      "page": "page-08",
+      "site_action": "装水龙头，一滴一滴",
+      "metaphor": "水是一滴一滴出来的，不是一桶砸下来",
+      "build": "SSE /api/stream（12 progress）"
+    },
+    {
+      "page": "page-09",
+      "site_action": "装窗户 + 交钥匙",
+      "metaphor": "屋里再漂亮，没窗户外面也看不见；验收只做一件事：开门、问一句、数出来",
+      "build": "nginx + 页面，浏览器出数"
+    }
+  ],
+  "stages": [
+    {
+      "level": "L1",
+      "name": "毛坯",
+      "live": "能站人不能住",
+      "software": "软件里对应 L1：拓扑齐全、全是壳——跑得起来，但还不会答"
+    },
+    {
+      "level": "L2",
+      "name": "通水通电",
+      "live": "能住",
+      "software": "软件里对应 L2：数据进库、服务常驻——能回答，但还不好用"
+    },
+    {
+      "level": "L3",
+      "name": "智能家居",
+      "live": "好用",
+      "software": "软件里对应 L3：听懂话、照图纸生成——问得懂，查得对"
+    },
+    {
+      "level": "L4",
+      "name": "物业安防",
+      "live": "敢交付",
+      "software": "软件里对应 L4：只读、可观测、可回归——敢交给别人用"
+    }
+  ],
+  "honest": [
+    {
+      "lead": "房子盖错不能一键重盖，软件能",
+      "detail": "推回上一版、重跑一条命令，容器和库都从零重来。"
+    },
+    {
+      "lead": "房子不能两套管线并行，软件能",
+      "detail": "蓝绿 / 灰度让新旧两版同时在线，流量一点点切。"
+    },
+    {
+      "lead": "房子验收靠人眼，软件能自动化",
+      "detail": "黄金集、夹具回放、失败矩阵，跑一遍就知道哪条退化。"
+    }
+  ]
+}
