@@ -6,9 +6,9 @@
 
     python3 manual/shots/prep_render.py
 
-它模拟**学生刚克隆完**的状态：用 `git archive HEAD` 把已提交的文件导到临时目录
+它模拟**学生刚克隆完**的状态：用 `git ls-files` 把工作区里「未忽略的文件」导到临时目录
 （所以没有 `.env`、`backend/.venv`、`frontend/node_modules`），在那里逐字真跑
-`manual/page-00.md`「## 动手」里的 5 组命令，捕获「命令 + 真实输出」，复用
+`manual/page-00.md`「## 动手」里的 2 条命令，捕获「命令 + 真实输出」，复用
 `term_render.py` 的 HTML 模板与 chrome 无头截图，输出
 `manual/images/page-00-prep.png`（1100px 宽，深色终端版式）。
 
@@ -20,7 +20,7 @@
 from __future__ import annotations
 
 import re
-import shlex
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -37,11 +37,8 @@ FORBIDDEN = ["/home/", "/Users/", ".dsh", "zhensirong"]
 
 # 与 manual/page-00.md「## 动手」逐字一致（改页面时这里要同步）
 STEPS = [
-    "docker --version",
-    "uv --version\nnode -v\ncurl --version | head -1",
     "make install",
-    "backend/.venv/bin/python -V",
-    'for p in 3307 8000 8081; do (echo >/dev/tcp/127.0.0.1/$p) 2>/dev/null && echo "$p 被占用" || echo "$p 空闲"; done',
+    "make doctor",
 ]
 
 PKG_LIST_NOTE = "…（其余安装清单略）"
@@ -57,6 +54,30 @@ def run(cmd: str, cwd: Path, timeout: float = 600.0) -> list[str]:
     if proc.returncode != 0:
         raise RuntimeError(f"命令失败（exit={proc.returncode}）：{cmd}\n--- 输出 ---\n{out}")
     return out.splitlines()
+
+
+def export_tree(dest: Path) -> None:
+    """把「一次干净克隆会拿到的东西」导出到 dest。
+
+    为什么不用 `git archive HEAD`：HEAD 里没有刚改的 Makefile 目标与
+    scripts/doctor.sh，图就会拍到旧命令。这里按 `git ls-files` 从工作区拷，
+    既带上未提交的改动，又靠 `--exclude-standard` 自动跳过 `.env`、
+    `backend/.venv`、`frontend/node_modules`——第 0 页的前提是「刚克隆完」。
+    """
+    listing = subprocess.run(
+        ["git", "ls-files", "-z", "--cached", "--others", "--exclude-standard"],
+        cwd=tr.REPO, capture_output=True,
+    )
+    if listing.returncode != 0:
+        raise RuntimeError("git ls-files 失败：\n" + listing.stderr.decode("utf-8", "replace"))
+    names = [n for n in listing.stdout.decode("utf-8", "surrogateescape").split("\0") if n]
+    for name in names:
+        src = tr.REPO / name
+        if not src.is_file():
+            continue
+        dst = dest / name
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(src, dst)
 
 
 def curate_for_shot(lines: list[str]) -> list[str]:
@@ -80,12 +101,7 @@ def main() -> int:
         work = Path(tmp)
         clone = work / "clone"
         clone.mkdir()
-        archive = subprocess.run(
-            "git archive HEAD | tar -x -C " + shlex.quote(str(clone)),
-            shell=True, cwd=tr.REPO, capture_output=True, text=True, timeout=120,
-        )
-        if archive.returncode != 0:
-            raise RuntimeError("git archive 失败：\n" + (archive.stderr or ""))
+        export_tree(clone)
 
         for gone in (".env", "backend/.venv", "frontend/node_modules"):
             if (clone / gone).exists():
@@ -99,10 +115,10 @@ def main() -> int:
             raw_outputs[i] = lines
             records[i] = {"cmd": cmd, "lines": curate_for_shot(lines)}
 
-        ports = raw_outputs[len(STEPS) - 1]
-        if ports != ["3307 空闲", "8000 空闲", "8081 空闲"]:
+        doctor = raw_outputs[len(STEPS) - 1]
+        if doctor[-1] != "12/12 通过":
             raise RuntimeError(
-                "端口现在不空，图和页面会对不上；先停掉占用者再重跑：\n" + "\n".join(ports)
+                "make doctor 没全过，图和页面会对不上；先修到 12/12 再重跑：\n" + "\n".join(doctor)
             )
 
         panes = [

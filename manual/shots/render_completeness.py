@@ -120,7 +120,7 @@ MATRICES = [
         "cols": ["可运行环境", "可查询数据"],
         "rows": [
             ("环境（A0）", ["■", DASH],
-             "backend/.venv/bin/python -V → Python 3.14.8；3307/8000/8081 空闲"),
+             "make doctor → 12/12 通过（工具 6 项 + 依赖 3 项 + 端口 3 项全 ✓）"),
             ("数据（A1·A2）", [DASH, "■"],
              "SELECT VERSION()=8.0.46；SHOW TABLES → 5 行；COUNT(*)=115"),
         ],

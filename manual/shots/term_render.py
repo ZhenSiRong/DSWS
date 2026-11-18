@@ -6,6 +6,10 @@
 
     python3 manual/shots/term_render.py
 
+只重跑其中几页（例如只重生成第 3 页的图，不动其他页）：
+
+    python3 manual/shots/term_render.py page-03
+
 它做四件事：
 
 1. 在 /tmp 建一个**临时工作区**：软链 `backend/`（用仓库里现成的 venv），
@@ -14,7 +18,8 @@
    `/home/...` 这类绝对路径。
 2. 按**页序**在真 shell 里跑每页「动手」的命令：第 1 页创建 MySQL 容器（3307）
    并复用，第 2 页把 `fixtures/dw.sql` 导入该容器，第 3 页起每页用新代码重启
-   uvicorn（8000），curl 的输出逐条捕获（不手抄）。
+   uvicorn（8000），curl 的输出逐条捕获（不手抄）。第 3 页在 curl 之后再等
+   uvicorn 追加访问日志，把 curl 触发的那一行也放进「终端 1」。
 3. 把捕获到的「命令 + 输出」拼成深色终端版式的 HTML，用
    `google-chrome --headless --screenshot` 截 1100px 宽、1:1 像素的图，
    再用 ImageMagick `convert -trim` 把高度裁到内容。
@@ -22,7 +27,8 @@
    每次不同的数字按通配处理），并检查内容里没有用户名/主机名/绝对路径。
 
 输出：`manual/images/page-0X-*.png`。跑完自动 `docker rm -f lab-mysql`、
-杀掉 uvicorn、删掉临时工作区，不留残余。
+杀掉 uvicorn、删掉临时工作区，不留残余。只跑某几页时，只碰这几页要用的
+端口和容器（例如 `page-03` 只检查 8000，不碰 MySQL 和容器）。
 
 依赖（本机已装，不新装）：docker、google-chrome、ImageMagick convert/identify、
 仓库自带的 `backend/.venv`。端口：MySQL 3307、API 8000。
@@ -444,6 +450,7 @@ def stream(q: str):
 # steps 里每一项按顺序执行；kind：
 #   cmd     跑一条命令，捕获合并后的 stdout+stderr
 #   server  起 uvicorn（后台），捕获到 "Uvicorn running on" 为止的启动日志
+#   log     等 uvicorn 新落盘的访问日志（正则命中才返回），只取新增的行
 #   stop    给 uvicorn 发 SIGINT（相当于 Ctrl+C），不产生截图内容
 #   stream  curl -sN 流式请求：逐行捕获并记录每行到达时间
 #
@@ -452,6 +459,7 @@ def stream(q: str):
 #   all              全部输出行（默认）
 #   first_events:N   前 N 个 SSE 事件（含事件之间真实存在的空行）
 #   last_events:N    最后 N 个 SSE 事件
+#   tail:N           最后 N 行
 #
 # checks 把某几步的真跑输出与页面「## 你应该看到」的第 block 个代码块对账。
 
@@ -517,6 +525,10 @@ PAGES = [
         "steps": [
             {"kind": "server", "cmd": UVICORN, "timeout": 30},
             {"kind": "cmd", "cmd": CURL_HEALTH, "timeout": 30},
+            # curl 打通后，终端 1 会多一行访问日志；抓这一行放进「终端 1」图里，
+            # 否则图里只有 4 行启动日志，学生实际看到的比页面多（校对时被发现过）。
+            {"kind": "log", "from_step": 0, "timeout": 10,
+             "wait_for": r'^INFO:\s+127\.0\.0\.1:\d+ - "GET /health HTTP/1\.1" 200 OK$'},
             {"kind": "stop"},
         ],
         "checks": [{"block": 0, "steps": [0]}, {"block": 1, "steps": [1]}],
@@ -529,6 +541,7 @@ PAGES = [
                         "items": [
                             {"step": 0, "part": "cmd"},
                             {"step": 0, "part": "out"},
+                            {"step": 2, "part": "out"},
                         ],
                     },
                     {
@@ -793,6 +806,20 @@ class Shell:
         with self._lock:
             return list(self.server_lines)
 
+    def wait_log(self, pattern: str, base_lines: list[str],
+                 timeout: float) -> list[str]:
+        """等启动之后新落盘的日志行（正则必须命中），返回新增的那几行。"""
+        rx = re.compile(pattern)
+        t0 = time.monotonic()
+        while time.monotonic() - t0 < timeout:
+            new = self.log_snapshot()[len(base_lines):]
+            if any(rx.search(line) for line in new):
+                return new
+            time.sleep(0.05)
+        raise RuntimeError(
+            "等服务访问日志超时：\n" + "\n".join(self.log_snapshot())
+        )
+
     # -- 流式请求 ---------------------------------------------------------
     def stream(self, cmd: str, timeout: float) -> tuple[list[str], list[tuple[float, str]]]:
         proc = subprocess.Popen(
@@ -837,24 +864,30 @@ def select_lines(lines: list[str], pick: str | None) -> list[str]:
         return list(lines)
 
     m = re.fullmatch(r"(first|last)_events:(\d+)", pick)
-    if not m:
-        raise ValueError(f"不认识的 pick：{pick}")
-    where, n = m.group(1), int(m.group(2))
+    if m:
+        where, n = m.group(1), int(m.group(2))
 
-    # SSE 输出里「事件」= 非空行；事件之间真实存在一个空行，要一起保留。
-    idx = [i for i, line in enumerate(lines) if line.strip()]
-    if len(idx) < n:
-        raise RuntimeError(f"只捕获到 {len(idx)} 个事件，不够 {n} 个")
-    if where == "first":
-        start = 0
-        end = idx[n] if n < len(idx) else len(lines)
-    else:
-        start = idx[-n]
-        end = len(lines)
-    picked = lines[start:end]
-    while picked and not picked[-1].strip():
-        picked.pop()
-    return picked
+        # SSE 输出里「事件」= 非空行；事件之间真实存在一个空行，要一起保留。
+        idx = [i for i, line in enumerate(lines) if line.strip()]
+        if len(idx) < n:
+            raise RuntimeError(f"只捕获到 {len(idx)} 个事件，不够 {n} 个")
+        if where == "first":
+            start = 0
+            end = idx[n] if n < len(idx) else len(lines)
+        else:
+            start = idx[-n]
+            end = len(lines)
+        picked = lines[start:end]
+        while picked and not picked[-1].strip():
+            picked.pop()
+        return picked
+
+    m = re.fullmatch(r"tail:(\d+)", pick)
+    if m:
+        n = int(m.group(1))
+        return lines[-n:] if n > 0 else []
+
+    raise ValueError(f"不认识的 pick：{pick}")
 
 
 # ---------------------------------------------------------------- HTML 渲染
@@ -1085,6 +1118,15 @@ def run_checks(page: dict, records: dict[int, list[str]]) -> bool:
 # ---------------------------------------------------------------- 工作区准备
 
 
+def page_uses_container(page: dict) -> bool:
+    """第 1–2 页会创建/使用 lab-mysql 容器；其余页不碰容器。"""
+    return page["id"] in ("page-01", "page-02")
+
+
+def page_starts_server(page: dict) -> bool:
+    return any(step["kind"] == "server" for step in page["steps"])
+
+
 def prepare_workdir() -> Path:
     work = Path(tempfile.mkdtemp(prefix="manual-shots-"))
     os.symlink(REPO / "backend", work / "backend", target_is_directory=True)
@@ -1095,30 +1137,49 @@ def prepare_workdir() -> Path:
     return work
 
 
-def preflight() -> None:
+def preflight(selected: list[dict]) -> None:
     missing = [tool for tool in ("docker", "google-chrome", "convert", "identify")
                if shutil.which(tool) is None]
     if missing:
         sys.exit(f"缺少依赖：{', '.join(missing)}（本脚本不装新依赖）")
-    for port in (MYSQL_PORT, API_PORT):
+    # 只检查选中页真正要用的端口：只重第 3 页时不必要求 3307 空着。
+    ports = []
+    if any(page_uses_container(page) for page in selected):
+        ports.append(MYSQL_PORT)
+    if any(page_starts_server(page) for page in selected):
+        ports.append(API_PORT)
+    for port in ports:
         if port_open(port):
             sys.exit(
                 f"端口 {port} 已被占用；本脚本不杀别人的进程。"
                 f"先停掉占用它的服务再重跑。"
             )
-    if CONTAINER in docker_names():
+    if (any(page_uses_container(page) for page in selected)
+            and CONTAINER in docker_names()):
         say(f"发现上一轮残留的容器 {CONTAINER}，先删除（脚本会自己清理，正常不应出现）")
         subprocess.run(["docker", "rm", "-f", CONTAINER], capture_output=True, timeout=60)
     IMAGES.mkdir(parents=True, exist_ok=True)
 
 
-def cleanup(work: Path | None) -> None:
-    try:
-        subprocess.run(["docker", "rm", "-f", CONTAINER], capture_output=True, timeout=60)
-    except Exception:
-        pass
+def cleanup(work: Path | None, remove_container: bool) -> None:
+    if remove_container:
+        try:
+            subprocess.run(["docker", "rm", "-f", CONTAINER], capture_output=True, timeout=60)
+        except Exception:
+            pass
     if work is not None:
         shutil.rmtree(work, ignore_errors=True)
+
+
+def parse_pages(argv: list[str]) -> list[dict]:
+    """不带参数=全部页；带页 id=只跑这几页（只碰它们用到的端口和容器）。"""
+    if not argv:
+        return PAGES
+    known = {page["id"] for page in PAGES}
+    unknown = [arg for arg in argv if arg not in known]
+    if unknown:
+        sys.exit(f"不认识的页：{', '.join(unknown)}；可选：{', '.join(sorted(known))}")
+    return [page for page in PAGES if page["id"] in argv]
 
 
 # ---------------------------------------------------------------- 主流程
@@ -1126,13 +1187,19 @@ def cleanup(work: Path | None) -> None:
 
 def main() -> int:
     t_start = time.monotonic()
+    selected = parse_pages(sys.argv[1:])
+    remove_container = any(page_uses_container(page) for page in selected)
+    if len(selected) == len(PAGES):
+        scope = "全部页"
+    else:
+        scope = "只跑 " + "、".join(page["id"] for page in selected)
     say("=" * 78)
-    say("term_render.py —— 真跑第 1–8 页命令，生成终端运行截图")
+    say(f"term_render.py —— 真跑第 1–8 页命令，生成终端运行截图（{scope}）")
     say(f"仓库：{REPO}")
     say(f"输出：{IMAGES.relative_to(REPO)}/page-0X-*.png   （窗口宽 {WINDOW_W}px，字号 {FONT_PX}px）")
     say("=" * 78)
 
-    preflight()
+    preflight(selected)
     work: Path | None = None
     sh = None
     checks: dict[str, bool] = {}
@@ -1141,7 +1208,7 @@ def main() -> int:
         say(f"临时工作区：{work}（命令里的相对路径都在这里，图里不出现绝对路径）")
         sh = Shell(work)
 
-        for page in PAGES:
+        for page in selected:
             say("")
             say(f"── {page['id']} ──")
             if page["code"] is not None:
@@ -1168,6 +1235,11 @@ def main() -> int:
                     lines, timed = sh.stream(step["cmd"], step["timeout"])
                     records[i] = {"cmd": step["cmd"], "lines": lines, "timed": timed}
                     say(f"      → {len(lines)} 行（{time.monotonic() - t0:.1f}s）")
+                elif kind == "log":
+                    base = records[step["from_step"]]["lines"]
+                    lines = sh.wait_log(step["wait_for"], base, step["timeout"])
+                    records[i] = {"cmd": None, "lines": lines}
+                    say(f"      → 终端 1 新增访问日志 {len(lines)} 行（{time.monotonic() - t0:.1f}s）")
                 elif kind == "stop":
                     stop_lines = sh.stop_server()
                     say(f"    Ctrl+C 停服务（收尾日志 {len(stop_lines)} 行，不上图）")
@@ -1215,13 +1287,13 @@ def main() -> int:
         say("=" * 78)
         say("汇总")
         say("=" * 78)
-        for page in PAGES:
+        for page in selected:
             mark = "✅" if checks.get(page["id"], False) else "⚠️ "
             files = ", ".join(shot["file"] for shot in page["shots"])
             say(f"  {mark} {page['id']}：{files}")
         say("")
         say("截图（identify）：")
-        for page in PAGES:
+        for page in selected:
             for shot in page["shots"]:
                 path = IMAGES / shot["file"]
                 ident = subprocess.run(
@@ -1244,7 +1316,7 @@ def main() -> int:
     finally:
         if sh is not None:
             sh.shutdown()
-        cleanup(work)
+        cleanup(work, remove_container)
 
 
 if __name__ == "__main__":

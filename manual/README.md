@@ -38,7 +38,7 @@
 
 | 页 | 构建活动 | 完成判据 |
 |---|---|---|
-| [第 0 页 · 开课前准备](page-00.md) | A0 环境准备 | `backend/.venv/bin/python -V` 有输出、三端口空闲 |
+| [第 0 页 · 开课前准备](page-00.md) | A0 环境准备 | `make doctor` 12/12 通过（工具 6 + 依赖 3 + 端口 3） |
 | [第 1 页](page-01.md) | A1 创建 MySQL 容器 | 容器 running、`SELECT VERSION()` 有输出 |
 | [第 2 页](page-02.md) | A2 导入 dw.sql | `SHOW TABLES` 5 行、`COUNT(*)` = 115 |
 | [第 3 页](page-03.md) | A3 最小 HTTP 服务 | `curl /health` → `{"ok":true}` |

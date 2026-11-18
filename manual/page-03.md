@@ -52,13 +52,15 @@ INFO:     Application startup complete.
 INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
 ```
 
+服务起来后，终端 1 还会接着打印**访问日志**：终端 2 每 `curl` 一次，它就多一行，格式 `INFO:     127.0.0.1:<端口> - "GET /health HTTP/1.1" 200 OK`。这是终端 2 的请求打进来的，正常，说明请求真的到了服务；`<端口>` 是这次连接的临时端口，每次都不一样。
+
 终端 2：
 
 ```
 {"ok":true}
 ```
 
-`Waiting for application startup.` 这行在有些版本里出现、有些版本里不出现，出现也不影响结果；方括号里的 `55698` 是进程号，每次都不一样。只需确认最后一行以 `Uvicorn running on http://127.0.0.1:8000` 开头，并且终端 2 出 `{"ok":true}`。收工就在终端 1 按 Ctrl+C。
+`Waiting for application startup.` 这行在有些版本里出现、有些版本里不出现，出现也不影响结果；方括号里的 `55698` 是进程号，每次都不一样。只需确认启动日志里有一行以 `Uvicorn running on http://127.0.0.1:8000` 开头，并且终端 2 出 `{"ok":true}`。收工就在终端 1 按 Ctrl+C。
 
 
 ![第 3 页 · 服务启动与 /health 的真实输出](images/page-03-health.png)
@@ -68,6 +70,7 @@ INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
 - 你猜终端会退回吗？不会。到 `Uvicorn running on ...` 这行就不动了——它在**值班**等请求，直到你按 Ctrl+C。这就是“服务”和“跑完就退的脚本”的区别。
 - 你猜 curl 会看到什么？`{"ok":true}` 是服务端返回的 **JSON**，不是网页。`ok` 这个字段名、`/health` 这个路径都是你在代码里自己起的，没有标准答案；只要代码里的路径和 curl 里的路径一致，它就能通。
 - 如果 curl 报 `Connection refused`：服务没起来（= 没**启动**，口语常说“起服务”），或者你敲的端口不是 `8000`。如果启动命令报 `No module named lab.app`：你没站在仓库根目录，或者文件建成了 `lab/app.py.py`。
+- 终端 1 里出现你没请求过的路径、而且回 404，例如 `INFO:     127.0.0.1:40196 - "GET /v1/models HTTP/1.1" 404 Not Found`：这是本机别的程序在探测 `8000` 端口（把它当成了 AI 服务），不是你的代码错，不影响 `/health`，忽略即可。嫌吵就换端口：启动命令加 `--port 8010`，`curl` 的地址也改成 `8010`，但后面第 4–9 页里写 `8000` 的地方要一起改。
 
 > **你现在拥有**：一个在 8000 端口值班、能回 JSON 的 HTTP 服务；它是浏览器和数据库之间唯一会说话的东西。
 
