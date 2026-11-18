@@ -1,0 +1,345 @@
+{
+  "schema": "maturity-compare/1",
+  "title": "同一棵树：骨架版 vs 成熟版",
+  "thesis": "同一棵树：骨架版每个节点都是壳，成熟版每个节点都长成真机制",
+  "kicker": "12 件交付物 · 左右同构 · 骨架版 L1 → 成熟版 L4",
+  "panels": {
+    "left": {
+      "label": "骨架版",
+      "level": "L1",
+      "hint": "现在这 10 页造出来的东西",
+      "style": "dashed",
+      "palette": "cool-gray"
+    },
+    "right": {
+      "label": "成熟版",
+      "level": "L4",
+      "hint": "本项目仓库里的真实工程能力",
+      "style": "solid",
+      "palette": "ink+orange"
+    }
+  },
+  "source_refs": {
+    "skeleton": "manual/page-00.md … page-09.md：每页「动手」里的实现 + 「你应该看到」的真跑输出",
+    "mature": "contracts/ · backend/app/ · frontend/src/ · compose.yaml / scripts/docker-smoke.sh；README 的 S0–S8 阶段表",
+    "shared": "manual/completeness/v2/data.json：本文件 12 件的编号 / 名字 / 位置 / 页码逐字沿用（渲染脚本会逐项比对）"
+  },
+  "counts": {
+    "artifacts": 12,
+    "deltas": 12,
+    "tags": 27,
+    "tag_kinds": 14
+  },
+  "legend": [
+    {
+      "mark": "dashed",
+      "label": "虚线框",
+      "desc": "壳 / 占位：现在这 10 页造出来的东西"
+    },
+    {
+      "mark": "solid",
+      "label": "实线框",
+      "desc": "真实现：仓库里跑得起来的机制"
+    },
+    {
+      "mark": "tag",
+      "label": "橙色标签",
+      "desc": "成熟版相对骨架版新增的能力"
+    },
+    {
+      "mark": "link",
+      "label": "细虚线 + 同一编号",
+      "desc": "同一件东西在左右面板的同一行位：拓扑没变，壳变真"
+    }
+  ],
+  "tag_vocabulary": [
+    "契约库",
+    "检索",
+    "LLM",
+    "校验",
+    "纠错",
+    "只读",
+    "策略拦截",
+    "取消",
+    "超时",
+    "错误码",
+    "可观测",
+    "回归",
+    "编排",
+    "健康检查"
+  ],
+  "tag_glossary": {
+    "契约库": "contracts/ 唯一事实源，前后端从契约派生",
+    "检索": "ES 列/值/指标 + Qdrant 向量召回",
+    "LLM": "生成器可切真 LLM；LangGraph 12 节点编排",
+    "校验": "validate_sql：sqlglot AST 静态校验",
+    "纠错": "correct_sql 闭环：最多 1 次，改完重校验",
+    "只读": "dw_reader 账号仅 SELECT",
+    "策略拦截": "sql.policy 执行前六道闸，拒危险构造",
+    "取消": "POST /api/cancel → CANCELLED / cancelled 三态之一",
+    "超时": "max_execution_time + 客户端读超时兜底",
+    "错误码": "16 个错误码 / 3 类失败（failure / empty / cancelled）",
+    "可观测": "健康接口 + 步骤事件 + 端到端 smoke",
+    "回归": "20 题黄金集 + 14 条 SSE 夹具回放 + 失败矩阵",
+    "编排": "compose 五服务 + 一次性 init + 健康检查门控",
+    "健康检查": "healthcheck / /api/health，未就绪不放流量"
+  },
+  "artifacts": [
+    {
+      "no": 1,
+      "id": "env",
+      "name": "开发机环境（工具 + venv + 端口）",
+      "kind": "工具 + venv + 端口",
+      "location": "本机 · `docker` / `uv` / `node` / `make` / `curl` + `backend/.venv`；3307 / 8000 / 8081 空着",
+      "pages": [
+        "page-00"
+      ],
+      "skeleton": "本机装 `docker`/`uv`/`node`/`make`/`curl`，`make install` 建 `backend/.venv`；`make doctor` 一次判工具/依赖/3307·8000·8081 端口（12/12）。",
+      "mature": "`compose.yaml` 编排五服务 + 一次性 `init`，`.env` 由脚本生成不入库；`make docker-smoke` 8 步验收。",
+      "delta": "手工装好的一台开发机 → 一条命令重建的声明式栈",
+      "tags": [
+        "编排",
+        "健康检查"
+      ],
+      "evidence": {
+        "skeleton": "page-00.md:17-55（make install / make doctor 的 12/12）",
+        "mature": "README S0–S8 · compose.yaml · scripts/docker-smoke.sh"
+      }
+    },
+    {
+      "no": 2,
+      "id": "mysql-container",
+      "name": "容器 `lab-mysql`",
+      "kind": "容器",
+      "location": "`lab-mysql` · `127.0.0.1:3307 → 3306`（只开给本机）",
+      "pages": [
+        "page-01"
+      ],
+      "skeleton": "`docker run -d --name lab-mysql -p 127.0.0.1:3307:3306` 起空库；就绪靠 `until docker logs … grep 'port: 3306'` 轮询。",
+      "mature": "compose 的 `mysql:8.0` 服务（首次启动自动执行 `fixtures/dw.sql`）+ `healthcheck`；`init` 等三存储健康后开通只读账号、校验 S2 元知识。",
+      "delta": "手敲 docker run + 日志轮询 → 声明式服务 + 健康检查门控",
+      "tags": [
+        "编排",
+        "健康检查"
+      ],
+      "evidence": {
+        "skeleton": "page-01.md:21-50（docker run、until docker logs）",
+        "mature": "README Docker 一键部署 · compose.yaml · docker_init.py"
+      }
+    },
+    {
+      "no": 3,
+      "id": "dw-tables",
+      "name": "库 `dw` + 5 张表",
+      "kind": "数据库对象",
+      "location": "容器内 `dw`：`fact_order` / `dim_region` / `dim_customer` / `dim_product` / `dim_date`",
+      "pages": [
+        "page-02"
+      ],
+      "skeleton": "`fixtures/dw.sql` 里 5 段手写 `CREATE TABLE`（`fact_order` + 4 张维表），类型/外键/口径只在 SQL 文本里。",
+      "mature": "`contracts/schema.contract.yaml` 把 5 表 / 24 列 / 6 指标的 grain、measures、value_domain 写成契约；`--check` 对 DDL 与真实值校验。",
+      "delta": "手写 DDL → 可被机器校验的 Schema 契约",
+      "tags": [
+        "契约库",
+        "校验"
+      ],
+      "evidence": {
+        "skeleton": "page-02.md:20-23 · fixtures/dw.sql（5 段 CREATE TABLE）",
+        "mature": "contracts/schema.contract.yaml · backend/app/schema_contract.py"
+      }
+    },
+    {
+      "no": 4,
+      "id": "dw-data",
+      "name": "数据 115 行",
+      "kind": "数据行",
+      "location": "`dw.fact_order`（由 `fixtures/dw.sql` 灌入）",
+      "pages": [
+        "page-02"
+      ],
+      "skeleton": "`fixtures/dw.sql` 一次灌 115 行种子（`dim_region` 6 行等），验收靠 `COUNT(*)` 手数 115 / 华北 19。",
+      "mature": "契约声明 `expected_fact_rows: 115`、`total_amount: 279159.5`、日期只到 2025-Q1；S3 20 题黄金集把期望表/列/指标/取值钉成回归基线。",
+      "delta": "人工数行 → 契约钉死行数/总额/日期域 + 黄金集钉死召回",
+      "tags": [
+        "契约库",
+        "校验",
+        "回归"
+      ],
+      "evidence": {
+        "skeleton": "page-02.md:35-64（COUNT(*)=115、华北 19）· fixtures/dw.sql",
+        "mature": "contracts/schema.contract.yaml dataset · backend/tests/recall/golden.yaml"
+      }
+    },
+    {
+      "no": 5,
+      "id": "service",
+      "name": "服务进程",
+      "kind": "进程（uvicorn）",
+      "location": "`127.0.0.1:8000`（uvicorn `lab.app:app`）",
+      "pages": [
+        "page-03"
+      ],
+      "skeleton": "`python -m uvicorn lab.app:app --port 8000` 前台值班，`/health` 只回 `{\"ok\":true}`；无超时、无优雅退出、无多副本。",
+      "mature": "FastAPI 应用工厂 + `/api/health` 回 `{status, stage}`；backend 容器非 root（uid 10001）运行，失败统一映射到 16 个错误码。",
+      "delta": "终端里一个进程 → 健康接口 + 非 root 容器 + 错误码通道",
+      "tags": [
+        "健康检查",
+        "错误码"
+      ],
+      "evidence": {
+        "skeleton": "page-03.md:20-63（lab/app.py + uvicorn 启动 + /health）",
+        "mature": "backend/app/main.py · contracts/errors.yaml · docker/Dockerfile"
+      }
+    },
+    {
+      "no": 6,
+      "id": "api-query",
+      "name": "端点 `POST /api/query`",
+      "kind": "HTTP 端点",
+      "location": "`http://127.0.0.1:8000/api/query`（第 7 页真执行同端点）",
+      "pages": [
+        "page-04"
+      ],
+      "skeleton": "`POST /api/query` 回写死的 JSON：`question` 永远是「华北销售额」，`keywords`/`sql`/`rows` 是空壳，换问题一字不变。",
+      "mature": "`POST /api/query` 走 LangGraph 12 节点流水线；SSE 按 `contracts/sse.schema.json` 发 `progress`/`result`/`error`，另有 `POST /api/cancel`。",
+      "delta": "写死回包 → 契约定义的三种事件，流必以 result 或 error 收尾",
+      "tags": [
+        "契约库",
+        "错误码"
+      ],
+      "evidence": {
+        "skeleton": "page-04.md:21-68（硬编码 JSON，两次一字不差）",
+        "mature": "contracts/sse.schema.json · backend/app/agent/graph.py · main.py"
+      }
+    },
+    {
+      "no": 7,
+      "id": "keywords-fn",
+      "name": "函数 `extract_keywords`",
+      "kind": "纯函数（纯字符串规则）",
+      "location": "文件 `lab/app.py`",
+      "pages": [
+        "page-05"
+      ],
+      "skeleton": "`extract_keywords` 用 `for word in REGIONS + METRICS` 扫 5 地区 + 2 指标共 7 个写死词，子串命中，无同义词。",
+      "mature": "S3 检索：ES 列/值/指标 + Qdrant 向量召回；线上主链路用契约离线裁剪的 8 阶段上下文。",
+      "delta": "7 个写死词子串匹配 → 契约/别名 + 三存储召回",
+      "tags": [
+        "检索"
+      ],
+      "evidence": {
+        "skeleton": "page-05.md:22-58（REGIONS/METRICS + extract_keywords）",
+        "mature": "backend/app/recall/ · README S2/S3 · contracts/schema.contract.yaml"
+      }
+    },
+    {
+      "no": 8,
+      "id": "sql-fn",
+      "name": "函数 `build_sql` + 契约 `CONTRACT`",
+      "kind": "函数 + 契约",
+      "location": "文件 `lab/app.py`",
+      "pages": [
+        "page-06"
+      ],
+      "skeleton": "`build_sql` 照 `CONTRACT` 字典用 f-string 拼一条固定 `JOIN` 的 `SELECT`，地区/指标写死在 Python 里，只 print 不执行。",
+      "mature": "7 槽位提示词 + 确定性生成器/LLM 出 SQL；`validate_sql` 过 AST 静态校验，`correct_sql` 最多纠错 1 次后重校验。",
+      "delta": "f-string 拼一条固定 JOIN → 契约生成 + AST 校验 + 纠错重验",
+      "tags": [
+        "LLM",
+        "校验",
+        "纠错"
+      ],
+      "evidence": {
+        "skeleton": "page-06.md:20-44（CONTRACT + build_sql + __main__）",
+        "mature": "contracts/prompts/ · backend/app/generate/ · backend/app/agent/correct.py"
+      }
+    },
+    {
+      "no": 9,
+      "id": "exec-chain",
+      "name": "执行链路",
+      "kind": "运行时链路",
+      "location": "`POST /api/query` → `pymysql` → `MySQL:3307`",
+      "pages": [
+        "page-07"
+      ],
+      "skeleton": "`pymysql.connect` 用管理员账号直连 `127.0.0.1:3307`，`cur.execute` 不限行、无超时、无取消，`DictCursor` 直接回 rows。",
+      "mature": "`run_sql` 只用 `dw_reader` 的 SELECT 权限；连库前过六道安全检查（AST + 词法禁词），自动补 `LIMIT 1000`，`max_execution_time` 5s + 读超时兜底。",
+      "delta": "管理员账号裸连 → 只读账号 + 策略拦截 + LIMIT/超时",
+      "tags": [
+        "只读",
+        "策略拦截",
+        "超时"
+      ],
+      "evidence": {
+        "skeleton": "page-07.md:22-39（pymysql.connect / run_sql）",
+        "mature": "contracts/sql.policy.yaml · backend/app/security/"
+      }
+    },
+    {
+      "no": 10,
+      "id": "stream-endpoint",
+      "name": "端点 `GET /api/stream`",
+      "kind": "HTTP 端点（SSE）",
+      "location": "`http://127.0.0.1:8000/api/stream`",
+      "pages": [
+        "page-08"
+      ],
+      "skeleton": "`GET /api/stream` 把 12 个假步骤名逐条 yield，每步 `time.sleep(0.15)` 假装干活；最后才真跑 SQL 发 result，不能取消。",
+      "mature": "SSE 按 `contracts/steps.yaml` 的 12 节点推送；`correct_sql` 条件步骤显式发 skipped；`POST /api/cancel` 把流收尾为 `cancelled`。",
+      "delta": "假步骤 sleep 0.15 → 真节点事件 + 条件跳过 + 取消收敛",
+      "tags": [
+        "取消",
+        "契约库"
+      ],
+      "evidence": {
+        "skeleton": "page-08.md:23-52（STEPS + time.sleep(0.15) + stream）",
+        "mature": "contracts/steps.yaml · backend/app/agent/cancel.py · main.py"
+      }
+    },
+    {
+      "no": 11,
+      "id": "nginx-page",
+      "name": "容器 `lab-nginx` + 页面",
+      "kind": "容器 + 静态页",
+      "location": "`lab-nginx`，`127.0.0.1:8081 → 80`；页面 `lab/index.html`",
+      "pages": [
+        "page-09"
+      ],
+      "skeleton": "`lab-nginx` 挂静态页、反代 `/api/` 到宿主机 8000；页面 9 行 JS 纯 `EventSource`，无取消按钮、无错误卡。",
+      "mature": "前端从契约生成事件类型与步骤目录（`/api/steps`、`/api/errors`）；`StepRail`/`ErrorCard` 按 failure/empty/cancelled 三态渲染。",
+      "delta": "裸 EventSource 贴数字 → 契约生成类型 + 三态错误卡",
+      "tags": [
+        "契约库",
+        "错误码"
+      ],
+      "evidence": {
+        "skeleton": "page-09.md:28-64（default.conf + index.html 9 行 JS）",
+        "mature": "frontend/src/generated/ · frontend/src/components/ · contracts/errors.yaml"
+      }
+    },
+    {
+      "no": 12,
+      "id": "e2e-chain",
+      "name": "端到端链路",
+      "kind": "端到端链路",
+      "location": "浏览器 `:8081` → nginx → `:8000` → A4–A8 → MySQL `:3307`",
+      "pages": [
+        "page-09"
+      ],
+      "skeleton": "全链路靠人手动拆：删掉 nginx 看主干仍出 `41099.5`、刷新 :8081 报 `ERR_CONNECTION_REFUSED`；没有可重跑的验收脚本。",
+      "mature": "`make docker-smoke` 8 步端到端：健康、12 节点、真查询、nginx 缓冲、只读账号、S2 对账，外加 init 幂等。",
+      "delta": "手工拆一层验主干 → 8 步 smoke + 14 条 SSE 夹具 + 失败矩阵",
+      "tags": [
+        "可观测",
+        "回归",
+        "编排"
+      ],
+      "evidence": {
+        "skeleton": "page-09.md:92-105（删 nginx 拆一刀）· page-08.md:63-70",
+        "mature": "scripts/docker-smoke.sh · fixtures/sse/ · fixtures/failures/"
+      }
+    }
+  ],
+  "rerun": "python3 manual/shots/render_maturity_compare.py"
+}

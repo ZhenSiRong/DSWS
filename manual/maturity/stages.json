@@ -1,0 +1,198 @@
+{
+  "schema": "maturity-house/1",
+  "title": "同一栋房子：从毛坯到精装 + 安防",
+  "thesis": "同一栋房子：毛坯能站人，通水通电才能住，装上智能才好用，有了安防才敢交付",
+  "kicker": "12 件交付物 · 同一户型 · 同一视角 · 4 级成熟度",
+  "house": {
+    "view": "正面剖视（同一栋、同一户型、同一视角，四个阶段并排，只增不删）",
+    "source": "manual/maturity/data.json 的 12 件（编号 / 名字 / location / skeleton / mature 逐字沿用）",
+    "mapping": {
+      "1": "环境 = 地基 / 场地",
+      "2": "容器 = 墙体",
+      "3": "库表 = 地下室储物架",
+      "4": "数据 = 水箱",
+      "5": "进程 = 锅炉 / 热水器",
+      "6": "端点 = 路由器 / 对讲",
+      "7": "抽词 = 天花板感应器（听懂话）",
+      "8": "生成 SQL = 阁楼电控箱 / 大脑",
+      "9": "执行 = 市政水管 + 只读水表",
+      "10": "流式 = 水龙头逐滴出水",
+      "11": "页面 = 玻璃窗 / 室内屏",
+      "12": "链路 = 入户管线总成"
+    }
+  },
+  "legend": [
+    {
+      "mark": "hollow",
+      "label": "空心徽章",
+      "desc": "壳 / 占位：房子上只有一个钉位，机制还没长出来"
+    },
+    {
+      "mark": "solid",
+      "label": "实心徽章",
+      "desc": "真机制：这件已经在房子里真跑起来（深棕 = 此前阶段长出）"
+    },
+    {
+      "mark": "new",
+      "label": "橙色 + 光晕",
+      "desc": "本阶段新长出来的那几件：灯一盏盏亮起来的时刻"
+    },
+    {
+      "mark": "pin",
+      "label": "①–⑫ 圆牌",
+      "desc": "钉在房子对应部位上，编号与 data.json 的 12 件一一对应"
+    }
+  ],
+  "stages": [
+    {
+      "id": "rough",
+      "level": "L1",
+      "name": "毛坯房",
+      "subtitle": "能站人：拓扑齐全，12 件全是壳",
+      "metaphor_line": "水泥墙、露钢筋、空窗框、泥地都在，房子能站人；12 件交付物全钉在对应部位上，但全是空心壳，屋里没水没电没灯。",
+      "artifacts_grown": [],
+      "mechanisms": []
+    },
+    {
+      "id": "utilities",
+      "level": "L2",
+      "name": "通水通电",
+      "subtitle": "能住：管线进墙、水箱蓄水、锅炉烧热",
+      "metaphor_line": "墙里走管线、配电箱合闸、水箱蓄满、锅炉点着火——房子第一次能住人；①②③④⑤ 五件一起变实心。",
+      "artifacts_grown": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "mechanisms": [
+        {
+          "no": 1,
+          "id": "env",
+          "name": "开发机环境（工具 + venv + 端口）",
+          "label": "6 service 编排（5 长驻 + 1 一次性 init）+ 健康门控 + 8 步 smoke",
+          "mechanism": "`compose.yaml` 编排五服务 + 一次性 `init`，`.env` 由脚本生成不入库；`make docker-smoke` 8 步验收。"
+        },
+        {
+          "no": 2,
+          "id": "mysql-container",
+          "name": "容器 `lab-mysql`",
+          "label": "compose 声明式服务 + healthcheck 就绪门控",
+          "mechanism": "compose 的 `mysql:8.0` 服务（首次启动自动执行 `fixtures/dw.sql`）+ `healthcheck`；`init` 等三存储健康后开通只读账号、校验 S2 元知识。"
+        },
+        {
+          "no": 3,
+          "id": "dw-tables",
+          "name": "库 `dw` + 5 张表",
+          "label": "契约库 = 唯一事实源：5 表 / 24 列 / 6 指标",
+          "mechanism": "`contracts/schema.contract.yaml` 把 5 表 / 24 列 / 6 指标的 grain、measures、value_domain 写成契约；`--check` 对 DDL 与真实值校验。"
+        },
+        {
+          "no": 4,
+          "id": "dw-data",
+          "name": "数据 115 行",
+          "label": "契约钉死行数 / 总额 / 日期域 + 黄金集回归",
+          "mechanism": "契约声明 `expected_fact_rows: 115`、`total_amount: 279159.5`、日期只到 2025-Q1；S3 20 题黄金集把期望表/列/指标/取值钉成回归基线。"
+        },
+        {
+          "no": 5,
+          "id": "service",
+          "name": "服务进程",
+          "label": "健康接口 + 非 root 容器 + 16 个错误码",
+          "mechanism": "FastAPI 应用工厂 + `/api/health` 回 `{status, stage}`；backend 容器非 root（uid 10001）运行，失败统一映射到 16 个错误码。"
+        }
+      ]
+    },
+    {
+      "id": "smart",
+      "level": "L3",
+      "name": "智能家居",
+      "subtitle": "好用：灯亮、网通、听懂话",
+      "metaphor_line": "灯一盏盏亮起来，路由器通了，天花板的感应器会「听懂话」，阁楼电控箱成了大脑；⑥⑦⑧ 三件变实心。",
+      "artifacts_grown": [
+        6,
+        7,
+        8
+      ],
+      "mechanisms": [
+        {
+          "no": 6,
+          "id": "api-query",
+          "name": "端点 `POST /api/query`",
+          "label": "契约定义 SSE 三事件 + 取消端点",
+          "mechanism": "`POST /api/query` 走 LangGraph 12 节点流水线；SSE 按 `contracts/sse.schema.json` 发 `progress`/`result`/`error`，另有 `POST /api/cancel`。"
+        },
+        {
+          "no": 7,
+          "id": "keywords-fn",
+          "name": "函数 `extract_keywords`",
+          "label": "契约驱动 + 可选检索（ES / Qdrant）",
+          "mechanism": "S3 检索：ES 列/值/指标 + Qdrant 向量召回；线上主链路用契约离线裁剪的 8 阶段上下文。"
+        },
+        {
+          "no": 8,
+          "id": "sql-fn",
+          "name": "函数 `build_sql` + 契约 `CONTRACT`",
+          "label": "确定性生成（可切真 LLM）+ AST 校验 + 纠错重验",
+          "mechanism": "7 槽位提示词 + 确定性生成器/LLM 出 SQL；`validate_sql` 过 AST 静态校验，`correct_sql` 最多纠错 1 次后重校验。"
+        }
+      ]
+    },
+    {
+      "id": "security",
+      "level": "L4",
+      "name": "物业安防",
+      "subtitle": "敢交付：只读、拍下、盯得住",
+      "metaphor_line": "市政水只读计量、摄像头对着门口、门禁刷卡、监控屏亮着、灭火器就位；⑨⑩⑪⑫ 最后四件变实心，12/12 到齐，房子才敢交付。",
+      "artifacts_grown": [
+        9,
+        10,
+        11,
+        12
+      ],
+      "mechanisms": [
+        {
+          "no": 9,
+          "id": "exec-chain",
+          "name": "执行链路",
+          "label": "只读账号 + 六道策略拦截 + LIMIT / 超时",
+          "mechanism": "`run_sql` 只用 `dw_reader` 的 SELECT 权限；连库前过六道安全检查（AST + 词法禁词），自动补 `LIMIT 1000`，`max_execution_time` 5s + 读超时兜底。"
+        },
+        {
+          "no": 10,
+          "id": "stream-endpoint",
+          "name": "端点 `GET /api/stream`",
+          "label": "真节点事件 + 条件跳过 + 取消收敛",
+          "mechanism": "SSE 按 `contracts/steps.yaml` 的 12 节点推送；`correct_sql` 条件步骤显式发 skipped；`POST /api/cancel` 把流收尾为 `cancelled`。"
+        },
+        {
+          "no": 11,
+          "id": "nginx-page",
+          "name": "容器 `lab-nginx` + 页面",
+          "label": "契约生成类型 + 取消 / 错误卡 / 结果表 / 步骤条",
+          "mechanism": "前端从契约生成事件类型与步骤目录（`/api/steps`、`/api/errors`）；`StepRail`/`ErrorCard` 按 failure/empty/cancelled 三态渲染。"
+        },
+        {
+          "no": 12,
+          "id": "e2e-chain",
+          "name": "端到端链路",
+          "label": "8 步端到端 smoke + 14 条 SSE 夹具 + 失败矩阵",
+          "mechanism": "`make docker-smoke` 8 步端到端：健康、12 节点、真查询、nginx 缓冲、只读账号、S2 对账，外加 init 幂等。"
+        }
+      ]
+    }
+  ],
+  "counts": {
+    "stages": 4,
+    "artifacts": 12,
+    "grown": 12,
+    "mechanisms": 12
+  },
+  "sources": {
+    "artifacts": "manual/maturity/data.json",
+    "maturity": "README S0–S8 阶段表 · contracts/ · backend/app/ · frontend/src/ · scripts/docker-smoke.sh",
+    "reuse": "12 件的编号 / 名字 / location / skeleton / mature 逐字沿用 data.json，不重写；本文件只补「哪一阶段长出」和机制短标签。"
+  },
+  "rerun": "python3 manual/shots/render_maturity_house.py"
+}
