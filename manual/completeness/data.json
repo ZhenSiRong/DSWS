@@ -85,7 +85,9 @@
       "流式推送"
     ],
     "L0": [
-      "可运行环境",
+      "工具",
+      "依赖",
+      "端口",
       "可查询数据"
     ]
   },
@@ -203,7 +205,7 @@
             "问答编排与 HTTP": "na",
             "数据存储与查询": "na"
           },
-          "evidence": "GET :8081/ → 200；浏览器经 :8081 出 41099.5",
+          "evidence": "浏览器打开 :8081 → 页面出 41099.5；删 nginx → ERR_CONNECTION_REFUSED",
           "page": "page-09.md",
           "pages": [
             "page-09.md"
@@ -265,7 +267,7 @@
             "问答编排与 HTTP": "na",
             "数据存储与查询": "built"
           },
-          "evidence": "SELECT VERSION()=8.0.46；COUNT(*)=115；华北 SUM=41099.5",
+          "evidence": "SELECT VERSION()=8.0.46；COUNT(*)=115；华北 19 单",
           "page": "page-02.md",
           "pages": [
             "page-01.md",
@@ -471,11 +473,15 @@
           "slot_ref": null,
           "status": "built",
           "capabilities": {
-            "可运行环境": true,
+            "工具": true,
+            "依赖": true,
+            "端口": true,
             "可查询数据": false
           },
           "cell_state": {
-            "可运行环境": "built",
+            "工具": "built",
+            "依赖": "built",
+            "端口": "built",
             "可查询数据": "na"
           },
           "evidence": "make doctor → 12/12 通过（工具 6 项 + 依赖 3 项 + 端口 3 项全 ✓）",
@@ -499,11 +505,15 @@
           "slot_ref": null,
           "status": "built",
           "capabilities": {
-            "可运行环境": false,
+            "工具": false,
+            "依赖": false,
+            "端口": false,
             "可查询数据": true
           },
           "cell_state": {
-            "可运行环境": "na",
+            "工具": "na",
+            "依赖": "na",
+            "端口": "na",
             "可查询数据": "built"
           },
           "evidence": "SELECT VERSION()=8.0.46；SHOW TABLES → 5 行；COUNT(*)=115",
@@ -753,18 +763,18 @@
   "answer_selfcheck": {
     "slots": "10/10",
     "rows": "12/12",
-    "columns": "13/13",
-    "covered_cells": 13,
-    "editable_cells": 13,
-    "total_cells": 44,
-    "cells": "13/44",
+    "columns": "15/15",
+    "covered_cells": 15,
+    "editable_cells": 15,
+    "total_cells": 48,
+    "cells": "15/48",
     "edges": "13/13",
     "end_to_end": "41099.5"
   },
   "meta": {
     "node_count": 12,
     "slot_count": 10,
-    "capability_column_count": 13,
+    "capability_column_count": 15,
     "edge_count": 13,
     "row_plan": {
       "L1": 2,
@@ -776,16 +786,16 @@
       "L1": 3,
       "L2": 3,
       "L3": 5,
-      "L0": 2
+      "L0": 4
     },
-    "cell_count": 44,
-    "provided_cell_count": 13,
-    "na_cell_count": 31,
+    "cell_count": 48,
+    "provided_cell_count": 15,
+    "na_cell_count": 33,
     "cells_plan": {
       "L1": 6,
       "L2": 9,
       "L3": 25,
-      "L0": 4
+      "L0": 8
     }
   },
   "notes": [

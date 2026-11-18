@@ -9,14 +9,14 @@
 它做五件事（依据 D38 / D39 / D40 / D41，D41 = 状态粒度下沉到「能力格」）：
 
 1. **读单源**：`manual/completeness/data.json`（12 个节点 = 四层「责任 × 证据」矩阵的
-   12 行；10 个槽位 A0–A9；13 项能力列；13 条链路边；D38 三条完备性判据；
+   12 行；10 个槽位 A0–A9；15 项能力列；13 条链路边；D38 三条完备性判据；
    D41 能力格真源 = 每节点每能力的 `cell_state`）。
 2. **反向核对**（防止两版漂移）：
    - 解析 `manual/completeness/poster.md` 的四张矩阵，逐行核对「节点名 / 能力列名 /
      `cell_state` 的 ■ 与 — / 证据文本」，要求与 data.json 一字一致；
    - 解析 `manual/flow.mmd`，核对槽位 A0–A9 的活动名与工期；
    - 核对槽位↔节点归属（每个槽位有且只有一个所属节点；节点拥有的槽位合计 10 个）、
-     答案态自检（10/10 槽位、12/12 行、13/13 列、13/13 边、13■ + 31— 能力格）。
+     答案态自检（10/10 槽位、12/12 行、15/15 列、13/13 边、15■ + 33— 能力格）。
 3. **内联**：把 data.json 原样内联进 HTML 模板的 `<script type="application/json">`，
    产物是**单文件、零依赖、离线可双击打开**的 explorer.html（不引 CDN / 外部字体 / 图片）。
 4. **自检产物**：HTML 里必须出现 `Noto Sans CJK SC`；不许出现 URL / `<link` / `src=` /
@@ -298,19 +298,19 @@ def validate_data(data: dict) -> None:
             answer_cells[state] += 1
     selfcheck = data["answer_selfcheck"]
     meta = data["meta"]
-    if rows != 12 or cols != 13 or cells_total != 44 or provided != 13:
-        fail("答案态自检应为 12 行 / 13 列 / 44 格 / 13 个提供格，实际 %d/%d/%d/%d"
+    if rows != 12 or cols != 15 or cells_total != 48 or provided != 15:
+        fail("答案态自检应为 12 行 / 15 列 / 48 格 / 15 个提供格，实际 %d/%d/%d/%d"
              % (rows, cols, cells_total, provided))
-    if answer_cells["built"] != 13 or answer_cells["na"] != 31:
-        fail("答案态能力格应为 13 个 ■ + 31 个 —，实际 %d + %d"
+    if answer_cells["built"] != 15 or answer_cells["na"] != 33:
+        fail("答案态能力格应为 15 个 ■ + 33 个 —，实际 %d + %d"
              % (answer_cells["built"], answer_cells["na"]))
-    if selfcheck.get("rows") != "12/12" or selfcheck.get("columns") != "13/13":
+    if selfcheck.get("rows") != "12/12" or selfcheck.get("columns") != "15/15":
         fail("answer_selfcheck 的 rows/columns 口径不对")
-    if selfcheck.get("cells") != "13/44" or selfcheck.get("total_cells") != 44:
-        fail("answer_selfcheck 的能力格口径应为 13/44")
-    if meta.get("cell_count") != 44 or meta.get("provided_cell_count") != 13 \
-            or meta.get("na_cell_count") != 31:
-        fail("meta 的能力格统计应为 44 / 13 / 31")
+    if selfcheck.get("cells") != "15/48" or selfcheck.get("total_cells") != 48:
+        fail("answer_selfcheck 的能力格口径应为 15/48")
+    if meta.get("cell_count") != 48 or meta.get("provided_cell_count") != 15 \
+            or meta.get("na_cell_count") != 33:
+        fail("meta 的能力格统计应为 48 / 15 / 33")
     # 答案态节点状态必须能由能力格派生为 ■（全 ■ 派生）
     for node in nodes.values():
         for col in data["capability_columns"][node["layer"]]:
@@ -324,9 +324,9 @@ def validate_data(data: dict) -> None:
         if not any(needle in ev for ev in all_evidence):
             fail("证据里缺少点名判据 %r" % needle)
 
-    ok("data.json 结构：12 节点 / 10 槽位 / 13 能力列 / 44 能力格 / 13 条边 / 3 条判据")
+    ok("data.json 结构：12 节点 / 10 槽位 / 15 能力列 / 48 能力格 / 13 条边 / 3 条判据")
     ok("D41 编辑模型：能力格为唯一真源 · 节点/槽位/结构图全部派生 · 卡片顶部只读徽章")
-    ok("答案态自检：A0–A9 10/10 · 行 12/12 · 列 13/13 · 能力格 13■ + 31—")
+    ok("答案态自检：A0–A9 10/10 · 行 12/12 · 列 15/15 · 能力格 15■ + 33—")
 
 
 def data_slot_owner(data: dict, slot_id: str) -> str:
@@ -412,7 +412,7 @@ def check_poster(data: dict) -> None:
                 if node["cell_state"][col] != want:
                     fail("poster.md %s「%s」%s 的 ■/— 与 data.json 的 cell_state 不一致"
                          % (code, label, col))
-    ok("poster.md 反向核对：4 张矩阵 · 12 行 · 13 列 · 证据逐条一字一致")
+    ok("poster.md 反向核对：4 张矩阵 · 12 行 · 15 列 · 证据逐条一字一致")
 
 
 # ------------------------------------------------------------------ flow.mmd 反向核对
@@ -847,6 +847,12 @@ a.pg:hover{background:var(--ink);color:#fff;}
     return 'unverified';
   }
 
+
+  // D41：可编辑格总数（答案态 = 全部提供格 = ■ 格数）；提示文案不再手写死数字
+  function providedCellTotal() {
+    return NODES.reduce(function (sum, node) { return sum + editableCols(node).length; }, 0);
+  }
+
   function deriveLine(node) {
     var counts = cellCounts(node);
     return '由本卡 ' + counts.editable + ' 项能力派生：' +
@@ -1193,7 +1199,7 @@ a.pg:hover{background:var(--ink);color:#fff;}
     });
     var hint = document.getElementById('mode-hint');
     if (mode === 'answer') {
-      hint.textContent = '答案态（参考答案）：13 个能力格全 ■ → 12 个节点全 ■、只读；' +
+      hint.textContent = '答案态（参考答案）：' + providedCellTotal() + ' 个能力格全 ■ → 12 个节点全 ■、只读；' +
         '点左侧块开卡对照证据，卡片顶部徽章是派生结果。';
     } else {
       hint.textContent = '空白态（编辑态）：点卡片里的能力格，按 ▢ → ◧ → ■ → ▢ 循环；' +
@@ -1231,7 +1237,7 @@ a.pg:hover{background:var(--ink);color:#fff;}
     if (mode === 'answer') {
       showToast(hadEdits
         ? '已切回答案态：手动改的能力格已丢弃，恢复全 ■。'
-        : '已切回答案态：13 个能力格全 ■、只读预览。');
+        : '已切回答案态：' + providedCellTotal() + ' 个能力格全 ■、只读预览。');
     }
   }
 
@@ -1490,13 +1496,13 @@ DOM_CHECK_JS = r"""
     check(!!ref, '缺少 __EXPLORER__ 验收句柄');
     if (!ref) { return; }
 
-    // ===== 1) 答案态：13 个能力格全 ■、只读、派生徽章只读、计数全绿 =====
+    // ===== 1) 答案态：15 个能力格全 ■、只读、派生徽章只读、计数全绿 =====
     check(ref.state.mode === 'answer', '初始应为答案态');
     var s = stats();
     check(s.blockCount === 12, '结构图应有 12 个块，实际 ' + s.blockCount);
     check(s.diagramButtons === 0, '结构图里不应有可点按钮（只读），实际 ' + s.diagramButtons);
     check(s.diagramTri === 0 && s.cardTri === 0, 'D41 要求移除卡片顶部节点控件，[data-tri] 应为 0');
-    expectCounts('答案态计数', '12/12', '13/13', '13/13', '10/10');
+    expectCounts('答案态计数', '12/12', '15/15', '13/13', '10/10');
     check(s.stamp === true, '答案态应显示建成证明印章');
     allBlockGlyphs('built', '答案态');
 
@@ -1506,8 +1512,8 @@ DOM_CHECK_JS = r"""
     s = stats();
     check(s.cards === 12, '点 12 个块应开 12 张卡，实际 ' + s.cards);
     check(s.badges === 12, '每张卡应有一个只读派生徽章，实际 ' + s.badges);
-    check(s.cellButtons === 13, '答案态应有 13 个能力格按钮（可编辑格），实际 ' + s.cellButtons);
-    check(s.dashCells === 31, '— 格应有 31 个，实际 ' + s.dashCells);
+    check(s.cellButtons === 15, '答案态应有 15 个能力格按钮（可编辑格），实际 ' + s.cellButtons);
+    check(s.dashCells === 33, '— 格应有 33 个，实际 ' + s.dashCells);
     qa('.card [data-derived-card]').forEach(function (badge) {
       check(badge.tagName !== 'BUTTON', '卡片顶部派生徽章不应是按钮（只读），实际 ' + badge.tagName);
       check(badge.getAttribute('data-status') === 'built' && badge.textContent.trim() === '■',
@@ -1538,7 +1544,7 @@ DOM_CHECK_JS = r"""
     q('.mode-btn[data-mode="blank"]').click();
     s = stats();
     check(ref.state.mode === 'blank', '应切到空白态');
-    expectCounts('空白态初始计数', '0/12', '0/13', '0/13', '0/10');
+    expectCounts('空白态初始计数', '0/12', '0/15', '0/13', '0/10');
     check(s.stamp === false, '空白态印章应隐藏');
     allBlockGlyphs('unbuilt', '空白态');
     check(q('#reset').disabled === false, '空白态「重置」应可用');
@@ -1553,7 +1559,7 @@ DOM_CHECK_JS = r"""
     check(l1 && l1.cells.join(' ') === '接收提问=unbuilt:▢ 返回答案=unbuilt:▢',
       '空白态 l1-interact 能力格应全 ▢：' + (l1 ? l1.cells.join(' / ') : ''));
     var enabled = qa('.card .cell[data-cell]').filter(function (btn) { return !btn.disabled; });
-    check(enabled.length === 13, '空白态 13 个可编辑格都可点，实际 ' + enabled.length);
+    check(enabled.length === 15, '空白态 15 个可编辑格都可点，实际 ' + enabled.length);
     var tip = cellState('l1-interact', '接收提问').title;
     check(tip.indexOf('点一下切下一态') >= 0, '空白态能力格 tooltip 应写「点一下切下一态」，实际 ' + tip);
     check(tip.indexOf('▢') >= 0 && tip.indexOf('◧') >= 0, '空白态能力格 tooltip 应写当前态与下一态：' + tip);
@@ -1577,7 +1583,7 @@ DOM_CHECK_JS = r"""
     if (badgeEl) { badgeEl.click(); }
     check(cellsSnapshot() === beforeNeg, '负向对照：点卡片顶部派生徽章不应改变格状态');
     check(ref.statusOfNode('l1-interact') === 'unbuilt', '负向对照后 l1-interact 仍是 ▢');
-    expectCounts('负向对照后计数', '0/12', '0/13', '0/13', '0/10');
+    expectCounts('负向对照后计数', '0/12', '0/15', '0/13', '0/10');
 
     // 结构图只读：点块只开卡，不改格状态
     ref.closeAll();
@@ -1601,21 +1607,21 @@ DOM_CHECK_JS = r"""
     l1 = cardBadge('l1-interact');
     check(l1 && l1.title.indexOf('由本卡 2 项能力派生：0■ 1◧ 1▢') === 0,
       '派生 tooltip 应为 0■ 1◧ 1▢，实际 ' + (l1 ? l1.title : ''));
-    expectCounts('一格 ◧ 时', '0/12', '0/13', '0/13', '0/10');
+    expectCounts('一格 ◧ 时', '0/12', '0/15', '0/13', '0/10');
 
     clickCell('l1-interact', '接收提问');          // ◧ → ■
     check(cellState('l1-interact', '接收提问').status === 'built', '第 1 格再点应 ■');
     check(ref.statusOfNode('l1-interact') === 'unverified', '只有一格 ■、另一格 ▢ 时节点仍 ◧');
     blk = blockState('l1-interact');
     check(blk && blk.status === 'unverified', '结构图徽章仍 ◧（节点未全 ■）');
-    expectCounts('一格 ■ 一格 ▢ 时', '0/12', '1/13', '0/13', '0/10');
+    expectCounts('一格 ■ 一格 ▢ 时', '0/12', '1/15', '0/13', '0/10');
     l1 = cardBadge('l1-interact');
     check(l1 && l1.title.indexOf('由本卡 2 项能力派生：1■ 0◧ 1▢') === 0,
       '派生 tooltip 应为 1■ 0◧ 1▢，实际 ' + (l1 ? l1.title : ''));
 
     clickCell('l1-interact', '返回答案');          // ▢ → ◧
     check(ref.statusOfNode('l1-interact') === 'unverified', '两格 ■◧ 混合时节点仍 ◧');
-    expectCounts('两格 ■◧ 时', '0/12', '1/13', '0/13', '0/10');
+    expectCounts('两格 ■◧ 时', '0/12', '1/15', '0/13', '0/10');
 
     clickCell('l1-interact', '返回答案');          // ◧ → ■ → 节点 ■
     check(cellState('l1-interact', '返回答案').status === 'built', '第 2 格再点应 ■');
@@ -1625,7 +1631,7 @@ DOM_CHECK_JS = r"""
     l1 = cardBadge('l1-interact');
     check(l1 && l1.title.indexOf('由本卡 2 项能力派生：2■ 0◧ 0▢') === 0,
       '派生 tooltip 应为 2■ 0◧ 0▢，实际 ' + (l1 ? l1.title : ''));
-    expectCounts('两格都 ■ 后', '1/12', '2/13', '0/13', '0/10');
+    expectCounts('两格都 ■ 后', '1/12', '2/15', '0/13', '0/10');
     check(ref.statusOfSlot('A0') === 'unbuilt', 'l1-interact 无独立槽位，槽位计数不受它影响');
     if (ref.storageOk) {
       var savedEdit = ref.savedRaw();
@@ -1639,7 +1645,7 @@ DOM_CHECK_JS = r"""
     check(ref.statusOfNode('data') === 'unverified', 'data 一格 ◧ 时节点应 ◧');
     check(ref.statusOfSlot('A1') === 'unverified' && ref.statusOfSlot('A2') === 'unverified',
       'data 节点 ◧ 时槽位 A1·A2 应同步 ◧');
-    expectCounts('data ◧ 时', '1/12', '2/13', '0/13', '0/10');
+    expectCounts('data ◧ 时', '1/12', '2/15', '0/13', '0/10');
 
     clickCell('data', '可查询数据');               // ◧ → ■
     check(ref.statusOfNode('data') === 'built', 'data 唯一能力格 ■ 后节点应 ■');
@@ -1653,20 +1659,20 @@ DOM_CHECK_JS = r"""
     check(blk && blk.status === 'built', '结构图 data 块应 ■');
     check(blk && blk.chips.indexOf('A1=built') >= 0 && blk.chips.indexOf('A2=built') >= 0,
       '结构图 data 块槽位 chip 应同步 A1·A2 ■');
-    expectCounts('data ■ 后', '2/12', '3/13', '0/13', '2/10');
+    expectCounts('data ■ 后', '2/12', '3/15', '0/13', '2/10');
     check(ref.compute().edges.filter(function (e) { return e.edge.id === 'e13'; })[0].pass === false,
       'data→mysql 边在 mysql 未 ■ 时不应通（负向对照）');
 
     clickBlock('mysql');
     clickCell('mysql', '数据存储与查询');          // ▢ → ◧
     check(ref.statusOfNode('mysql') === 'unverified', 'mysql 一格 ◧ 时节点应 ◧');
-    expectCounts('mysql ◧ 时', '2/12', '3/13', '0/13', '2/10');
+    expectCounts('mysql ◧ 时', '2/12', '3/15', '0/13', '2/10');
     check(ref.compute().edges.filter(function (e) { return e.edge.id === 'e13'; })[0].pass === false,
       '边要两端节点都 ■：mysql ◧ 时 data→mysql 仍不通');
 
     clickCell('mysql', '数据存储与查询');          // ◧ → ■
     check(ref.statusOfNode('mysql') === 'built', 'mysql 唯一能力格 ■ 后节点应 ■');
-    expectCounts('mysql ■ 后', '3/12', '4/13', '1/13', '2/10');
+    expectCounts('mysql ■ 后', '3/12', '4/15', '1/13', '2/10');
     var passes = ref.compute().edges.filter(function (e) { return e.pass; })
       .map(function (e) { return e.edge.id; });
     check(passes.indexOf('e13') >= 0, '两端节点都 ■ 后 data→mysql 边应通，实际通的边 ' + passes.join(','));
@@ -1676,7 +1682,7 @@ DOM_CHECK_JS = r"""
 
     // ===== 6) 重置：全部回 ▢ =====
     q('#reset').click();
-    expectCounts('重置后计数', '0/12', '0/13', '0/13', '0/10');
+    expectCounts('重置后计数', '0/12', '0/15', '0/13', '0/10');
     allBlockGlyphs('unbuilt', '重置后');
     check(ref.statusOfCell('data', '可查询数据') === 'unbuilt', '重置后 data 能力格应 ▢');
     check(ref.statusOfCell('l1-interact', '接收提问') === 'unbuilt', '重置后 l1-interact 能力格应 ▢');
@@ -1686,7 +1692,7 @@ DOM_CHECK_JS = r"""
     clickCell('data', '可查询数据');
     check(ref.statusOfNode('data') === 'unverified', '重置后应能再次编辑');
     q('.mode-btn[data-mode="answer"]').click();
-    expectCounts('切回答案态计数', '12/12', '13/13', '13/13', '10/10');
+    expectCounts('切回答案态计数', '12/12', '15/15', '13/13', '10/10');
     allBlockGlyphs('built', '切回答案态');
     check(ref.state.mode === 'answer', '应切回答案态');
     check(sStatsDisabled() === 0, '答案态应没有可点的能力格');
