@@ -256,10 +256,6 @@ GROUP BY dim_region.region_name"""
     return sql
 
 
-if __name__ == "__main__":
-    print(build_sql(extract_keywords("华北销售额")))
-
-
 @app.get("/health")
 def health():
     return {"ok": True}
@@ -274,6 +270,10 @@ def query(q: Query):
         "sql": None,
         "rows": [],
     }
+
+
+if __name__ == "__main__":
+    print(build_sql(extract_keywords("华北销售额")))
 '''
 
 APP_PAGE_07 = '''\
@@ -346,6 +346,10 @@ def query(q: Query):
     sql = build_sql(keywords)
     return {"question": q.question, "keywords": keywords,
             "sql": sql, "rows": run_sql(sql)}
+
+
+if __name__ == "__main__":
+    print(build_sql(extract_keywords("华北销售额")))
 '''
 
 APP_PAGE_08 = '''\
@@ -444,6 +448,10 @@ def stream(q: str):
         yield sse({"type": "result", "data": {"rows": rows}})
 
     return StreamingResponse(gen(), media_type="text/event-stream")
+
+
+if __name__ == "__main__":
+    print(build_sql(extract_keywords("华北销售额")))
 '''
 
 # ---------------------------------------------------------------- 页面规格

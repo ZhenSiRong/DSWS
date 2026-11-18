@@ -13,7 +13,7 @@
 
 ## 动手
 
-要改的文件是 `lab/app.py`。在 `extract_keywords` 函数下面、`@app.get("/health")` 上面，插入这 24 行：
+要改的文件是 `lab/app.py`。下面这段共 24 行，**分两步放**：`CONTRACT` 和 `build_sql` 插在文件中间，最后 3 行 `__main__` 入口追加到文件最末尾——**别整段一起插**：
 
 ```python
 CONTRACT = {
@@ -41,6 +41,12 @@ GROUP BY dim_region.region_name"""
 if __name__ == "__main__":
     print(build_sql(extract_keywords("华北销售额")))
 ```
+
+**第 1 步：把前 21 行插中间。** 从 `CONTRACT = {` 到 `build_sql` 的 `return sql` 这 21 行，插到 `extract_keywords` 函数下面、`@app.get("/health")` 上面。
+
+**第 2 步：把最后 3 行追加末尾。** 剩下的 3 行（一个空行 + `if __name__ == "__main__":` + 它下面缩进的 `print(...)`）追加到 `lab/app.py` 的最末尾，也就是 `@app.post("/api/query")` 函数之后，让它成为全文件的最后一个块。
+
+这 3 行是程序的入口，故意放最后：`uvicorn` 导入模块时不执行，只有 `python -m lab.app` 才执行。
 
 然后在仓库根目录跑（**不用起服务**，终端 1 那个服务开着也不影响）：
 

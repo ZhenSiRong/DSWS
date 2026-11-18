@@ -26,7 +26,7 @@ import time
 from fastapi.responses import StreamingResponse
 ```
 
-2. 把下面这段接在文件最后（`@app.post("/api/query")` 那个函数之后）：
+2. 把下面这段接在 `@app.post("/api/query")` 那个函数之后、`if __name__ == "__main__":` 那 3 行**之前**——`__main__` 块永远是文件最后一块：
 
 ```python
 STEPS = ["extract_keywords", "recall_column", "recall_value", "recall_metric",
