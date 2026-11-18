@@ -13,7 +13,8 @@
 
 ## 动手
 
-要改的文件是 `lab/app.py`。下面这段共 24 行，**分两步放**：`CONTRACT` 和 `build_sql` 插在文件中间，最后 3 行 `__main__` 入口追加到文件最末尾——**别整段一起插**：
+要改的文件是 `lab/app.py`。改完先按 **Ctrl+S 保存**再跑——本页不用重启终端 1 的服务，但 `python -m lab.app` 每次现读文件，不保存跑的还是第 5 页的旧代码（症状见「对账」）。
+下面这段共 24 行，**分两步放**：`CONTRACT` 和 `build_sql` 插在文件中间，剩下的 4 行（两个空行 + `__main__` 入口）追加到文件最末尾——**别整段一起插**：
 
 ```python
 CONTRACT = {
@@ -42,11 +43,11 @@ if __name__ == "__main__":
     print(build_sql(extract_keywords("华北销售额")))
 ```
 
-**第 1 步：把前 21 行插中间。** 从 `CONTRACT = {` 到 `build_sql` 的 `return sql` 这 21 行，插到 `extract_keywords` 函数下面、`@app.get("/health")` 上面。
+**第 1 步：把前 20 行插中间。** 从 `CONTRACT = {` 到 `build_sql` 的 `return sql`，共 20 行（中间的空行也算），插到 `extract_keywords` 函数下面、`@app.get("/health")` 上面。
 
-**第 2 步：把最后 3 行追加末尾。** 剩下的 3 行（一个空行 + `if __name__ == "__main__":` + 它下面缩进的 `print(...)`）追加到 `lab/app.py` 的最末尾，也就是 `@app.post("/api/query")` 函数之后，让它成为全文件的最后一个块。
+**第 2 步：把剩下的 4 行追加末尾。** 就是 `return sql` 后面那两个空行，加上 `if __name__ == "__main__":` 和它下面缩进的 `print(...)`，共 4 行；追加到 `lab/app.py` 的最末尾，也就是 `@app.post("/api/query")` 函数之后，让它成为全文件的最后一个块。
 
-这 3 行是程序的入口，故意放最后：`uvicorn` 导入模块时不执行，只有 `python -m lab.app` 才执行。
+`if` 和 `print` 这 2 行是程序的入口，故意放最后：`uvicorn` 导入模块时不执行，只有 `python -m lab.app` 才执行。
 
 然后在仓库根目录跑（**不用起服务**，终端 1 那个服务开着也不影响）：
 
@@ -75,6 +76,7 @@ GROUP BY dim_region.region_name
 - `WHERE` 用 `dim_region.region_name`，不是 `province`：`province` 里存的是“北京市”，而“华北”是大区名，在 `region_name` 列。用错列，查出来会是空的。等号右边 `'华北'` 就是 `build_sql` 里 `region` 变量的值，来自第 5 页抽出的关键词。
 - SQL 是**照契约拼**的，不是让 AI 直接写的：表名、列名、指标公式都能在 `CONTRACT` 里逐字对上，错了你能查出来。`print` 出来说明拼接成功；这条 SQL 到第 7 页才交给数据库执行。
 - 服务没起也正常：`print` 在 `if __name__ == "__main__":` 里，只有命令行直接运行这个文件时才执行；uvicorn 导入 `lab.app` 时不会执行它。
+- 输出 0 字节 = 没保存：`python -m lab.app` 跑完退出码 0、屏幕上一个字都没有，多半是 `lab/app.py` 还没存盘——跑的是第 5 页那份没有 `__main__` 块的旧文件（`echo $?` 也是 0，看不出错）。按 Ctrl+S 保存再跑。
 
 > **你现在拥有**：一个照着契约把关键词拼成带 `JOIN` 的 `SELECT` 的 `build_sql`；它是第 7 页交给 MySQL 执行的那条命令，拼得对不对，在这一页就能逐字核对。
 

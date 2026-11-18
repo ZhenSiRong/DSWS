@@ -1,19 +1,21 @@
 # 第 9 页 · 给浏览器一个入口：nginx 反代 + 一个页面
 
-> 前置：第 0 页备好环境；本页接第 8 页留下的 lab/app.py 与 8000 端口的服务（启动时要加 `--host 0.0.0.0`）。
+> 前置：第 0 页备好环境；本页接第 8 页留下的 lab/app.py 与终端 1 那个服务（端口用你实际的，默认 8000；启动时要加 `--host 0.0.0.0`）。
 
 ## 这一页构建什么
 
-三样：一个 8 行的 nginx 配置（把 `/api/` 转给 8000）、一个 17 行的页面（输入框 + 结果区，用浏览器自带的 `EventSource` 接第 8 页的流）、一条 `docker run` 把 nginx 跑起来。
+三样：一个 8 行的 nginx 配置（把 `/api/` 转给第 8 页那个服务）、一个 17 行的页面（输入框 + 结果区，用浏览器自带的 `EventSource` 接第 8 页的流）、一条 `docker run` 把 nginx 跑起来。
 这一页给系统加一个浏览器入口，让浏览器能接上第 8 页那条流。
 
 ## 猜一猜
 
 动手前写下答案：
 浏览器页面里的那 12 条 progress，会像 `curl -N` 那样一条条刷过去，还是等全部算完、页面直接跳到最终结果？
-然后删掉 nginx 容器：浏览器打 `8081` 会怎样？终端里直连 `8000` 的 `curl` 又会怎样？
+然后删掉 nginx 容器：浏览器打 nginx 的宿主机端口（默认 `8081`）会怎样？终端里直连服务端口（默认 `8000`）的 `curl` 又会怎样？
 
 ## 动手
+
+**先对端口**：本页所有 8000 / 8081 都按你实际用的端口写，共四处：uvicorn 的 `--port`、`default.conf` 里 `proxy_pass` 的端口、`docker run -p` 的宿主机端口、浏览器地址。默认 8000 / 8081。
 
 1. 先让“容器里的 nginx”够得着你的服务。终端 1 按 Ctrl+C 停掉，把启动命令加一个参数再起：
 
@@ -21,7 +23,7 @@
 backend/.venv/bin/python -m uvicorn lab.app:app --host 0.0.0.0 --port 8000
 ```
 
-第 3 页那条命令默认只监听 `127.0.0.1`（只有你本机的进程连得上）；nginx 跑在容器里，从 Docker 网卡进来，所以要改成 `0.0.0.0`（意思是所有网卡）。看到 `Uvicorn running on http://0.0.0.0:8000` 就对了。
+第 3 页那条命令默认只监听 `127.0.0.1`（只有你本机的进程连得上）；nginx 跑在容器里，从 Docker 网卡进来，所以要改成 `0.0.0.0`（意思是所有网卡）。看到 `Uvicorn running on http://0.0.0.0:8000`（8000 换成你的端口）就对了。
 
 2. 在仓库根目录新建两个文件。`lab/default.conf`：
 
@@ -35,6 +37,8 @@ server {
     }
 }
 ```
+
+`proxy_pass` 里的 8000 填第 1 步 uvicorn 实际用的端口（默认 8000）；这里写错，浏览器会看到 502。
 
 `lab/index.html`：
 
@@ -69,9 +73,10 @@ docker run -d --name lab-nginx -p 127.0.0.1:8081:80 --add-host host.docker.inter
   "$(grep '^NGINX_IMAGE=' .env.example | cut -d= -f2)"
 ```
 
-逐项看：`-p 127.0.0.1:8081:80` 把宿主机的 8081 接到容器的 80，并且只开给本机（和第 1、3 页一致）；`--add-host host.docker.internal:host-gateway` 在容器里给宿主机起一个名字（**容器里的 `127.0.0.1` 是容器自己，不是你的电脑**）；两个 `-v` 把配置和页面挂进容器；最后一行不手写 `nginx:alpine`，而是像第 1 页那样从 `.env.example` 的 `NGINX_IMAGE` 读——仓库已经配了国内镜像源，直连 Docker Hub 在国内会断，第 9 页不该例外。命令回来打印一串容器 ID，就是起来了（和第 1 页起 MySQL 时一样）。
+逐项看：`-p 127.0.0.1:8081:80` 把宿主机的 8081 接到容器的 80，宿主机那侧的 8081 换成你实际用的（默认 8081；浏览器地址跟着它），并且只开给本机（和第 1、3 页一致）；`--add-host host.docker.internal:host-gateway` 在容器里给宿主机起一个名字（**容器里的 `127.0.0.1` 是容器自己，不是你的电脑**）；两个 `-v` 把配置和页面挂进容器；最后一行不手写 `nginx:alpine`，而是像第 1 页那样从 `.env.example` 的 `NGINX_IMAGE` 读——仓库已经配了国内镜像源，直连 Docker Hub 在国内会断，第 9 页不该例外。命令回来打印一串容器 ID，就是起来了（和第 1 页起 MySQL 时一样）。
+若报 `Conflict. The container name "/lab-nginx" is already in use`，说明上次的 `lab-nginx` 还没删：先 `docker rm -f lab-nginx` 再重跑这条。
 
-4. 打开浏览器，地址栏敲 `http://127.0.0.1:8081`，点“问一句”。刚打开时结果区是空的，点了才开始问。
+4. 打开浏览器，地址栏敲 `http://127.0.0.1:8081`（8081 换成第 3 步 `-p` 的宿主机端口），点“问一句”。刚打开时结果区是空的，点了才开始问。
 
 ## 你应该看到
 
@@ -102,7 +107,7 @@ docker rm -f lab-nginx && curl -sN -G 'http://127.0.0.1:8000/api/stream' --data-
 - 如果 `docker run` 报 `unknown flag` 或 `invalid IP address: host-gateway`：`--add-host host.docker.internal:host-gateway` 里的 `host-gateway` 需要 Docker ≥ 20.10；升级 Docker，或把宿主机名换成宿主机的 IP。
 - 如果打 `8081` 回 `403 Forbidden`：nginx 活着、页面文件也在，但 nginx 的 worker 进程不是 root，读不了权限太严的 `lab/index.html`；按“动手”第 2 步那句 `chmod 644 lab/index.html lab/default.conf` 改完再刷新，就回 200。
 
-> **你现在拥有**：一个浏览器里能问完整一句话的系统（页面 → nginx:8081 → uvicorn:8000 → MySQL:3307）；nginx 和页面只是入口，真正干活的是前八页造出来的 Python 服务和 MySQL 数据库。
+> **你现在拥有**：一个浏览器里能问完整一句话的系统（页面 → nginx:8081 → uvicorn:8000 → MySQL:3307，端口都按你实际用的）；nginx 和页面只是入口，真正干活的是前八页造出来的 Python 服务和 MySQL 数据库。
 
 ## 自己改一下
 

@@ -16,7 +16,7 @@
 
 ## 动手
 
-还是改 `lab/app.py`，两处。
+还是改 `lab/app.py`，两处。改完先按 **Ctrl+S 保存**再重启；不保存就重启，`/api/stream` 还是第 7 页的旧代码（症状见「对账」）。
 
 1. 在文件开头的 import 区加三行：
 
@@ -26,7 +26,7 @@ import time
 from fastapi.responses import StreamingResponse
 ```
 
-2. 把下面这段接在 `@app.post("/api/query")` 那个函数之后、`if __name__ == "__main__":` 那 3 行**之前**——`__main__` 块永远是文件最后一块：
+2. 把下面这段接在 `@app.post("/api/query")` 那个函数之后、`if __name__ == "__main__":` 那 2 行**之前**——`__main__` 块永远是文件最后一块：
 
 ```python
 STEPS = ["extract_keywords", "recall_column", "recall_value", "recall_metric",
@@ -52,7 +52,7 @@ def stream(q: str):
     return StreamingResponse(gen(), media_type="text/event-stream")
 ```
 
-Ctrl+C 停服务，再用第 3 页那条命令重启。然后打这条流：
+Ctrl+C 停服务，再用**你第 3 页实际用的那条启动命令**重启（端口按你实际改过的；下面 `curl` 里的 8000 同理）。然后打这条流：
 
 ```bash
 curl -sN -G 'http://127.0.0.1:8000/api/stream' --data-urlencode 'q=华北销售额'
@@ -80,6 +80,7 @@ data: {"type": "result", "data": {"rows": [{"region_name": "华北", "sales": 41
 - `data: ` 前缀加末尾空行是 SSE 的格式：一个事件 = 一行 `data: ...` + 一个空行。浏览器（第 9 页）就靠空行切事件。`ensure_ascii=False` 让中文原样输出，不变成 `\u534e\u5317` 这种转义。
 - `result` 里的 `rows` 和第 7 页 POST 返回的一模一样（`41099.5`）：流式只改“什么时候给你”，不改“给你什么”。
 - 为什么不把 POST 改成流式：第 7 页那种“只要最终值”的调用还得留着当对照；浏览器那边 `EventSource` 只能发 GET，所以流式入口用 `GET` + 查询参数。两条入口共用同一个 `run_sql`。
+- 404 = 没保存 / 上一页没生效：重启后 `GET /api/stream` 回 `{"detail":"Not Found"}`、`/health` 却正常，说明 `stream` 那段没进内存——多半是改完没 Ctrl+S 就重启，跑的仍是第 7 页代码。保存后再重启一次。
 - 真实契约里 `result` 还带 `columns`（字段名和类型，画表格要用），见 `contracts/sse.schema.json`；这一页只发 `rows`，够第 9 页用。
 
 > **你现在拥有**：一条把一次查询拆成 12 条 `progress` + 1 条 `result`、逐条推送的 SSE 流；它是第 9 页浏览器页面的数据源，只改“什么时候给你”，不改“给你什么”。
