@@ -27,6 +27,6 @@
     "data: {\"type\": \"progress\", \"step\": \"validate_sql\", \"status\": \"error\", \"duration_ms\": 12.5}",
     "data: {\"type\": \"progress\", \"step\": \"correct_sql\", \"status\": \"running\", \"duration_ms\": null}",
     "data: {\"type\": \"progress\", \"step\": \"correct_sql\", \"status\": \"error\", \"duration_ms\": 12.5}",
-    "data: {\"type\": \"error\", \"code\": \"SQL_SYNTAX\", \"class\": \"failure\", \"message\": \"SQL 无法被解析：Expecting ). Line 1, Col: 39.\", \"step\": \"validate_sql\", \"detail\": {\"reason_code\": \"SQL_SYNTAX\", \"sql\": \"SELECT SUM(fact_order.order_amount FROM fact_order\", \"original_sql\": \"SELECT SUM(fact_order.order_amount FROM fact_order\", \"attempts\": 0}}"
+    "data: {\"type\": \"error\", \"code\": \"SQL_SYNTAX\", \"class\": \"failure\", \"message\": \"SQL 无法被解析：Expecting ). Line 1, Col: 39.\", \"step\": \"validate_sql\", \"detail\": {\"reason_code\": \"SQL_SYNTAX\", \"reason\": \"校正被拒答：INVALID_OUTPUT 离线夹具无法修正这条 SQL。\", \"sql\": \"SELECT SUM(fact_order.order_amount FROM fact_order\", \"original_sql\": \"SELECT SUM(fact_order.order_amount FROM fact_order\", \"attempts\": 0}}"
   ]
 }

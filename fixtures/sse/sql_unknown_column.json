@@ -27,6 +27,6 @@
     "data: {\"type\": \"progress\", \"step\": \"validate_sql\", \"status\": \"error\", \"duration_ms\": 12.5}",
     "data: {\"type\": \"progress\", \"step\": \"correct_sql\", \"status\": \"running\", \"duration_ms\": null}",
     "data: {\"type\": \"progress\", \"step\": \"correct_sql\", \"status\": \"error\", \"duration_ms\": 12.5}",
-    "data: {\"type\": \"error\", \"code\": \"SQL_UNKNOWN_COLUMN\", \"class\": \"failure\", \"message\": \"列 dim_region.no_such_column 不在契约上下文里\", \"step\": \"validate_sql\", \"detail\": {\"reason_code\": \"SQL_UNKNOWN_COLUMN\", \"sql\": \"SELECT dim_region.no_such_column AS `地区`\\nFROM fact_order JOIN dim_region ON fact_order.region_id = dim_region.region_id\\n\", \"original_sql\": \"SELECT dim_region.no_such_column AS `地区`\\nFROM fact_order JOIN dim_region ON fact_order.region_id = dim_region.region_id\\n\", \"attempts\": 0}}"
+    "data: {\"type\": \"error\", \"code\": \"SQL_UNKNOWN_COLUMN\", \"class\": \"failure\", \"message\": \"列 dim_region.no_such_column 不在契约上下文里\", \"step\": \"validate_sql\", \"detail\": {\"reason_code\": \"SQL_UNKNOWN_COLUMN\", \"reason\": \"没有配置校正器\", \"sql\": \"SELECT dim_region.no_such_column AS `地区`\\nFROM fact_order JOIN dim_region ON fact_order.region_id = dim_region.region_id\\n\", \"original_sql\": \"SELECT dim_region.no_such_column AS `地区`\\nFROM fact_order JOIN dim_region ON fact_order.region_id = dim_region.region_id\\n\", \"attempts\": 0}}"
   ]
 }
