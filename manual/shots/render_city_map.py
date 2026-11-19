@@ -10,7 +10,13 @@
     `manual/city/data.json`
       canvas     1600×1000 CSS 画布
       zones      四区：市政配套区 / 仓储区 / 服务区 / 门户区（= L0 地基 / 数据层 / 服务层 / 入口层）
-      facilities 十座设施 P0–P9：城市名、软件对应、问题句、方案句、判据、区、交付物 ①–⑫、坐标
+      facilities 10 件设施（方向 C「真楼嵌套」，用户 2026-11-19 确认）：
+                  3 座楼 P1 数据仓库 / P3 查询服务中心 / P9 城市门户；
+                  1 块场地 P0 市政配套（hatch，不是楼）；
+                  楼内房间 P2 货架（父 P1）、P4 窗口 / P5 柜台 / P6 房间 / P7 楼内通道（父 P3）；
+                  1 条流线 P8 传送带（父 P3，flow_path 从 P3 穿出、接到 P9）。
+                  每件有城市名、软件对应、短标签（问/方）、问题句、方案句、判据、区、交付物 ①–⑫；
+                  有 parent 的件，矩形必须包含在父楼里（不占独立地块）；P8 只有 flow_path，不占地块。
       roads      设施之间的道路 / 管网（市民 → 门户 → 服务窗口 → 前台 → 规则室 → 取货通道 → 仓库；
                  仓库 → 传送带 → 门户 → 市民），每条有 from / to / label / via
       titles     23 页标题草案 P0–P22（L1 = 地图设施的问题 + 方案；L2–L4 = 换 / 审 / 守的动作升级）
@@ -26,17 +32,24 @@
     办事员 = 函数、货架 = 库表、道路 = 网络，不许把窗口画成楼。
 
 内置自检（任一不过就退出码 1，不写成品）：
-  1. 数据：四区 / 十设施 / 12 件交付物各一次 / 11 条路（含 9 段主链、引用合法）/ 23 行标题
+  1. 数据：四区 / 10 件设施 / 12 件交付物各一次 / 11 条路（含 9 段主链、引用合法）/ 23 行标题
      （P0–P22 顺序、级 10+4+4+5、L1 问题与方案与地图设施逐字一致）、矩形不越界不互相压。
+  1b. 方向 C 结构：buildings == 3（P1/P3/P9）、site == 1（P0）、楼内房间 5 个（P2/P4–P7）、
+      流线 1 条（P8）；parent 合法且父件必是楼；房间矩形必须包含在父楼里（不占独立地块）；
+      P8 流线起点在 P3 内、终点穿出并接到 P9；整图图注逐字含
+      「全市 3 座楼（P1/P3/P9）+ 1 块场地（P0）；P2、P4–P8 是楼内房间/通道/流线，不是独立建筑。」
   2. HTML：零外链 / 零 src·href 资源 / 无用户名 / 绝对路径 / 口令；字体系统 Noto Sans CJK SC；
-     10 个设施块、12 个圈号徽章各一次、11 条路、3 个图注、12 个 progress 刻度都在页面上。
-  3. 页面内置自检（无头 Chrome --dump-dom 读回）：DOM 计数、悬停 tooltip 内容、点击高亮
-     相连道路（P4 → 2 条）、四区箭头、不溢出 1600×1000。
+     3 个楼体 / 1 个场地 / 5 个楼内房间 / 1 条传送带条带、12 个圈号徽章各一次、11 条路、
+     3 个图注都在页面上；问题/方案在图上只留短标签，全文进 tooltip。
+  3. 页面内置自检（无头 Chrome --dump-dom 读回）：DOM 计数、悬停 tooltip（含「属于 P1/P3」的
+     楼内归属）、点击高亮相连道路（P4 → 2 条、P8 流线 → 2 条）、不溢出 1600×1000。
   4. 成图：3200×2000，四区都有墨，橙色「已建成」占比合理；PNG 无文本元数据 / 用户名 /
      绝对路径 / 口令；装了 tesseract 时再 OCR 抽查关键真值（软检查，只提醒）。
 
 依赖：本机 python3 / google-chrome / Noto Sans CJK SC / DejaVu Sans Mono / Pillow。
 只写上面三个产物；不改十页正文、SPEC、completeness、maturity、README、决策文档、map/。
+方向依据：用户 2026-11-19 确认样例方向 C（真楼嵌套）——「从十张一样大的卡片，变成 3 座楼 + 1 块场地，
+其余是楼内房间」。
 """
 
 from __future__ import annotations
@@ -93,7 +106,18 @@ EXTERNAL_PATTERNS = [
 ]
 # 图上必须能认出的关键真值（数据 / HTML 都要有）
 REQUIRED_TOKENS = ["41099.5", "115", "3307", "8000", "8081", "Noto Sans CJK SC",
-                   "已建成", "市政配套区", "仓储区", "服务区", "门户区", "12 条 progress"]
+                   "已建成", "市政配套区", "仓储区", "服务区", "门户区", "12 条 progress",
+                   "3 座楼", "1 块场地", "不是独立建筑", "楼内"]
+# 方向 C：3 座楼 + 1 块场地，其余是楼内房间 / 通道 / 流线
+KIND_ALLOWED = ("楼", "楼内房间", "窗口", "柜台", "货架", "楼内通道", "流道", "门户", "场地")
+BUILDING_KINDS = {"楼", "门户"}
+ROOM_KINDS = {"楼内房间", "窗口", "柜台", "货架", "楼内通道"}
+EXPECTED_BUILDINGS = ["P1", "P3", "P9"]
+EXPECTED_SITE = ["P0"]
+EXPECTED_ROOMS = ["P2", "P4", "P5", "P6", "P7"]
+EXPECTED_FLOW = ["P8"]
+EXPECTED_PARENT = {"P2": "P1", "P4": "P3", "P5": "P3", "P6": "P3", "P7": "P3", "P8": "P3"}
+CAPTION_TEXT = "全市 3 座楼（P1/P3/P9）+ 1 块场地（P0）；P2、P4–P8 是楼内房间/通道/流线，不是独立建筑。"
 # 六种粒度（GLOSSARY 原表，顺序固定）
 GRANULARITY = [
     ("设施 / 建筑", "运行单元（容器 / 进程 / 存储）"),
@@ -142,8 +166,25 @@ def png_size(png: Path) -> tuple[int, int]:
 
 
 def pos_size(item: dict) -> dict:
+    if item.get("kind") == "流道":
+        return flow_bbox(item)
     return {"x": item["position"]["x"], "y": item["position"]["y"],
             "w": item["size"]["w"], "h": item["size"]["h"]}
+
+
+def flow_bbox(f: dict) -> dict:
+    """流线的外接矩形：水平带按带宽向上下扩，竖直带向左右扩。"""
+    pts = [tuple(p) for p in f["flow_path"]]
+    band = int(f["flow_width"])
+    xs = [p[0] for p in pts]
+    ys = [p[1] for p in pts]
+    x0, x1, y0, y1 = min(xs), max(xs), min(ys), max(ys)
+    if x1 - x0 < 1:            # 竖带
+        return {"x": x0 - band // 2, "y": y0, "w": band, "h": y1 - y0}
+    if y1 - y0 < 1:            # 横带
+        return {"x": x0, "y": y0 - band // 2, "w": x1 - x0, "h": band}
+    return {"x": x0 - band // 2, "y": y0 - band // 2,
+            "w": x1 - x0 + band, "h": y1 - y0 + band}
 
 
 def overlap(a: dict, b: dict) -> bool:
@@ -269,7 +310,7 @@ def validate_data(data: dict) -> dict:
     # 顶层
     for key in ("schema", "decision", "status", "title", "kicker", "one_liner", "image",
                 "rerun", "note", "canvas", "granularity", "legend", "levels", "zones",
-                "citizen", "facilities", "roads", "notes", "titles"):
+                "citizen", "facilities", "roads", "notes", "titles", "caption"):
         need(key in data, f"data.json 缺字段 {key}")
     if errs:
         print("✗ data.json 结构不完整：", file=sys.stderr)
@@ -316,20 +357,21 @@ def validate_data(data: dict) -> dict:
             need(not overlap(zones[i]["rect"], zones[j]["rect"]),
                  f"区 {zones[i]['name']} 与 {zones[j]['name']} 矩形重叠")
 
-    # 设施
+    # 设施：方向 C = 3 座楼 + 1 块场地 + 5 个楼内房间 + 1 条流线
     facs = data["facilities"]
-    need(len(facs) == 10, f"应为 10 座设施，实为 {len(facs)}")
+    need(len(facs) == 10, f"应为 10 件设施（3 楼 + 1 场地 + 5 房间 + 1 流线），实为 {len(facs)}")
     need([f["no"] for f in facs] == [f"P{i}" for i in range(10)],
          "设施编号应为 P0–P9 顺序")
     by_no: dict[str, dict] = {}
     artifacts: dict[int, str] = {}
     for f in facs:
-        for k in ("no", "name", "kind", "soft", "problem", "solution", "criterion",
-                  "zone", "artifacts", "facts", "page", "page_id", "position", "size"):
+        for k in ("no", "name", "kind", "soft", "short", "problem", "solution", "criterion",
+                  "zone", "artifacts", "page", "page_id"):
             need(k in f, f"设施 {f.get('no')} 缺字段 {k}")
         if f["no"] in by_no:
             errs.append(f"设施编号重复 {f['no']}")
         by_no[f["no"]] = f
+        need(f["kind"] in KIND_ALLOWED, f"{f['no']} 的 kind {f['kind']} 不在 {KIND_ALLOWED}")
         need(f["zone"] in zone_rect, f"{f['no']} 的 zone {f['zone']} 不存在")
         no = int(f["no"][1:])
         need(f["page_id"] == f"page-{no:02d}", f"{f['no']} 的 page_id 应为 page-{no:02d}")
@@ -340,31 +382,93 @@ def validate_data(data: dict) -> dict:
             need(isinstance(a, int) and 1 <= a <= 12, f"{f['no']} 的交付物编号 {a} 不在 1–12")
             need(a not in artifacts, f"交付物 {CIRCLED[a - 1]} 重复出现在 {artifacts.get(a)} 与 {f['no']}")
             artifacts[a] = f["no"]
-        need(1 <= len(f["facts"]) <= 4, f"{f['no']} 的 facts 应为 1–4 条")
-        need(isinstance(f["position"], dict) and isinstance(f["size"], dict),
-             f"{f['no']} 的 position / size 不是对象")
+        short = f["short"]
+        need(isinstance(short, dict) and short.get("q") and short.get("a"),
+             f"{f['no']} 缺短标签 short.q / short.a")
+        need(len(short.get("q", "")) <= 16 and len(short.get("a", "")) <= 16,
+             f"{f['no']} 的短标签超过 16 字（图上会挤）")
+        if f["kind"] == "流道":
+            need("flow_path" in f and "flow_width" in f,
+                 f"{f['no']} 是流线，必须有 flow_path / flow_width")
+            need(f.get("box") == flow_bbox(f),
+                 f"{f['no']} 的 box 应由 flow_path + flow_width 派生，实为 {f.get('box')}")
+            need("position" not in f and "size" not in f,
+                 f"{f['no']} 是流线，不占独立地块（不要 position / size）")
+        else:
+            need(isinstance(f.get("position"), dict) and isinstance(f.get("size"), dict),
+                 f"{f['no']} 的 position / size 不是对象")
+            need("flow_path" not in f, f"{f['no']} 不是流线，不要 flow_path")
+        if "facts" in f:
+            need(1 <= len(f["facts"]) <= 4, f"{f['no']} 的 facts 应为 1–4 条")
     need(sorted(artifacts) == list(range(1, 13)),
          f"12 件交付物应各出现一次，实为 {sorted(artifacts)}")
+
+    # 方向 C 的三类计数：楼 3 / 场地 1 / 楼内房间 5 / 流线 1
+    buildings = [f["no"] for f in facs if f["kind"] in BUILDING_KINDS]
+    site = [f["no"] for f in facs if f["kind"] == "场地"]
+    rooms = [f["no"] for f in facs if f["kind"] in ROOM_KINDS]
+    flows = [f["no"] for f in facs if f["kind"] == "流道"]
+    need(buildings == EXPECTED_BUILDINGS, f"楼应为 {EXPECTED_BUILDINGS}，实为 {buildings}")
+    need(site == EXPECTED_SITE, f"场地应为 {EXPECTED_SITE}，实为 {site}")
+    need(rooms == EXPECTED_ROOMS, f"楼内房间应为 {EXPECTED_ROOMS}，实为 {rooms}")
+    need(flows == EXPECTED_FLOW, f"流线应为 {EXPECTED_FLOW}，实为 {flows}")
 
     fac_rect = {f["no"]: pos_size(f) for f in facs}
     for f in facs:
         r = fac_rect[f["no"]]
         need(in_canvas(r), f"{f['no']} 的矩形越出画布")
-        need(contains(zone_rect[f["zone"]], r), f"{f['no']} 不在它的区 {f['zone']} 里")
+        if f["kind"] != "流道":
+            need(contains(zone_rect[f["zone"]], r), f"{f['no']} 不在它的区 {f['zone']} 里")
+
+    # parent 校验：房间必包含在父楼里（不占独立地块）；流线 P8 属于 P3 但必须穿出、接到 P9
     for f in facs:
-        if "parent" in f:
-            need(f["parent"] in by_no, f"{f['no']} 的 parent {f['parent']} 不存在")
-            if f["parent"] in by_no:
-                need(contains(fac_rect[f["parent"]], fac_rect[f["no"]]),
-                     f"{f['no']} 没有画在父设施 {f['parent']} 里")
+        want_parent = EXPECTED_PARENT.get(f["no"])
+        need(f.get("parent") == want_parent,
+             f"{f['no']} 的 parent 应为 {want_parent}，实为 {f.get('parent')}")
+        if want_parent is None:
+            continue
+        p = by_no.get(want_parent)
+        need(p is not None, f"{f['no']} 的 parent {want_parent} 不存在")
+        if p is None:
+            continue
+        need(p["kind"] in BUILDING_KINDS,
+             f"{f['no']} 的 parent {want_parent} 必须是楼，不能是 {p['kind']}")
+        if f["kind"] in ROOM_KINDS:
+            need(contains(fac_rect[want_parent], fac_rect[f["no"]]),
+                 f"{f['no']} 是楼内房间，矩形必须整个包含在 {want_parent} 楼里（不占独立地块）")
+        if f["kind"] == "流道":
+            pts = [tuple(pt) for pt in f["flow_path"]]
+            band = int(f["flow_width"])
+            for a, b in zip(pts, pts[1:]):
+                need(abs(a[0] - b[0]) < 0.01 or abs(a[1] - b[1]) < 0.01,
+                     f"流线 {f['no']} 有一段既非横也非竖：{a} → {b}")
+            need(contains(fac_rect[want_parent], {"x": pts[0][0], "y": pts[0][1], "w": 0, "h": 0}),
+                 f"流线 {f['no']} 的起点必须在 {want_parent} 楼内")
+            need(not contains(fac_rect[want_parent], {"x": pts[-1][0], "y": pts[-1][1], "w": 0, "h": 0}),
+                 f"流线 {f['no']} 必须从 {want_parent} 穿出楼体")
+            p9 = fac_rect.get("P9")
+            if p9:
+                ex, ey = pts[-1]
+                dx = max(p9["x"] - ex, 0, ex - (p9["x"] + p9["w"]))
+                dy = max(p9["y"] - ey, 0, ey - (p9["y"] + p9["h"]))
+                gap = (dx * dx + dy * dy) ** 0.5
+                need(gap <= 80, f"流线 {f['no']} 的终点没接到 P9（距离 {gap:.0f}px）")
+                need(not overlap(fac_rect[f["no"]], p9), f"流线 {f['no']} 压住了 P9 楼体")
+            need(f.get("flows_to") == "P9", f"{f['no']} 的 flows_to 应为 P9")
+            need(str(PROGRESS_TICKS) in f["short"]["a"] and "progress" in f["short"]["a"],
+                 f"{f['no']} 的短标签要写清 {PROGRESS_TICKS} 条 progress（第 8 页的判据）")
+            need(band >= 10, f"{f['no']} 的 flow_width 太小")
+            need(not any(overlap(fac_rect[f["no"]], fac_rect[rno]) for rno in rooms),
+                 f"流线 {f['no']} 压住了楼内房间")
+
+    # 建筑 / 场地 / 房间两两不许互相压（父子包含除外；流线可穿过父楼）
     for i in range(len(facs)):
         for j in range(i + 1, len(facs)):
             a, b = facs[i], facs[j]
-            parent_child = (b.get("parent") == a["no"]) or (a.get("parent") == b["no"])
-            if parent_child:
+            if (b.get("parent") == a["no"]) or (a.get("parent") == b["no"]):
                 continue
             need(not overlap(fac_rect[a["no"]], fac_rect[b["no"]]),
-                 f"设施 {a['no']} 与 {b['no']} 矩形重叠（读者会认成同一座楼）")
+                 f"{a['no']} 与 {b['no']} 矩形重叠（会数成同一座楼）")
 
     # 货架 / 路线 / 刻度（特殊部件的口径）
     p2 = by_no.get("P2", {})
@@ -384,7 +488,7 @@ def validate_data(data: dict) -> dict:
          "市民没有站在门户区里")
     need(not any(overlap(cit_rect, r) for r in fac_rect.values()), "市民与设施矩形重叠")
 
-    # 图注
+    # 图注：必须有一句「全市 3 座楼 + 1 块场地」的整图说明
     notes = data["notes"]
     need(len(notes) == 3, f"应为 3 个图注，实为 {len(notes)}")
     note_ids = set()
@@ -397,6 +501,12 @@ def validate_data(data: dict) -> dict:
         need(not any(overlap(r, fr) for fr in fac_rect.values()), f"图注 {n['id']} 压住了设施")
         need(not overlap(r, cit_rect), f"图注 {n['id']} 压住了市民")
         need(bool(n["title"]) and 2 <= len(n["lines"]) <= 3, f"图注 {n['id']} 应有 2–3 行")
+    need(note_ids == {"structure", "inventory", "portal-route"},
+         f"图注 id 应为 structure / inventory / portal-route，实为 {sorted(note_ids)}")
+    structure = next(n for n in notes if n["id"] == "structure")
+    need(CAPTION_TEXT in structure["lines"],
+         "structure 图注必须逐字包含：全市 3 座楼（P1/P3/P9）+ 1 块场地（P0）…不是独立建筑。")
+    need(data.get("caption") == CAPTION_TEXT, "data.caption 与约定的整图图注不一致")
 
     # 道路
     roads = data["roads"]
@@ -473,15 +583,19 @@ def validate_data(data: dict) -> dict:
             print(f"  - {e}", file=sys.stderr)
         raise SystemExit(1)
 
-    print(f"  ✓ 数据：4 区 / {len(facs)} 设施 / 12 件交付物各一次 / {len(roads)} 条路"
+    print(f"  ✓ 结构：3 座楼 {buildings} + 1 块场地 {site} + 5 个楼内房间 {rooms} + 1 条流线 {flows}")
+    print(f"  ✓ parent：P2→P1；P4/P5/P6/P7→P3；P8→P3 且穿出至 P9；房间矩形全部包含在父楼里（不占独立地块）")
+    print(f"  ✓ 数据：4 区 / 12 件交付物各一次 / {len(roads)} 条路"
           f"（主链 {len(CHAIN_WANT)} 段齐）/ {len(titles)} 行标题（10+4+4+5）")
     print("  ✓ 粒度：设施=运行单元、窗口=端点、办事员=函数、货架=库表、道路=网络（与 GLOSSARY 逐字一致）")
     print("  ✓ 徽章落点：" + " ".join(f"{CIRCLED[a-1]}→{artifacts[a]}" for a in range(1, 13)))
+    print("  ✓ 图注：含「" + CAPTION_TEXT + "」")
     print("  ✓ 道路引用：from / to 全部合法（设施或 citizen），直角路网无斜线，全部在画布内")
     print(f"  ✓ 标题：P0–P22 齐；L1 的问题 / 方案 / 判据与地图设施逐字一致；级配比 "
           f"{cnt['L1 造']}+{cnt['L2 换']}+{cnt['L3 审']}+{cnt['L4 守']}")
     return {"facilities": by_no, "artifacts": artifacts, "rects": rects,
-            "roads": roads, "titles": titles}
+            "roads": roads, "titles": titles, "buildings": buildings,
+            "site": site, "rooms": rooms, "flows": flows}
 
 
 # ------------------------------------------------------------------ HTML 组版
@@ -508,10 +622,6 @@ def shelves_html(names: list[str]) -> str:
     return f'<div class="shelves"><div class="shelves-h">货架 = 库表</div>{rows}</div>'
 
 
-def ticks_html(n: int) -> str:
-    return '<div class="ticks">' + "".join("<i></i>" for _ in range(n)) + "</div>"
-
-
 def route_html(steps: list[str]) -> str:
     parts = []
     for i, s in enumerate(steps):
@@ -521,52 +631,100 @@ def route_html(steps: list[str]) -> str:
     return '<div class="route">' + "".join(parts) + "</div>"
 
 
-def plain(text: str) -> str:
-    return str(text).replace("`", "")
+def badges_html(f: dict) -> str:
+    return '<span class="badges">' + "".join(
+        f'<span class="badge" data-art="{a}" title="交付物 {CIRCLED[a - 1]}">{CIRCLED[a - 1]}</span>'
+        for a in f["artifacts"]) + "</span>"
 
 
-def facility_html(f: dict) -> str:
+def short_html(f: dict) -> str:
+    """问题 / 方案的短标签（全文在悬停 tooltip 里，楼内不挤）。"""
+    sh = f["short"]
+    return (f'<div class="stag"><span class="q">问</span>{esc(sh["q"])}'
+            f'<span class="arrow">→</span><span class="a">方</span>{esc(sh["a"])}</div>')
+
+
+def soft_row_html(f: dict) -> str:
+    page_no = int(f["no"][1:])
+    return (f'<div class="softrow"><span class="soft">{esc(f["soft"])}</span>'
+            f'<span class="pg">第 {page_no} 页</span></div>')
+
+
+def fac_attrs(f: dict, cls: str) -> str:
     r = pos_size(f)
-    cls = "fac"
-    if f["no"] == "P0":
-        cls += " site"
-    elif f["no"] in ("P1", "P3"):
-        cls += " building"
-    elif "parent" in f:
-        cls += " inner"
-    if f["no"] == "P8":
-        cls += " belt"
-    if f["no"] == "P9":
-        cls += " gate"
+    return (f'class="{cls}" data-no="{esc(f["no"])}" data-kind="{esc(f["kind"])}" '
+            f'data-zone="{esc(f["zone"])}" data-page="{esc(f["page"])}" tabindex="0" '
+            f'role="button" aria-label="{esc(f["no"] + " " + f["name"])}" '
+            f'style="left:{r["x"]}px;top:{r["y"]}px;width:{r["w"]}px;height:{r["h"]}px"')
+
+
+def site_html(f: dict) -> str:
+    """场地（P0）：不是楼，斜线 hatch + 场地角标。"""
+    return (f'<div {fac_attrs(f, "fac sitecard")}>'
+            f'<div class="shead"><span class="pno">{esc(f["no"])}</span>'
+            f'<span class="sname">{esc(f["name"])}</span>'
+            f'<span class="kind">{esc(f["kind"])}</span>{badges_html(f)}</div>'
+            f'{soft_row_html(f)}{short_html(f)}{facts_html(f["facts"])}</div>')
+
+
+def building_html(f: dict) -> str:
+    """楼（P1 / P3 / P9）：屋顶带 + 墙厚 + 大标题；楼内房间由 room_html 画在楼体里。"""
+    gate = f["kind"] == "门户"
+    cls = "fac bldg gate" if gate else "fac bldg"
+    inside = ""
+    if gate:
+        inside = ('<div class="gate-draw"><b></b><i></i><i></i>'
+                  '<em>城门 · nginx 容器值班</em></div>' + route_html(f["route"]))
+    return (f'<div {fac_attrs(f, cls)}>'
+            f'<div class="roof"><span>{esc(f["kind"])}</span></div>'
+            f'<div class="bhead"><span class="pno">{esc(f["no"])}</span>'
+            f'<span class="bname">{esc(f["name"])}</span>'
+            f'<span class="kind">{esc(f["kind"])}</span>{badges_html(f)}</div>'
+            f'{soft_row_html(f)}{short_html(f)}{facts_html(f["facts"])}{inside}</div>')
+
+
+def room_html(f: dict) -> str:
+    """楼内房间 / 窗口 / 柜台 / 货架 / 通道：浅底细边，明显嵌在楼里。"""
+    extra = shelves_html(f["shelves"]) if "shelves" in f else ""
+    return (f'<div {fac_attrs(f, "fac room")}>'
+            f'<div class="rhead"><span class="pno sm">{esc(f["no"])}</span>'
+            f'<span class="rname">{esc(f["name"])}</span>'
+            f'<span class="kind">{esc(f["kind"])}</span>{badges_html(f)}</div>'
+            f'{soft_row_html(f)}{short_html(f)}{facts_html(f["facts"])}{extra}</div>')
+
+
+def flow_html(f: dict) -> str:
+    """流线（P8）：带传送带纹理的条带，从 P3 穿出、接到 P9。"""
+    r = pos_size(f)
     badges = "".join(
         f'<span class="badge" data-art="{a}" title="交付物 {CIRCLED[a - 1]}">{CIRCLED[a - 1]}</span>'
         for a in f["artifacts"])
-    extra = ""
-    if "shelves" in f:
-        extra = shelves_html(f["shelves"])
-    elif f["no"] == "P8":
-        extra = ticks_html(PROGRESS_TICKS)
-    elif "route" in f:
-        extra = route_html(f["route"])
-    crit = ""
-    if f.get("crit_on_map"):
-        crit = f'<div class="crit"><b>判据</b>{esc(plain(f["criterion"]))}</div>'
-    page_no = int(f["no"][1:])
-    return (
-        f'<div class="{cls}" data-no="{esc(f["no"])}" data-zone="{esc(f["zone"])}" '
-        f'data-page="{esc(f["page"])}" tabindex="0" role="button" '
-        f'aria-label="{esc(f["no"] + " " + f["name"])}" '
-        f'style="left:{r["x"]}px;top:{r["y"]}px;width:{r["w"]}px;height:{r["h"]}px">'
-        f'<div class="head"><span class="pno">{esc(f["no"])}</span>'
-        f'<span class="fname">{esc(f["name"])}</span>'
-        f'<span class="kind">{esc(f["kind"])}</span>'
-        f'<span class="badges">{badges}</span></div>'
-        f'<div class="softrow"><span class="soft">{esc(f["soft"])}</span>'
-        f'<span class="pg">第 {page_no} 页</span></div>'
-        f'<div class="tag"><span class="q">问</span>{esc(f["problem"])}'
-        f'<span class="arrow">→</span><span class="a">方</span>{esc(f["solution"])}</div>'
-        f'{facts_html(f["facts"])}{extra}{crit}</div>'
-    )
+    return (f'<div class="flow" data-no="{esc(f["no"])}" data-kind="{esc(f["kind"])}" '
+            f'data-zone="{esc(f["zone"])}" data-page="{esc(f["page"])}" tabindex="0" role="button" '
+            f'aria-label="{esc(f["no"] + " " + f["name"])}" '
+            f'style="left:{r["x"]}px;top:{r["y"]}px;width:{r["w"]}px;height:{r["h"]}px">'
+            f'{badges}<span class="flow-name">{esc(f["no"])} {esc(f["name"])}</span>'
+            f'<span class="q">问</span>{esc(f["short"]["q"])}'
+            f'<span class="arrow">→</span><span class="a">方</span>{esc(f["short"]["a"])}'
+            f'<span class="flow-chev">›››</span></div>')
+
+
+def facilities_html(data: dict) -> str:
+    """楼的顺序在前（z 低），房间/流线后画（z 高），视觉上嵌在楼里 / 压在楼墙上。"""
+    by_no = {f["no"]: f for f in data["facilities"]}
+    order = ["P0", "P1", "P3", "P9", "P2", "P4", "P5", "P6", "P7", "P8"]
+    out = []
+    for no in order:
+        f = by_no[no]
+        if f["kind"] in BUILDING_KINDS:
+            out.append(building_html(f))
+        elif f["kind"] == "场地":
+            out.append(site_html(f))
+        elif f["kind"] == "流道":
+            out.append(flow_html(f))
+        else:
+            out.append(room_html(f))
+    return "".join(out)
 
 
 def roads_svg(roads: list[dict], rects: dict[str, dict]) -> str:
@@ -730,29 +888,96 @@ path.utility { stroke: #A97C3F; stroke-width: 2.3; stroke-dasharray: 7 5.5; }
 .road-seg.hot path.utility { stroke: #D9761C; }
 #map.dim .road-seg:not(.hot) { opacity: .26; }
 
-.fac {
-  position: absolute; z-index: 3; background: #FCF8EF; border: 1.7px solid #2B3B46;
-  border-radius: 2px; padding: 9px 10px 8px; cursor: pointer;
-  display: flex; flex-direction: column;
-  box-shadow: 2px 3px 0 rgba(43, 59, 70, .10);
-  transition: box-shadow .12s, background .12s, opacity .12s;
+/* —— 设施层级：楼 > 楼内房间；场地是空地；流线是条带 —— */
+.fac { position: absolute; z-index: 3; display: flex; flex-direction: column; cursor: pointer;
+       transition: box-shadow .12s, background .12s, opacity .12s; }
+
+/* 楼（P1 / P3 / P9）：屋顶带 + 墙厚 + 大标题 */
+.fac.bldg {
+  background-color: #FBF6EA; border: 2.4px solid #22303A; border-radius: 2px;
+  padding: 36px 13px 10px;
+  background-image:
+    linear-gradient(rgba(43, 59, 70, .045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(43, 59, 70, .045) 1px, transparent 1px);
+  background-size: 26px 26px;
+  box-shadow: inset 0 0 0 4px #F3ECDC, inset 0 0 0 5.5px #B9A98B,
+              5px 6px 0 rgba(34, 48, 58, .16);
 }
-.fac::before {
-  content: ""; position: absolute; left: -1.7px; top: -1.7px;
-  width: calc(100% + 3.4px); height: 4px; background: #E07A1F; border-radius: 2px 2px 0 0;
+.fac.bldg::before {
+  content: ""; position: absolute; left: -2.4px; top: -2.4px; z-index: 5;
+  width: calc(100% + 4.8px); height: 5px; background: #E07A1F; border-radius: 2px 2px 0 0;
 }
-.fac.building { border-width: 2.2px; background: #FDFAF3; box-shadow: 3px 4px 0 rgba(43, 59, 70, .13); }
-.fac.inner { border-style: dashed; border-width: 1.4px; background: #FFFDF6; z-index: 4;
-             box-shadow: 1px 2px 0 rgba(43, 59, 70, .08); }
-.fac.site { background: #F7F1E4; border-style: dashed; }
-.fac.site::after {
+.roof {
+  position: absolute; left: 0; right: 0; top: 0; height: 27px; z-index: 2; border-radius: 0;
+  background: repeating-linear-gradient(90deg, #4A5C67 0 2px, #5E727F 2px 15px);
+  border-bottom: 1.5px solid #22303A;
+}
+.roof span {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  font-size: 7.8px; letter-spacing: 6px; font-weight: 700; color: #F3EEDF; opacity: .9;
+}
+.bhead { display: flex; align-items: center; gap: 6px; position: relative; z-index: 3; margin-top: 3px; }
+.bname { flex: none; font-size: 16px; font-weight: 800; letter-spacing: .8px; white-space: nowrap; }
+.fac.gate .bname { font-size: 14.4px; }
+.fac.bldg > .softrow, .fac.bldg > .stag, .fac.bldg > .facts,
+.fac.bldg > .route, .fac.bldg > .gate-draw { position: relative; z-index: 3; }
+
+/* 楼内房间 / 窗口 / 柜台 / 货架 / 通道：浅底细边，明显在楼体里 */
+.fac.room {
+  z-index: 4; background-color: #FFFDF6; border: 1.2px solid #7E919D; border-radius: 2px;
+  padding: 7px 8px 6px; box-shadow: 1.5px 2px 0 rgba(43, 59, 70, .09);
+  background-image:
+    linear-gradient(rgba(43, 59, 70, .04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(43, 59, 70, .04) 1px, transparent 1px);
+  background-size: 18px 18px;
+}
+.rhead { display: flex; align-items: center; gap: 4px; position: relative; z-index: 3; }
+.rname { flex: none; font-size: 11.4px; font-weight: 800; letter-spacing: .3px; white-space: nowrap; }
+.fac.room .pno.sm { font-size: 8.6px; line-height: 12px; padding: 0 4px; }
+.fac.room .badge { width: 15px; height: 15px; font-size: 9px; line-height: 12px; border-width: 1.4px; }
+.fac.room .soft { font-size: 7.7px; }
+.fac.room .pg { font-size: 6.4px; }
+.fac.room > .softrow, .fac.room > .stag, .fac.room > .facts, .fac.room > .shelves {
+  position: relative; z-index: 3;
+}
+
+/* 场地（P0）：hatch，不是楼 */
+.fac.sitecard {
+  background-color: #F7F1E4; border: 2px dashed #8A7A4E; border-radius: 2px;
+  padding: 10px 12px 8px; box-shadow: 2px 3px 0 rgba(43, 59, 70, .10);
+}
+.fac.sitecard::before {
+  content: ""; position: absolute; left: -2px; top: -2px; z-index: 4;
+  width: calc(100% + 4px); height: 4px; background: #E07A1F; border-radius: 2px 2px 0 0;
+}
+.fac.sitecard::after {
   content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none; border-radius: 2px;
-  background: repeating-linear-gradient(45deg, rgba(169, 124, 63, .11) 0 6px, transparent 6px 12px);
+  background: repeating-linear-gradient(45deg, rgba(169, 124, 63, .15) 0 6px, transparent 6px 14px);
 }
-.fac.belt { background: #ECF2F0; border-width: 1.8px; }
-.fac.gate { background: #FBF1E7; border-width: 2px; }
-.fac > .head, .fac > .softrow, .fac > .soft, .fac > .tag, .fac > .facts,
-.fac > .shelves, .fac > .route, .fac > .crit { position: relative; z-index: 3; }
+.shead { display: flex; align-items: center; gap: 6px; position: relative; z-index: 3; }
+.sname { flex: none; font-size: 13.4px; font-weight: 800; letter-spacing: .3px; white-space: nowrap; }
+.fac.sitecard > .softrow, .fac.sitecard > .stag, .fac.sitecard > .facts { position: relative; z-index: 3; }
+
+/* 流线（P8）：带传送带纹理的条带，从 P3 穿墙接到 P9 */
+.flow {
+  position: absolute; z-index: 4; display: flex; align-items: center; gap: 5px; padding: 0 7px;
+  background: repeating-linear-gradient(90deg, #6E8A84 0 2.4px, #DDE8E4 2.4px 12px);
+  border: 1.3px solid #4F6863; border-radius: 3px; cursor: pointer;
+  box-shadow: 0 0 0 2px rgba(255, 253, 247, .85);
+  transition: box-shadow .12s, opacity .12s;
+}
+.flow .badge { width: 16px; height: 16px; font-size: 9.6px; line-height: 13px; border-width: 1.4px; flex: none; }
+.flow-name { flex: none; font-size: 8.4px; font-weight: 800; letter-spacing: .3px; white-space: nowrap; }
+.flow .q, .flow .a {
+  display: inline-block; width: 11px; height: 11px; line-height: 11px; text-align: center;
+  font-size: 7px; border-radius: 2px; color: #fff; font-weight: 700; flex: none;
+}
+.flow .q { background: #A8452F; }
+.flow .a { background: #3C7452; }
+.flow .arrow { color: #B3452F; font-weight: 800; flex: none; }
+.flow-chev { margin-left: auto; font-size: 10px; color: #3E5563; letter-spacing: 1px; flex: none; }
+
+/* 通用页眉与行 */
 .head { display: flex; align-items: center; gap: 5px; }
 .pno {
   flex: none; background: #E07A1F; color: #fff; font-weight: 800; font-size: 10.4px;
@@ -778,19 +1003,14 @@ path.utility { stroke: #A97C3F; stroke-width: 2.3; stroke-dasharray: 7 5.5; }
   flex: none; font-family: "DejaVu Sans Mono", monospace; font-size: 7px;
   color: #8FA0AB; letter-spacing: .3px;
 }
-.crit {
-  margin-top: auto; padding-top: 4px; border-top: 1px dashed #C9BE9F;
-  font-size: 7.9px; line-height: 1.45; color: #4A5C67;
-}
-.crit b { color: #8A6A3C; font-weight: 800; margin-right: 4px; }
-.tag { margin-top: 4px; font-size: 8.5px; line-height: 1.42; color: #3A4A55; }
-.tag .q, .tag .a {
+.stag { margin-top: 4px; font-size: 8.4px; line-height: 1.38; color: #3A4A55; }
+.stag .q, .stag .a {
   display: inline-block; width: 12px; height: 12px; line-height: 12px; text-align: center;
   font-size: 7.6px; border-radius: 2px; color: #fff; margin-right: 2px; font-weight: 700;
 }
-.tag .q { background: #A8452F; }
-.tag .a { background: #3C7452; }
-.tag .arrow { color: #D9761C; font-weight: 800; margin: 0 3px; }
+.stag .q { background: #A8452F; }
+.stag .a { background: #3C7452; }
+.stag .arrow { color: #D9761C; font-weight: 800; margin: 0 3px; }
 .facts { margin-top: 4px; display: flex; flex-wrap: wrap; gap: 3px; }
 .facts span {
   font-size: 7.4px; color: #4A5C67; background: #F0EBDF; border: 1px solid #D6CDB9;
@@ -805,8 +1025,6 @@ path.utility { stroke: #A97C3F; stroke-width: 2.3; stroke-dasharray: 7 5.5; }
 .shelf::after { right: 0; }
 .shelf-name { font-family: "DejaVu Sans Mono", monospace; font-size: 8px; color: #3E5563; margin-left: 7px; }
 .shelf-tag { margin-left: auto; font-size: 7px; color: #8A7A50; }
-.ticks { position: absolute; left: 10px; right: 10px; bottom: 6px; display: flex; justify-content: space-between; z-index: 2; }
-.ticks i { display: block; width: 5px; height: 7px; background: #D9761C; opacity: .6; }
 .route { margin-top: 5px; display: flex; flex-wrap: wrap; align-items: center; gap: 2px; }
 .route span {
   font-family: "DejaVu Sans Mono", monospace; font-size: 7.3px; background: #F0E6DA;
@@ -814,10 +1032,27 @@ path.utility { stroke: #A97C3F; stroke-width: 2.3; stroke-dasharray: 7 5.5; }
 }
 .route em { font-style: normal; color: #D9761C; font-size: 7.6px; }
 
-.fac.sel { outline: 2.5px solid #E07A1F; outline-offset: 2px; background: #FFF6E7;
-           box-shadow: 4px 5px 0 rgba(224, 122, 31, .25); }
-.fac.related { box-shadow: 0 0 0 2px rgba(224, 122, 31, .5), 3px 4px 0 rgba(43, 59, 70, .12); }
-#map.dim .fac:not(.sel):not(.related) { opacity: .55; }
+/* P9 城门示意（楼里的 nginx 值班室） */
+.gate-draw { position: relative; height: 56px; margin-top: 6px; }
+.gate-draw b {
+  position: absolute; left: 22px; right: 22px; top: 2px; height: 8px;
+  background: #3E5563; border-radius: 1px;
+}
+.gate-draw i {
+  position: absolute; top: 9px; bottom: 12px; width: 14px; background: #3E5563; border-radius: 1px;
+}
+.gate-draw i:nth-of-type(1) { left: 22px; }
+.gate-draw i:nth-of-type(2) { right: 22px; }
+.gate-draw em {
+  position: absolute; left: 0; right: 0; bottom: 0; text-align: center; font-style: normal;
+  font-size: 7.2px; color: #8A6A3C; letter-spacing: .6px;
+}
+
+/* 选中 / 关联 / 变淡 */
+.fac.sel, .flow.sel { outline: 2.5px solid #E07A1F; outline-offset: 2px; }
+.fac.sel { background-color: #FFF6E7; }
+.fac.related, .flow.related { outline: 2px solid rgba(224, 122, 31, .5); outline-offset: 2px; }
+#map.dim .fac:not(.sel):not(.related), #map.dim .flow:not(.sel):not(.related) { opacity: .55; }
 
 .rlabel {
   position: absolute; z-index: 6; font-size: 8.1px; line-height: 13px; color: #22303A;
@@ -895,6 +1130,7 @@ path.utility { stroke: #A97C3F; stroke-width: 2.3; stroke-dasharray: 7 5.5; }
       <div class="tt-row"><b>问题</b><span class="tt-problem"></span></div>
       <div class="tt-row"><b>方案</b><span class="tt-solution"></span></div>
       <div class="tt-row"><b>判据</b><span class="tt-criterion"></span></div>
+      <div class="tt-row"><b>楼内</b><span class="tt-parent"></span></div>
       <div class="tt-row"><b>位置</b><span class="tt-page"></span></div>
     </div>
   </div>
@@ -928,6 +1164,22 @@ path.utility { stroke: #A97C3F; stroke-width: 2.3; stroke-dasharray: 7 5.5; }
     tip.querySelector('.tt-problem').textContent = f.problem;
     tip.querySelector('.tt-solution').textContent = f.solution;
     tip.querySelector('.tt-criterion').textContent = String(f.criterion).replace(/`/g, '');
+    var parentTxt;
+    if (f.parent) {
+      var p = facs[f.parent];
+      if (f.kind === '流道') {
+        parentTxt = '楼内流线，属于 ' + p.no + ' ' + p.name +
+                    '；从 ' + p.no + ' 穿出、接到 P9（不是独立建筑）';
+      } else {
+        var roomKind = f.kind.indexOf('楼内') === 0 ? f.kind : '楼内' + f.kind;
+        parentTxt = roomKind + '，属于 ' + p.no + ' ' + p.name + '（不是独立建筑）';
+      }
+    } else if (f.kind === '场地') {
+      parentTxt = '场地（不是楼）';
+    } else {
+      parentTxt = '独立建筑（运行单元）';
+    }
+    tip.querySelector('.tt-parent').textContent = parentTxt;
     tip.querySelector('.tt-page').textContent = f.page + '（' + f.page_id + '）· 交付物 ' + artsText(f);
   }
   function moveTip(ev) {
@@ -941,15 +1193,15 @@ path.utility { stroke: #A97C3F; stroke-width: 2.3; stroke-dasharray: 7 5.5; }
   }
   function clearSel() {
     selected = null;
-    Array.prototype.forEach.call(document.querySelectorAll('.fac.sel'), function (e) { e.classList.remove('sel'); });
-    Array.prototype.forEach.call(document.querySelectorAll('.fac.related'), function (e) { e.classList.remove('related'); });
+    Array.prototype.forEach.call(document.querySelectorAll('.fac.sel, .flow.sel'), function (e) { e.classList.remove('sel'); });
+    Array.prototype.forEach.call(document.querySelectorAll('.fac.related, .flow.related'), function (e) { e.classList.remove('related'); });
     Array.prototype.forEach.call(document.querySelectorAll('.road-seg.hot'), function (e) { e.classList.remove('hot'); });
     map.classList.remove('dim');
   }
   function select(no) {
     clearSel();
     selected = no;
-    var el = document.querySelector('.fac[data-no="' + no + '"]');
+    var el = document.querySelector('[data-no="' + no + '"]');
     if (!el) return;
     el.classList.add('sel');
     map.classList.add('dim');
@@ -962,7 +1214,7 @@ path.utility { stroke: #A97C3F; stroke-width: 2.3; stroke-dasharray: 7 5.5; }
       }
     });
     Object.keys(related).forEach(function (n) {
-      var e = document.querySelector('.fac[data-no="' + n + '"]');
+      var e = document.querySelector('[data-no="' + n + '"]');
       if (e) e.classList.add('related');
     });
   }
@@ -970,7 +1222,7 @@ path.utility { stroke: #A97C3F; stroke-width: 2.3; stroke-dasharray: 7 5.5; }
   window.__citySelect = toggle;
   window.__cityClear = clearSel;
 
-  Array.prototype.forEach.call(document.querySelectorAll('.fac'), function (el) {
+  Array.prototype.forEach.call(document.querySelectorAll('.fac[data-no], .flow[data-no]'), function (el) {
     var f = facs[el.dataset.no];
     el.addEventListener('mouseenter', function (ev) { fillTip(f); tip.hidden = false; moveTip(ev); });
     el.addEventListener('mousemove', moveTip);
@@ -981,35 +1233,54 @@ path.utility { stroke: #A97C3F; stroke-width: 2.3; stroke-dasharray: 7 5.5; }
     });
   });
   map.addEventListener('click', function (ev) {
-    if (!ev.target.closest || !ev.target.closest('.fac')) { clearSel(); }
+    if (!ev.target.closest || !ev.target.closest('.fac, .flow')) { clearSel(); }
   });
   document.addEventListener('keydown', function (ev) { if (ev.key === 'Escape') { clearSel(); } });
 
-  /* 页面内置自检：DOM 计数 + 交互（悬停 / 点击）真跑一遍，写回 #selftest-data 供 --dump-dom 读取 */
+  /* 页面内置自检：DOM 计数 + 交互（悬停 / 点击 / 楼内归属）真跑一遍，写回 #selftest-data 供 --dump-dom 读取 */
   function collect() {
-    var cards = Array.prototype.slice.call(document.querySelectorAll('.fac[data-no]'));
+    var cards = Array.prototype.slice.call(document.querySelectorAll('[data-no]'));
     var badges = Array.prototype.slice.call(document.querySelectorAll('.badge[data-art]'));
     var segs = Array.prototype.slice.call(document.querySelectorAll('.road-seg'));
     var rlabels = Array.prototype.slice.call(document.querySelectorAll('.rlabel'));
-    var p4 = document.querySelector('.fac[data-no="P4"]');
+    var p4 = document.querySelector('[data-no="P4"]');
+    var p2 = document.querySelector('[data-no="P2"]');
+    var flowEl = document.querySelector('.flow');
+    /* 点击 P4：应高亮 2 条相连道路 */
     p4.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     var hot = document.querySelectorAll('.road-seg.hot').length;
-    var sel = document.querySelectorAll('.fac.sel').length;
-    var related = document.querySelectorAll('.fac.related').length;
+    var sel = document.querySelectorAll('.fac.sel, .flow.sel').length;
+    var related = document.querySelectorAll('.fac.related, .flow.related').length;
     p4.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     var hotAfter = document.querySelectorAll('.road-seg.hot').length;
+    /* 点击流线 P8：应高亮 2 条相连道路 */
+    flowEl.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    var hotFlow = document.querySelectorAll('.road-seg.hot').length;
+    var selFlow = document.querySelectorAll('.flow.sel').length;
+    flowEl.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    /* 悬停：窗口 P4 的 tooltip 应写「属于 P3 查询服务中心」 */
     p4.dispatchEvent(new MouseEvent('mouseenter', { bubbles: false, clientX: 940, clientY: 300 }));
     var tipShown = !tip.hidden;
     var tipText = tip.textContent;
+    var tipHasParent3 = tipText.indexOf('属于 P3 查询服务中心') >= 0;
     p4.dispatchEvent(new MouseEvent('mouseleave'));
     var tipHidden = tip.hidden;
+    /* 悬停：货架 P2 的 tooltip 应写「属于 P1 数据仓库大楼」 */
+    p2.dispatchEvent(new MouseEvent('mouseenter', { bubbles: false, clientX: 300, clientY: 700 }));
+    var tip2 = tip.textContent;
+    var tipHasParent1 = tip2.indexOf('属于 P1 数据仓库大楼') >= 0;
+    p2.dispatchEvent(new MouseEvent('mouseleave'));
     var rects = cards.map(function (c) {
       var r = c.getBoundingClientRect();
       return { no: c.dataset.no, x: Math.round(r.left), y: Math.round(r.top),
                w: Math.round(r.width), h: Math.round(r.height) };
     });
-    var overflow = cards.filter(function (c) { return c.scrollHeight > c.clientHeight + 1; })
-                        .map(function (c) { return c.dataset.no; });
+    var overflow = cards.filter(function (c) {
+      if (c.scrollHeight > c.clientHeight + 1) { return true; }
+      /* 楼体上的 ::before 装饰会撑大 scrollWidth，横向只看流带；文字截断另查 .soft */
+      if (c.classList.contains('flow') && c.scrollWidth > c.clientWidth + 1) { return true; }
+      return false;
+    }).map(function (c) { return c.dataset.no; });
     var clipped = Array.prototype.filter.call(document.querySelectorAll('.soft'),
       function (s) { return s.scrollWidth > s.clientWidth + 1; })
       .map(function (s) { return s.textContent; });
@@ -1017,25 +1288,35 @@ path.utility { stroke: #A97C3F; stroke-width: 2.3; stroke-dasharray: 7 5.5; }
       var lab = z.querySelector('.zlabel').getBoundingClientRect();
       return { id: z.dataset.zone, labelBottom: Math.round(lab.bottom) };
     });
+    var structureText = document.querySelector('.note[data-id="structure"]').textContent;
     return {
       facilities: cards.map(function (c) { return c.dataset.no; }),
+      kinds: cards.map(function (c) { return c.dataset.kind || ''; }),
+      buildings: document.querySelectorAll('.fac.bldg').length,
+      rooms: document.querySelectorAll('.fac.room').length,
+      site: document.querySelectorAll('.fac.sitecard').length,
+      flow: document.querySelectorAll('.flow').length,
       badges: badges.map(function (b) { return b.dataset.art; }),
       roads: segs.map(function (s) { return s.dataset.key; }),
       rlabels: rlabels.map(function (s) { return s.textContent; }),
       notes: document.querySelectorAll('.note').length,
       shelves: document.querySelectorAll('.shelf').length,
       route: document.querySelectorAll('.route span').length,
-      ticks: document.querySelectorAll('.ticks i').length,
       zones: document.querySelectorAll('.zone').length,
-      pages: cards.map(function (c) { return c.querySelector('.pg').textContent; }),
-      crits: document.querySelectorAll('.crit').length,
+      pages: cards.map(function (c) {
+        var pg = c.querySelector('.pg');
+        return pg ? pg.textContent : (c.dataset.page || '');
+      }),
+      caption: structureText.indexOf('不是独立建筑') >= 0 && structureText.indexOf('3 座楼') >= 0,
       overflow: overflow,
       clipped: clipped,
       zoneLabels: zoneLabels,
       selftest: { hot: hot, sel: sel, related: related, hotAfter: hotAfter,
+                  hotFlow: hotFlow, selFlow: selFlow,
                   tipShown: tipShown, tipHidden: tipHidden,
                   tipHasSoft: tipText.indexOf('POST /api/query') >= 0,
-                  tipHasPage: tipText.indexOf('第 4 页') >= 0 },
+                  tipHasPage: tipText.indexOf('第 4 页') >= 0,
+                  tipHasParent3: tipHasParent3, tipHasParent1: tipHasParent1 },
       resources: performance.getEntriesByType('resource').length,
       srcAttrs: document.querySelectorAll('[src]').length + document.querySelectorAll('link').length,
       font: getComputedStyle(document.body).fontFamily,
@@ -1057,8 +1338,8 @@ path.utility { stroke: #A97C3F; stroke-width: 2.3; stroke-dasharray: 7 5.5; }
 
 
 def build_html(data: dict, info: dict) -> str:
-    plan_note = (f"规划示意 · 非按比例 · {len(data['facilities'])} 座设施 · 12 件交付物 · "
-                 f"{len(data['roads'])} 条道路 / 管网 · {len(data['titles'])} 页标题")
+    plan_note = (f"规划示意 · 非按比例 · 3 座楼 + 1 块场地 · 5 个楼内房间 + 1 条流线 · "
+                 f"12 件交付物 · {len(data['titles'])} 页标题")
     legend = "".join(
         f'<span class="lg lg-{esc(l["mark"])}"><i></i>{esc(l["short"])}</span>'
         for l in data["legend"])
@@ -1082,9 +1363,7 @@ def build_html(data: dict, info: dict) -> str:
         "__GRANULARITY__": granularity,
         "__ZONES__": "".join(zone_html(z) for z in data["zones"]),
         "__ROADS__": roads_svg(data["roads"], info["rects"]),
-        "__FACILITIES__": "".join(facility_html(f) for f in
-                                  sorted(data["facilities"],
-                                         key=lambda f: (1 if "parent" in f else 0, f["no"]))),
+        "__FACILITIES__": facilities_html(data),
         "__CITIZEN__": citizen_html(data["citizen"]),
         "__NOTES__": notes_html(data["notes"]),
         "__ROAD_LABELS__": road_labels_html(data["roads"]),
@@ -1141,16 +1420,28 @@ def check_html_static(page: str, data: dict, info: dict) -> None:
     for token in REQUIRED_TOKENS:
         if token not in page:
             fail(f"成品 HTML 里缺少关键真值 {token!r}（图会讲不清）")
-    if page.count('class="badge"') != 12:
-        fail(f"HTML 里圈号徽章 {page.count('class=\"badge\"')} 个，应为 12")
-    if page.count('class="zone zone-') != 4:
-        fail("HTML 里区划不是 4 个")
-    if page.count('class="road-seg"') != len(data["roads"]):
-        fail(f"HTML 里道路 {page.count('class=\"road-seg\"')} 条，应为 {len(data['roads'])}")
+    checks = [
+        ('class="badge"', 12, "圈号徽章"),
+        ('class="zone zone-', 4, "区划"),
+        ('class="road-seg"', len(data["roads"]), "道路"),
+        ('class="fac bldg', len(info["buildings"]), "楼"),
+        ('class="fac room', len(info["rooms"]), "楼内房间"),
+        ('class="fac sitecard"', len(info["site"]), "场地"),
+        ('class="flow"', len(info["flows"]), "流线"),
+        ('class="roof"', len(info["buildings"]), "屋顶"),
+        ('class="stag"', len(data["facilities"]) - len(info["flows"]), "问题→方案短标签"),
+    ]
+    for needle, want, label in checks:
+        got = page.count(needle)
+        if got != want:
+            fail(f"HTML 里{label} {got} 个，应为 {want}")
+    if CAPTION_TEXT not in page:
+        fail("HTML 里没有整图图注：3 座楼 + 1 块场地…不是独立建筑")
     if page.count('style="left:') < 10:
         fail("HTML 里绝对定位元素太少，版面没排出来")
     print("  ✓ HTML 素材：零外链 / 零 src·href 资源 / 无用户名 / 绝对路径 / 口令；"
-          "10 设施 / 12 徽章 / 11 条道路都在")
+          f"3 座楼 / 1 块场地 / {len(info['rooms'])} 个楼内房间 / 1 条流线 / 12 徽章 / "
+          f"{len(data['roads'])} 条道路 / 图注都在")
 
 
 # ------------------------------------------------------------------ Chrome
@@ -1194,6 +1485,15 @@ def check_metrics(metrics: dict, data: dict, info: dict) -> None:
     got_facs = sorted(metrics.get("facilities") or [], key=lambda s: int(str(s)[1:]))
     if got_facs != want_facs:
         errs.append(f"页面设施 {metrics.get('facilities')}，应为 {want_facs}")
+    want_kind = {f["no"]: f["kind"] for f in data["facilities"]}
+    got_kind = dict(zip(metrics.get("facilities") or [], metrics.get("kinds") or []))
+    for no, kind in want_kind.items():
+        if got_kind.get(no) != kind:
+            errs.append(f"{no} 页面 kind={got_kind.get(no)!r}，应为 {kind!r}")
+    for key, expected in (("buildings", info["buildings"]), ("rooms", info["rooms"]),
+                          ("site", info["site"]), ("flow", info["flows"])):
+        if metrics.get(key) != len(expected):
+            errs.append(f"页面 {key}={metrics.get(key)}，应为 {len(expected)}（{expected}）")
     got_badges = sorted(int(x) for x in (metrics.get("badges") or []))
     if got_badges != list(range(1, 13)):
         errs.append(f"页面徽章 {metrics.get('badges')}，应为 1–12 各一次")
@@ -1211,21 +1511,19 @@ def check_metrics(metrics: dict, data: dict, info: dict) -> None:
         errs.append(f"P2 货架 {metrics.get('shelves')} 行，应为 5（5 张库表）")
     if metrics.get("route") != len(data["facilities"][-1].get("route") or []):
         errs.append("P9 端到端链路步骤数与 data.json 不一致")
-    if metrics.get("ticks") != PROGRESS_TICKS:
-        errs.append(f"传送带进度刻度 {metrics.get('ticks')} 个，应为 {PROGRESS_TICKS}")
-    want_pages = sorted(f"第 {int(f["no"][1:])} 页" for f in data["facilities"])
+    if not metrics.get("caption"):
+        errs.append("页面里没有「3 座楼 + 1 块场地…不是独立建筑」的整图图注")
+    want_pages = sorted(f["page"] for f in data["facilities"])
     if sorted(metrics.get("pages") or []) != want_pages:
         errs.append(f"页面页码标 {metrics.get('pages')}，应为 {want_pages}")
-    want_crits = sum(1 for f in data["facilities"] if f.get("crit_on_map"))
-    if metrics.get("crits") != want_crits:
-        errs.append(f"页面判据条 {metrics.get('crits')} 条，应为 {want_crits}")
     if metrics.get("overflow"):
-        errs.append(f"设施卡内容溢出（会被裁掉）：{metrics['overflow']}")
+        errs.append(f"设施卡 / 流带内容溢出（会被裁掉）：{metrics['overflow']}")
     if metrics.get("clipped"):
         errs.append(f"软件对应行被省略号截断：{metrics['clipped']}")
     zone_min_top = {}
     for f in data["facilities"]:
-        zone_min_top[f["zone"]] = min(zone_min_top.get(f["zone"], 10 ** 9), f["position"]["y"])
+        r = pos_size(f)
+        zone_min_top[f["zone"]] = min(zone_min_top.get(f["zone"], 10 ** 9), r["y"])
     for zl in metrics.get("zoneLabels") or []:
         limit = zone_min_top.get(zl["id"])
         if limit is not None and zl["labelBottom"] > limit - 2:
@@ -1236,15 +1534,22 @@ def check_metrics(metrics: dict, data: dict, info: dict) -> None:
     connected = sum(1 for r in data["roads"] if "P4" in (r["from"], r["to"]))
     related = len({r["to"] if r["from"] == "P4" else r["from"]
                    for r in data["roads"] if "P4" in (r["from"], r["to"])} - {"citizen"})
-    for key, want in (("hot", connected), ("sel", 1), ("related", related), ("hotAfter", 0)):
+    flow_connected = sum(1 for r in data["roads"] if "P8" in (r["from"], r["to"]))
+    for key, want in (("hot", connected), ("sel", 1), ("related", related), ("hotAfter", 0),
+                      ("hotFlow", flow_connected), ("selFlow", 1)):
         if hit.get(key) != want:
-            errs.append(f"交互自检 {key}={hit.get(key)}，应为 {want}（点击 P4 应高亮 {connected} 条路）")
+            errs.append(f"交互自检 {key}={hit.get(key)}，应为 {want}"
+                        f"（点 P4 高亮 {connected} 条路；点 P8 流线高亮 {flow_connected} 条路）")
     if not hit.get("tipShown") or not hit.get("tipHidden"):
         errs.append("悬停 tooltip 没有正确显示 / 收起")
     if not hit.get("tipHasSoft"):
         errs.append("tooltip 里没有软件对应（POST /api/query）")
     if not hit.get("tipHasPage"):
         errs.append("tooltip 里没有页码（第 4 页）")
+    if not hit.get("tipHasParent3"):
+        errs.append("P4 的 tooltip 没写「属于 P3 查询服务中心」")
+    if not hit.get("tipHasParent1"):
+        errs.append("P2 的 tooltip 没写「属于 P1 数据仓库大楼」")
     if metrics.get("resources"):
         errs.append(f"页面发起了 {metrics['resources']} 个外部资源请求（必须 0）")
     if metrics.get("srcAttrs"):
@@ -1258,7 +1563,7 @@ def check_metrics(metrics: dict, data: dict, info: dict) -> None:
     for rect in metrics.get("rects", []):
         r = {"x": rect["x"], "y": rect["y"], "w": rect["w"], "h": rect["h"]}
         if not in_canvas(r):
-            errs.append(f"{rect['no']} 渲染后越出画布：{rect}")
+            errs.append(f"{rect['no']} 渲染后越出画布：{r}")
         want = pos_size(info["facilities"][rect["no"]])
         if abs(r["x"] - want["x"]) > 1 or abs(r["y"] - want["y"]) > 1 \
                 or abs(r["w"] - want["w"]) > 1 or abs(r["h"] - want["h"]) > 1:
@@ -1268,9 +1573,10 @@ def check_metrics(metrics: dict, data: dict, info: dict) -> None:
         for e in errs:
             print(f"  - {e}", file=sys.stderr)
         raise SystemExit(1)
-    print(f"  ✓ 页面自检：10 设施 / 12 徽章 / 11 条路 / 4 区 / 3 图注 / 5 货架 / "
-          f"{PROGRESS_TICKS} 个进度刻度 / 10 个页码标 / {want_crits} 条判据；"
-          f"悬停 tooltip 有软件名与页码；点击 P4 高亮 {connected} 条路、再点归零；"
+    print(f"  ✓ 页面自检：3 座楼 / 1 块场地 / 5 个楼内房间 / 1 条流线（10 件，12 徽章各一次）；"
+          f"11 条路 / 4 区 / 3 图注 / 5 货架 / 10 个页码标；")
+    print(f"    悬停 P4 显示「属于 P3 查询服务中心」、P2 显示「属于 P1 数据仓库大楼」；"
+          f"点 P4 高亮 {connected} 条路、点 P8 高亮 {flow_connected} 条路、再点归零；"
           f"无外部请求、无内容溢出 / 截断、区标题不压设施")
 
 
@@ -1394,13 +1700,13 @@ def main() -> int:
     if not Path(CHROME).exists():
         fail(f"找不到 Chrome：{CHROME}")
 
-    print("① 读 data.json + 结构与几何自检")
+    print("① 读 data.json + 结构与几何自检（方向 C：3 座楼 + 1 块场地，其余是楼内房间）")
     data = load_json(DATA_PATH, "data.json")
     info = validate_data(data)
     scan_forbidden(DATA_PATH.read_text(encoding="utf-8"), "data.json")
     print("  ✓ 数据文本：无外链 / 用户名 / 绝对路径 / 口令")
 
-    print("② 组版 city-map.html（四区 + 十设施 + 十二条徽章 + 十一条道路 + 图注）")
+    print("② 组版 city-map.html（四区 + 3 座楼 + 1 块场地 + 5 个楼内房间 + 1 条流线 + 11 条道路 + 图注）")
     page = build_html(data, info)
     scan_forbidden(page, "成品 HTML")
     check_html_static(page, data, info)
@@ -1446,7 +1752,7 @@ def main() -> int:
     ocr_soft_check(OUT_PNG)
 
     print("\n✓ 完成：")
-    print(f"  {HTML_PATH.relative_to(REPO)}（可交互：悬停 tooltip / 点击高亮相连道路）")
+    print(f"  {HTML_PATH.relative_to(REPO)}（可交互：悬停 tooltip 显示楼内归属 / 点击高亮相连道路）")
     print(f"  {TITLES_PATH.relative_to(REPO)}（23 行标题草案）")
     print(f"  {OUT_PNG.relative_to(REPO)}  {OUT_W}×{OUT_H}  {OUT_PNG.stat().st_size // 1024} KB")
     print(f"  重跑：{RERUN}")
