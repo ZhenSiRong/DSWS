@@ -1,0 +1,43 @@
+{
+  "page": "page-19",
+  "title": "第 19 页 · 守策略：36 条注入全拒、11 条正常零误杀",
+  "output": "/tmp/shots-demo/page-19-policy.png",
+  "stack": {"mode": "none"},
+  "embed": {
+    "path": "manual/page-19.md",
+    "image": "images/page-19-policy.png",
+    "alt": "第 19 页 · `security --check`：36/36 拒 + 11/11 放行 + 8/8 基线，S5 PASS",
+    "anchor": "## 对账",
+    "position": "before",
+    "mode": "verify"
+  },
+  "ocr_keywords": ["36/36", "11/11", "8/8", "S5 PASS", "47"],
+  "panels": [
+    {
+      "heading": "终端 · 第 2 步：security --check——36/36 全拒 + 11/11 放行 + 8/8 基线，末行 S5 PASS（纯离线）",
+      "commands": ["(cd backend && .venv/bin/python -m app.scripts.security --check)"],
+      "expect_lines": [
+        "== 1/3 注入语料（必须 100% 拒绝） ==",
+        "  注入语料：36/36 条按预期拒绝",
+        "== 2/3 零误杀语料（必须全部放行） ==",
+        "  零误杀语料：11/11 条放行",
+        "== 3/3 S4 基线零误杀 ==",
+        "  S4 基线：8/8 条 SQL 通过策略",
+        "S5 PASS"
+      ]
+    },
+    {
+      "heading": "第 3 步：语料判定表（节选三类构造）——末行统计走 stderr，PYTHONUNBUFFERED=1 保证它落在表尾",
+      "commands": ["(cd backend && PYTHONUNBUFFERED=1 .venv/bin/python -m app.scripts.security --corpus) 2>&1 | grep -E \"multi_statement|executable_comment|union|语料：\""],
+      "expect_lines": [
+        "| multi_statement_drop | SQL_MULTIPLE_STATEMENTS | SQL_MULTIPLE_STATEMENTS | PASS |",
+        "| multi_statement_update | SQL_MULTIPLE_STATEMENTS | SQL_MULTIPLE_STATEMENTS | PASS |",
+        "| executable_comment_union | SQL_COMMENT_OBFUSCATION | SQL_COMMENT_OBFUSCATION | PASS |",
+        "| executable_comment_drop | SQL_COMMENT_OBFUSCATION | SQL_COMMENT_OBFUSCATION | PASS |",
+        "| union_exfiltration | SQL_FORBIDDEN_CONSTRUCT | SQL_FORBIDDEN_CONSTRUCT | PASS |",
+        "| union_all_exfiltration | SQL_FORBIDDEN_CONSTRUCT | SQL_FORBIDDEN_CONSTRUCT | PASS |",
+        "语料：47 条，失败 0 条"
+      ]
+    }
+  ]
+}

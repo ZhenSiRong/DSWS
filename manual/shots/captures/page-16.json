@@ -1,0 +1,50 @@
+{
+  "page": "page-16",
+  "title": "第 16 页 · 审校验：错单要在执行前被拦下",
+  "output": "/tmp/shots-demo/page-16-guard.png",
+  "stack": {"mode": "none"},
+  "embed": {
+    "path": "manual/page-16.md",
+    "image": "images/page-16-guard.png",
+    "alt": "第 16 页 · 三条离线判据：26 passed + 失败矩阵 S6 PASS + 语料对账 {\"total\": 20, \"mismatch\": 0}",
+    "anchor": "## 对账",
+    "position": "before",
+    "mode": "verify"
+  },
+  "ocr_keywords": ["26 passed", "S6 PASS", "mismatch", "SQL_REJECTED", "16"],
+  "panels": [
+    {
+      "heading": "终端 · 第 2 步：pytest test_guard.py——静态校验 26 条全过（秒数随机器变）",
+      "commands": ["backend/.venv/bin/python -m pytest backend/tests/generate/test_guard.py -q"],
+      "display": "matched",
+      "expect_lines": ["26 passed in …"]
+    },
+    {
+      "heading": "第 3 步：失败矩阵（9 个场景）+ 16 码表——S6 PASS",
+      "commands": ["(cd backend && .venv/bin/python -m app.scripts.failures --check)"],
+      "display": "matched",
+      "expect_lines": [
+        "sql_unknown_column 期望 SQL_UNKNOWN_COLUMN 实际 SQL_UNKNOWN_COLUMN",
+        "错误码表：16 个码，路线图要求的 7 个全在",
+        "S6 PASS"
+      ]
+    },
+    {
+      "heading": "第 4 步：20 条错单的期望码对账 + 码分布——mismatch 0（分布共 10 行，留前 7 行）",
+      "commands": [
+        "PYTHONPATH=backend backend/.venv/bin/python eval/probe_correction.py | tail -1",
+        "grep -o '\"expect_code\": \"[A-Z_]*\"' eval/correction.jsonl | awk -F'\"' '{print $4}' | sort | uniq -c | sort -rn"
+      ],
+      "display": "matched",
+      "expect_lines": [
+        "{\"total\": 20, \"mismatch\": 0}",
+        "5 SQL_REJECTED",
+        "3 SQL_UNKNOWN_COLUMN",
+        "2 SQL_UNKNOWN_TABLE",
+        "2 SQL_SYNTAX",
+        "2 SQL_NOT_READ_ONLY",
+        "2 SQL_CONSTANT_PROJECTION"
+      ]
+    }
+  ]
+}
