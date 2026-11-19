@@ -1,10 +1,10 @@
 # 第 22 页 · 守回归：一套门禁能不能替你值班
 
-> 前置：L4（守）第五页，也是全书最后一页。前两条判据离线：`backend/.venv` 由第 0 页 `make install` 生成，`frontend/node_modules` 缺了就先 `npm ci`（要联网）。第三条要整栈：Docker 可用、`.env` 已由 `make docker-env` 生成、第 13 页的 `make docker-up` 起过栈。命令都在仓库根目录、同一个终端里整段连续执行；括号是子 shell，跑完你还在仓库根目录。
+> 前置：L4（守）第五页，也是全书最后一页。前两条判据离线：`backend/.venv` 由第 0 页 `make install` 生成，`frontend/node_modules` 缺了就先 `npm ci`（要联网）。第三条要整栈：Docker 可用、`.env` 已由 `make docker-env` 生成、第 13 页的 `make docker-up` 起过栈（栈停过/机器重启过就先 `make docker-up` 或 `docker compose up -d`，第 13 页起过 ≠ 现在还在跑）；宿主机还要有 `python3`（≥3.8）与 `curl`，smoke 预检要用。除级考核的终端 B 外，命令都在仓库根目录、同一个终端里整段连续执行；终端 B 也先 `cd` 到仓库根目录，否则 `source` 找不到脚本、`id` 为空会空等；括号是子 shell，跑完你还在仓库根目录。
 
 ## 这一页构建什么
 
-把 8 步 `docker-smoke`、stage0–7、全量 pytest、前端测试拼成一张**回归网**：一条命令替你值班，任何一条变红都能指出是哪一层退化。做完你拿到一张「每条门禁防哪类退化」的对照表，和一次亲手把网打穿、看它精确变红、再修好的级考核。心智模型：**回归网的价值不在「全绿」，在「红了能定位」。**
+把 8 步 `docker-smoke`、stage0–7、全量 pytest、前端测试拼成一张**回归网**：每个门禁各一条命令，哪条变红就指出哪一层退化（本页只跑其中 4 条；要连 stage 一起跑就是 `make stage7` 再接 `make docker-smoke`）。做完你拿到一张「每条门禁防哪类退化」的对照表，和一次亲手把网打穿、看它精确变红、再修好的级考核。心智模型：**回归网的价值不在「全绿」，在「红了能定位」。**
 
 ## 猜一猜
 
@@ -28,7 +28,7 @@ scripts/lab save p22-before
 (cd frontend && npm test)
 ```
 
-**第 4 步：一键门禁。** 前提：Docker 可用、`.env` 已生成、第 13 页起的栈在跑（端口被占就先按第 13 页第 3 步改 `.env`）。它自己会 `up` 一次（幂等），再 8 步逐条验；任何一步红都立刻停：
+**第 4 步：一键门禁。** 前提：Docker 可用、`.env` 已生成、第 13 页起的栈在跑（栈停过就先 `docker compose up -d` 或按第 13 页重起；端口被占就先按第 13 页第 3 步改 `.env`）。它自己会 `up` 一次（幂等；首次或镜像被清会重建，约 8 分钟），再 8 步逐条验；任何一步红都立刻停：
 ```bash
 make docker-smoke
 ```
@@ -37,13 +37,13 @@ make docker-smoke
 
 （`#` 开头是标注；秒数、文件数、端口、`sse_chunks` 随机器变；`sse_verdict` 可能是 `streamed` 也可能是 `too-fast`——后者同样算过，见第 13 页）：
 ```text
-# 第 1 步
+# 第 1 步（节选：实际另有「位置」「下一步」两行回显）
 已保存快照 "p22-before"：169 个文件。
 # 第 2 步
 813 passed, 30 skipped in 36.28s
 # 第 3 步
       Tests  40 passed (40)
-# 第 4 步（节选：从上往下依次是 1/8 起栈、2/8 health、3/8 服务表、4/8 步数、5/8 真查询、6/8 nginx、7/8 只读、8/8 对账、init 幂等、通过）
+# 第 4 步（节选：1/8 起栈日志省略；从上往下是 2/8 health、3/8 服务表、4/8 步数、5/8 真查询、6/8 nginx、7/8 只读、8/8 对账、init 幂等、通过。5/8 内部与 6/8 都会打 nginx 行，这里只留 6/8 一次）
 health: {"status":"ok","stage":"S7"}
 services: backend=running, elasticsearch=running, frontend=running, init=exited, mysql=running, qdrant=running
 steps=12
@@ -76,34 +76,37 @@ DOCKER SMOKE PASS
 
 **第 1 步：先搞清时机。** smoke 第 1 步的 `up` 每次都会重跑一次性 init，init 每次都重建 `dw_reader`——所以「先越权、再整跑」是 0 步红（猜 2 的答案）。要让第 7 步的牙咬到，越权必须发生在 init 之后、第 7 步之前。
 
-**第 2 步：终端 B 先粘、回车，再跑终端 A。** 窗口实测只有约 3 秒（init 退出 → 第 7 步开始），靠手速会输，让循环替你等；终端 A 只有一条 `make docker-smoke`：
+**第 2 步：先起终端 B，粘完、回车，确认它在等，再在终端 A 跑。** 前置：终端 B 也在仓库根目录，`docker compose ps -a` 要能看到 init 容器——栈停过/重启过就先 `docker compose up -d`（或按第 13 页重起）；看不到 init 时 `id` 为空，B 会无限静默空等、A 照样跑，级考核既不红也不报错。窗口实测只有约 3 秒（init 退出 → 第 7 步开始），靠手速会输，让循环替你等；终端 A 只有一条 `make docker-smoke`：
 ```bash
-# 终端 B：先 source 拿到密码，等这次 init 真跑过（running → exited）就立刻越权
+# 终端 B（仓库根目录，先启动、回车）：每轮重取 id（A 的 up 会重建 init），60 秒等不到就退出
 source scripts/export-docker-env.sh
-id="$(docker compose ps -aq init)"
-while [ "$(docker inspect -f '{{.State.Status}}' "$id")" != running ]; do sleep 0.1; done
-while [ "$(docker inspect -f '{{.State.Status}}' "$id")" != exited ]; do sleep 0.1; done
+seen=0; end=$((SECONDS+60)); while [ "$SECONDS" -lt "$end" ]; do
+  id="$(docker compose ps -aq init 2>/dev/null)"; [ -z "$id" ] && { sleep 0.1; continue; }
+  s="$(docker inspect -f '{{.State.Status}}' "$id" 2>/dev/null)"; [ "$s" = running ] && seen=1
+  [ "$seen" = 1 ] && [ "$s" = exited ] && { echo "watcher: 捕捉到 init 退出，立刻注入 GRANT ALL"; break; }
+  sleep 0.1; done
+[ "$seen" = 1 ] || { echo "没等到 init 跑起来（60 秒）：先确认栈已起、A 的 smoke 已开跑（docker compose ps -a），再重跑本步" >&2; exit 1; }
 docker compose exec -T mysql mysql -uroot -p"$REBUILD_MYSQL_ROOT_PASSWORD" -e "GRANT ALL ON dw.* TO 'dw_reader'@'%'"
 ```
 
-**第 3 步：看 A 的输出。** 1–6 步全绿（节选），第 7 步红，脚本 fail-fast 停在这里、第 8 步不跑，并打出 `ps -a` 与各服务日志（省略）：
+**第 3 步：看 A 的输出。** 1–6 步全绿（节选），第 7 步红，脚本 fail-fast 停在这里、第 8 步不跑，并打出 `ps -a` 与各服务日志（省略）。**若 A 8 步全绿，说明 GRANT 落晚了（已在第 7 步之后）或没注入——整次重来，别把全绿当成功**（慢机器可先 `docker compose exec -T mysql true` 预热）：
 ```text
 # 1–6 步（节选）
 steps=12
 sse_verdict=streamed
 result rows=1 columns=1 sse_chunks=22
 nginx: /api/query 的代理缓冲已关闭
-# 第 7 步
+# 第 7 步（节选；FAIL 摘要走 stderr 先到，账号/GRANT/写操作后到 stdout——缓冲顺序，不是判据错，见第 18 页）
+FAIL: 3 项问题
   GRANT GRANT USAGE ON *.* TO `dw_reader`@`%`
   GRANT GRANT ALL PRIVILEGES ON `dw`.* TO `dw_reader`@`%`
 写操作尝试：写操作被放行（权限配置有误）
-FAIL: 3 项问题
 DOCKER SMOKE FAIL: 只读账号验证未通过
 ```
 
 **第 4 步：验「定位精确」。** 同一个越权状态下，第 8 步的判据单独跑仍是绿的（`docker compose run --rm --no-deps init python -m app.build_meta_knowledge --verify | tail -1` → `S2 VERIFY PASS`）——红的只有第 7 步，不是整片红。
 
-**第 5 步：还原、回 PASS。** 还原就是第 18 页那句重开账号（权限集合回到 `SELECT`），再整跑一次：
+**第 5 步：还原、回 PASS。** 在**终端 B（已 `source` 过）**里跑；新开的终端要先 `source scripts/export-docker-env.sh`，否则会红 `缺少环境变量 REBUILD_DW_RO_PASSWORD`。还原就是第 18 页那句重开账号（权限集合回到 `SELECT`），再整跑一次（回显节选：实际前面还有 4 行 `已执行：…`）：
 ```bash
 (cd backend && .venv/bin/python -m app.scripts.security --provision-ro-account)
 make docker-smoke
