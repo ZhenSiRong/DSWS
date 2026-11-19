@@ -1,0 +1,787 @@
+#!/usr/bin/env bash
+# scripts/lab —— 教学用快照 / 回滚 CLI（D33 安全底线；D46 第 6 条「lab 最先做」）
+#
+# 学生只用三条主命令：
+#   scripts/lab save <名字>            给白名单路径拍快照
+#   scripts/lab diff <名字>            看工作区比快照多了 / 少了 / 改了什么
+#   scripts/lab reset <名字> --yes     把白名单文件恢复成快照的样子
+# 辅助：list（列快照）、help（一屏说明）
+#
+# 为什么这么小：L2–L4 每页的「拆一刀」只需要"改坏了能一句话回到拆之前"。
+# 版本控制、分支、容器编排都不该抢学生的注意力，所以这里刻意只做文件层。
+#
+# 三条硬规则（改脚本前先读）：
+#   1. 只碰白名单（WHITELIST）里的普通文件；.env / .venv / node_modules /
+#      __pycache__ / .git 永不入快照，也永不被 reset 删除；
+#   2. 快照只读：同名 save 直接拒绝，绝不覆盖（D33 第 5 条）；
+#   3. reset 没有 --yes 只打印计划；有 --yes 也必须先拍 pre-reset 安全快照。
+#
+# 文件之外的（容器、数据库、Docker 卷）不在 v1：见 docs/lab.md「限制」。
+
+set -u
+
+SELF_DIR="$(cd "$(dirname "$0")" && pwd)"
+ROOT="$(cd "$SELF_DIR/.." && pwd)"
+LAB_DIR="$ROOT/.lab"
+SNAP_DIR="$LAB_DIR/snapshots"
+
+# 白名单：只跟踪这些路径。目录不存在就跳过（并在 manifest 里记一笔）。
+WHITELIST=(contracts compose.yaml backend/app backend/tests fixtures frontend/src)
+# 与 WHITELIST 一一对应的类型；路径当前不存在时也要在 manifest 里记对类型。
+WHITELIST_KIND=(dir file dir dir dir dir)
+
+# 永不入快照、也永不被删除的名字（find -name 的模式，作用于任意层级）。
+# .env 与 .env.* 是密钥；其余是依赖/缓存/版本库，体积大且可重建。
+EXCLUDES=(.git .venv node_modules __pycache__ .env '.env.*' '*.pyc' .DS_Store)
+
+TMP_WORK=""
+SHA256_CMD=()
+DIFF_LABEL_OK=""
+
+# ---------------------------------------------------------------------------
+# 小工具
+# ---------------------------------------------------------------------------
+
+cleanup_tmp() {
+  if [ -n "$TMP_WORK" ] && [ -d "$TMP_WORK" ]; then
+    rm -rf -- "$TMP_WORK"
+  fi
+}
+trap cleanup_tmp EXIT HUP INT TERM
+
+error() {
+  printf 'lab: %s\n' "$*" >&2
+}
+
+# 失败即停，并给"下一步做什么"。
+die() {
+  error "$1"
+  if [ $# -gt 1 ]; then
+    printf '%s\n' "$2" >&2
+  fi
+  exit 1
+}
+
+ensure_tmp() {
+  if [ -z "$TMP_WORK" ]; then
+    TMP_WORK="$(mktemp -d "${TMPDIR:-/tmp}/lab.XXXXXX")" || die "建不了临时目录（mktemp 失败）。" "检查 TMPDIR 或磁盘空间后重试。"
+  fi
+}
+
+json_escape() {
+  # 路径里的反斜杠和双引号不能直接写进 JSON；控制字符由调用方跳过。
+  printf '%s' "$1" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g' -e 's/\t/\\t/g'
+}
+
+json_str() {
+  # 从自己写的 manifest.json 里取一个顶层字符串值（格式固定，不需要 jq）。
+  sed -n "s/^  \"$2\": \"\(.*\)\",\{0,1\}\$/\1/p" "$1" 2>/dev/null | head -n 1
+}
+
+json_num() {
+  sed -n "s/^  \"$2\": \([0-9][0-9]*\),\{0,1\}\$/\1/p" "$1" 2>/dev/null | head -n 1
+}
+
+count_lines() {
+  if [ -s "$1" ]; then
+    LC_ALL=C wc -l < "$1" | tr -d '[:space:]'
+  else
+    printf '0'
+  fi
+}
+
+require_sha256() {
+  if [ "${#SHA256_CMD[@]}" -gt 0 ]; then
+    return 0
+  fi
+  if command -v sha256sum >/dev/null 2>&1; then
+    SHA256_CMD=(sha256sum)
+  elif command -v shasum >/dev/null 2>&1; then
+    SHA256_CMD=(shasum -a 256)
+  else
+    die "找不到 sha256sum 或 shasum，无法给文件算校验和。" \
+        "装 coreutils（或 macOS 自带的 shasum）后重试。"
+  fi
+}
+
+sha256_of() {
+  "${SHA256_CMD[@]}" "$1" | awk '{print $1}'
+}
+
+human_age() {
+  # 把 unix 时间戳说成"3 分钟前"，让"我要回到哪个时刻"是可感知的。
+  local ts="${1:-}" now delta
+  case "$ts" in
+    ''|*[!0-9]*) printf '时间未知'; return 0 ;;
+  esac
+  if [ "$ts" -le 0 ]; then
+    printf '时间未知'
+    return 0
+  fi
+  now="$(date +%s)"
+  delta=$((now - ts))
+  if [ "$delta" -lt 60 ]; then
+    printf '刚刚'
+  elif [ "$delta" -lt 3600 ]; then
+    printf '%d 分钟前' "$((delta / 60))"
+  elif [ "$delta" -lt 86400 ]; then
+    printf '%d 小时前' "$((delta / 3600))"
+  else
+    printf '%d 天前' "$((delta / 86400))"
+  fi
+}
+
+git_head() {
+  # 快照里记 git HEAD 只为"对账"：学生不看 git，但老师/助教能对上提交。
+  local head
+  head="$(git -C "$ROOT" rev-parse HEAD 2>/dev/null || true)"
+  if [ -n "$head" ]; then
+    printf '%s' "$head"
+  else
+    printf 'unknown'
+  fi
+}
+
+git_head_short() {
+  local head
+  head="$(git_head)"
+  if [ "$head" = "unknown" ]; then
+    printf 'unknown'
+  else
+    printf '%s' "${head:0:7}"
+  fi
+}
+
+# ---------------------------------------------------------------------------
+# 文件枚举 / 快照校验
+# ---------------------------------------------------------------------------
+
+# 在 $1 目录下找普通文件，剪掉 EXCLUDES 里的依赖、缓存、密钥、版本库。
+find_tracked_files() {
+  local base="$1" expr=() pat
+  for pat in "${EXCLUDES[@]}"; do
+    if [ "${#expr[@]}" -gt 0 ]; then
+      expr+=(-o)
+    fi
+    expr+=(-name "$pat")
+  done
+  find "$base" \( "${expr[@]}" \) -prune -o -type f -print
+}
+
+# 当前工作区里、白名单内的文件（repo 相对路径，一行一个，排序）。
+list_worktree_files() {
+  local entry abs
+  for entry in "${WHITELIST[@]}"; do
+    abs="$ROOT/$entry"
+    if [ -L "$abs" ]; then
+      continue                     # v1 只跟踪普通文件，符号链接不跟
+    elif [ -d "$abs" ]; then
+      find_tracked_files "$abs"
+    elif [ -f "$abs" ]; then
+      printf '%s\n' "$abs"
+    fi
+  done | while IFS= read -r abs; do
+    printf '%s\n' "${abs#"$ROOT"/}"
+  done | LC_ALL=C sort
+}
+
+# 某张快照里的文件（repo 相对路径，一行一个，排序）。
+list_snapshot_files() {
+  local name="$1" tree="$SNAP_DIR/$name/tree" abs
+  [ -d "$tree" ] || return 0
+  find "$tree" -type f -print | while IFS= read -r abs; do
+    printf '%s\n' "${abs#"$tree"/}"
+  done | LC_ALL=C sort
+}
+
+is_whitelist_root() {
+  local entry
+  for entry in "${WHITELIST[@]}"; do
+    if [ "$entry" = "$1" ]; then
+      return 0
+    fi
+  done
+  return 1
+}
+
+assert_safe_rel() {
+  case "$1" in
+    ''|/*|.|..|../*|*/..|*/../*)
+      error "拒绝操作可疑路径：$1（脚本有 bug 或快照被改过）"
+      return 1
+      ;;
+  esac
+  return 0
+}
+
+validate_name() {
+  local name="$1"
+  case "$name" in
+    '')
+      usage_error "名字不能为空。例：scripts/lab save before-schema"
+      ;;
+    *[!A-Za-z0-9._-]*)
+      usage_error "名字 '$name' 含非法字符。只能用字母、数字、点、下划线、短横线（例：before-schema）。"
+      ;;
+    [A-Za-z0-9]*)
+      ;;
+    *)
+      usage_error "名字 '$name' 要以字母或数字开头。例：before-schema"
+      ;;
+  esac
+  if [ "${#name}" -gt 64 ]; then
+    usage_error "名字 '$name' 太长（最多 64 个字符）。"
+  fi
+}
+
+require_snapshot() {
+  local name="$1" dir="$SNAP_DIR/$name"
+  if [ ! -d "$dir" ]; then
+    die "找不到快照 \"$name\"。" \
+        "先看有哪些：scripts/lab list
+想给当前工作区拍一张：scripts/lab save $name"
+  fi
+  if [ ! -f "$dir/manifest.json" ] || [ ! -d "$dir/tree" ]; then
+    die "快照 \"$name\" 不完整（缺 manifest.json 或 tree/），不敢用它恢复。" \
+        "删掉它再重拍：rm -rf .lab/snapshots/$name && scripts/lab save $name"
+  fi
+}
+
+# 比对快照与工作区：结果写进 $2/$3/$4 三个文件（新增/删除/修改）。
+collect_changes() {
+  local name="$1" added="$2" deleted="$3" modified="$4"
+  local snap="$SNAP_DIR/$name"
+  local cur="$TMP_WORK/worktree.list"
+  local snap_list="$TMP_WORK/snapshot.list"
+  local common="$TMP_WORK/common.list"
+  local rel
+
+  list_worktree_files > "$cur"
+  list_snapshot_files "$name" > "$snap_list"
+  LC_ALL=C comm -13 "$snap_list" "$cur" > "$added"      # 只有工作区有 → 新增
+  LC_ALL=C comm -23 "$snap_list" "$cur" > "$deleted"    # 只有快照有 → 删除
+  LC_ALL=C comm -12 "$snap_list" "$cur" > "$common"
+  : > "$modified"
+  while IFS= read -r rel; do
+    [ -n "$rel" ] || continue
+    if ! cmp -s -- "$snap/tree/$rel" "$ROOT/$rel"; then
+      printf '%s\n' "$rel" >> "$modified"
+    fi
+  done < "$common"
+}
+
+print_changed_list() {
+  # $1=标题 $2=符号 $3=文件清单
+  local title="$1" sign="$2" file="$3" n rel
+  n="$(count_lines "$file")"
+  if [ "$n" -eq 0 ]; then
+    return 0
+  fi
+  printf '  %s：%s 个\n' "$title" "$n"
+  while IFS= read -r rel; do
+    printf '    %s %s\n' "$sign" "$rel"
+  done < "$file"
+}
+
+print_file_diff() {
+  # $1=旧文件（可以是 /dev/null） $2=新文件 $3=旧标签 $4=新标签
+  local old="$1" new="$2" old_label="$3" new_label="$4"
+  if [ "$DIFF_LABEL_OK" = "1" ]; then
+    diff -u --label "$old_label" --label "$new_label" "$old" "$new" || true
+  else
+    # 老 diff 不认 --label 时退化成普通 -u，头部路径长一点但内容一样。
+    diff -u "$old" "$new" || true
+  fi
+}
+
+require_diff() {
+  if ! command -v diff >/dev/null 2>&1; then
+    die "找不到 diff 命令。" "装 diffutils 后重试（Linux/macOS 一般自带）。"
+  fi
+  if [ -z "$DIFF_LABEL_OK" ]; then
+    if diff --label a --label b /dev/null /dev/null >/dev/null 2>&1; then
+      DIFF_LABEL_OK=1
+    else
+      DIFF_LABEL_OK=0
+    fi
+  fi
+}
+
+# ---------------------------------------------------------------------------
+# 拍快照（save 与 reset 的安全快照共用）
+# ---------------------------------------------------------------------------
+
+# 成功时设置：SAVED_COUNT
+save_snapshot() {
+  local name="$1"
+  local staging tree list_file entry kind present files
+  local rel src dst size sha count=0 i=0 skipped=""
+  local now_iso now_epoch head short
+
+  mkdir -p -- "$SNAP_DIR" || die "建不了快照目录：$SNAP_DIR" "检查 .lab/ 的权限或磁盘空间。"
+  if [ -e "$SNAP_DIR/$name" ]; then
+    die "同名快照 \"$name\" 已存在，不能覆盖（快照只读）。" \
+        "换一个名字：scripts/lab save ${name}-2
+先看已有快照：scripts/lab list"
+  fi
+
+  ensure_tmp
+  require_sha256
+  staging="$(mktemp -d "$SNAP_DIR/.tmp.XXXXXX")" || die "建不了临时快照目录。" "检查磁盘空间后重试。"
+  tree="$staging/tree"
+  mkdir -p -- "$tree" || { rm -rf -- "$staging"; die "建不了快照目录树。"; }
+  list_file="$staging/files.list"
+  list_worktree_files > "$list_file"
+  : > "$staging/files.json"
+
+  while IFS= read -r rel; do
+    [ -n "$rel" ] || continue
+    case "$rel" in
+      *$'\n'*|*$'\t'*)
+        printf 'lab: 跳过文件名含换行/制表符的文件（v1 不支持）：%q\n' "$rel" >&2
+        skipped="${skipped:+$skipped、}$rel"
+        continue
+        ;;
+    esac
+    src="$ROOT/$rel"
+    dst="$tree/$rel"
+    mkdir -p -- "$(dirname -- "$dst")" || { rm -rf -- "$staging"; die "建不了目录：$(dirname -- "$dst")"; }
+    if ! cp -p -- "$src" "$dst"; then
+      rm -rf -- "$staging"
+      die "复制失败：$rel" "检查文件权限；如果是刚被别的程序删掉，重跑一次 save。"
+    fi
+    size="$(LC_ALL=C wc -c < "$dst" | tr -d '[:space:]')"
+    sha="$(sha256_of "$dst")" || { rm -rf -- "$staging"; die "算 sha256 失败：$rel"; }
+    if [ "$count" -gt 0 ]; then
+      printf ',\n' >> "$staging/files.json"
+    fi
+    printf '    {"path": "%s", "size": %s, "sha256": "%s"}' \
+      "$(json_escape "$rel")" "$size" "$sha" >> "$staging/files.json"
+    count=$((count + 1))
+  done < "$list_file"
+
+  now_epoch="$(date +%s)"
+  now_iso="$(date +%Y-%m-%dT%H:%M:%S%z)"
+  head="$(git_head)"
+  short="$(git_head_short)"
+
+  {
+    printf '{\n'
+    printf '  "name": "%s",\n' "$(json_escape "$name")"
+    printf '  "time": "%s",\n' "$now_iso"
+    printf '  "time_unix": %s,\n' "$now_epoch"
+    printf '  "git_head": "%s",\n' "$(json_escape "$head")"
+    printf '  "git_head_short": "%s",\n' "$(json_escape "$short")"
+    printf '  "file_count": %s,\n' "$count"
+    printf '  "whitelist": [\n'
+    i=0
+    for entry in "${WHITELIST[@]}"; do
+      kind="${WHITELIST_KIND[$i]}"
+      present="false"
+      files=0
+      if [ -d "$ROOT/$entry" ] && [ ! -L "$ROOT/$entry" ]; then
+        present="true"
+        files="$(grep -c -F -- "$entry/" "$list_file" || true)"
+      elif [ -f "$ROOT/$entry" ] && [ ! -L "$ROOT/$entry" ]; then
+        present="true"
+        files="$(grep -c -x -F -- "$entry" "$list_file" || true)"
+      fi
+      if [ "$i" -gt 0 ]; then
+        printf ',\n'
+      fi
+      printf '    {"path": "%s", "kind": "%s", "present": %s, "files": %s}' \
+        "$(json_escape "$entry")" "$kind" "$present" "$files"
+      i=$((i + 1))
+    done
+    printf '\n  ],\n'
+    printf '  "excludes": ['
+    i=0
+    for entry in "${EXCLUDES[@]}"; do
+      if [ "$i" -gt 0 ]; then
+        printf ', '
+      fi
+      printf '"%s"' "$(json_escape "$entry")"
+      i=$((i + 1))
+    done
+    printf '],\n'
+    printf '  "files": [\n'
+    cat "$staging/files.json"
+    printf '\n  ]\n'
+    printf '}\n'
+  } > "$staging/manifest.json" || { rm -rf -- "$staging"; die "写 manifest.json 失败。"; }
+
+  rm -f -- "$list_file" "$staging/files.json"
+  # 落盘前再查一次同名：两个人同一秒 save 同一个名字时，第二个也不能覆盖第一个。
+  if [ -e "$SNAP_DIR/$name" ]; then
+    rm -rf -- "$staging"
+    die "同名快照 \"$name\" 已存在，不能覆盖（快照只读）。" \
+        "换一个名字：scripts/lab save ${name}-2
+先看已有快照：scripts/lab list"
+  fi
+  if ! mv -- "$staging" "$SNAP_DIR/$name"; then
+    rm -rf -- "$staging"
+    die "把快照放到 .lab/snapshots/$name 失败。" "检查 .lab/snapshots/ 的权限后重试。"
+  fi
+  SAVED_COUNT="$count"
+  return 0
+}
+
+report_skipped_whitelist() {
+  # $1=名字列表（、分隔），没有就静默
+  local skipped="$1"
+  [ -n "$skipped" ] || return 0
+  printf '  当前不存在、已跳过：%s\n' "$skipped"
+}
+
+whitelist_absent_list() {
+  local entry out=""
+  for entry in "${WHITELIST[@]}"; do
+    if [ ! -e "$ROOT/$entry" ] && [ ! -L "$ROOT/$entry" ]; then
+      out="${out:+$out、}$entry"
+    fi
+  done
+  printf '%s' "$out"
+}
+
+# ---------------------------------------------------------------------------
+# 命令：save
+# ---------------------------------------------------------------------------
+
+cmd_save() {
+  if [ $# -ne 1 ]; then
+    usage_error "save 需要一个快照名字。例：scripts/lab save before-schema"
+  fi
+  local name="$1"
+  validate_name "$name"
+  save_snapshot "$name"
+  printf '已保存快照 "%s"：%s 个文件。\n' "$name" "$SAVED_COUNT"
+  report_skipped_whitelist "$(whitelist_absent_list)"
+  printf '  位置：.lab/snapshots/%s/（快照只读，同名 save 会被拒绝）\n' "$name"
+  printf '  下一步：改你的代码，然后 scripts/lab diff %s\n' "$name"
+}
+
+# ---------------------------------------------------------------------------
+# 命令：list
+# ---------------------------------------------------------------------------
+
+cmd_list() {
+  if [ ! -d "$SNAP_DIR" ]; then
+    printf '还没有任何快照。先给当前工作区拍一张：\n  scripts/lab save before-change\n'
+    return 0
+  fi
+  ensure_tmp
+  local d name manifest time_s time_unix count short ts_rows="$TMP_WORK/list.tsv"
+  local total=0 bad=0 time_display
+  : > "$ts_rows"
+  for d in "$SNAP_DIR"/*/; do
+    [ -d "$d" ] || continue
+    name="$(basename -- "$d")"
+    case "$name" in
+      .tmp.*) continue ;;
+    esac
+    manifest="$d/manifest.json"
+    if [ ! -f "$manifest" ]; then
+      bad=$((bad + 1))
+      continue
+    fi
+    time_s="$(json_str "$manifest" time)"
+    time_unix="$(json_num "$manifest" time_unix)"
+    count="$(json_num "$manifest" file_count)"
+    short="$(json_str "$manifest" git_head_short)"
+    printf '%s\t%s\t%s\t%s\t%s\n' "${time_unix:-0}" "$name" "${time_s:-?}" "${count:-?}" "${short:-unknown}" >> "$ts_rows"
+    total=$((total + 1))
+  done
+
+  if [ "$total" -eq 0 ]; then
+    printf '还没有任何快照。先给当前工作区拍一张：\n  scripts/lab save before-change\n'
+    return 0
+  fi
+  printf '共 %s 张快照（新的在前）：\n' "$total"
+  LC_ALL=C sort -rn -k1,1 "$ts_rows" | while IFS=$'\t' read -r time_unix name time_s count short; do
+    time_display="${time_s:0:19}"
+    printf '  %-26s %s（%s）  %s 个文件  git %s\n' \
+      "$name" "${time_display/T/ }" "$(human_age "$time_unix")" "$count" "$short"
+  done
+  printf '\n要恢复哪张：scripts/lab reset <名字> --yes（先不加 --yes 看计划）\n'
+  if [ "$bad" -gt 0 ]; then
+    printf '注意：有 %s 个快照目录缺 manifest.json，已跳过。\n' "$bad"
+  fi
+}
+
+# ---------------------------------------------------------------------------
+# 命令：diff
+# ---------------------------------------------------------------------------
+
+cmd_diff() {
+  if [ $# -ne 1 ]; then
+    usage_error "diff 需要一个快照名字。例：scripts/lab diff before-schema"
+  fi
+  local name="$1"
+  validate_name "$name"
+  require_snapshot "$name"
+  require_diff
+  ensure_tmp
+
+  local snap="$SNAP_DIR/$name"
+  local added="$TMP_WORK/added.list"
+  local deleted="$TMP_WORK/deleted.list"
+  local modified="$TMP_WORK/modified.list"
+  local manifest="$snap/manifest.json"
+  local n_add n_del n_mod time_unix count rel
+  collect_changes "$name" "$added" "$deleted" "$modified"
+  n_add="$(count_lines "$added")"
+  n_del="$(count_lines "$deleted")"
+  n_mod="$(count_lines "$modified")"
+  time_unix="$(json_num "$manifest" time_unix)"
+  count="$(json_num "$manifest" file_count)"
+
+  printf '对比快照 "%s"（%s，%s 个文件）：\n' "$name" "$(human_age "$time_unix")" "${count:-?}"
+  if [ "$n_add" -eq 0 ] && [ "$n_del" -eq 0 ] && [ "$n_mod" -eq 0 ]; then
+    printf '  工作区与快照完全一致，什么都不用恢复。\n'
+    return 0
+  fi
+  printf '  新增 %s 个 / 修改 %s 个 / 删除 %s 个（共 %s 处差异）\n' \
+    "$n_add" "$n_mod" "$n_del" "$((n_add + n_del + n_mod))"
+  printf '\n清单：\n'
+  print_changed_list "新增（快照里没有，工作区有）" "+" "$added"
+  print_changed_list "修改（内容不同）" "~" "$modified"
+  print_changed_list "删除（快照里有，工作区没有）" "-" "$deleted"
+
+  printf '\n统一 diff（--- 快照里的旧版本 / +++ 现在的工作区）：\n'
+  if [ "$n_add" -gt 0 ]; then
+    while IFS= read -r rel; do
+      printf '\n[新增] %s\n' "$rel"
+      print_file_diff /dev/null "$ROOT/$rel" "/dev/null" "b/$rel"
+    done < "$added"
+  fi
+  if [ "$n_mod" -gt 0 ]; then
+    while IFS= read -r rel; do
+      printf '\n[修改] %s\n' "$rel"
+      print_file_diff "$snap/tree/$rel" "$ROOT/$rel" "a/$rel" "b/$rel"
+    done < "$modified"
+  fi
+  if [ "$n_del" -gt 0 ]; then
+    while IFS= read -r rel; do
+      printf '\n[删除] %s\n' "$rel"
+      print_file_diff "$snap/tree/$rel" /dev/null "a/$rel" "/dev/null"
+    done < "$deleted"
+  fi
+  printf '\n要回到快照 "%s"：scripts/lab reset %s --yes\n' "$name" "$name"
+}
+
+# ---------------------------------------------------------------------------
+# 命令：reset
+# ---------------------------------------------------------------------------
+
+prune_empty_dirs() {
+  local rel="$1" dir
+  dir="$(dirname -- "$rel")"
+  while [ "$dir" != "." ] && [ "$dir" != "/" ]; do
+    case "$dir" in
+      /*|..|../*|*/..|*/../*) break ;;
+    esac
+    if is_whitelist_root "$dir"; then
+      break
+    fi
+    rmdir -- "$ROOT/$dir" 2>/dev/null || break
+    dir="$(dirname -- "$dir")"
+  done
+}
+
+safe_unique_snapshot_name() {
+  local base="$1" candidate="$1" n=2
+  while [ -e "$SNAP_DIR/$candidate" ]; do
+    candidate="${base}-${n}"
+    n=$((n + 1))
+  done
+  printf '%s' "$candidate"
+}
+
+cmd_reset() {
+  local name="" assume_yes=0 no_safety=0 arg
+  for arg in "$@"; do
+    case "$arg" in
+      --yes) assume_yes=1 ;;
+      --no-safety) no_safety=1 ;;
+      -*)
+        usage_error "reset 不认识选项 '$arg'（只支持 --yes / --no-safety）"
+        ;;
+      *)
+        if [ -n "$name" ]; then
+          usage_error "reset 只接受一个快照名字（收到 \"$name\" 和 \"$arg\"）"
+        fi
+        name="$arg"
+        ;;
+    esac
+  done
+  if [ -z "$name" ]; then
+    usage_error "reset 需要一个快照名字。例：scripts/lab reset before-schema --yes"
+  fi
+  validate_name "$name"
+  require_snapshot "$name"
+  ensure_tmp
+
+  local snap="$SNAP_DIR/$name"
+  local manifest="$snap/manifest.json"
+  local added="$TMP_WORK/added.list"
+  local deleted="$TMP_WORK/deleted.list"
+  local modified="$TMP_WORK/modified.list"
+  local n_add n_del n_mod time_unix count rel target src
+  local safety="" safety_count=0
+  collect_changes "$name" "$added" "$deleted" "$modified"
+  n_add="$(count_lines "$added")"
+  n_del="$(count_lines "$deleted")"
+  n_mod="$(count_lines "$modified")"
+  time_unix="$(json_num "$manifest" time_unix)"
+  count="$(json_num "$manifest" file_count)"
+
+  printf '快照 "%s"：%s，%s 个文件。\n' "$name" "$(human_age "$time_unix")" "${count:-?}"
+  if [ "$n_add" -eq 0 ] && [ "$n_del" -eq 0 ] && [ "$n_mod" -eq 0 ]; then
+    printf '工作区已经和快照完全一致，不需要恢复。\n'
+    return 0
+  fi
+
+  printf '\n如果现在恢复（--yes），会：\n'
+  print_changed_list "删除（快照里没有、工作区多出来的文件）" "-" "$added"
+  print_changed_list "写回（快照里有、工作区缺失的文件）" "+" "$deleted"
+  print_changed_list "覆盖（两边都有、内容不同的文件）" "~" "$modified"
+
+  if [ "$assume_yes" -eq 0 ]; then
+    printf '\n没有 --yes，一个文件都没动。\n'
+    printf '确认上面就是要做的，再执行：\n  scripts/lab reset %s --yes\n' "$name"
+    printf '想先看逐行 diff：scripts/lab diff %s\n' "$name"
+    exit 2
+  fi
+
+  # 安全兜底：恢复前先把当前工作区拍下来，恢复错了还能回去。
+  if [ "$no_safety" -eq 1 ]; then
+    printf '\n注意：--no-safety 关掉了自动安全快照，恢复错了只能找老师帮忙。\n'
+  else
+    safety="$(safe_unique_snapshot_name "pre-reset-$(date +%Y%m%d-%H%M%S)")"
+    if ! save_snapshot "$safety"; then
+      die "安全快照没拍成，已中止恢复，工作区一个文件都没动。" \
+          "检查磁盘空间/权限后重试；也可以先 scripts/lab save 手动拍一张。"
+    fi
+    safety_count="$SAVED_COUNT"
+    printf '\n已先拍安全快照 "%s"（恢复前的现场，%s 个文件）。\n' "$safety" "$safety_count"
+  fi
+
+  # 1) 先删掉"快照里没有"的多余文件（只在白名单内，且不碰排除名单）。
+  while IFS= read -r rel; do
+    [ -n "$rel" ] || continue
+    assert_safe_rel "$rel" || exit 1
+    target="$ROOT/$rel"
+    if [ -L "$target" ] || { [ -e "$target" ] && [ -d "$target" ]; }; then
+      rm -rf -- "$target" || die "删除失败：$rel" "检查文件权限后重试；工作区可能只恢复了一半，安全快照还在。"
+    else
+      rm -f -- "$target" || die "删除失败：$rel" "检查文件权限后重试；安全快照还在：.lab/snapshots/$safety"
+    fi
+    prune_empty_dirs "$rel"
+  done < "$added"
+
+  # 2) 再把快照里的文件逐份写回（缺失的 + 内容不同的）。
+  {
+    cat "$deleted"
+    cat "$modified"
+  } > "$TMP_WORK/restore.list"
+  while IFS= read -r rel; do
+    [ -n "$rel" ] || continue
+    assert_safe_rel "$rel" || exit 1
+    src="$snap/tree/$rel"
+    target="$ROOT/$rel"
+    if [ -L "$target" ] || { [ -e "$target" ] && [ -d "$target" ]; }; then
+      rm -rf -- "$target"
+    fi
+    mkdir -p -- "$(dirname -- "$target")" || die "建不了目录：$(dirname -- "$rel")" "安全快照还在：.lab/snapshots/$safety"
+    cp -p -- "$src" "$target" || die "写回失败：$rel" "检查文件权限；安全快照还在：.lab/snapshots/$safety"
+  done < "$TMP_WORK/restore.list"
+
+  # 3) 恢复后自检：必须和快照完全一致，否则立刻报出来。
+  local post_add="$TMP_WORK/post-added.list"
+  local post_del="$TMP_WORK/post-deleted.list"
+  local post_mod="$TMP_WORK/post-modified.list"
+  collect_changes "$name" "$post_add" "$post_del" "$post_mod"
+  if [ "$(count_lines "$post_add")" -ne 0 ] || [ "$(count_lines "$post_del")" -ne 0 ] || [ "$(count_lines "$post_mod")" -ne 0 ]; then
+    printf 'lab: 恢复后自检没通过：工作区仍与快照不一致。\n' >&2
+    print_changed_list "仍多出（未能删除）" "-" "$post_add" >&2
+    print_changed_list "仍缺失（未能写回）" "+" "$post_del" >&2
+    print_changed_list "仍不同（未能覆盖）" "~" "$post_mod" >&2
+    if [ -n "$safety" ]; then
+      printf '先别继续改：可以回退到恢复前现场：scripts/lab reset %s --yes --no-safety\n' "$safety" >&2
+    fi
+    exit 1
+  fi
+
+  printf '\n已恢复快照 "%s"：\n' "$name"
+  if [ "$n_del" -gt 0 ]; then
+    printf '  写回 %s 个文件（快照里有、工作区缺失）\n' "$n_del"
+  fi
+  if [ "$n_mod" -gt 0 ]; then
+    printf '  覆盖 %s 个文件（内容不同）\n' "$n_mod"
+  fi
+  if [ "$n_add" -gt 0 ]; then
+    printf '  删除 %s 个文件（快照里没有、工作区多出来）\n' "$n_add"
+  fi
+  if [ -n "$safety" ]; then
+    printf '安全快照："%s"（%s 个文件）\n' "$safety" "$safety_count"
+    printf '  想撤销这次恢复：scripts/lab reset %s --yes --no-safety\n' "$safety"
+  fi
+  printf '现在工作区与快照 "%s" 完全一致。\n' "$name"
+}
+
+# ---------------------------------------------------------------------------
+# 帮助 / 入口
+# ---------------------------------------------------------------------------
+
+print_help() {
+  cat <<'EOF'
+scripts/lab —— 教学用快照与回滚（只管文件，不碰 git）
+
+学生只用三条主命令：
+  scripts/lab save <名字>                 给当前白名单文件拍一张快照
+  scripts/lab diff <名字>                 看工作区比快照多了 / 少了 / 改了什么
+  scripts/lab reset <名字> --yes          把白名单文件恢复成快照的样子
+
+  scripts/lab list                        列出已有快照（名字、时间、文件数、git HEAD）
+  scripts/lab help                        看这一页
+
+两条安全规则：
+  1) reset 必须先看计划：不加 --yes 只打印"会删除 / 写回 / 覆盖什么"，一个文件都不动。
+  2) reset 前自动拍安全快照 pre-reset-<时间>；恢复错了就用 reset 回到它
+     （--no-safety 可关闭，不建议）。
+
+白名单（只跟踪这些路径）：
+  contracts/  compose.yaml  backend/app/  backend/tests/  fixtures/  frontend/src/
+永不入快照（也不会被 reset 删）：.env  .env.*  .venv  node_modules  __pycache__  .git
+快照只读：同名 save 会被拒绝，不会覆盖已有快照。
+
+限制：v1 只回滚文件；容器/数据库状态不恢复（见 docs/lab.md）。
+EOF
+}
+
+usage_error() {
+  error "$1"
+  printf '看用法：scripts/lab help\n' >&2
+  exit 2
+}
+
+main() {
+  local cmd="${1:-}"
+  if [ $# -gt 0 ]; then
+    shift
+  fi
+  case "$cmd" in
+    save) cmd_save "$@" ;;
+    list) cmd_list "$@" ;;
+    diff) cmd_diff "$@" ;;
+    reset) cmd_reset "$@" ;;
+    help|-h|--help|"") print_help ;;
+    *)
+      error "不认识的命令：$cmd"
+      printf '可用命令：save / list / diff / reset / help（看用法：scripts/lab help）\n' >&2
+      exit 2
+      ;;
+  esac
+}
+
+main "$@"
