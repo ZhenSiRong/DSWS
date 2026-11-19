@@ -1001,10 +1001,13 @@ CMD22_SAVE = "scripts/lab save p22-before"
 CMD22_PYTEST = "(cd backend && .venv/bin/python -m pytest -q)"
 CMD22_SMOKE = "make docker-smoke"
 CMD22_TERMINAL_B = """source scripts/export-docker-env.sh
-id="$(docker compose ps -aq init)"
-while [ "$(docker inspect -f '{{.State.Status}}' "$id")" != running ]; do sleep 0.1; done
-while [ "$(docker inspect -f '{{.State.Status}}' "$id")" != exited ]; do sleep 0.1; done
-docker compose exec -T mysql mysql -uroot -p"$REBUILD_MYSQL_ROOT_PASSWORD" -e "GRANT ALL ON dw.* TO 'dw_reader'@'%'\""""  # noqa: E501
+seen=0; end=$((SECONDS+60)); while [ "$SECONDS" -lt "$end" ]; do
+  id="$(docker compose ps -aq init 2>/dev/null)"; [ -z "$id" ] && { sleep 0.1; continue; }
+  s="$(docker inspect -f '{{.State.Status}}' "$id" 2>/dev/null)"; [ "$s" = running ] && seen=1
+  [ "$seen" = 1 ] && [ "$s" = exited ] && { echo "watcher: 捕捉到 init 退出，立刻注入 GRANT ALL"; break; }
+  sleep 0.1; done
+[ "$seen" = 1 ] || { echo "没等到 init 跑起来（60 秒）：先确认栈已起、A 的 smoke 已开跑（docker compose ps -a），再重跑本步" >&2; exit 1; }
+docker compose exec -T mysql mysql -uroot -p"$REBUILD_MYSQL_ROOT_PASSWORD" -e "GRANT ALL ON dw.* TO 'dw_reader'@'%'\""""
 
 
 # ---------------------------------------------------------------- 捕获流程（离线）
@@ -1122,33 +1125,13 @@ def capture_stack(work: Path, records: dict, extra: list[str]) -> None:
 
 
 def _watcher_script() -> str:
-    return f"""set -u
-source scripts/export-docker-env.sh
-old="$(docker compose -p {PROJECT} ps -aq init 2>/dev/null || true)"
-seen=0
-seen_id=""
-while :; do
-  cur="$(docker compose -p {PROJECT} ps -aq init 2>/dev/null || true)"
-  if [ -n "$cur" ]; then
-    st="$(docker inspect -f '{{{{.State.Status}}}}' "$cur" 2>/dev/null || true)"
-    if [ "$st" = "running" ]; then
-      seen=1
-      seen_id="$cur"
-    fi
-    if [ "$st" = "exited" ] && [ "$seen" = "1" ] && [ "$cur" = "$seen_id" ]; then
-      echo "watcher: 捕捉到 init 退出（running→exited）"
-      break
-    fi
-    if [ "$st" = "exited" ] && [ "$seen" = "0" ] && [ "$cur" != "$old" ]; then
-      echo "watcher: 捕捉到 init 退出（新容器已 exited）"
-      break
-    fi
-  fi
-  sleep 0.1
-done
-docker compose -p {PROJECT} exec -T mysql mysql -uroot -p"$REBUILD_MYSQL_ROOT_PASSWORD" -e "GRANT ALL ON dw.* TO 'dw_reader'@'%'" 2>&1 || true
-echo "watcher: GRANT ALL 已注入"
-"""
+    """终端 B：与 page-22「拆一刀」同一份 8 行命令（图里照抄页面原文）。
+
+    执行侧不改写命令本身：调用处用 COMPOSE_PROJECT_NAME 把 `docker compose`
+    指到隔离 project（本脚本全程只碰 project=shotsl4；因为命令与页面逐字
+    一致，图里显示的终端 B 不需要任何执行侧替换）。
+    """
+    return CMD22_TERMINAL_B
 
 
 def capture_ablation_with_retry(work: Path, records: dict, extra: list[str],
@@ -1157,7 +1140,8 @@ def capture_ablation_with_retry(work: Path, records: dict, extra: list[str],
         say(f"   第 {attempt} 次尝试（终端 B 自动等 init 窗口 → 终端 A 跑 smoke）")
         t0 = time.monotonic()
         watcher = subprocess.Popen(
-            ["bash", "-c", _watcher_script()], cwd=work, env=base_env(),
+            ["bash", "-c", _watcher_script()], cwd=work,
+            env={**base_env(), "COMPOSE_PROJECT_NAME": PROJECT},
             stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
             encoding="utf-8", errors="replace",
         )

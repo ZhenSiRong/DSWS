@@ -76,9 +76,12 @@ FAIL: 1 项不符合预期
 
 ```bash
 source scripts/export-docker-env.sh
-id="$(docker compose ps -aq init)"
-while [ "$(docker inspect -f '{{.State.Status}}' "$id")" != running ]; do sleep 0.1; done
-while [ "$(docker inspect -f '{{.State.Status}}' "$id")" != exited ]; do sleep 0.1; done
+seen=0; end=$((SECONDS+60)); while [ "$SECONDS" -lt "$end" ]; do
+  id="$(docker compose ps -aq init 2>/dev/null)"; [ -z "$id" ] && { sleep 0.1; continue; }
+  s="$(docker inspect -f '{{.State.Status}}' "$id" 2>/dev/null)"; [ "$s" = running ] && seen=1
+  [ "$seen" = 1 ] && [ "$s" = exited ] && { echo "watcher: 捕捉到 init 退出，立刻注入 GRANT ALL"; break; }
+  sleep 0.1; done
+[ "$seen" = 1 ] || { echo "没等到 init 跑起来（60 秒）：先确认栈已起、A 的 smoke 已开跑（docker compose ps -a），再重跑本步" >&2; exit 1; }
 docker compose exec -T mysql mysql -uroot -p"$REBUILD_MYSQL_ROOT_PASSWORD" -e "GRANT ALL ON dw.* TO 'dw_reader'@'%'"
 ```
 
