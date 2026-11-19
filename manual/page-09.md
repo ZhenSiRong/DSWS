@@ -88,6 +88,7 @@ docker run -d --name lab-nginx -p 127.0.0.1:8081:80 --add-host host.docker.inter
 
 ![第 9 页 · 浏览器打开 http://127.0.0.1:8081，点「问一句」后结果区停在 41099.5](images/page-09-browser-ok.png)
 ![第 9 页 · 删掉 nginx 容器后刷新 8081：ERR_CONNECTION_REFUSED](images/page-09-no-nginx.png)
+![第 9 页 · 效果预览：敲问题→进度逐条刷新→41099.5（真跑录制 GIF）](images/page-09-demo.gif)
 
 ## 对账
 
@@ -96,7 +97,7 @@ docker run -d --name lab-nginx -p 127.0.0.1:8081:80 --add-host host.docker.inter
 - 拆一刀：把 nginx 删掉，再验一次主干。一条命令做完：
 
 ```bash
-docker rm -f lab-nginx && curl -sN -G 'http://127.0.0.1:8000/api/stream' --data-urlencode 'q=华北销售额' | grep result
+docker rm -f lab-nginx && curl -sN -G 'http://127.0.0.1:8000/api/stream' --data-urlencode 'q=华北销售额' | grep result  # 8000 换成你实际用的端口
 ```
 
 终端里先打印 `lab-nginx`（被删掉的容器名），再打出 `data: {"type": "result", "data": {"rows": [{"region_name": "华北", "sales": 41099.5}]}}`。

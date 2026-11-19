@@ -72,6 +72,7 @@ data: {"type": "result", "data": {"rows": [{"region_name": "华北", "sales": 41
 
 ![第 8 页 · 流式响应逐条到达](images/page-08-stream.png)
 ![第 8 页 · 最后一条 result](images/page-08-result.png)
+![第 8 页 · 效果预览：12 条 progress 逐条到达（真跑录制 GIF）](images/page-08-stream.gif)
 
 ## 对账
 
