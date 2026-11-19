@@ -10,14 +10,14 @@ GNU make 对 recipe 失败统一返回 2：非 0 即红）。
 
 | # | 检查 | 失败时怎么修 |
 |---|---|---|
-| 1 | `python3 manual/shots/audit_book.py`：23 页 H1/六段/围栏/图引用/README 坏链 | 按 FAIL 页号与明细改页面 |
+| 1 | `python3 manual/shots/audit_book.py`：24 页 H1/六段/围栏/图引用/README 坏链 | 按 FAIL 页号与明细改页面 |
 | 2 | `git diff --check`：空白错误（行尾空格、冲突标记） | 删掉行尾空白 |
 | 3 | `backend/uv.lock` 与仓库一致 | `git checkout -- backend/uv.lock` |
 | 4 | `manual/` 不得出现 `zhensirong` 或 `/home/` | 换相对路径 / `<家目录>` 占位符 |
 
 第 4 项排除两类正当引用：`manual/review/`（重放报告按设计记录真实路径作证据）和
 `manual/*.py`（校验/生成脚本自身以 `FORBIDDEN` 词表包含这些串）。`audit_book.py` 对
-23 页与 README 另有同规则的逐页检查，不受上述排除影响。
+24 页与 README 另有同规则的逐页检查，不受上述排除影响。
 
 ## 为什么锁文件单独查
 

@@ -1,6 +1,6 @@
 # 第 22 页 · 守回归：一套门禁能不能替你值班
 
-> 前置：L4（守）第五页，也是全书最后一页。前两条判据离线：`backend/.venv` 由第 0 页 `make install` 生成，`frontend/node_modules` 缺了就先 `npm ci`（要联网）。第三条要整栈：Docker 可用、`.env` 已由 `make docker-env` 生成、第 13 页的 `make docker-up` 起过栈（栈停过/机器重启过就先 `make docker-up` 或 `docker compose up -d`，第 13 页起过 ≠ 现在还在跑）；宿主机还要有 `python3`（≥3.8）与 `curl`，smoke 预检要用。除级考核的终端 B 外，命令都在仓库根目录、同一个终端里整段连续执行；终端 B 也先 `cd` 到仓库根目录，否则 `source` 找不到脚本、`id` 为空会空等；括号是子 shell，跑完你还在仓库根目录。
+> 前置：L4（守）第五页，也是 L4 最后一页。前两条判据离线：`backend/.venv` 由第 0 页 `make install` 生成，`frontend/node_modules` 缺了就先 `npm ci`（要联网）。第三条要整栈：Docker 可用、`.env` 已由 `make docker-env` 生成、第 13 页的 `make docker-up` 起过栈（栈停过/机器重启过就先 `make docker-up` 或 `docker compose up -d`，第 13 页起过 ≠ 现在还在跑）；宿主机还要有 `python3`（≥3.8）与 `curl`，smoke 预检要用。除级考核的终端 B 外，命令都在仓库根目录、同一个终端里整段连续执行；终端 B 也先 `cd` 到仓库根目录，否则 `source` 找不到脚本、`id` 为空会空等；括号是子 shell，跑完你还在仓库根目录。
 
 ## 这一页构建什么
 

@@ -1,6 +1,6 @@
-# 全书 23 页验收清单
+# 全书 24 页验收清单
 
-> 按级验收：L1 按十页判据 + [建成证明海报](completeness/poster-answer.png)（12 件 × 24 个检验点），L2–L4 每级一条**级考核**（该级最后一页的「拆一刀」），再加一次**全量结构审计**；每页判据以「你应该看到」为准。命令都在仓库根目录、同一终端里整段执行（括号是子 shell）；期望输出只贴关键行，秒数、文件数、端口随机器变。
+> 按级验收：L1 按十页判据 + [建成证明海报](completeness/poster-answer.png)（12 件 × 24 个检验点），L2–L5 每级一条**级考核**（该级最后一页的「拆一刀」），再加一次**全量结构审计**；每页判据以「你应该看到」为准。命令都在仓库根目录、同一终端里整段执行（括号是子 shell）；期望输出只贴关键行，秒数、文件数、端口随机器变。
 
 ## 0. 前置
 - **环境**：Docker 已运行；`uv`、Node.js LTS + npm、GNU Make、curl 齐（[page-00](page-00.md)「提前说明」）。`make install` 后 `make doctor` 末行 `12/12 通过`（page-00）。整栈建议至少 8 GB 内存（ES 堆固定 512 MB，来源 `../docs/DOCKER-DEPLOY.md` §1），并留出镜像与 ES 索引的磁盘空间（见下方水位坑）。
@@ -9,10 +9,10 @@
 - **已知环境坑**（重放报告实测）：① 带裸 `uv run` 的 `make stage3` / `stage0-ui` / `stage6-ui`（脚本里没有 `--frozen`）或手敲 `uv run` 会按本机镜像源重写 `backend/uv.lock`（`lab reset` 管不到它）——`git status` 显示变脏再 `git checkout -- backend/uv.lock`；Makefile 直接调的 `stage*` 都已 `uv run --frozen`，不会脏（[page-15](page-15.md)、[page-19](page-19.md)、[page-21](page-21.md)）；② ES 默认低/高/洪水水位 85% / 90% / 95%：85–89% 只告警、写入与 S2/S3 正常，≥90% 高水位才危险（不再分配分片）、≥95% 索引转只读（`review/replay-page-14.md`），别把盘跑满；③ 别在别人的栈上做级考核，要并行验收就用仓库副本 + 独立 compose 项目名 + 端口覆盖（见 `review/replay-page-14.md`、`review/replay-page-18.md`）。
 
 ## 1. 结构审计（任何环境可做）
-`python3 manual/shots/audit_book.py` 是离线只读审计：查 23 页 H1/六段、代码围栏成对、图片引用、敏感串、`manual/README.md` 坏链；只验结构、不验判据真假。期望末行（来源 `shots/audit_book.py`）：
+`python3 manual/shots/audit_book.py` 是离线只读审计：查 24 页 H1/六段、代码围栏成对、图片引用、敏感串、`manual/README.md` 坏链；只验结构、不验判据真假。期望末行（来源 `shots/audit_book.py`）：
 
 ```text
-页面：23/23 通过；README 坏链：0
+页面：24/24 通过；README 坏链：0
 ```
 
 ## 2. L1 验收（page-00 – page-09，「造」）
@@ -95,19 +95,33 @@ DOCKER SMOKE FAIL: 只读账号验证未通过
 
 3. 还原回 PASS：`(cd backend && .venv/bin/python -m app.scripts.security --provision-ro-account)` → `只读账号就绪：'dw_reader'@'%' on dw (SELECT)`；再 `make docker-smoke` → `PASS: 该账号在 dw 上只有 SELECT` + `DOCKER SMOKE PASS`。答案：网有牙（第 7 步抓住）、定位精确（只红第 7 步）、边界清楚（跑之前就有的越权会被 init 修好，归 p18 单步判据管）。
 
-## 6. 已知限制（诚实）
+## 6. L5 验收（page-23，「装」体验层）
+逐页对账（L5 只有一页）：
+- [p23](page-23.md) `make docker-up` 起整栈后，浏览器打开 `http://127.0.0.1:8080`（compose 的 `frontend` 服务）问一句 → 结果表出 `41,099.5`（数值即 `41099.5`）；`(cd frontend && npm test)` → `40 passed (40)`。判据与 L1 第 9 页同一条（同一问题、同一个数），但入口是真前端：React 构建版由 compose `frontend` 服务提供，不再是第 9 页那份手写 HTML。命令与期望输出以 [page-23](page-23.md)「动手」「你应该看到」为准。
+
+**级考核（第 23 页「拆一刀」：把真前端换回第 9 页同款简陋页）**——验的不是「真前端能跑」，而是「前端只是入口，不是承重墙」（命令与期望输出均取自 [page-23](page-23.md)「拆一刀」）：
+1. 停掉真前端、整栈留着：`docker compose stop frontend`（MySQL / ES / Qdrant / backend 都不停）。
+2. 写回第 9 页同款页面 `p23-html/index.html`：`form + pre + 事件处理`骨架不变（骨架还是第 9 页那 17 行），只补 3 处接线——入口换 `POST /api/query`、`EventSource` 换 `fetch` 读流、结果行取 `rows[0][0]`（完整内容照 [page-23](page-23.md)「拆一刀」第 2 步抄）。
+3. 用真前端镜像起 nginx 占 8080（反代沿用镜像里的 `docker/nginx.conf`：`proxy_pass http://backend:8100`），并进 compose 网络——`backend` 才解析得到（不进网络回 502；proxy 写 `host.docker.internal:8100` 也连不上，`backend` 只绑宿主 127.0.0.1）：`docker run -d --name p23-html --network shopkeeper-rebuild_default -p 127.0.0.1:8080:80 -v "$PWD/p23-html/index.html:/usr/share/nginx/html/index.html:ro" shopkeeper-rebuild/frontend:local`。
+4. 浏览器 `http://127.0.0.1:8080` 强刷、问同一句 → `<pre>` 里先闪 `extract_keywords`、`generate_sql` 等步骤名，约 6 秒后停在 `41099.5`：接口、契约、SQL、SSE 流都没变，变的只是入口载体。
+5. 还原：`docker rm -f p23-html && docker compose up -d frontend`（等 `frontend` `healthy`）→ 刷新 8080 再问一句 → `41,099.5`。
+
+> 口径：界面只是入口（第 9 页「拆一刀」就是模板：删掉 nginx，主干仍活着）；L5 把这一刀升级到整栈——换掉真前端，接口层与判据纹丝不动，才叫「装修不改变承重墙」。两次结果相同、契约相同（23 条 `progress` + 1 条 `result`），差的只是「谁负责渲染」。
+
+## 7. 已知限制（诚实）
 - **真 LLM 成功态不可复现**：p17 对账写明，成功率只能写成「多次采样（`trials>=3`）+ 成功率 + 失败分类」，不许写「已修复」；本清单不验真模型。
 - **可观测只有应用层**：p21 对账——没有 metrics、追踪、结构化请求日志、告警，`duration_ms` 只发给浏览器；不能回答 QPS / 错误率 / P99。
 - **重栈耗时**：`make docker-up` 首次约 8 分钟（p13），p22 要整栈；验收中途别重建镜像。
 - **端口占用**：默认端口被占就改 `.env` 的 `*_HOST_PORT`，别改 `compose.yaml`（p13）。
 
-## 7. 失败时看哪
+## 8. 失败时看哪
 | 级 / 范围 | 先看 |
 |---|---|
 | L1（p00–p09） | `review/walkthrough.md`、`review/replay-03-05.md`、`review/replay-06-09.md` |
 | L2（p10–p13） | `review/replay-page-10.md` … `review/replay-page-13.md` |
 | L3（p14–p17） | `review/replay-page-14.md` … `review/replay-page-17.md` |
 | L4（p18–p22） | `review/replay-page-18.md` … `review/replay-page-22.md`（p18–p22 全有） |
+| L5（page-23） | page-23「对账」；`review/replay-page-23.md`（待重放） |
 | 环境 / 工具 / 奇怪报错 | `../error-proofread/README.md`（真机实测台账）、`../docs/DOCKER-DEPLOY.md` §1 |
 | 新重放报告 / 报告写法 | 按 [review/REPLAY-TEMPLATE.md](review/REPLAY-TEMPLATE.md) 六段模板 + 8 类必查清单写（新报告先复制模板） |
 

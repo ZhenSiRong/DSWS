@@ -4,9 +4,9 @@
 - 环境回滚：`docs/lab.md`（`lab save/diff/reset` 只回文件）；页面模板与 DoD：`humen-desicions/09-ablation-course.md` D46/D47。
 - 验收/回归：`manual/ACCEPTANCE.md`（按级判据、级考核、失败时看哪）；结构审计 `python3 manual/shots/audit_book.py`。
 - 教材生产流程：skill `tutorial-production`（写手 → 独立重放者 → 修复者 → 截图/验收；重放八类必查）；Orca worker（codebuddy/opencode/qoder）读不到 DSH skill，改按 `manual/review/REPLAY-TEMPLATE.md` + `manual/SPEC.md` + `humen-desicions/09-ablation-course.md` D46/D47 手工执行同一流程。
-- 术语：`GLOSSARY.md`（流程术语）；`L1–L4`/`A0–A9` 口径见 `manual/README.md` 与 D44。
+- 术语：`GLOSSARY.md`（流程术语）；`L1–L5`/`A0–A9` 口径见 `manual/README.md` 与 D44/D50。
 - 提交边界：只提交本项目修正——`manual/`、`humen-desicions/`、`GLOSSARY.md`、`docs/`、`scripts/`；`atlas/`、`mermaid/` 是用户的探索，只留工作区、不提交。
-- 硬规则 1：改完页面必须跑 `python3 manual/shots/audit_book.py`，末行 `页面：23/23 通过；README 坏链：0` 才算过。
+- 硬规则 1：改完页面必须跑 `python3 manual/shots/audit_book.py`，末行 `页面：24/24 通过；README 坏链：0` 才算过。
 - 硬规则 2：**隔离验证栈**用隔离 project + 端口覆盖，跑完 `docker compose down -v`；教材主栈按 `manual/ACCEPTANCE.md` 级考核保留（级考核用 `make docker-down`、不删卷，整座城留着跑下一级）；同一时间只留一套栈。`lab` 只回白名单文件——数据库、容器卷、`uv.lock` 回不来，且别照 `record_sse` 提示重录（见 `manual/TRAPS.md` 6/7）。
 - 硬规则 3：先落盘再收尾——结论先写回文件，再跑下一项或结束会话。
 - 派单：同构重复 / 同工作区写文件 → 内置 subagent；跨模型独立评审、独立 worktree 长任务、需用户旁观 → Orca worker（`orca-ide orchestration worker-start`，免费 agent：opencode2/codebuddy/qoder）。

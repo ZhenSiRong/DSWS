@@ -1,0 +1,68 @@
+%% 单代号网络图（AON / 紧前关系法 PDM）：L2–L5 合并成一张图，四个子图 = 四条泳道（L2 换 / L3 审 / L4 守 / L5 装）
+%% 节点 = 一页的核心动作（+ 该级级考核）；箭头 = FS（完成–开始）判据依赖：前一条判据绿了，后一条才能开始
+%% 节点内：编号+活动名 / 工期（估）/ ES EF LS LF（单位：分钟，估）/ 完成判据（看到它才算这一页做完）
+%% 拓扑：L2 P10/P11 并行（都只依赖 L1 交付）→ P12 等两者 → P13 → G2；L3 P14→P15→P16→P17→G3（P17⇢P15 点线回流，重试路径，不计 CPM）；
+%%       L4 P18→P19→P20→P21→P22→G4，P18/P19/P20 直连 P22 是三条汇聚边（前四项全完成 P22 才能开始）；L5 P23→G5
+%% 级间：G2→P14、G3→P18、G4→P23 三条虚线是级间 FS 依赖（L2→L3→L4→L5 串行），计入 CPM；与 P17⇢P15 的回流点线区分（后者不计 CPM）
+%% 起点 = L1 交付（A0–A9 全绿 + 建成证明海报；图外，L1 网络见旧图 manual/flow.mmd，本图不重画、不设 S 节点）
+%% 工期全部是估算值（分钟），仅用于表达判据依赖与关键路径，不是验收时限（口径见 manual/aon/README.md）
+%% 引用出处：p13 首次 make docker-up 构建约 8 分钟、p22 级考核抢 init 退出窗口约 3 秒、p14 make stage3 本机 33.94 秒 / p15 make stage4 约 38 秒——都是运行耗时，不折算成工期
+%% 渲染：python3 manual/shots/render_flow_l2_l5.py（mermaid 自动布局会把这条 18 节点链拉成一长条，故脚本按四条泳道重排后画 SVG；本文件仍是唯一内容源与 CPM 数据源）
+%% 关键路径：P10 → P12 → P13 → G2 → P14 → P15 → P16 → P17 → G3 → P18 → P19 → P20 → P21 → P22 → G4 → P23 → G5，总工期 330 分钟（估算值，不是验收时限）
+%% 浮动：P11（换真契约）总浮动 5 分钟，不进关键路径；其余节点总浮动 0（L3/L4/L5 全串行，没有可压缩的并行空间）
+flowchart LR
+    subgraph L2["L2 换 ｜ P10–P13 + G2 级考核"]
+        P10["<b>P10 换真数据</b><br/>工期 25（估）<br/>ES0 EF25 LS0 LF25<br/>判据：清洗后 405 行<br/>合计 1136341.10<br/>naive 差 8394.40"]
+        P11["<b>P11 换真契约</b><br/>工期 20（估）<br/>ES0 EF20 LS5 LF25<br/>判据：5 行 SQL<br/>与 P6 逐字一致<br/>S1 PASS"]
+        P12["<b>P12 换真执行器</b><br/>工期 25（估）<br/>ES25 EF50 LS25 LF50<br/>判据：Decimal<br/>'1144735.50'<br/>1000 行上限 / 非 SELECT 拒<br/>超时抛 OperationalError"]
+        P13["<b>P13 换真部署</b><br/>工期 20（估）<br/>ES50 EF70 LS50 LF70<br/>判据：5 长驻 healthy<br/>init Exited(0)<br/>DOCKER SMOKE PASS"]
+        G2["<b>G2 L2 级考核</b><br/>工期 10（估）· 拆编排<br/>ES70 EF80 LS70 LF80<br/>判据：删 init 后<br/>smoke 第 3 步红<br/>还原回 SMOKE PASS"]
+        P10 -->|FS| P12
+        P11 -->|FS| P12
+        P12 -->|FS| P13
+        P13 -->|FS| G2
+    end
+    subgraph L3["L3 审 ｜ P14–P17 + G3 级考核"]
+        P14["<b>P14 审召回</b><br/>工期 30（估）<br/>ES80 EF110 LS80 LF110<br/>判据：stage3 → S3 PASS<br/>停 ES 仍回 41099.5<br/>黄金集 18 passed / 23 errors"]
+        P15["<b>P15 审生成</b><br/>工期 25（估）<br/>ES110 EF135 LS110 LF135<br/>判据：122 passed, 5 skipped<br/>基线 10/10 通过（拒答 2）<br/>S4 PASS"]
+        P16["<b>P16 审校验</b><br/>工期 20（估）<br/>ES135 EF155 LS135 LF155<br/>判据：26 passed<br/>失败矩阵 S6 PASS<br/>语料 mismatch 0"]
+        P17["<b>P17 审纠错</b><br/>工期 25（估）<br/>ES155 EF180 LS155 LF180<br/>判据：14 passed + S6 PASS<br/>11 retryable / 9 rejected"]
+        G3["<b>G3 L3 级考核</b><br/>工期 10（估）· 拆纠错<br/>ES180 EF190 LS180 LF190<br/>判据：关纠错后 5 failed<br/>矩阵只红 corrected<br/>语料仍 mismatch 0"]
+        P14 -->|FS| P15
+        P15 -->|FS| P16
+        P16 -->|FS| P17
+        P17 -->|FS| G3
+        P17 -.->|回流| P15
+    end
+    subgraph L4["L4 守 ｜ P18–P22 + G4 级考核"]
+        P18["<b>P18 守账号</b><br/>工期 15（估）<br/>ES190 EF205 LS190 LF205<br/>判据：写操作被拒 1142<br/>PASS: 该账号只有 SELECT"]
+        P19["<b>P19 守策略</b><br/>工期 20（估）<br/>ES205 EF225 LS205 LF225<br/>判据：36/36 拒<br/>11/11 放行 + S5 PASS<br/>8/8 基线"]
+        P20["<b>P20 守取消</b><br/>工期 20（估）<br/>ES225 EF245 LS225 LF245<br/>判据：6 passed / 108 deselected<br/>skipped → CANCELLED<br/>S7 SSE RECORD PASS"]
+        P21["<b>P21 守可观测</b><br/>工期 20（估）<br/>ES245 EF265 LS245 LF265<br/>判据：/api/steps=12<br/>/api/errors=16<br/>夹具 30 + npm 40 passed"]
+        P22["<b>P22 守回归</b><br/>工期 20（估）<br/>ES265 EF285 LS265 LF285<br/>判据：813 passed<br/>30 skipped · npm 40 passed<br/>DOCKER SMOKE PASS"]
+        G4["<b>G4 L4 级考核</b><br/>工期 15（估）· 拆窗口<br/>ES285 EF300 LS285 LF300<br/>判据：抢窗口注入<br/>GRANT ALL → 第 7 步红<br/>还原回 SMOKE PASS"]
+        P18 -->|FS| P19
+        P19 -->|FS| P20
+        P20 -->|FS| P21
+        P21 -->|FS| P22
+        P18 -->|FS| P22
+        P19 -->|FS| P22
+        P20 -->|FS| P22
+        P22 -->|FS| G4
+    end
+    subgraph L5["L5 装 ｜ P23 + G5 级考核"]
+        P23["<b>P23 装真前端</b><br/>工期 20（估）<br/>ES300 EF320 LS300 LF320<br/>判据：make docker-up<br/>→ 8080 出 41099.5<br/>npm test 40 passed"]
+        G5["<b>G5 L5 级考核</b><br/>工期 10（估）· 拆前端<br/>ES320 EF330 LS320 LF330<br/>判据：换回 17 行 HTML<br/>仍出 41099.5"]
+        P23 -->|FS| G5
+    end
+    G2 -.->|级间FS| P14
+    G3 -.->|级间FS| P18
+    G4 -.->|级间FS| P23
+    classDef critical fill:#fff1e0,stroke:#e65100,stroke-width:5px,color:#333333
+    classDef normal fill:#f6f7f9,stroke:#b6bcc4,stroke-width:2px,color:#333333
+    class P10,P12,P13,G2,P14,P15,P16,P17,G3,P18,P19,P20,P21,P22,G4,P23,G5 critical
+    class P11 normal
+    linkStyle 0,2,3,4,5,6,7,9,10,11,12,16,17 stroke:#e65100,stroke-width:4px
+    linkStyle 1,13,14,15 stroke:#9aa0a6,stroke-width:2px
+    linkStyle 18,19,20 stroke:#e65100,stroke-width:4px,stroke-dasharray:10 6
+    linkStyle 8 stroke:#7a8088,stroke-width:3px,stroke-dasharray:2 6

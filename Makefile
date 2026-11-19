@@ -211,13 +211,13 @@ docker-reset: docker-env-require
 
 # `make audit`：4 项聚合检查，任一失败即中断并以非 0 退出
 # （子命令自身退出码 1；GNU make 对 recipe 失败统一返回 2）。
-# 1) 23 页结构 / 图引用 / README 坏链（audit_book.py）
+# 1) 24 页结构 / 图引用 / README 坏链（audit_book.py）
 # 2) git diff --check 空白错误
 # 3) backend/uv.lock 必须与仓库一致（本机 uv 镜像源会按 index 重写 registry URL，
 #    而 scripts/lab 快照白名单不含它，所以只能靠 git 还原）
 # 4) manual/ 不得泄露用户名 / 家目录（排除 review/ 证据报告与 *.py 校验脚本）
 audit:
-	@echo "== 1/4 结构审计：23 页 / 图引用 / README 坏链 =="
+	@echo "== 1/4 结构审计：24 页 / 图引用 / README 坏链 =="
 	@python3 manual/shots/audit_book.py || { echo "AUDIT FAIL：结构审计未通过（明细见上）"; exit 1; }
 	@echo "== 2/4 空白错误：git diff --check =="
 	@git diff --check; rc=$$?; \
@@ -256,6 +256,6 @@ install-hooks:
 	@test -x .githooks/pre-commit || { echo "缺少可执行的 .githooks/pre-commit：先 git checkout -- .githooks/ 或 chmod +x .githooks/pre-commit" >&2; exit 1; }
 	@git config core.hooksPath .githooks
 	@echo "已启用：core.hooksPath=.githooks（仅本仓库，未改全局配置）"
-	@echo "  pre-commit 会检查：23 页结构审计 / backend/uv.lock 未被修改 / staged 的 manual/*.md 敏感串"
+	@echo "  pre-commit 会检查：24 页结构审计 / backend/uv.lock 未被修改 / staged 的 manual/*.md 敏感串"
 	@echo "  临时绕过（不推荐）：git commit --no-verify"
 	@echo "  停用：git config --unset core.hooksPath"

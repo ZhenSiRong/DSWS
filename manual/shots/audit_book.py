@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""audit_book.py —— 23 页全书结构审计（离线、只读）
+"""audit_book.py —— 24 页全书结构审计（离线、只读）
 
-检查项（每页 page-00 … page-22）：
+检查项（每页 page-00 … page-23）：
   1. H1 形如 `# 第 N 页 · 标题`，N 与文件名一致
-  2. 恰好六个 `##` 段，名称与顺序符合 L1/L2–L4 模板
+  2. 恰好六个 `##` 段，名称与顺序符合 L1/L2–L5 模板
      L1：这一页构建什么 / 猜一猜 / 动手 / 你应该看到 / 对账 / 自己改一下
-     L2–L4：同上但末段为「拆一刀」（级末页允许「拆一刀（Lx 级考核）」）
+     L2–L5：同上但末段为「拆一刀」（级末页允许「拆一刀（Lx 级考核）」）
   3. 代码围栏成对（``` 数量为偶数）
   4. 正文图片引用 `](images/xxx.png)` 全部存在
   5. 不出现用户名 / 家目录绝对路径
@@ -22,7 +22,7 @@ import sys
 from pathlib import Path
 
 MANUAL = Path(__file__).resolve().parent.parent
-PAGES = [MANUAL / f"page-{i:02d}.md" for i in range(23)]
+PAGES = [MANUAL / f"page-{i:02d}.md" for i in range(24)]
 
 L1_LAST = "自己改一下"
 L2L4_LAST = "拆一刀"

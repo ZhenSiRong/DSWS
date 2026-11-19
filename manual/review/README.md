@@ -19,5 +19,6 @@
 | [page-19](replay-page-19.md) | 判据与拆一刀逐字复现；最大问题是 uv run 改 uv.lock 而 reset 救不回，其次管道退出码矛盾。 |
 | [page-20](replay-page-20.md) | 核心判据全逐字复现；缺「先还原第 19 页拆一刀」前置检查，重录假绿缺后果说明。 |
 | [page-21](replay-page-21.md) | 第 1–3 步与拆一刀逐字复现；最该先修 stage7 的 uv.lock 副作用、拆一刀两处定位按字面搜不到。 |
+| [page-23](replay-page-23.md) | 待重放（D50 新增 L5「装」体验层，第 23 页；重放报告落盘后由 lead 更新本行）。 |
 
 > 旧格式：`replay-03-05.md`、`replay-06-09.md`、`walkthrough.md` 属 L1，未套本模板，仍可参照。

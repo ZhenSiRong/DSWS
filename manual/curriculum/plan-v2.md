@@ -1,5 +1,7 @@
 # 课程目录草案 v2 · 23 页（造 → 换 → 审 → 守）
 
+> **快照说明（D50 后）**：本文件是 **23 页设计快照（D44）**；D50 起全书为 **24 页**（末尾追加 page-23 = 第 23 页，L5「装」体验层，配比 10+4+4+5+1=24），页数 / 级别 / 验收口径以 [`../README.md`](../README.md) 与 [`../ACCEPTANCE.md`](../ACCEPTANCE.md) 为准，本表正文不追改。
+
 > 依据：`humen-desicions/09-ablation-course.md` D44（四级 = 四种工程动作，10+4+4+5 = 23 页）；D34 封装梯度、D35 三段式降级、D42/D43 交付物口径。基线：`manual/page-00.md`–`manual/page-09.md`、`manual/maturity/stages.json`、`manual/city/data.json`。
 > 口径：L1 十页原样（page-00–09，只列标题）；L2–L4 十三页新写，编号 page-10–22（文中记 P10–P22），沿用 `page-0N` 命名。本文件只做盘点与目录，不改任何现有文件。
 > 数字：2026-11-19 本机实测——`pytest --collect-only` 843 条、全套 `813 passed / 30 skipped`、前端 `40 passed`、离线门禁 `S1/S5/S6/S7 PASS`。README 的 782/31 与实测不一致（见 E-7）。

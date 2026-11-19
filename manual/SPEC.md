@@ -2,7 +2,7 @@
 
 > 依据：`humen-desicions/09-ablation-course.md` D20–D25；术语以根目录 `GLOSSARY.md` 为准。
 > 交付：`manual/page-01.md` … `manual/page-09.md`，一页一个文件。
-> 范围：本文件只约束 L1 九页（`manual/page-01.md` … `manual/page-09.md`）；p00 为前置页另计，全书 23 页 = p00 + L1 九页 + p10–p22（L2–L4），p00 与 p10–p22 不在本文件范围，其判据与模板见 `manual/ACCEPTANCE.md` 及 `humen-desicions/09-ablation-course.md` D46/D47。
+> 范围：本文件只约束 L1 九页（`manual/page-01.md` … `manual/page-09.md`）；p00 为前置页另计，全书 24 页 = p00 + L1 九页 + p10–p22（L2–L4）+ page-23（L5「装」体验层，D50）；p00 与 p10–p23 不在本文件范围，其判据与模板见 `manual/ACCEPTANCE.md` 及 `humen-desicions/09-ablation-course.md` D46/D47。
 
 ## 读者
 
