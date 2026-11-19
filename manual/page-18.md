@@ -112,4 +112,4 @@ docker compose exec -T mysql mysql -uroot -p"$REBUILD_MYSQL_ROOT_PASSWORD" -e "R
 (cd backend && .venv/bin/python -m app.scripts.security --verify-ro-account)
 ```
 
-跑完推荐的第一段，末行回到 `PASS: 该账号在 dw 上只有 SELECT`。这次拆一刀的答案：**静态判据和动态判据都抓到了，但“文件快照”没抓到——数据库状态必须手动还原。** 不还原，以后每次 `make docker-smoke` 的第 7 步都会红。
+跑完推荐的第一段，末行回到 `PASS: 该账号在 dw 上只有 SELECT`。这次拆一刀的答案：**静态判据和动态判据都抓到了，但“文件快照”没抓到——数据库状态必须手动还原。** 不还原的后果要分单步和整跑看：单步 `--verify-ro-account`（本页第 4 步那条）会一直红——脏权限还在；整跑 `make docker-smoke` 不会，第 1 步的 `up` 每次都会重跑一次性 `init`，`init` 又用 `--provision-ro-account` 重建 `dw_reader`，所以第 7 步反而是绿的。整跑 smoke 会被 init 重置——这正是第 22 页级考核要抢窗口的原因（越权必须在 init 退出后、第 7 步开始前注入 GRANT，第 22 页实测窗口只有约 3 秒）。
