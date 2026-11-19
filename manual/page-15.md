@@ -65,7 +65,7 @@ S4 PASS
 
 ## 对账
 
-- **猜 2：模板，不是模型。** 默认生成器是 `backend/app/generate/deterministic.py` 里的确定性实现：指标公式直接抄契约的 `formula`，表/列/取值/时间边界也都来自契约。`sql_or_refusal` 输出契约、`app.generate.guard` 静态校验、`baseline.yaml` 的语义断言，三道都不认“谁写的 SQL”。换真模型只替换 `HttpLlmGenerator` 这个实现（配三个 `REBUILD_LLM_*` 变量），模型写出的 SQL 过的是同一个输出形状、同一套 `check_sql`；`baseline.yaml` 断言的是 SQL 里的事实，也不认识生成器——所以尺子量得动两边。本页不配 key，只跑可复现的确定性一侧。
+- **猜 2：模板，不是模型。** 默认生成器是 `backend/app/generate/deterministic.py` 里的确定性实现：指标公式直接抄契约的 `formula`，表/列/取值/时间边界也都来自契约。`sql_or_refusal` 输出契约、`app.generate.guard` 静态校验、`baseline.yaml` 的语义断言，三道都不认“谁写的 SQL”。换真模型只替换 `HttpLlmGenerator` 这个实现（配三个 `REBUILD_LLM_*` 变量），模型写出的 SQL 过的是同一个输出形状、同一套 `check_sql`；`baseline.yaml` 断言的是 SQL 里的事实，也不认识生成器——所以尺子量得动两边。本页不配 key，只跑可复现的确定性一侧（想换真模型：见 [`appendix/llm-endpoint.md`](appendix/llm-endpoint.md)）。
 - **猜 1：只红用到 GMV 的两题**（b01 华北销售额、b04 品牌销售额 Top 3），其余 8 题照绿——下面拆一刀真验。注意 b02 平均客单价生成的 SQL 里也有同样的除法，但它用的是 AOV 指标、公式没被改，照样 PASS：判据按每题依赖的指标精确命中，不是拿一个字符串全库搜。
 - **baseline 量的是什么：表、列、指标、取值。** b01 的 `sql_contains` 断言：`SUM(fact_order.order_amount)`（指标公式）、`dim_region.region_name` 与 `'华北'`（表/列/真实枚举值）、`BETWEEN 20250101 AND 20250331`（数据边界）；`sql_not_contains` 防串味（不许出现 `dim_region.province`、不许混进 `COUNT(DISTINCT`）。它不是字符串快照：换行、别名可以变，这四类事实不能变。
 - **为什么生成错要先查契约：** 生成器是契约的翻译器，不是发明家。契约错（公式、枚举值、粒度、时间边界），它只会“忠实地错”；这次允许用哪些表/列/值，上下文也是按契约裁的。所以 SQL 错先回契约找那一行；契约对了还错，才轮到生成逻辑。

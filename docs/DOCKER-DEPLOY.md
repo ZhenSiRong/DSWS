@@ -230,8 +230,7 @@ make docker-up
   换完密码之后**一定要重新 `source` 一次**——脚本导出的是 `.env` 的快照，
   宿主 CLI 读的还是旧密码。容器那边不用管：Compose 每次都重新读 `.env`。
 
-- 启用外部 LLM：在 `.env` 填 `REBUILD_LLM_BASE_URL`、`REBUILD_LLM_API_KEY`、
-  `REBUILD_LLM_MODEL`，然后重启 backend：
+- 启用外部 LLM：在 `.env` 填 `REBUILD_LLM_BASE_URL`、`REBUILD_LLM_API_KEY`、`REBUILD_LLM_MODEL`，然后重启 backend；端点形状、四种示例、自检与排错见 [附录 · 真 LLM 端点配置](../manual/appendix/llm-endpoint.md)。
 
 ```bash
 docker compose up -d --force-recreate backend
