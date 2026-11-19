@@ -1,6 +1,6 @@
 # 第 18 页 · 守账号：只读账号真的写不了吗
 
-> 前置：第 13 页起的整座城在跑（`docker compose ps` 里 `mysql` healthy）、`.env` 已由 `make docker-env` 生成；本页不重建镜像、不改代码。命令都在仓库根目录、同一个终端里整段连续执行；括号是子 shell，跑完你还在仓库根目录。L4（守）从这一页开始。
+> 前置：至少 `mysql` 在跑且 healthy（`docker compose ps`）——本页全部判据只需要数据库，整栈都在时可顺带做第 13 页 `docker-smoke` 第 7 步；`.env` 已由 `make docker-env` 生成；本页不重建镜像、不改代码。命令都在仓库根目录、同一个终端里整段连续执行；括号是子 shell，跑完你还在仓库根目录。L4（守）从这一页开始。另外两样在第 0 页就绪：`backend/.venv` 由第 0 页 `make install` 生成（本页 `.venv/bin/python` 靠它），宿主 `uv` 由第 0 页先装好（第 5 步 `uv run` 靠它）；缺了先回第 0 页（`.venv` 也可 `cd backend && uv sync --frozen` 补）。
 
 ## 这一页构建什么
 
@@ -13,13 +13,13 @@
 
 ## 动手
 
-**第 1 步：拍快照。** 本页拆的是数据库权限、不是文件，但先拍一张——待会儿用它证明“文件快照救不了数据库”（同名快照会被拒，重做本页就换个名字）：
+**第 1 步：拍快照。** 本页拆的是数据库权限、不是文件，但先拍一张——待会儿用它证明“文件快照救不了数据库”（同名快照会被拒，重做本页就换个名字；**换了名字就把下文所有 `p18-before` 一并替换**，旧快照留在 `.lab/snapshots/` 不影响本页结论）：
 
 ```bash
 scripts/lab save p18-before
 ```
 
-**第 2 步：让当前终端拿到密码。** 开通要两把密码：MySQL root 的（建账号）和 `dw_reader` 的（设密码）。它们只在 `.env` 里（第 13 页 `make docker-env` 生成；`.env` 被 `.gitignore` 忽略，`.env.example` 里只有 `change-me-ro` 占位——明文密码不进仓库）。必须用 `source` 把它导出成 `REBUILD_MYSQL_ROOT_PASSWORD` / `REBUILD_DW_RO_PASSWORD`；直接 `bash` 跑脚本只改子进程，改不了你当前终端（忘了 `source` 或换了终端，下一步会报 `缺少环境变量 REBUILD_DW_RO_PASSWORD`）：
+**第 2 步：让当前终端拿到密码。** 开通要两把密码：MySQL root 的（建账号）和 `dw_reader` 的（设密码）。它们只在 `.env` 里（第 13 页 `make docker-env` 生成；`.env` 被 `.gitignore` 忽略，`.env.example` 里只有 `change-me-ro` 占位——明文密码不进仓库）。必须用 `source` 把它导出成 `REBUILD_MYSQL_ROOT_PASSWORD` / `REBUILD_DW_RO_PASSWORD`；直接 `bash` 跑脚本只改子进程，改不了你当前终端（忘了 `source` 或换了终端：`backend` 这边会报 `缺少环境变量 REBUILD_DW_RO_PASSWORD`，拆一刀里那条 `mysql` 命令则会先让你 `Enter password:` 再报 `ERROR 1045 (28000): Access denied for user 'root'@'localhost' (using password: NO)`——都只是没 `source`，不是库/密码坏了）：
 
 ```bash
 source scripts/export-docker-env.sh
@@ -80,14 +80,14 @@ S5 LIVE PASS
 
 ## 拆一刀
 
-把“能力边界”拆掉：给 `dw_reader` 加一句数据库级全权，重跑同一条门禁，看它红在哪。
+把“能力边界”拆掉：给 `dw_reader` 加一句数据库级全权，重跑同一条门禁，看它红在哪。**下面这段沿用第 2 步 `source` 过的那个终端；如果新开了终端，先 `source scripts/export-docker-env.sh`**——否则 `$REBUILD_MYSQL_ROOT_PASSWORD` 是空的，`mysql` 会先让你 `Enter password:` 再报 `ERROR 1045 (28000): Access denied … (using password: NO)`，看着像库/密码坏了，其实只是没 `source`。
 
 ```bash
 docker compose exec -T mysql mysql -uroot -p"$REBUILD_MYSQL_ROOT_PASSWORD" -e "GRANT ALL ON dw.* TO 'dw_reader'@'%'"
 (cd backend && .venv/bin/python -m app.scripts.security --verify-ro-account)
 ```
 
-`mysql: [Warning] Using a password on the command line interface can be insecure.` 是客户端的例行提醒，不是失败。门禁变红，退出码 1：
+`mysql: [Warning] Using a password on the command line interface can be insecure.` 是客户端的例行提醒，不是失败。门禁变红，退出码 1。**若用 `tee`/重定向把输出存成日志，`FAIL:` 摘要会先于上面的明细出现（明细走 stdout、`FAIL:` 走 stderr，缓冲顺序不同）——那是保存方式造成的顺序，不是输出不对，别怀疑判据**：
 
 ```text
 账号：'dw_reader'@'%' on dw (SELECT)
@@ -100,11 +100,16 @@ FAIL: 3 项问题
   - 写操作被放行（权限配置有误）
 ```
 
-**关键坑：`scripts/lab reset` 救不了这个。** `lab` 快照只收文件，数据库权限不在里面——拆完跑 `scripts/lab diff p18-before`，它会说“工作区与快照完全一致”，可门禁还是红的。要手动还原，用开通命令重建账号（一句还原，权限集合回到 SELECT）；也可以显式撤销：`docker compose exec -T mysql mysql -uroot -p"$REBUILD_MYSQL_ROOT_PASSWORD" -e "REVOKE ALL PRIVILEGES, GRANT OPTION FROM 'dw_reader'@'%'; GRANT SELECT ON dw.* TO 'dw_reader'@'%'"`（二选一）。
+**关键坑：`scripts/lab reset` 救不了这个。** `lab` 快照只收文件，数据库权限不在里面——拆完跑 `scripts/lab diff p18-before`，它会说“工作区与快照完全一致”，可门禁还是红的。手动还原**推荐用下面第一段代码里的 `--provision-ro-account`**（一句重建账号，权限集合回到 `SELECT`）；第二段 REVOKE 是**备选**，只用于理解“去掉 ALL、补回 SELECT”两件事，一条命令里同时有双引号、单引号和分号，从正文复制极易断，请整行复制。两段二选一，推荐第一段：
 
 ```bash
 (cd backend && .venv/bin/python -m app.scripts.security --provision-ro-account)
 (cd backend && .venv/bin/python -m app.scripts.security --verify-ro-account)
 ```
 
-末行回到 `PASS: 该账号在 dw 上只有 SELECT`。这次拆一刀的答案：**静态判据和动态判据都抓到了，但“文件快照”没抓到——数据库状态必须手动还原。** 不还原，以后每次 `make docker-smoke` 的第 7 步都会红。
+```bash
+docker compose exec -T mysql mysql -uroot -p"$REBUILD_MYSQL_ROOT_PASSWORD" -e "REVOKE ALL PRIVILEGES, GRANT OPTION FROM 'dw_reader'@'%'; GRANT SELECT ON dw.* TO 'dw_reader'@'%'"
+(cd backend && .venv/bin/python -m app.scripts.security --verify-ro-account)
+```
+
+跑完推荐的第一段，末行回到 `PASS: 该账号在 dw 上只有 SELECT`。这次拆一刀的答案：**静态判据和动态判据都抓到了，但“文件快照”没抓到——数据库状态必须手动还原。** 不还原，以后每次 `make docker-smoke` 的第 7 步都会红。
