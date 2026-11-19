@@ -1,0 +1,33 @@
+%% 单代号网络图（AON / 紧前关系法 PDM）：节点 = L4「守」的一个页面核心动作（+ 级考核），箭头 = FS（完成-开始）判据依赖
+%% 节点内：编号+活动名 / 工期（估）/ ES EF LS LF（单位：分钟，估）/ 完成判据（看到它才算这一页做完）
+%% 起点 = L3 终局（G3 绿 = 生成与校验的判据都立住）；G3 不在本图：D44 的横切系统按级推进
+%% P18→P19→P20→P21 串行守账号/策略/取消/可观测；P22 回归是汇聚节点：前四者全部完成才能开始（P18/P19/P20 直连 P22 的三条是汇聚边，不是驱动边）
+%% 工期全部是估算值，仅用于表达依赖与关键路径，不是验收时限（口径见 manual/aon/README.md）
+%% 引用出处：p22 级考核「抢 init 退出窗口」实测约 3 秒（page-22），那是时间窗、不是工期；make docker-smoke 的运行时长随机器变
+%% 渲染：python3 manual/shots/render_flow_levels.py --level l4
+%% 关键路径：P18 → P19 → P20 → P21 → P22 → G4，总工期 110 分钟（估算值，不是验收时限）
+%% 本图所有节点总浮动 0：五个守的动作串行，没有可压缩的并行空间（P22 的汇聚依赖不产生浮动）
+flowchart LR
+    P18["<b>P18 守账号</b><br/>工期 15（估）<br/>ES0 EF15 LS0 LF15<br/>判据：写操作被拒 1142<br/>PASS: 该账号在 dw 上只有 SELECT"]
+    P19["<b>P19 守策略</b><br/>工期 20（估）<br/>ES15 EF35 LS15 LF35<br/>判据：36/36 拒 + 11/11 放行<br/>8/8 基线 + S5 PASS"]
+    P20["<b>P20 守取消</b><br/>工期 20（估）<br/>ES35 EF55 LS35 LF55<br/>判据：6 passed, 108 deselected<br/>两帧 skipped → CANCELLED<br/>S7 SSE RECORD PASS"]
+    P21["<b>P21 守可观测</b><br/>工期 20（估）<br/>ES55 EF75 LS55 LF75<br/>判据：/api/steps=12、/api/errors=16<br/>夹具 30 passed + npm 40 passed"]
+    P22["<b>P22 守回归</b><br/>工期 20（估）<br/>ES75 EF95 LS75 LF95<br/>判据：813 passed, 30 skipped<br/>npm 40 passed<br/>DOCKER SMOKE PASS"]
+    G4["<b>G4 L4 级考核（P22 拆窗口）</b><br/>工期 15（估）<br/>ES95 EF110 LS95 LF110<br/>判据：抢窗口注入 GRANT ALL<br/>smoke 第 7 步红 FAIL: 3 项问题<br/>还原回 DOCKER SMOKE PASS"]
+
+    P18 -->|FS| P19
+    P19 -->|FS| P20
+    P20 -->|FS| P21
+    P21 -->|FS| P22
+    P18 -->|FS| P22
+    P19 -->|FS| P22
+    P20 -->|FS| P22
+    P22 -->|FS| G4
+
+    %% 关键路径（橙色粗边框 + 浅橙底 + 橙色粗箭头）：P18 P19 P20 P21 P22 G4
+    %% linkStyle 的序号 = 上面箭头的书写顺序（从 0 起）；虚线回流边不参与 CPM
+    classDef critical fill:#fff1e0,stroke:#e65100,stroke-width:5px,color:#333333
+    classDef normal fill:#f6f7f9,stroke:#b6bcc4,stroke-width:2px,color:#333333
+    class P18,P19,P20,P21,P22,G4 critical
+    linkStyle 0,1,2,3,7 stroke:#e65100,stroke-width:4px
+    linkStyle 4,5,6 stroke:#9aa0a6,stroke-width:2px

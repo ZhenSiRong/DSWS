@@ -6,6 +6,8 @@
 
 **范围**：L1 十页 = 造；L2/L3/L4 共 13 页 = 换/审/守，已在 page-10…page-22 交付。
 
+- **答辩/概览用 AON**：[L1 旧图](images/flow-aon.png) + [L2–L4 三张新图与读图口径](aon/README.md)——节点 = 每级一页的核心动作、边 = 判据依赖；L2–L4 工期为估算值，不是验收时限。
+
 > 城市版的 L1 全景见 [`city/city-map.html`](city/city-map.html)（四区 / 十设施 / 十二件交付物，单源 [`city/data.json`](city/data.json)）；本页把 L1 十页并排成一条城建流水线。
 
 **页标题与页码由生成脚本从 `page-0X.md` 的 H1 提取并同步**：下表只写页码、设施、问题、方案、造什么和交付物编号，不手写页标题；改页标题只改正文，重跑 `python3 manual/shots/render_map.py` 即可。
