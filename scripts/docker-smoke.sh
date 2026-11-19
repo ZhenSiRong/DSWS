@@ -109,6 +109,26 @@ fi
 echo "health: $(curl -fsS "$BASE/api/health")"
 
 echo "== 3/8 五个长驻服务 healthy + init 正常退出 =="
+# /api/health 通了只说明 nginx→backend 这条链活了：nginx 自己的 healthcheck
+# 还要再过几秒才从 starting 变 healthy。直接拍一张 ps 快照会撞上这个窗口，
+# 报"frontend 未健康"其实是检查得太早，不是部署有问题。先轮询等齐。
+services_ready=0
+attempt=1
+while [ "$attempt" -le 60 ]; do
+  if docker compose ps -a --format "{{.Service}}\t{{.State}}\t{{.Health}}\t{{.ExitCode}}" \
+    | "$PYTHON" "$ROOT/scripts/smoke_checks.py" services >/dev/null 2>&1; then
+    services_ready=1
+    break
+  fi
+  sleep 2
+  attempt=$((attempt + 1))
+done
+if [ "$services_ready" -ne 1 ]; then
+  # 最后一次不吞输出，把到底哪个服务没达标打出来
+  docker compose ps -a --format "{{.Service}}\t{{.State}}\t{{.Health}}\t{{.ExitCode}}" \
+    | "$PYTHON" "$ROOT/scripts/smoke_checks.py" services || true
+  fail "120 秒内服务状态没齐"
+fi
 STATUS_TABLE="$(docker compose ps -a --format "{{.Service}}\t{{.State}}\t{{.Health}}\t{{.ExitCode}}")" \
   || fail "docker compose ps 失败：栈是不是根本没起来？"
 printf '%s\n' "$STATUS_TABLE" \
