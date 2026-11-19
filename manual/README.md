@@ -36,7 +36,7 @@
 
 ## 全部页面（page-00 – page-09）
 
-- 全书在盖什么：**先看 [全书地图 · 一页图](OVERVIEW.md)**（[PNG](images/map-house-vs-pages.png)）——把「盖房子 ↔ 我们这十页」十行对照、四阶段成熟度和诚实三行收在一页，10 分钟看懂整本。
+- 全书在盖什么：**先看 [全书地图 · 一页图](OVERVIEW.md)**（[PNG](images/map-city-vs-pages.png)）——把「城市十设施 ↔ 我们这十页」十行对照、四阶段成熟度和诚实三行收在一页，10 分钟看懂整本；城市 L1 全景见 [城市地图](city/city-map.html)（四区 / 十设施 / 十二件交付物，单源 [city/data.json](city/data.json)）。
 
 | 页 | 构建活动 | 完成判据 |
 |---|---|---|
@@ -53,7 +53,7 @@
 
 - [建成证明海报 · 物料清单 + 检验单](completeness/poster-answer.png)：**12 件交付物 × 24 个检验点**，勾满一行 = 这件东西建成、12 行全满 = 系统完备；空白打印版 [poster-blank.png](completeness/poster-blank.png)。判据全部取自第 0–9 页「你应该看到」，渲染 `python3 manual/shots/render_completeness.py`。
 - 单源数据 [`completeness/v2/data.json`](completeness/v2/data.json)：海报与交互页共用同一份（v1「行=架构节点的四层矩阵」已按 D43 归档到 [`completeness/archive-v1/`](completeness/archive-v1/README.md)，仅作历史证据）。
-- [建成证明 · 可交互原型](completeness/explorer.html)：一个文件两个视图，默认「物料清单」——行=交付物，检验点级三态 ▢/◧/■ 可编辑、行状态由检验点派生、空白/答案态实时判定；切「工地地图」——左列十工地动作竖排时间线、右列十页页卡（页标题运行期取自正文 H1，「长出」徽章=该页交付物编号、`../page-0X.md` 相对链接离线可开）、底部四阶段成熟度 0/12→5/12→8/12→12/12 只读，点动作↔页卡双向高亮（单文件离线；数据源 [`completeness/v2/data.json`](completeness/v2/data.json) + [`map/data.json`](map/data.json) + [`maturity/stages.json`](maturity/stages.json)，生成 `python3 manual/shots/build_explorer.py`）。
+- [建成证明 · 可交互原型](completeness/explorer.html)：一个文件两个视图，默认「物料清单」——行=交付物，检验点级三态 ▢/◧/■ 可编辑、行状态由检验点派生、空白/答案态实时判定；切「城市地图」——左列按 4 区分组的十设施（城市名 + 问题句，楼内房间标「楼内 · 属于 P1/P3」）、右列十页页卡（页标题运行期取自正文 H1，「长出」徽章=该页交付物编号、`../page-0X.md` 相对链接离线可开）、底部城市四阶段 D44 只读，点设施↔页卡双向高亮（单文件离线；数据源 [`completeness/v2/data.json`](completeness/v2/data.json) + [`city/data.json`](city/data.json) + [`city/stages-city.json`](city/stages-city.json)，生成 `python3 manual/shots/build_explorer.py`）。
 
 ## 附录：换成双代号（AOA）会怎样
 

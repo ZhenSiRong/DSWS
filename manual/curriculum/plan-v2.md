@@ -1,6 +1,6 @@
 # 课程目录草案 v2 · 23 页（造 → 换 → 审 → 守）
 
-> 依据：`humen-desicions/09-ablation-course.md` D44（四级 = 四种工程动作，10+4+4+5 = 23 页）；D34 封装梯度、D35 三段式降级、D42/D43 交付物口径。基线：`manual/page-00.md`–`manual/page-09.md`、`manual/maturity/stages.json`、`manual/map/data.json`。
+> 依据：`humen-desicions/09-ablation-course.md` D44（四级 = 四种工程动作，10+4+4+5 = 23 页）；D34 封装梯度、D35 三段式降级、D42/D43 交付物口径。基线：`manual/page-00.md`–`manual/page-09.md`、`manual/maturity/stages.json`、`manual/city/data.json`。
 > 口径：L1 十页原样（page-00–09，只列标题）；L2–L4 十三页新写，编号 page-10–22（文中记 P10–P22），沿用 `page-0N` 命名。本文件只做盘点与目录，不改任何现有文件。
 > 数字：2026-11-19 本机实测——`pytest --collect-only` 843 条、全套 `813 passed / 30 skipped`、前端 `40 passed`、离线门禁 `S1/S5/S6/S7 PASS`。README 的 782/31 与实测不一致（见 E-7）。
 
@@ -85,7 +85,7 @@
 6. 黄金集：`eval/golden.jsonl`(30) + `backend/tests/recall/golden.yaml`(20) + `backend/tests/generate/baseline.yaml`(10) + `eval/conformance/`（8 gate），供 L3 检索/生成页。
 7. 录制回放：`record_sse --check`（实测 14 夹具一致）+ `fixtures/sse/` 14 条 + `frontend/tests/replay-server.mjs` + `make stage7`，供 L4 可观测页。
 8. 编排与验收：`compose.yaml` 6 服务 + `scripts/docker-smoke.sh` 8 步 + `scripts/smoke_checks.py` + `make docker-*`，供 L2 部署与 L4 回归页。
-9. 口径数据：`manual/completeness/v2/data.json`（12 件 × 24 检验点）+ `manual/map/data.json`（10 页对照）+ `manual/maturity/stages.json`（四阶段），目录编号与页映射现成。
+9. 口径数据：`manual/completeness/v2/data.json`（12 件 × 24 检验点）+ `manual/city/data.json`（10 页对照）+ `manual/maturity/stages.json`（四阶段），目录编号与页映射现成。
 10. S0–S8 正文：`design/book/chapters/10-s0-s4.md`(1006 行) + `20-s5-s8.md`(1223 行)（由 `design/book-editorial/build_book.py` 组装成 `book.html`），可作参考书直引。
 
 ### D2 需改造（10 条）
