@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+# .githooks/pre-commit —— 提交前快速护栏（retro 决议）
+#
+# 启用：make install-hooks     # git config core.hooksPath .githooks（仅本仓库）
+# 绕过：git commit --no-verify # 不推荐；只在确认误报时用
+#
+# 检查三件事（离线、目标 < 2s）：
+#   1) python3 manual/shots/audit_book.py：23 页结构 / 图引用 / README 坏链
+#   2) backend/uv.lock 不允许提交（uv 会按本机镜像源重写 registry URL）
+#   3) staged 的 manual/**/*.md 不得出现用户名 / 家目录绝对路径
+# 脚本缺失时对应检查跳过（防误伤历史/浅克隆 checkout）。
+set -u
+
+ROOT="$(git rev-parse --show-toplevel 2>/dev/null)" || exit 0
+cd "$ROOT" || exit 0
+
+fail=0
+note() { printf '%s\n' "$*" >&2; }
+
+# ---- 1) 全书结构审计（输出只在失败时展示，避免每次提交刷屏）--------------
+if [ -f manual/shots/audit_book.py ]; then
+  if command -v python3 >/dev/null 2>&1; then
+    audit_out="$(python3 manual/shots/audit_book.py 2>&1)"
+    if [ $? -ne 0 ]; then
+      note "$audit_out"
+      note "✗ pre-commit 拒绝：manual/shots/audit_book.py 结构审计未通过（明细见上）。"
+      note "  改好页面后 git add 再提交；确认误报可临时绕过：git commit --no-verify"
+      fail=$((fail + 1))
+    fi
+  else
+    note "⚠ pre-commit 跳过结构审计：未找到 python3"
+  fi
+else
+  note "⚠ pre-commit 跳过结构审计：manual/shots/audit_book.py 不存在"
+fi
+
+# ---- 2) 锁文件：backend/uv.lock 禁止提交 -----------------------------------
+if ! git diff --cached --quiet -- backend/uv.lock; then
+  note "✗ pre-commit 拒绝：backend/uv.lock 被修改并暂存。"
+  note "  uv 会按本机镜像源（~/.config/uv/uv.toml）重写 registry URL；锁文件必须与仓库一致。"
+  note "  修复：git restore --staged --worktree backend/uv.lock"
+  note "        （尚未暂存时等价于 git checkout -- backend/uv.lock）"
+  fail=$((fail + 1))
+fi
+
+# ---- 3) staged 的 manual Markdown：敏感串 ----------------------------------
+staged_md="$(git diff --cached --name-only --diff-filter=ACMR -- 'manual/' \
+  | grep -E '\.md$' | grep -vE '^manual/review/' || true)"
+while IFS= read -r f; do
+  [ -n "$f" ] || continue
+  hit="$(git show ":$f" 2>/dev/null | grep -nIE 'zhensirong|/home/' || true)"
+  if [ -n "$hit" ]; then
+    note "✗ pre-commit 拒绝：$f 含敏感串（用户名 / 家目录绝对路径）"
+    note "$hit"
+    note "  改用相对路径或 <家目录> 占位符后再提交。"
+    fail=$((fail + 1))
+  fi
+done <<EOF
+$staged_md
+EOF
+
+if [ "$fail" -ne 0 ]; then
+  note ""
+  note "pre-commit 护栏未通过：$fail 项检查失败，提交已取消（绕过：git commit --no-verify）。"
+  exit 1
+fi
+
+echo "✓ pre-commit 护栏通过（结构审计 / uv.lock / 敏感串）"
