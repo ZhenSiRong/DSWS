@@ -58,6 +58,9 @@ S6 PASS
       9 "expect": "rejected"
 ```
 
+![第 17 页 · 14 passed + S6 PASS（corrected 期望 result 实际 result）+ 9、11 重试标记统计](images/page-17-correct.png)
+![第 17 页 · 拆一刀关掉纠错后：pytest 5 failed, 9 passed + 失败矩阵只红 corrected + 语料 mismatch 0（哪条判据抓到了、哪条没抓到）](images/page-17-ablation.png)
+
 ## 对账
 
 - **猜 1：0 条。** 20 条里 11 条 `retryable: true` + `expect: "corrected"`，9 条 `retryable: false` + `expect: "rejected"`。`rejected` 不是“重试后仍失败”，是**根本不进重试**（策略拒绝 / 多语句 / 写操作 / 空 SQL 这类，重试等于给注入开一次口子）；`corrected` 也只说“这条错单该进校正”，不等于校正会成功。`eval/build_datasets.py` 用 `contracts/errors.yaml` 的 `retryable` 逐条校验这张表（expect 与 retryable 对不上就报错退出）——语料里**一条重试结局都没有**，拿它算“成功率”（11/20 或 11/11）都是假的。

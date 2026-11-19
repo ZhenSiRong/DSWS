@@ -61,6 +61,8 @@ S6 PASS
       2 SQL_CONSTANT_PROJECTION
 ```
 
+![第 16 页 · 三条离线判据：26 passed + 失败矩阵 S6 PASS + 语料对账 {"total": 20, "mismatch": 0}](images/page-16-guard.png)
+
 ## 对账
 
 - **猜 1：10 种，不是 16。** 16 是 `contracts/errors.yaml` 里错误码的总数；20 条语料只覆盖**校验这一步能发出的** 10 个码——9 个静态校验码 + 1 个策略通道码 `SQL_REJECTED`。剩下 6 个（`EMPTY_RESULT` / `LLM_REFUSAL` / `TIMEOUT` / `CANCELLED` / `SQL_EXECUTION_ERROR` / `INTERNAL_ERROR`）来自执行后、模型、取消和兜底，不在“校验拦下来”的名单里，所以本页不拿它们当判据。

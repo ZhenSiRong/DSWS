@@ -60,6 +60,9 @@ recall stats: query='华北销售额' keywords=3 es_roundtrips=1 qdrant_roundtri
 S3 PASS
 ```
 
+![第 14 页 · `make stage3` 真输出：S2 VERIFY PASS → 41 passed → 813 passed, 30 skipped → S3 PASS](images/page-14-stage3.png)
+![第 14 页 · 停掉 Elasticsearch 后：POST /api/query 仍回 41099.5；20 题黄金集 18 passed, 23 errors](images/page-14-stop-es.png)
+
 ## 对账
 
 - **猜 1：不会失败**——照常回一个数（拆一刀会真验）。主链路 `POST /api/query` 用的是 `backend/app/agent/orchestrator.py` 里默认的 `OfflineContextBuilder`：8 个阶段只读契约（表粒度、字段角色、枚举值域），不打开 ES/Qdrant 连接。

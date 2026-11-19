@@ -61,6 +61,8 @@ S4 PASS
 
 第 3 步最后那个 `30 skipped` 也不是失败：其中 23 条是 `REBUILD_INTEGRATION` 集成测试（没设 `REBUILD_INTEGRATION=1` 时按设计跳过，和第 14 页那 23 条同源）、5 条是第 2 步同款的提示词形状、2 条是安全语料的拒答题；要看逐条原因，单独跑 `(cd backend && .venv/bin/python -m pytest -q -rs)` 的 `short test summary info`。
 
+![第 15 页 · `make baseline` 两段对照：绿 基线：10/10 通过（拒答 2）→ 拆一刀后红 基线：8/10 通过（拒答 2）](images/page-15-baseline.png)
+
 ## 对账
 
 - **猜 2：模板，不是模型。** 默认生成器是 `backend/app/generate/deterministic.py` 里的确定性实现：指标公式直接抄契约的 `formula`，表/列/取值/时间边界也都来自契约。`sql_or_refusal` 输出契约、`app.generate.guard` 静态校验、`baseline.yaml` 的语义断言，三道都不认“谁写的 SQL”。换真模型只替换 `HttpLlmGenerator` 这个实现（配三个 `REBUILD_LLM_*` 变量），模型写出的 SQL 过的是同一个输出形状、同一套 `check_sql`；`baseline.yaml` 断言的是 SQL 里的事实，也不认识生成器——所以尺子量得动两边。本页不配 key，只跑可复现的确定性一侧。
