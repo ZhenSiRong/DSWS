@@ -42,6 +42,19 @@ h1{margin:2px 0 0;font-size:26px;font-weight:900;letter-spacing:.4px;line-height
 .reset-btn:disabled{opacity:.35;cursor:default;}
 .mode-hint{font-size:11.5px;color:var(--mute);text-align:right;line-height:1.45;}
 
+/* ---------- 视图切换：物料清单 / 工地地图 ---------- */
+.view-row{display:flex;align-items:center;gap:9px;}
+.views{display:flex;border:2px solid var(--ink);border-radius:6px;overflow:hidden;}
+.view-btn{border:0;border-right:1.5px solid var(--ink);background:#fff;color:var(--ink);
+          font:inherit;font-size:12.5px;font-weight:800;padding:4px 13px;cursor:pointer;
+          letter-spacing:.5px;white-space:nowrap;}
+.view-btn:last-child{border-right:0;}
+.view-btn:hover{background:#eeeeee;}
+.view-btn.is-on{background:var(--ink);color:#fff;}
+.view-hint{font-size:10.6px;color:var(--mute);white-space:nowrap;overflow:hidden;
+           text-overflow:ellipsis;max-width:330px;}
+.app.view-map .mode-row{display:none;}
+
 /* ---------- 状态条 ---------- */
 .statusbar{display:flex;align-items:center;gap:9px;padding:6px 22px;
            border-bottom:1.5px solid var(--ink);background:var(--soft);
@@ -206,6 +219,104 @@ a.pg:hover{background:var(--ink);color:#fff;}
            line-height:1.4;overflow-wrap:anywhere;}
 .card-foot code{font-family:"DejaVu Sans Mono",monospace;font-size:9.2px;background:#f2f2f2;padding:0 2px;}
 
+/* ---------- 工地地图视图（工地十动作 ↔ 十页） ---------- */
+#mapview{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;background:#fff;}
+#mapview[hidden],.split[hidden],.statusbar[hidden],.aon[hidden]{display:none;}
+.map-head{display:flex;align-items:baseline;gap:12px;padding:6px 20px;
+          border-bottom:1.5px solid var(--ink);background:var(--soft);flex:0 0 auto;}
+.mh-kicker{font-family:"DejaVu Sans Mono","Noto Sans CJK SC",monospace;font-size:10.5px;
+           font-weight:900;letter-spacing:.4px;white-space:nowrap;}
+.mh-title{font-size:12.3px;color:var(--ink2);white-space:nowrap;overflow:hidden;
+          text-overflow:ellipsis;min-width:0;}
+.mh-pair{margin-left:auto;flex:0 0 auto;font-size:10.8px;color:#333;white-space:nowrap;}
+.mh-pair b{font-family:"DejaVu Sans Mono","Noto Sans CJK SC",monospace;font-weight:900;}
+.map-body{display:flex;flex:1 1 auto;min-height:0;}
+.map-col{display:flex;flex-direction:column;min-width:0;min-height:0;}
+.map-left{flex:0 0 41%;border-right:2px solid var(--ink);}
+.map-right{flex:1 1 59%;background:#fafafa;}
+.mv-head{display:flex;align-items:baseline;gap:8px;padding:5px 16px;
+         border-bottom:1.4px solid var(--ink);background:#efefef;flex:0 0 auto;}
+.mv-head b{font-size:11.3px;font-weight:900;letter-spacing:.2px;}
+.mv-head .mv-note{font-size:9.8px;color:var(--mute);white-space:nowrap;}
+.mv-head .mv-n{margin-left:auto;font-family:"DejaVu Sans Mono","Noto Sans CJK SC",monospace;
+               font-size:10px;color:#555;white-space:nowrap;}
+.site-list{flex:1 1 auto;min-height:0;overflow:auto;margin:0;list-style:none;
+           padding:7px 12px 10px 31px;display:flex;flex-direction:column;gap:5px;
+           position:relative;}
+.site-list::before{content:"";position:absolute;left:18px;top:11px;bottom:11px;width:2px;
+                   background:#cfcfcf;}
+.site-line{margin:0;padding:0;display:flex;flex:1 0 auto;min-height:0;}
+.site-item{display:flex;align-items:center;gap:9px;width:100%;height:100%;text-align:left;
+           border:1.4px solid var(--ink);border-radius:6px;background:#fff;color:var(--ink);
+           font:inherit;padding:5px 9px 6px;cursor:pointer;min-width:0;
+           box-shadow:0 1px 0 #e5e5e5;}
+.site-item:hover{background:#f0f0f0;}
+.site-no{flex:0 0 auto;width:24px;height:24px;border:1.6px solid var(--ink);border-radius:50%;
+         display:flex;align-items:center;justify-content:center;background:#fff;color:var(--ink);
+         font-family:"DejaVu Sans Mono","Noto Sans CJK SC",monospace;font-size:12.5px;
+         font-weight:900;line-height:1;margin-top:1px;}
+.site-txt{min-width:0;}
+.site-name{display:block;font-size:13.2px;font-weight:900;line-height:1.25;}
+.site-meta{display:block;font-size:10.3px;color:#444;line-height:1.38;margin-top:1px;}
+.site-item.is-hot{background:var(--ink);color:#fff;border-color:var(--ink);
+                  box-shadow:0 0 0 2px #999,0 1px 0 #999;}
+.site-item.is-hot .site-no{background:#fff;color:var(--ink);}
+.site-item.is-hot .site-meta{color:#e8e8e8;}
+.site-item.is-dim{opacity:.35;}
+.page-cards{flex:1 1 auto;min-height:0;overflow:auto;padding:7px 16px 11px;
+            display:flex;flex-direction:column;gap:5px;}
+.map-card{display:grid;grid-template-columns:32px minmax(0,1fr) auto;gap:9px;
+          align-items:center;border:1.4px solid var(--ink);border-radius:6px;background:#fff;
+          padding:5px 10px 6px;cursor:pointer;min-width:0;box-shadow:0 1px 0 #e5e5e5;
+          flex:1 0 auto;}
+.map-card:hover{background:#f0f0f0;}
+.map-card:focus-visible{outline:2px solid var(--ink);outline-offset:1px;}
+.mc-no{font-family:"DejaVu Sans Mono","Noto Sans CJK SC",monospace;font-size:11px;
+       font-weight:900;background:var(--ink);color:#fff;border-radius:4px;
+       padding:2px 0;text-align:center;}
+.mc-main{min-width:0;}
+.mc-title{margin:0;font-size:13.4px;font-weight:900;line-height:1.24;white-space:nowrap;
+          overflow:hidden;text-overflow:ellipsis;}
+.mc-build{font-size:10.5px;color:#333;line-height:1.35;margin-top:1px;overflow:hidden;
+          display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
+.mc-build .mc-lbl,.mc-arts .mc-lbl{font-family:"DejaVu Sans Mono","Noto Sans CJK SC",monospace;
+          font-size:9.2px;font-weight:800;color:#777;letter-spacing:.3px;margin-right:4px;}
+.mc-side{display:flex;flex-direction:column;align-items:flex-end;gap:2px;white-space:nowrap;}
+.mc-arts{display:flex;align-items:center;gap:3px;flex-wrap:nowrap;}
+.art-badge{font-family:"DejaVu Sans Mono","Noto Sans CJK SC",monospace;font-size:9.6px;
+           font-weight:900;border:1.2px solid var(--ink);border-radius:3px;padding:0 4px;
+           background:#f2f2f2;color:var(--ink);}
+.mc-open{font-size:9.8px;color:var(--ink);text-decoration:none;border-bottom:1px solid var(--ink);}
+.mc-open:hover{background:var(--ink);color:#fff;}
+.map-card.is-hot{background:var(--ink);color:#fff;border-color:var(--ink);
+                 box-shadow:0 0 0 2px #999,0 1px 0 #999;}
+.map-card.is-hot .mc-no{background:#fff;color:var(--ink);}
+.map-card.is-hot .mc-title{color:#fff;}
+.map-card.is-hot .mc-build{color:#f0f0f0;}
+.map-card.is-hot .mc-build .mc-lbl,.map-card.is-hot .mc-arts .mc-lbl{color:#cfcfcf;}
+.map-card.is-hot .art-badge{background:#fff;color:var(--ink);border-color:#fff;}
+.map-card.is-hot .mc-open{color:#fff;border-bottom-color:#fff;}
+.map-card.is-dim{opacity:.33;}
+.map-stages{flex:0 0 auto;display:flex;align-items:center;gap:10px;padding:6px 20px 7px;
+            border-top:2px solid var(--ink);background:#fff;}
+.ms-title{font-size:10.6px;font-weight:900;white-space:nowrap;}
+.ms-title span{font-size:9.6px;font-weight:400;color:#666;}
+.ms-bar{display:flex;gap:6px;flex:1 1 auto;min-width:0;}
+.ms-seg{flex:1 1 0;min-width:0;border:1.4px solid var(--ink);border-radius:5px;
+        padding:2px 8px 2px;display:flex;align-items:baseline;gap:6px;white-space:nowrap;
+        overflow:hidden;background:#fff;}
+.ms-seg b{font-size:10.8px;font-weight:900;}
+.ms-count{font-family:"DejaVu Sans Mono","Noto Sans CJK SC",monospace;font-size:11px;
+          font-weight:900;letter-spacing:.3px;}
+.ms-sub{font-size:9.7px;color:#555;overflow:hidden;text-overflow:ellipsis;}
+.ms-seg.l4{background:var(--ink);color:#fff;}
+.ms-seg.l4 .ms-sub{color:#dcdcdc;}
+@media (max-width:1280px){
+  .map-left{flex-basis:44%;}
+  .mh-title{display:none;}
+  .ms-sub{display:none;}
+}
+
 /* ---------- 提示条 ---------- */
 .toast{position:fixed;left:50%;top:14px;transform:translateX(-50%) translateY(-8px);
        background:var(--ink);color:#fff;font-size:12.5px;font-weight:700;letter-spacing:.3px;
@@ -222,7 +333,7 @@ a.pg:hover{background:var(--ink);color:#fff;}
 </style>
 </head>
 <body>
-<div class="app">
+<div class="app" id="app">
   <header class="top">
     <div class="brand">
       <div class="kicker" id="kicker"></div>
@@ -230,6 +341,15 @@ a.pg:hover{background:var(--ink);color:#fff;}
       <div class="sub" id="subtitle"></div>
     </div>
     <div class="controls">
+      <div class="view-row">
+        <div class="views" role="group" aria-label="视图切换">
+          <button type="button" class="view-btn is-on" data-view="material"
+                  aria-pressed="true">物料清单</button>
+          <button type="button" class="view-btn" data-view="map"
+                  aria-pressed="false">工地地图</button>
+        </div>
+        <span class="view-hint" id="view-hint">视图：物料清单 · 12 件 × 24 检验点</span>
+      </div>
       <div class="mode-row">
         <div class="modes" role="group" aria-label="模式切换">
           <button type="button" class="mode-btn" data-mode="answer" aria-pressed="true">答案态</button>
@@ -301,6 +421,36 @@ a.pg:hover{background:var(--ink);color:#fff;}
       <div class="cards is-empty" id="cards"></div>
     </aside>
   </main>
+
+  <section class="mapview" id="mapview" hidden aria-label="全书地图：工地十动作 ↔ 十页">
+    <div class="map-head">
+      <span class="mh-kicker" id="map-kicker">全书地图 · 工地十动作 ↔ 十页</span>
+      <span class="mh-title" id="map-title"></span>
+      <span class="mh-pair" id="map-pair">点左列动作 → 右列同号页卡高亮并滚入视野；点右列页卡 → 左列同号动作高亮</span>
+    </div>
+    <div class="map-body">
+      <section class="map-col map-left" aria-label="左列：工地十动作（比喻层）">
+        <div class="mv-head">
+          <b>① 工地 · 我们做了什么动作</b>
+          <span class="mv-note">比喻层：为什么按这个顺序</span>
+          <span class="mv-n" id="map-action-n">10 个动作</span>
+        </div>
+        <ol class="site-list" id="site-timeline"></ol>
+      </section>
+      <section class="map-col map-right" aria-label="右列：十页页卡（交付层）">
+        <div class="mv-head">
+          <b>② 我们的页面 · 这一页造出什么</b>
+          <span class="mv-note">交付层：盖完应该看到什么</span>
+          <span class="mv-n" id="map-page-n">10 页 · 12 件交付物</span>
+        </div>
+        <div class="page-cards" id="page-cards"></div>
+      </section>
+    </div>
+    <div class="map-stages" id="map-stages" aria-label="四阶段成熟度（只读口径，不参与勾选）">
+      <span class="ms-title">四阶段成熟度 <span>· 口径同 maturity/stages.json · 不参与勾选</span></span>
+      <div class="ms-bar" id="ms-bar"></div>
+    </div>
+  </section>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
@@ -697,6 +847,226 @@ a.pg:hover{background:var(--ink);color:#fff;}
   ],
   "rerun": "python3 manual/shots/render_completeness.py（海报）· python3 manual/shots/build_explorer.py --shots（交互页+截图）"
 }</script>
+<script id="map-data" type="application/json">{
+  "schema": "explorer-map/1",
+  "title": "全书地图 · 我们不是在发明系统，是在把一栋毛坯房盖到能开门接客",
+  "kicker": "全书地图 · 一页图看懂十页",
+  "one_liner": "先立骨架、再通水电、最后精装与安防——软件也是这么盖起来的。",
+  "sources": {
+    "rows": "manual/map/data.json（page / site_action / metaphor / build）",
+    "titles": "manual/page-00.md – page-09.md 的 H1（运行期读取，不手写）",
+    "artifacts": "manual/completeness/v2/data.json 的 pages 字段反转（page → 长出哪些交付物）",
+    "stages": "manual/maturity/stages.json（artifacts_grown 累积件数）"
+  },
+  "pages": [
+    {
+      "page": "page-00",
+      "no": 0,
+      "title": "第 0 页 · 开课前准备",
+      "site_action": "三通一平",
+      "metaphor": "开工前先三通一平：Docker 通、依赖通、端口通，场地干净",
+      "build": "装 Docker/uv/Node/curl + make install + make doctor",
+      "artifacts": [
+        {
+          "no": 1,
+          "id": "env",
+          "name": "开发机环境（工具 + venv + 端口）",
+          "kind": "工具 + venv + 端口"
+        }
+      ]
+    },
+    {
+      "page": "page-01",
+      "no": 1,
+      "title": "第 1 页 · 创建 MySQL 容器（空库）",
+      "site_action": "打地基",
+      "metaphor": "地基一浇，后面所有重量都压在它上面",
+      "build": "docker run 起一个空库，先不导入数据",
+      "artifacts": [
+        {
+          "no": 2,
+          "id": "mysql-container",
+          "name": "容器 `lab-mysql`",
+          "kind": "容器"
+        }
+      ]
+    },
+    {
+      "page": "page-02",
+      "no": 2,
+      "title": "第 2 页 · 导入 dw.sql：建表灌数据",
+      "site_action": "隔墙 + 材料进场",
+      "metaphor": "先隔出房间，再把材料搬进去",
+      "build": "导入 dw.sql：5 张表 + 115 行",
+      "artifacts": [
+        {
+          "no": 3,
+          "id": "dw-tables",
+          "name": "库 `dw` + 5 张表",
+          "kind": "数据库对象"
+        },
+        {
+          "no": 4,
+          "id": "dw-data",
+          "name": "数据 115 行",
+          "kind": "数据行"
+        }
+      ]
+    },
+    {
+      "page": "page-03",
+      "no": 3,
+      "title": "第 3 页 · 让服务在 8000 端口回答问题",
+      "site_action": "装锅炉（常驻）",
+      "metaphor": "锅炉一点着火就不熄——服务进程就是那台常驻锅炉",
+      "build": "最小 HTTP 服务 /health",
+      "artifacts": [
+        {
+          "no": 5,
+          "id": "service",
+          "name": "服务进程",
+          "kind": "进程（uvicorn）"
+        }
+      ]
+    },
+    {
+      "page": "page-04",
+      "no": 4,
+      "title": "第 4 页 · 加一个能收问题的接口",
+      "site_action": "装门铃/对讲",
+      "metaphor": "门口先装对讲机：外面喊话，屋里听得见",
+      "build": "POST /api/query 能收问题",
+      "artifacts": [
+        {
+          "no": 6,
+          "id": "api-query",
+          "name": "端点 `POST /api/query`",
+          "kind": "HTTP 端点"
+        }
+      ]
+    },
+    {
+      "page": "page-05",
+      "no": 5,
+      "title": "第 5 页 · 从一句话里抽出关键词",
+      "site_action": "装感应器（耳朵）",
+      "metaphor": "听见“华北销售额”，能分辨出“华北”和“销售额”",
+      "build": "extract_keywords",
+      "artifacts": [
+        {
+          "no": 7,
+          "id": "keywords-fn",
+          "name": "函数 `extract_keywords`",
+          "kind": "纯函数（纯字符串规则）"
+        }
+      ]
+    },
+    {
+      "page": "page-06",
+      "no": 6,
+      "title": "第 6 页 · 照契约生成那条带 JOIN 的 SQL",
+      "site_action": "照图纸接线",
+      "metaphor": "接线不能凭手感，得照图纸；契约是图纸，SQL 是接出来的线",
+      "build": "契约 + build_sql（只 print）",
+      "artifacts": [
+        {
+          "no": 8,
+          "id": "sql-fn",
+          "name": "函数 `build_sql` + 契约 `CONTRACT`",
+          "kind": "函数 + 契约"
+        }
+      ]
+    },
+    {
+      "page": "page-07",
+      "no": 7,
+      "title": "第 7 页 · 把 SQL 真交给 MySQL",
+      "site_action": "接市政水管 + 装水表",
+      "metaphor": "接上市政管网才真的有水；水表只许你量，不许倒灌",
+      "build": "pymysql 真执行 → 41099.5",
+      "artifacts": [
+        {
+          "no": 9,
+          "id": "exec-chain",
+          "name": "执行链路",
+          "kind": "运行时链路"
+        }
+      ]
+    },
+    {
+      "page": "page-08",
+      "no": 8,
+      "title": "第 8 页 · 让答案一条条推送出来（SSE）",
+      "site_action": "装水龙头，一滴一滴",
+      "metaphor": "水是一滴一滴出来的，不是一桶砸下来",
+      "build": "SSE /api/stream（12 progress）",
+      "artifacts": [
+        {
+          "no": 10,
+          "id": "stream-endpoint",
+          "name": "端点 `GET /api/stream`",
+          "kind": "HTTP 端点（SSE）"
+        }
+      ]
+    },
+    {
+      "page": "page-09",
+      "no": 9,
+      "title": "第 9 页 · 给浏览器一个入口：nginx 反代 + 一个页面",
+      "site_action": "装窗户 + 交钥匙",
+      "metaphor": "屋里再漂亮，没窗户外面也看不见；验收只做一件事：开门、问一句、数出来",
+      "build": "nginx + 页面，浏览器出数",
+      "artifacts": [
+        {
+          "no": 11,
+          "id": "nginx-page",
+          "name": "容器 `lab-nginx` + 页面",
+          "kind": "容器 + 静态页"
+        },
+        {
+          "no": 12,
+          "id": "e2e-chain",
+          "name": "端到端链路",
+          "kind": "端到端链路"
+        }
+      ]
+    }
+  ],
+  "stages": [
+    {
+      "level": "L1",
+      "name": "毛坯房",
+      "count": 0,
+      "total": 12,
+      "live": "能站人不能住",
+      "software": "能站人：拓扑齐全，12 件全是壳"
+    },
+    {
+      "level": "L2",
+      "name": "通水通电",
+      "count": 5,
+      "total": 12,
+      "live": "能住",
+      "software": "能住：管线进墙、水箱蓄水、锅炉烧热"
+    },
+    {
+      "level": "L3",
+      "name": "智能家居",
+      "count": 8,
+      "total": 12,
+      "live": "好用",
+      "software": "好用：灯亮、网通、听懂话"
+    },
+    {
+      "level": "L4",
+      "name": "物业安防",
+      "count": 12,
+      "total": 12,
+      "live": "敢交付",
+      "software": "敢交付：只读、拍下、盯得住"
+    }
+  ]
+}</script>
 <script>
 (function () {
   'use strict';
@@ -725,6 +1095,11 @@ a.pg:hover{background:var(--ink);color:#fff;}
   if (!E2E_ART) { E2E_ART = ARTS[ARTS.length - 1]; }
   var TOTAL_CHECKS = ARTS.reduce(function (sum, art) { return sum + art.checkpoints.length; }, 0);
 
+  // 全书地图（工地十动作 ↔ 十页）：数据由生成器从 map/data.json + page-0X.md 的 H1 +
+  // v2 data 的 pages 反转 + maturity/stages.json 合成后内联；页标题不在这里手写。
+  var MAP = JSON.parse(document.getElementById('map-data').textContent);
+  var MAP_PAGES = MAP.pages || [];
+
   // AON 导航的活动 → 交付物 id（由生成器从 flow.mmd 映射后写进 data-arts）
   var ACTIVITY_ARTS = {};
   Array.prototype.forEach.call(document.querySelectorAll('#aon [data-activity]'), function (node) {
@@ -742,8 +1117,9 @@ a.pg:hover{background:var(--ink);color:#fff;}
     } catch (err) { return false; }
   })();
 
-  // 唯一可变状态：mode（答案态 / 空白态）、checks（检验点级真源）、open（打开的卡片）、navhl
-  var state = { mode: 'answer', checks: {}, open: [], navhl: null };
+  // 唯一可变状态：view（物料清单 / 工地地图）、mode（答案态 / 空白态）、
+  // checks（检验点级真源）、open（打开的卡片）、navhl、mapSel（地图选中的页）
+  var state = { view: 'material', mode: 'answer', checks: {}, open: [], navhl: null, mapSel: null };
 
   function esc(value) {
     return String(value === null || value === undefined ? '' : value)
@@ -1077,6 +1453,177 @@ a.pg:hover{background:var(--ink);color:#fff;}
     renderNavState();
   }
 
+  // ---------- 全书地图视图（工地十动作 ↔ 十页） ----------
+  function siteItemHTML(page, index) {
+    var tip = '工地动作 ' + index + ' · ' + page.site_action + ' · 比喻：' + page.metaphor +
+      ' · 点它高亮第 ' + index + ' 页页卡';
+    return '<li class="site-line"><button type="button" class="site-item"' +
+      ' data-map-action="' + index + '" data-page="' + esc(page.page) + '"' +
+      ' aria-pressed="false" title="' + esc(tip) + '">' +
+      '<span class="site-no">' + index + '</span>' +
+      '<span class="site-txt"><span class="site-name">' + esc(page.site_action) + '</span>' +
+      '<span class="site-meta">' + esc(page.metaphor) + '</span></span></button></li>';
+  }
+
+  function mapCardHTML(page, index) {
+    var badges = (page.artifacts || []).map(function (art) {
+      var tip = '#' + pad2(art.no) + ' ' + String(art.name).replace(/`/g, '') +
+        ' · ' + String(art.kind).replace(/`/g, '');
+      return '<span class="art-badge" data-art-no="' + esc(art.no) + '" title="' + esc(tip) +
+        '">#' + pad2(art.no) + '</span>';
+    }).join('');
+    var tipCard = '第 ' + index + ' 页 · ' + page.title + ' · 该页长出 ' +
+      (page.artifacts || []).length + ' 件交付物 · 点它高亮左列同号动作';
+    return '<article class="map-card" data-map-page="' + esc(page.page) + '" data-page-no="' +
+      index + '" tabindex="0" role="button" aria-pressed="false" title="' + esc(tipCard) + '">' +
+      '<span class="mc-no">#' + pad2(index) + '</span>' +
+      '<div class="mc-main"><h3 class="mc-title">' + esc(page.title) + '</h3>' +
+      '<div class="mc-build"><span class="mc-lbl">这一页造什么</span>' +
+      rich(page.build) + '</div></div>' +
+      '<div class="mc-side"><div class="mc-arts"><span class="mc-lbl">长出</span>' +
+      badges + '</div><a class="mc-open" href="../' + esc(page.page) + '.md" title="打开 ' +
+      esc(page.page) + '.md（相对路径 ../）">打开这一页</a></div></article>';
+  }
+
+  function stageHTML(stage) {
+    return '<div class="ms-seg' + (stage.level === 'L4' ? ' l4' : '') + '" data-stage="' +
+      esc(stage.level) + '" title="' + esc(stage.software || '') + '">' +
+      '<b>' + esc(stage.level + ' ' + stage.name) + '</b>' +
+      '<span class="ms-count">' + stage.count + '/' + stage.total + '</span>' +
+      '<span class="ms-sub">' + esc(stage.live || '') + '</span></div>';
+  }
+
+  function sumArtifacts() {
+    return MAP_PAGES.reduce(function (sum, page) {
+      return sum + (page.artifacts || []).length;
+    }, 0);
+  }
+
+  function renderMap() {
+    var timeline = document.getElementById('site-timeline');
+    var host = document.getElementById('page-cards');
+    if (!timeline || !host) { return; }
+    timeline.innerHTML = MAP_PAGES.map(siteItemHTML).join('');
+    host.innerHTML = MAP_PAGES.map(mapCardHTML).join('');
+    var kicker = document.getElementById('map-kicker');
+    var title = document.getElementById('map-title');
+    var actionN = document.getElementById('map-action-n');
+    var pageN = document.getElementById('map-page-n');
+    var bar = document.getElementById('ms-bar');
+    if (kicker) { kicker.textContent = MAP.kicker || '全书地图'; }
+    if (title) { title.textContent = MAP.title || ''; }
+    if (actionN) { actionN.textContent = MAP_PAGES.length + ' 个动作'; }
+    if (pageN) {
+      pageN.textContent = MAP_PAGES.length + ' 页 · ' + sumArtifacts() + ' 件交付物';
+    }
+    if (bar) { bar.innerHTML = (MAP.stages || []).map(stageHTML).join(''); }
+    renderMapSelection();
+  }
+
+  function renderMapSelection() {
+    var sel = state.mapSel;
+    Array.prototype.forEach.call(
+      document.querySelectorAll('#site-timeline [data-map-action]'), function (node) {
+        var on = sel !== null && Number(node.getAttribute('data-map-action')) === sel;
+        node.classList.toggle('is-hot', on);
+        node.classList.toggle('is-dim', sel !== null && !on);
+        node.setAttribute('aria-pressed', on ? 'true' : 'false');
+      });
+    Array.prototype.forEach.call(
+      document.querySelectorAll('#page-cards [data-map-page]'), function (node) {
+        var on = sel !== null && Number(node.getAttribute('data-page-no')) === sel;
+        node.classList.toggle('is-hot', on);
+        node.classList.toggle('is-dim', sel !== null && !on);
+        node.setAttribute('aria-pressed', on ? 'true' : 'false');
+      });
+    var pair = document.getElementById('map-pair');
+    if (!pair) { return; }
+    if (sel === null || !MAP_PAGES[sel]) {
+      pair.textContent = '点左列动作 → 右列同号页卡高亮并滚入视野；' +
+        '点右列页卡 → 左列同号动作高亮';
+      return;
+    }
+    var page = MAP_PAGES[sel];
+    pair.innerHTML = '<b>' + sel + ' ' + esc(page.site_action) + '</b> ↔ ' +
+      esc(page.title) + ' · 长出 <b>' + (page.artifacts || []).length + '</b> 件交付物';
+  }
+
+  function scrollInside(container, element) {
+    if (!container || !element || !container.getBoundingClientRect) { return; }
+    var c = container.getBoundingClientRect();
+    var r = element.getBoundingClientRect();
+    var delta = 0;
+    if (r.top < c.top) { delta = r.top - c.top - 4; }
+    else if (r.bottom > c.bottom) { delta = r.bottom - c.bottom + 4; }
+    if (delta) { container.scrollTop = Math.max(0, container.scrollTop + delta); }
+  }
+
+  function scrollMapSelection() {
+    var sel = state.mapSel;
+    if (sel === null) { return; }
+    scrollInside(document.getElementById('page-cards'),
+      document.querySelector('#page-cards [data-page-no="' + sel + '"]'));
+    scrollInside(document.getElementById('site-timeline'),
+      document.querySelector('#site-timeline [data-map-action="' + sel + '"]'));
+  }
+
+  function mapSelect(index) {
+    var at = Number(index);
+    if (!(at >= 0 && at < MAP_PAGES.length)) { return false; }
+    state.mapSel = at;
+    renderMapSelection();
+    if (state.view === 'map') { scrollMapSelection(); }
+    return true;
+  }
+
+  function applyViewUI() {
+    var isMap = state.view === 'map';
+    var app = document.getElementById('app');
+    if (app) { app.classList.toggle('view-map', isMap); }
+    var mapview = document.getElementById('mapview');
+    var split = document.querySelector('.split');
+    var statusbar = document.querySelector('.statusbar');
+    var aon = document.getElementById('aon');
+    if (mapview) { mapview.hidden = !isMap; }
+    if (split) { split.hidden = isMap; }
+    if (statusbar) { statusbar.hidden = isMap; }
+    if (aon) { aon.hidden = isMap; }
+    Array.prototype.forEach.call(document.querySelectorAll('.view-btn'), function (button) {
+      var on = button.getAttribute('data-view') === state.view;
+      button.classList.toggle('is-on', on);
+      button.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+    var hint = document.getElementById('view-hint');
+    if (hint) {
+      hint.textContent = isMap
+        ? '视图：工地地图 · 只读联动，不改勾选'
+        : '视图：物料清单 · ' + ARTS.length + ' 件 × ' + TOTAL_CHECKS + ' 检验点';
+    }
+    if (isMap) {
+      var modeHint = document.getElementById('mode-hint');
+      if (modeHint) {
+        modeHint.textContent = '地图视图（只读联动）：点左列工地动作 → 右列同号页卡高亮并' +
+          '滚入视野；点右列页卡 → 左列同号动作高亮。物料清单的勾选 / 空白态进度不受影响。';
+      }
+      var reset = document.getElementById('reset');
+      if (reset) { reset.disabled = state.mode !== 'blank'; }
+    } else {
+      applyModeUI();
+    }
+    if (isMap) {
+      renderMapSelection();
+      if (state.mapSel !== null) { scrollMapSelection(); }
+    }
+  }
+
+  function switchView(view) {
+    if (view !== 'material' && view !== 'map') { return false; }
+    if (view === state.view) { return false; }
+    state.view = view;
+    applyViewUI();
+    return true;
+  }
+
   // ---------- 交互 ----------
   function toggleCard(artId) {
     if (!ART_BY_ID[artId]) { return false; }
@@ -1231,6 +1778,38 @@ a.pg:hover{background:var(--ink);color:#fff;}
     renderNavState();
   });
 
+  // ---------- 视图切换：物料清单 / 工地地图 ----------
+  Array.prototype.forEach.call(document.querySelectorAll('.view-btn'), function (button) {
+    button.addEventListener('click', function () {
+      switchView(button.getAttribute('data-view'));
+    });
+  });
+
+  // 地图左列：点工地动作 → 右列同号页卡高亮并滚入视野
+  document.getElementById('site-timeline').addEventListener('click', function (ev) {
+    var node = ev.target.closest ? ev.target.closest('[data-map-action]') : null;
+    if (!node) { return; }
+    mapSelect(node.getAttribute('data-map-action'));
+  });
+
+  // 地图右列：点页卡 → 左列同号动作高亮；「打开这一页」是普通相对链接，不拦截
+  var pageCardsHost = document.getElementById('page-cards');
+  pageCardsHost.addEventListener('click', function (ev) {
+    var target = ev.target;
+    if (target.closest && target.closest('a')) { return; }
+    var card = target.closest ? target.closest('[data-map-page]') : null;
+    if (!card) { return; }
+    mapSelect(card.getAttribute('data-page-no'));
+  });
+  pageCardsHost.addEventListener('keydown', function (ev) {
+    if (ev.key !== 'Enter' && ev.key !== ' ') { return; }
+    if (ev.target.closest && ev.target.closest('a')) { return; }
+    var card = ev.target.closest ? ev.target.closest('[data-map-page]') : null;
+    if (!card) { return; }
+    ev.preventDefault();
+    mapSelect(card.getAttribute('data-page-no'));
+  });
+
   // ---------- 静态文案 ----------
   // 页眉 kicker 用 D43 口径（data.kicker 仍是 D42 样例阶段「供确认后再全量替换 v1」，
   // 那句在 D43 已完成替换后已过期；标题 / 副标题 / 12×24 内容仍逐字取单源 data.json）
@@ -1287,6 +1866,16 @@ a.pg:hover{background:var(--ink);color:#fff;}
       renderRows();
       renderNavState();
     },
+    mapData: MAP,
+    mapPages: MAP_PAGES,
+    mapArtifactsOfPage: function (pageId) {
+      for (var i = 0; i < MAP_PAGES.length; i++) {
+        if (MAP_PAGES[i].page === pageId) { return MAP_PAGES[i].artifacts; }
+      }
+      return null;
+    },
+    setView: switchView,
+    mapSelect: mapSelect,
     render: renderAll,
     savedRaw: savedRaw
   };
@@ -1302,7 +1891,9 @@ a.pg:hover{background:var(--ink);color:#fff;}
   }
   applyModeUI();
   renderCriteria();
+  renderMap();
   renderAll();
+  applyViewUI();
 })();
 </script>
 </body>
