@@ -1,0 +1,361 @@
+{
+  "dataset": "dw-real",
+  "version": 1,
+  "role": "L2 / P10「换真数据」第二数据集 · 对账真值（机器可复算）",
+  "generated_at": "2026-11-19",
+  "as_of_date": 20261119,
+  "as_of_note": "未来日期判定与清洗窗口上界 = 2026-11-19；冻结值，不随运行日漂移。",
+  "money_format": "DECIMAL(16,2)：金额一律两位小数；本文件以保留两位小数的 JSON number 字面量输出（如 1136341.10），比对时按 Decimal 值比较。",
+  "why_float_column": "fact_order.order_amount 物理类型与 dw.sql 相同仍是 FLOAT；所有金额聚合先逐值 CAST(x AS DECIMAL(16,2)) 再 SUM，避免 FLOAT 累加噪声。",
+  "provenance": "全部数值由 fixtures/dw-real.sql 真实导入 MySQL 8.0.46 后执行本文件中的 sql 得到，没有任何手算。",
+  "how_to_recompute": [
+    "1) 起一个临时 MySQL 8.0（验证时用 mysql:8.0 容器，监听 127.0.0.1:3310，库名随导入脚本创建为 dw）",
+    "2) 导入：mysql --default-character-set=utf8mb4 < fixtures/dw-real.sql",
+    "3) 先执行 clean.clean_fact_sql 建 tmp_clean_fact 临时表；再执行各 check 的 sql（引用 tmp_clean_fact 的必须在同一会话）",
+    "4) 也可以直接：mysql --default-character-set=utf8mb4 < fixtures/dw-real.checks.sql",
+    "5) 金额按 DECIMAL(16,2) 比较，日期按 yyyyMMdd 整数比较；机器批量比对见 README「验证（真跑）」"
+  ],
+  "files": {
+    "data": "fixtures/dw-real.sql",
+    "expected": "fixtures/dw-real.expected.json",
+    "checks": "fixtures/dw-real.checks.sql",
+    "readme": "fixtures/dw-real.README.md"
+  },
+  "raw": {
+    "row_counts": {
+      "dim_region_rows": {
+        "value": 7,
+        "sql": "SELECT COUNT(*) FROM dim_region;"
+      },
+      "dim_customer_rows": {
+        "value": 20,
+        "sql": "SELECT COUNT(*) FROM dim_customer;"
+      },
+      "dim_product_rows": {
+        "value": 15,
+        "sql": "SELECT COUNT(*) FROM dim_product;"
+      },
+      "dim_date_rows": {
+        "value": 1461,
+        "sql": "SELECT COUNT(*) FROM dim_date;"
+      },
+      "fact_order_rows": {
+        "value": 410,
+        "sql": "SELECT COUNT(*) FROM fact_order;"
+      }
+    },
+    "fact_rows": {
+      "value": 410,
+      "sql": "SELECT COUNT(*) FROM fact_order;"
+    },
+    "distinct_order_ids": {
+      "value": 409,
+      "sql": "SELECT COUNT(DISTINCT order_id) FROM fact_order;"
+    },
+    "count_order_amount_non_null": {
+      "value": 408,
+      "sql": "SELECT COUNT(order_amount) FROM fact_order;"
+    },
+    "naive_sum_amount": {
+      "value": 1144735.5,
+      "sql": "SELECT CAST(SUM(CAST(order_amount AS DECIMAL(16,2))) AS DECIMAL(16,2)) FROM fact_order;"
+    },
+    "date_min": {
+      "value": 20230101,
+      "sql": "SELECT MIN(date_id) FROM fact_order;"
+    },
+    "date_max": {
+      "value": 20261215,
+      "sql": "SELECT MAX(date_id) FROM fact_order;"
+    },
+    "distinct_years": {
+      "value": 4,
+      "sql": "SELECT COUNT(DISTINCT date_id DIV 10000) FROM fact_order;"
+    },
+    "note": "naive_sum_amount 是「不洗不筛直接 SUM」的错数：重复行 +1 份、孤儿行、未来行都在里面，NULL 行被 SUM 跳过。"
+  },
+  "dirty_classes": [
+    {
+      "id": "D1",
+      "name": "order_amount 为 NULL",
+      "table": "fact_order",
+      "detect": "COUNT(*) WHERE order_amount IS NULL",
+      "effect": "SUM 漏掉 2 行金额；COUNT(*) 又把它们算进订单数 → 金额与单数口径同时错位。",
+      "checks": {
+        "rows_with_null_amount": {
+          "value": 2,
+          "sql": "SELECT COUNT(*) FROM fact_order WHERE order_amount IS NULL;"
+        }
+      }
+    },
+    {
+      "id": "D2",
+      "name": "order_id 重复（1 对重复行）",
+      "table": "fact_order",
+      "detect": "GROUP BY order_id HAVING COUNT(*) > 1",
+      "effect": "naive SUM 把同一单金额算两次；COUNT(DISTINCT order_id) 会少算行数（去重会少）。",
+      "checks": {
+        "duplicate_order_id_groups": {
+          "value": 1,
+          "sql": "SELECT COUNT(*) FROM (SELECT order_id FROM fact_order GROUP BY order_id HAVING COUNT(*) > 1) t;"
+        },
+        "duplicate_rows_involved": {
+          "value": 2,
+          "sql": "SELECT COALESCE(SUM(c), 0) FROM (SELECT COUNT(*) AS c FROM fact_order GROUP BY order_id HAVING COUNT(*) > 1) t;"
+        },
+        "extra_duplicate_rows": {
+          "value": 1,
+          "sql": "SELECT COALESCE(SUM(c - 1), 0) FROM (SELECT COUNT(*) AS c FROM fact_order GROUP BY order_id HAVING COUNT(*) > 1) t;"
+        },
+        "duplicate_order_id": {
+          "value": "ORD20261119001",
+          "sql": "SELECT order_id FROM fact_order GROUP BY order_id HAVING COUNT(*) > 1 LIMIT 1;"
+        },
+        "duplicate_row_amount": {
+          "value": 5197.4,
+          "sql": "SELECT CAST(CAST(order_amount AS DECIMAL(16,2)) AS DECIMAL(16,2)) FROM fact_order WHERE order_id = 'ORD20261119001' LIMIT 1;"
+        }
+      }
+    },
+    {
+      "id": "D3",
+      "name": "dim_region.region_name 带后缀脏值（华北区 / 华东区）",
+      "table": "dim_region",
+      "detect": "WHERE region_name LIKE '%区'",
+      "effect": "按契约枚举值（华南/华东/西南/华北/华中）过滤或 JOIN 会漏掉 R002、R004 两区的订单 → 华东、华北销售额大幅少算。",
+      "checks": {
+        "dim_rows_with_dirty_name": {
+          "value": 2,
+          "sql": "SELECT COUNT(*) FROM dim_region WHERE region_name LIKE '%区';"
+        },
+        "dirty_region_names": {
+          "value": "华东区,华北区",
+          "sql": "SELECT GROUP_CONCAT(region_name ORDER BY region_id SEPARATOR ',') FROM dim_region WHERE region_name LIKE '%区';"
+        },
+        "affected_fact_rows": {
+          "value": 129,
+          "sql": "SELECT COUNT(*) FROM fact_order f JOIN dim_region r ON r.region_id = f.region_id WHERE r.region_name LIKE '%区';"
+        },
+        "contract_enum_filter_rows": {
+          "value": 279,
+          "sql": "SELECT COUNT(*) FROM fact_order f JOIN dim_region r ON r.region_id = f.region_id WHERE f.order_amount IS NOT NULL AND r.region_name IN ('华南','华东','西南','华北','华中');"
+        },
+        "contract_enum_filter_sales": {
+          "value": 789027.5,
+          "sql": "SELECT CAST(SUM(CAST(f.order_amount AS DECIMAL(16,2))) AS DECIMAL(16,2)) FROM fact_order f JOIN dim_region r ON r.region_id = f.region_id WHERE f.order_amount IS NOT NULL AND r.region_name IN ('华南','华东','西南','华北','华中');"
+        }
+      }
+    },
+    {
+      "id": "D4",
+      "name": "fact_order.region_id 孤儿行（R099 不在 dim_region）",
+      "table": "fact_order",
+      "detect": "LEFT JOIN dim_region ... WHERE r.region_id IS NULL",
+      "effect": "内连接会静默丢掉这 1 行金额；清洗规则必须显式剔孤儿，不能指望 JOIN 报错。",
+      "checks": {
+        "orphan_rows": {
+          "value": 1,
+          "sql": "SELECT COUNT(*) FROM fact_order f LEFT JOIN dim_region r ON r.region_id = f.region_id WHERE r.region_id IS NULL;"
+        },
+        "orphan_region_id": {
+          "value": "R099",
+          "sql": "SELECT f.region_id FROM fact_order f LEFT JOIN dim_region r ON r.region_id = f.region_id WHERE r.region_id IS NULL LIMIT 1;"
+        },
+        "orphan_row_amount": {
+          "value": 1798.0,
+          "sql": "SELECT CAST(CAST(f.order_amount AS DECIMAL(16,2)) AS DECIMAL(16,2)) FROM fact_order f LEFT JOIN dim_region r ON r.region_id = f.region_id WHERE r.region_id IS NULL LIMIT 1;"
+        }
+      }
+    },
+    {
+      "id": "D5",
+      "name": "日期跨 2023–2026 且含 1 行未来日期（2026-12-15）",
+      "table": "fact_order",
+      "detect": "WHERE date_id > AS-OF(20261119)",
+      "effect": "时间过滤口径会变：不设上界就把未来单算进当期；写死演示集的 20250101–20250331 又只剩 1 个季度。",
+      "checks": {
+        "future_date_rows": {
+          "value": 1,
+          "sql": "SELECT COUNT(*) FROM fact_order WHERE date_id > 20261119;"
+        },
+        "future_date": {
+          "value": 20261215,
+          "sql": "SELECT date_id FROM fact_order WHERE date_id > 20261119 LIMIT 1;"
+        },
+        "future_row_amount": {
+          "value": 1399.0,
+          "sql": "SELECT CAST(CAST(order_amount AS DECIMAL(16,2)) AS DECIMAL(16,2)) FROM fact_order WHERE date_id > 20261119 LIMIT 1;"
+        }
+      }
+    }
+  ],
+  "additional_anomalies": [
+    {
+      "id": "D6",
+      "name": "dim_region 同名(province=北京市)两行不同 id（R004 / R007）",
+      "table": "dim_region",
+      "detect": "GROUP BY province HAVING COUNT(*) > 1",
+      "effect": "按 region_id 关联安全（1:1）；一旦按 province/region_name 这类自然键连接，北京市的订单会被匹配两次 → 行数与金额放大。",
+      "checks": {
+        "duplicate_province_groups": {
+          "value": 1,
+          "sql": "SELECT COUNT(*) FROM (SELECT province FROM dim_region GROUP BY province HAVING COUNT(*) > 1) t;"
+        },
+        "extra_dim_rows": {
+          "value": 1,
+          "sql": "SELECT COUNT(*) - COUNT(DISTINCT province) FROM dim_region;"
+        },
+        "province_join_rows": {
+          "value": 496,
+          "sql": "SELECT COUNT(*) FROM tmp_clean_fact f JOIN dim_region d1 ON d1.region_id = f.region_id JOIN dim_region d2 ON d2.province = d1.province;"
+        },
+        "province_join_sales": {
+          "value": 1359154.3,
+          "sql": "SELECT CAST(SUM(f.order_amount) AS DECIMAL(16,2)) FROM tmp_clean_fact f JOIN dim_region d1 ON d1.region_id = f.region_id JOIN dim_region d2 ON d2.province = d1.province;"
+        }
+      }
+    },
+    {
+      "id": "D7",
+      "name": "金额带分（两位小数；dw.sql 是整数金额）",
+      "table": "fact_order",
+      "detect": "order_amount <> ROUND(order_amount, 0)",
+      "effect": "整数金额的直觉失效：必须按 DECIMAL(16,2) 处理，四舍五入/截断会让对账差几角几分。",
+      "checks": {
+        "rows_with_nonzero_cents": {
+          "value": 191,
+          "sql": "SELECT COUNT(*) FROM fact_order WHERE order_amount IS NOT NULL AND order_amount <> ROUND(order_amount, 0);"
+        }
+      }
+    }
+  ],
+  "cleaning_rules": [
+    {
+      "id": "R1",
+      "name": "去重：同一 order_id 只保留 1 行",
+      "sql": "SELECT DISTINCT order_id, customer_id, product_id, date_id, region_id, order_quantity, order_amount FROM fact_order",
+      "why": "D2：重复行为逐列相同，DISTINCT 即可；真实数据若列有差异需定保留规则。"
+    },
+    {
+      "id": "R2",
+      "name": "剔除金额缺失行",
+      "sql": "WHERE order_amount IS NOT NULL",
+      "why": "D1：无金额的订单不能计入销售额与有效单数。"
+    },
+    {
+      "id": "R3",
+      "name": "时间窗口上界 = AS-OF 2026-11-19",
+      "sql": "WHERE date_id <= 20261119",
+      "why": "D5：未来单不算当期；AS-OF 用冻结值而非 CURDATE()，保证机器可复算。"
+    },
+    {
+      "id": "R4",
+      "name": "剔除孤儿地区行",
+      "sql": "JOIN dim_region r ON r.region_id = d.region_id  -- INNER JOIN 即过滤",
+      "why": "D4：region_id 不在 dim_region 的行不能参与地区对账。"
+    },
+    {
+      "id": "R5",
+      "name": "地区名归一化（去掉尾部“区”后缀）",
+      "sql": "TRIM(TRAILING '区' FROM r.region_name)",
+      "why": "D3：把 华北区→华北、华东区→华东，回到契约枚举值。"
+    },
+    {
+      "id": "R6",
+      "name": "地区维度只按 region_id 关联",
+      "sql": "-- 只 JOIN ON r.region_id = f.region_id；不要按 province / region_name 关联",
+      "why": "D6：按自然键关联会被同名维度行放大。"
+    },
+    {
+      "id": "R7",
+      "name": "金额按 DECIMAL 聚合",
+      "sql": "CAST(order_amount AS DECIMAL(16,2)) 后再 SUM",
+      "why": "金额带分 + FLOAT 物理类型；输出两位小数。"
+    },
+    {
+      "id": "R8",
+      "name": "单数用去重后的行数",
+      "sql": "COUNT(DISTINCT order_id)",
+      "why": "去重后 COUNT(*) 与 COUNT(DISTINCT order_id) 应相等（都是 405）；两者不等说明清洗没做干净。"
+    }
+  ],
+  "clean": {
+    "clean_fact_sql": "CREATE TEMPORARY TABLE tmp_clean_fact AS\nWITH dedup AS (\n    SELECT DISTINCT order_id, customer_id, product_id, date_id, region_id, order_quantity, order_amount\n    FROM fact_order\n),\nclean AS (\n    SELECT d.order_id, d.date_id, d.region_id, d.order_quantity,\n           CAST(d.order_amount AS DECIMAL(16,2)) AS order_amount,\n           TRIM(TRAILING '区' FROM r.region_name) AS region_name\n    FROM dedup d\n    JOIN dim_region r ON r.region_id = d.region_id\n    WHERE d.order_amount IS NOT NULL\n      AND d.date_id <= 20261119\n)\nSELECT * FROM clean",
+    "recipe": "先执行 clean_fact_sql 建立 tmp_clean_fact，再执行本节的 sql（后者引用 tmp_clean_fact，需同一连接会话）。",
+    "checks": {
+      "clean_rows": {
+        "value": 405,
+        "sql": "SELECT COUNT(*) FROM tmp_clean_fact;"
+      },
+      "clean_orders": {
+        "value": 405,
+        "sql": "SELECT COUNT(DISTINCT order_id) FROM tmp_clean_fact;"
+      },
+      "total_sales": {
+        "value": 1136341.1,
+        "sql": "SELECT CAST(SUM(order_amount) AS DECIMAL(16,2)) FROM tmp_clean_fact;"
+      },
+      "north_china_orders": {
+        "value": 91,
+        "sql": "SELECT COUNT(DISTINCT order_id) FROM tmp_clean_fact WHERE region_name = '华北';"
+      },
+      "north_china_sales": {
+        "value": 222813.2,
+        "sql": "SELECT CAST(SUM(order_amount) AS DECIMAL(16,2)) FROM tmp_clean_fact WHERE region_name = '华北';"
+      },
+      "clean_date_min": {
+        "value": 20230101,
+        "sql": "SELECT MIN(date_id) FROM tmp_clean_fact;"
+      },
+      "clean_date_max": {
+        "value": 20261119,
+        "sql": "SELECT MAX(date_id) FROM tmp_clean_fact;"
+      }
+    },
+    "by_region": {
+      "columns": [
+        "region_name",
+        "orders",
+        "sales"
+      ],
+      "sql": "SELECT region_name, COUNT(DISTINCT order_id) AS orders, CAST(SUM(order_amount) AS DECIMAL(16,2)) AS sales FROM tmp_clean_fact GROUP BY region_name ORDER BY region_name;",
+      "value": [
+        {
+          "region_name": "华东",
+          "orders": 130,
+          "sales": 325179.8
+        },
+        {
+          "region_name": "华中",
+          "orders": 45,
+          "sales": 174373.4
+        },
+        {
+          "region_name": "华北",
+          "orders": 91,
+          "sales": 222813.2
+        },
+        {
+          "region_name": "华南",
+          "orders": 87,
+          "sales": 261231.6
+        },
+        {
+          "region_name": "西南",
+          "orders": 52,
+          "sales": 152743.1
+        }
+      ]
+    }
+  },
+  "verification": {
+    "verified_at": "2026-11-19",
+    "engine": "MySQL 8.0.46 (mysql:8.0 container)",
+    "container": "lab-real-verify (temporary, host port 3310)",
+    "import_cmd": "mysql --default-character-set=utf8mb4 < fixtures/dw-real.sql",
+    "checks_cmd": "mysql --default-character-set=utf8mb4 < fixtures/dw-real.checks.sql",
+    "expected_check_count": 42,
+    "result": "每个 check 的 sql 重新执行后与 value 一致（42 项全部 PASS）",
+    "container_removed_after_verify": true
+  }
+}
