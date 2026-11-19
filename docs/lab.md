@@ -40,9 +40,10 @@ L2–L4 每页都有一个「拆一刀」：改一行契约、删一个校验、
 
 ## 白名单与排除
 
-只跟踪：`contracts/`、`compose.yaml`、`backend/app/`、`backend/tests/`、`fixtures/`、`frontend/src/`。
+只跟踪：`contracts/`、`compose.yaml`、`lab/`、`backend/app/`、`backend/tests/`、`fixtures/`、`frontend/src/`。
 目录不存在就跳过，manifest 里记 `present: false`；`manifest.json` 还记录时间、git HEAD、
 每个文件的 sha256 与文件数，方便老师对账。
+学生自己的代码（`lab/app.py`、`lab/db.py` 等）也在保护范围内：拆坏执行器/应用后一样能 `reset` 回来（`reset` 会删掉 `lab/` 里快照之外的新文件，这是整目录恢复语义）。
 
 永不入快照、也永不被 `reset` 删除：`.env`、`.env.*`、`.venv`、`node_modules`、
 `__pycache__`、`.git`（另含 `*.pyc`、`.DS_Store`）。密钥不会进 `.lab/`。
@@ -76,5 +77,4 @@ overlay 跳转（D33 的跳转留到 v2，先用 `save`/`reset` 顶住）。
 | 快照只读、不可覆盖 | ✅ 同名 save 拒绝 |
 | 学生不接触 git | ✅ 三条命令都不出现 git 操作 |
 
-验证：`bash scripts/tests/test_lab.sh`（纯 shell，覆盖 save/diff/reset、排除项、事故回退）；
-语法检查 `bash -n scripts/lab`，有 shellcheck 时再跑 `shellcheck scripts/lab`。
+验证：`bash scripts/tests/test_lab.sh`（纯 shell）；语法检查 `bash -n scripts/lab`（有 shellcheck 时再跑 `shellcheck scripts/lab`）。

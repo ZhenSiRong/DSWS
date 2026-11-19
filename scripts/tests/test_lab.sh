@@ -132,7 +132,8 @@ fi
 
 assert_file "scripts/lab 存在" "$LAB_SRC"
 
-mkdir -p "$TREE/scripts" "$TREE/contracts" "$TREE/backend/app/__pycache__" \
+mkdir -p "$TREE/scripts" "$TREE/contracts" "$TREE/lab/__pycache__" \
+  "$TREE/backend/app/__pycache__" \
   "$TREE/backend/app/.venv" "$TREE/backend/app/node_modules" "$TMP/orig"
 cp "$LAB_SRC" "$TREE/scripts/lab"
 chmod +x "$TREE/scripts/lab"
@@ -154,9 +155,15 @@ cat > "$TREE/backend/app/x.py" <<'PY'
 def add(a, b):
     return a + b
 PY
+# lab/ 是学生的主要产物：必须纳入白名单（拆坏执行器后要能还原自己的代码）
+cat > "$TREE/lab/app.py" <<'PY'
+def main():
+    print("hello lab")
+PY
 # 这些必须被排除：密钥、缓存、依赖、符号链接式噪音
 printf 'SECRET=contracts-dotenv\n' > "$TREE/contracts/.env"
 printf 'ROOT_SECRET=root-dotenv\n' > "$TREE/.env"
+printf 'cached\n' > "$TREE/lab/__pycache__/cache.pyc"
 printf 'cached\n' > "$TREE/backend/app/__pycache__/x.pyc"
 printf 'venv\n' > "$TREE/backend/app/.venv/fake.py"
 printf 'dep\n' > "$TREE/backend/app/node_modules/index.js"
@@ -164,9 +171,10 @@ printf 'dep\n' > "$TREE/backend/app/node_modules/index.js"
 cp "$TREE/contracts/schema.contract.yaml" "$TMP/orig/schema.contract.yaml"
 cp "$TREE/compose.yaml" "$TMP/orig/compose.yaml"
 cp "$TREE/backend/app/x.py" "$TMP/orig/x.py"
+cp "$TREE/lab/app.py" "$TMP/orig/lab-app.py"
 cp "$TREE/contracts/.env" "$TMP/orig/contracts.env"
 
-# 预期跟踪 3 个文件（schema / compose / x.py），其余都被排除或不在白名单。
+# 预期跟踪 4 个文件（schema / compose / x.py / lab/app.py），其余都被排除或不在白名单。
 printf '  （临时树：%s）\n' "$TREE"
 
 # ---------------------------------------------------------------------------
@@ -202,7 +210,7 @@ section "2. save / manifest / 排除规则"
 
 run "$LAB" save s0
 assert_ok "save s0 成功"
-assert_contains "save 报文件数" "已保存快照 \"s0\"：3 个文件"
+assert_contains "save 报文件数" "已保存快照 \"s0\"：4 个文件"
 assert_contains "save 报跳过的不存在路径" "已跳过"
 
 SNAP="$TREE/.lab/snapshots/s0"
@@ -210,10 +218,12 @@ TREE_DIR="$SNAP/tree"
 assert_file "快照存了 contracts/schema.contract.yaml" "$TREE_DIR/contracts/schema.contract.yaml"
 assert_file "快照存了 compose.yaml" "$TREE_DIR/compose.yaml"
 assert_file "快照存了 backend/app/x.py" "$TREE_DIR/backend/app/x.py"
+assert_file "快照存了 lab/app.py（学生代码在保护范围内）" "$TREE_DIR/lab/app.py"
 assert_file "manifest.json 存在" "$SNAP/manifest.json"
 
 assert_no_file ".env 未入快照（contracts/）" "$TREE_DIR/contracts/.env"
 assert_no_file ".env 未入快照（仓库根）" "$TREE_DIR/.env"
+assert_no_file "lab/__pycache__ 未入快照" "$TREE_DIR/lab/__pycache__/cache.pyc"
 assert_no_file "__pycache__ 未入快照" "$TREE_DIR/backend/app/__pycache__/x.pyc"
 assert_no_file ".venv 未入快照" "$TREE_DIR/backend/app/.venv/fake.py"
 assert_no_file "node_modules 未入快照" "$TREE_DIR/backend/app/node_modules/index.js"
@@ -223,7 +233,12 @@ else
   ng "快照树里混进了排除项"
 fi
 
-if grep -qF '"file_count": 3' "$SNAP/manifest.json"; then ok "manifest 记录文件数 3"; else ng "manifest 文件数不对"; fi
+if grep -qF '"file_count": 4' "$SNAP/manifest.json"; then ok "manifest 记录文件数 4"; else ng "manifest 文件数不对"; fi
+if grep -qF '"path": "lab", "kind": "dir", "present": true, "files": 1' "$SNAP/manifest.json"; then
+  ok "manifest 把 lab 记为存在的白名单目录"
+else
+  ng "manifest 没记录 lab 白名单目录"
+fi
 if grep -qF '"path": "frontend/src", "kind": "dir", "present": false' "$SNAP/manifest.json"; then
   ok "manifest 记录不存在的白名单路径"
 else
@@ -236,7 +251,7 @@ if grep -qF '"excludes"' "$SNAP/manifest.json"; then ok "manifest 记录排除�
 run "$LAB" list
 assert_ok "list 成功"
 assert_contains "list 列出 s0" "s0"
-assert_contains "list 显示文件数" "3 个文件"
+assert_contains "list 显示文件数" "4 个文件"
 assert_contains "list 显示 git HEAD" "git unknown"
 
 SHA_MANIFEST_BEFORE="$(sha_file "$SNAP/manifest.json")"
@@ -420,9 +435,43 @@ assert_fail "diff 缺名字失败"
 assert_contains "diff 缺名字给例子" "scripts/lab diff"
 
 # ---------------------------------------------------------------------------
-# 9. 空快照（S0「空起点」场景）
+# 9. lab/ 学生代码也在保护范围（本页拆一刀的主战场）
 # ---------------------------------------------------------------------------
-section "9. 空树 save：0 个文件的空起点快照"
+section "9. lab/ 学生代码：改坏 app.py / 新增文件也能回滚"
+
+# 拆一刀：改坏学生自己的执行器 + 新增一个文件；__pycache__ 也要制造改动
+printf '\n# 拆一刀：学生改坏了执行器\n' >> "$TREE/lab/app.py"
+printf 'def helper():\n    pass\n' > "$TREE/lab/new_module.py"
+printf 'cached-lab-changed\n' > "$TREE/lab/__pycache__/cache.pyc"
+cp "$TREE/lab/app.py" "$TMP/modified-lab-app.py"
+
+run "$LAB" diff s0
+assert_ok "diff 发现 lab/ 改动成功"
+assert_contains "diff 列出被改的 lab/app.py" "lab/app.py"
+assert_contains "diff 把 lab/app.py 归入修改" "修改（内容不同）"
+assert_contains "diff 把 lab/new_module.py 归入新增" "lab/new_module.py"
+assert_not_contains "diff 无视 lab/__pycache__" "__pycache__"
+
+run "$LAB" reset s0 --yes
+assert_ok "reset 还原 lab/ 成功"
+assert_sha_eq "lab/app.py 还原到快照 sha" "$TMP/orig/lab-app.py" "$TREE/lab/app.py"
+assert_no_file "lab/ 下新增文件被删除" "$TREE/lab/new_module.py"
+assert_file "lab/__pycache__ 未被 reset 删除" "$TREE/lab/__pycache__/cache.pyc"
+if grep -qF 'cached-lab-changed' "$TREE/lab/__pycache__/cache.pyc"; then
+  ok "lab/__pycache__ 内容未被 reset 改动"
+else
+  ng "lab/__pycache__ 被 reset 动了"
+fi
+assert_no_file "lab/__pycache__ 保存时也没进快照" "$TREE/.lab/snapshots/s0/tree/lab/__pycache__"
+
+run "$LAB" diff s0
+assert_ok "lab/ 还原后 diff 成功"
+assert_contains "lab/ 还原后 diff 为空" "工作区与快照完全一致"
+
+# ---------------------------------------------------------------------------
+# 10. 空快照（S0「空起点」场景）
+# ---------------------------------------------------------------------------
+section "10. 空树 save：0 个文件的空起点快照"
 
 mkdir -p "$TMP/blank/scripts"
 cp "$LAB_SRC" "$TMP/blank/scripts/lab"
