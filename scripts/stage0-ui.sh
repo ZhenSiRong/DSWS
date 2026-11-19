@@ -24,7 +24,7 @@ cleanup() {
   done
 
   # 兜底：按本次使用的唯一端口清理（防止 setsid/uv/npm 留下孤儿）
-  pkill -f "uvicorn app.main:app --host 127.0.0.1 --port $API_PORT" 2>/dev/null || true
+  pkill -f "app.scenarios.app --host 127.0.0.1 --port $API_PORT" 2>/dev/null || true
   pkill -f "vite.*--port $WEB_PORT" 2>/dev/null || true
 }
 trap cleanup EXIT
@@ -44,8 +44,11 @@ start_bg() {
 }
 
 echo "== 启动临时后端 :$API_PORT =="
+# S6 把 /api/query 从"永远成功的假流"换成了真流水线，假流搬到了 app/scenarios。
+# S0 冒烟断言的是那条假流的固定数据（4 行地区汇总），所以这里起场景后端；
+# 起 app.main 的话要连 MySQL，而且真实数据是 5 个地区，断言必红。
 start_bg "$LOG_DIR/api.pid" "$LOG_DIR/api.log" "$ROOT/backend" \
-  "uv run uvicorn app.main:app --host 127.0.0.1 --port $API_PORT"
+  "uv run python -m app.scenarios.app --host 127.0.0.1 --port $API_PORT"
 
 # 不用 $(seq 1 60)：seq 在 macOS/BSD 上不存在（那边是 jot），命令替换展开
 # 成空串，循环体一次都不执行，脚本会立刻带着"后端启动失败"失败——比真正
@@ -67,7 +70,7 @@ fi
 
 echo "== 启动临时前端 :$WEB_PORT =="
 start_bg "$LOG_DIR/web.pid" "$LOG_DIR/web.log" "$ROOT/frontend" \
-  "VITE_DEV_PROXY_TARGET=http://127.0.0.1:$API_PORT exec npm run dev -- --port $WEB_PORT --strictPort"
+  "env VITE_DEV_PROXY_TARGET=http://127.0.0.1:$API_PORT npm run dev -- --port $WEB_PORT --strictPort"
 
 attempt=1
 while [ "$attempt" -le 80 ]; do

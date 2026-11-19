@@ -1,8 +1,16 @@
-.PHONY: install dev-backend dev-frontend stage0 stage0-ui stage1 stage2 stage3 stage4 stage5 stage5-live stage6 stage6-ui stage7 stage7-ui baseline docker-env docker-env-require docker-up docker-down docker-logs docker-smoke docker-reset
+.PHONY: install doctor doctor-v dev-backend dev-frontend stage0 stage0-ui stage1 stage2 stage3 stage4 stage5 stage5-live stage6 stage6-ui stage7 stage7-ui baseline docker-env docker-env-require docker-up docker-down docker-logs docker-smoke docker-reset
 
 install:
 	cd backend && uv sync --frozen
 	cd frontend && npm ci
+
+# 第 0 页的完成判据：工具 / 依赖 / 端口一次判完，全 ✓ 才算环境就绪。
+# 输出可直接贴进 issue 或截图进手册；失败时逐条给修法。
+doctor:
+	@bash scripts/doctor.sh
+
+doctor-v:
+	@bash scripts/doctor.sh -v
 
 dev-backend:
 	cd backend && uv run uvicorn app.main:app --host 127.0.0.1 --port 8100 --reload

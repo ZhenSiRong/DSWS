@@ -38,6 +38,9 @@ services:
   elasticsearch:
     image: ${ELASTICSEARCH_IMAGE:?}
     restart: unless-stopped
+    # ES 启动时用 log4j 取本机主机名，默认主机名是容器 ID，
+    # 在带 search 域的环境里解析不了（UnknownHostException）。显式起名即可。
+    hostname: elasticsearch
     environment:
       - discovery.type=single-node
       - xpack.security.enabled=false
