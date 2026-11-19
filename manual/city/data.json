@@ -1,0 +1,938 @@
+{
+  "schema": "manual-city/1",
+  "decision": "D45",
+  "status": "sample",
+  "title": "L1 城市地图 · 十座设施与十二件交付物",
+  "kicker": "D45 · 城市隐喻样例 · 一级「造」",
+  "one_liner": "我们不是在发明系统，是在一片空地上，为问题一座一座盖设施、一段一段接管网。",
+  "image": "images/city-map-l1.png",
+  "rerun": "python3 manual/shots/render_city_map.py",
+  "note": "单源：四区 / 十设施 / 十二件交付物 / 十一条道路 / 23 页标题都只改本文件；重跑渲染脚本会重建 city-map.html 与 titles-v2.md。artifacts 用 1–12，对应 completeness/v2 的 ①–⑫（渲染时转圈号）。",
+  "canvas": {
+    "w": 1600,
+    "h": 1000
+  },
+  "granularity": [
+    {
+      "city": "设施 / 建筑",
+      "soft": "运行单元（容器 / 进程 / 存储）",
+      "not": "不是一个微服务"
+    },
+    {
+      "city": "窗口 / 柜台",
+      "soft": "端点（路由）",
+      "not": "不是新设施"
+    },
+    {
+      "city": "办事员",
+      "soft": "进程内函数（抽词、生成 SQL）",
+      "not": "不是独立服务"
+    },
+    {
+      "city": "分区 / 货架",
+      "soft": "库表",
+      "not": "不是新仓库"
+    },
+    {
+      "city": "库存",
+      "soft": "数据行",
+      "not": "——"
+    },
+    {
+      "city": "道路 / 管网",
+      "soft": "网络、端口、数据流",
+      "not": "不是装饰"
+    },
+    {
+      "city": "市民 / 顾客",
+      "soft": "用户",
+      "not": "——"
+    }
+  ],
+  "legend": [
+    {
+      "mark": "built",
+      "text": "橙色 = 已建成（这一页做完手里的东西）",
+      "short": "橙 = 已建成"
+    },
+    {
+      "mark": "request",
+      "text": "深线 = 请求怎么走",
+      "short": "深线 = 请求"
+    },
+    {
+      "mark": "response",
+      "text": "青线 = 结果怎么回",
+      "short": "青线 = 结果"
+    },
+    {
+      "mark": "utility",
+      "text": "棕虚线 = 配套管线（环境就位才开工）",
+      "short": "棕虚线 = 配套"
+    },
+    {
+      "mark": "zone",
+      "text": "灰点线 = 区界（四区 = 四层）",
+      "short": "灰点线 = 区界"
+    }
+  ],
+  "levels": [
+    {
+      "level": "L1 造",
+      "theme": "从无到有",
+      "pages": "P0–P9",
+      "count": 10,
+      "desc": "一件一件把骨架造出来：每页一个设施，看到它能跑。"
+    },
+    {
+      "level": "L2 换",
+      "theme": "真的假不了",
+      "pages": "P10–P13",
+      "count": 4,
+      "desc": "把实验室替身换成真件：数据 / 契约 / 执行器 / 编排各换一处。"
+    },
+    {
+      "level": "L3 审",
+      "theme": "机器靠不靠谱",
+      "pages": "P14–P17",
+      "count": 4,
+      "desc": "机器输出不确定，先预注册判据再让错误发生。"
+    },
+    {
+      "level": "L4 守",
+      "theme": "出了事兜不兜得住",
+      "pages": "P18–P22",
+      "count": 5,
+      "desc": "制造故障与越权，证明防线有效。"
+    }
+  ],
+  "zones": [
+    {
+      "id": "municipal",
+      "name": "市政配套区",
+      "layer": "地基",
+      "level": "L0",
+      "maps_to": "环境准备（工具 / 依赖 / 端口）",
+      "rect": {
+        "x": 28,
+        "y": 104,
+        "w": 372,
+        "h": 196
+      }
+    },
+    {
+      "id": "storage",
+      "name": "仓储区",
+      "layer": "数据层",
+      "level": "L1",
+      "maps_to": "数据（容器 / 库表 / 数据行）",
+      "rect": {
+        "x": 28,
+        "y": 308,
+        "w": 372,
+        "h": 628
+      }
+    },
+    {
+      "id": "service",
+      "name": "服务区",
+      "layer": "服务层",
+      "level": "L1",
+      "maps_to": "服务（进程 / 端点 / 函数 / 执行链 / 流）",
+      "rect": {
+        "x": 410,
+        "y": 104,
+        "w": 728,
+        "h": 832
+      }
+    },
+    {
+      "id": "portal",
+      "name": "门户区",
+      "layer": "入口层",
+      "level": "L1",
+      "maps_to": "入口（nginx / 页面 / 端到端链路）",
+      "rect": {
+        "x": 1148,
+        "y": 104,
+        "w": 424,
+        "h": 832
+      }
+    }
+  ],
+  "citizen": {
+    "id": "citizen",
+    "name": "市民 / 用户",
+    "soft": "浏览器访问 :8081",
+    "note": "点「问一句」",
+    "position": {
+      "x": 1436,
+      "y": 774
+    },
+    "size": {
+      "w": 96,
+      "h": 104
+    }
+  },
+  "facilities": [
+    {
+      "no": "P0",
+      "name": "市政配套 · 场地平整",
+      "kind": "场地",
+      "soft": "环境准备：工具 / 依赖 / 端口",
+      "problem": "没工具、没依赖、端口还被占，怎么开工？",
+      "solution": "装齐工具依赖，腾出 3307 / 8000 / 8081",
+      "criterion": "`make doctor` 末行 `12/12 通过`，三个端口行全 ✓",
+      "zone": "municipal",
+      "artifacts": [
+        1
+      ],
+      "facts": [
+        "make doctor 12/12",
+        "3307 ✓",
+        "8000 ✓",
+        "8081 ✓"
+      ],
+      "page": "第 0 页",
+      "page_id": "page-00",
+      "position": {
+        "x": 52,
+        "y": 152
+      },
+      "size": {
+        "w": 324,
+        "h": 124
+      }
+    },
+    {
+      "no": "P1",
+      "name": "数据仓库大楼",
+      "kind": "楼",
+      "soft": "MySQL 容器 lab-mysql（空库）:3307",
+      "problem": "连仓库都还没有，数据往哪儿放？",
+      "solution": "起一个只开给本机 3307 的空库容器",
+      "criterion": "`SELECT VERSION()` 回 8.0 开头；`SHOW DATABASES` 只有 4 个系统库，没有 `dw`",
+      "zone": "storage",
+      "artifacts": [
+        2
+      ],
+      "facts": [
+        "容器名 lab-mysql",
+        "只开本机 3307"
+      ],
+      "page": "第 1 页",
+      "page_id": "page-01",
+      "position": {
+        "x": 48,
+        "y": 352
+      },
+      "size": {
+        "w": 332,
+        "h": 368
+      }
+    },
+    {
+      "no": "P2",
+      "name": "仓库分区与入库通道",
+      "kind": "楼内分区 / 货架",
+      "soft": "dw + 5 张表 + 灌 115 行",
+      "problem": "空库空空如也，来了问题无货可取？",
+      "solution": "导入 dw.sql：隔 5 个分区、灌 115 行库存",
+      "criterion": "`SHOW TABLES` 5 张齐；`COUNT(*) = 115`；华北 19 单",
+      "zone": "storage",
+      "parent": "P1",
+      "artifacts": [
+        3,
+        4
+      ],
+      "facts": [
+        "5 张表 = 5 个货架",
+        "115 行库存"
+      ],
+      "shelves": [
+        "dim_customer",
+        "dim_date",
+        "dim_product",
+        "dim_region",
+        "fact_order"
+      ],
+      "page": "第 2 页",
+      "page_id": "page-02",
+      "position": {
+        "x": 64,
+        "y": 456
+      },
+      "size": {
+        "w": 300,
+        "h": 256
+      }
+    },
+    {
+      "no": "P3",
+      "name": "查询服务中心",
+      "kind": "楼",
+      "soft": "uvicorn 进程 :8000",
+      "problem": "货备好了，谁来常驻值班接问题？",
+      "solution": "把 uvicorn 跑在 8000，先让 /health 回 ok",
+      "criterion": "`curl /health` 回 `{\"ok\":true}`，进程停在 `Uvicorn running`",
+      "zone": "service",
+      "artifacts": [
+        5
+      ],
+      "facts": [
+        "uvicorn lab.app:app",
+        "常驻 :8000"
+      ],
+      "page": "第 3 页",
+      "page_id": "page-03",
+      "position": {
+        "x": 418,
+        "y": 144
+      },
+      "size": {
+        "w": 712,
+        "h": 436
+      }
+    },
+    {
+      "no": "P4",
+      "name": "对外服务窗口",
+      "kind": "窗口 / 端点",
+      "soft": "POST /api/query（端点）",
+      "problem": "问题从哪儿递进系统？",
+      "solution": "开一个窗口收 JSON，先把收发修通",
+      "criterion": "两次 `POST` 回同一串固定 JSON（`question` 写死也不变）",
+      "zone": "service",
+      "parent": "P3",
+      "artifacts": [
+        6
+      ],
+      "facts": [
+        "收 JSON",
+        "回固定 JSON"
+      ],
+      "page": "第 4 页",
+      "page_id": "page-04",
+      "position": {
+        "x": 806,
+        "y": 236
+      },
+      "size": {
+        "w": 308,
+        "h": 148
+      },
+      "crit_on_map": true
+    },
+    {
+      "no": "P5",
+      "name": "前台接待台",
+      "kind": "柜台 / 办事员",
+      "soft": "extract_keywords（函数）",
+      "problem": "一句话里哪几个词才算数？",
+      "solution": "纯字符串规则抽出「地区 + 指标」",
+      "criterion": "「华北销售额」→ `[\"华北\",\"销售额\"]`；「的 / 多少」不进词表",
+      "zone": "service",
+      "parent": "P3",
+      "artifacts": [
+        7
+      ],
+      "facts": [
+        "纯字符串规则",
+        "可预测、可核对"
+      ],
+      "page": "第 5 页",
+      "page_id": "page-05",
+      "position": {
+        "x": 434,
+        "y": 236
+      },
+      "size": {
+        "w": 308,
+        "h": 148
+      },
+      "crit_on_map": true
+    },
+    {
+      "no": "P6",
+      "name": "办事指南与规则室",
+      "kind": "房间 / 办事员",
+      "soft": "契约 CONTRACT + build_sql（函数）",
+      "problem": "凭什么规矩把关键词拼成 SQL？",
+      "solution": "照契约拼出带 JOIN 的 SELECT（只 print）",
+      "criterion": "指标 `SUM(order_amount)`、带 `JOIN`、地区 `'华北'`、有 `GROUP BY`",
+      "zone": "service",
+      "parent": "P3",
+      "artifacts": [
+        8
+      ],
+      "facts": [
+        "契约 = 办事指南",
+        "只 print，不执行"
+      ],
+      "page": "第 6 页",
+      "page_id": "page-06",
+      "position": {
+        "x": 434,
+        "y": 420
+      },
+      "size": {
+        "w": 308,
+        "h": 148
+      },
+      "crit_on_map": true
+    },
+    {
+      "no": "P7",
+      "name": "取货通道",
+      "kind": "楼内通道",
+      "soft": "pymysql 真执行 → 41099.5",
+      "problem": "SQL 拼好了，谁去仓库真取货？",
+      "solution": "pymysql 把 SQL 交给 MySQL:3307 执行",
+      "criterion": "`rows[0].sales` 是不带引号的数字 `41099.5`",
+      "zone": "service",
+      "parent": "P3",
+      "artifacts": [
+        9
+      ],
+      "facts": [
+        "pymysql",
+        "MySQL :3307"
+      ],
+      "page": "第 7 页",
+      "page_id": "page-07",
+      "position": {
+        "x": 806,
+        "y": 420
+      },
+      "size": {
+        "w": 308,
+        "h": 148
+      },
+      "crit_on_map": true
+    },
+    {
+      "no": "P8",
+      "name": "传送带",
+      "kind": "流线 / 端点",
+      "soft": "SSE /api/stream（12 条 progress）",
+      "problem": "答案一口气砸下来，中间在干什么看不见？",
+      "solution": "12 条 progress 一条条推，最后 1 条 result",
+      "criterion": "`curl -N` 数到 12 条 `progress` + 1 条 `result`，`sales = 41099.5`",
+      "zone": "service",
+      "artifacts": [
+        10
+      ],
+      "facts": [
+        "逐条推送",
+        "约 0.15 秒一条"
+      ],
+      "page": "第 8 页",
+      "page_id": "page-08",
+      "position": {
+        "x": 418,
+        "y": 636
+      },
+      "size": {
+        "w": 712,
+        "h": 92
+      }
+    },
+    {
+      "no": "P9",
+      "name": "城市门户 + 道路网",
+      "kind": "城门 / 路网",
+      "soft": "nginx + 页面 + 端到端链路",
+      "problem": "市民怎么从城门口走到服务中心？",
+      "solution": "8081 反代 8000，页面用 EventSource 接流",
+      "criterion": "浏览器 8081 点「问一句」停在 `41099.5`；删掉 nginx 主干仍活",
+      "zone": "portal",
+      "artifacts": [
+        11,
+        12
+      ],
+      "facts": [
+        "入口不是主干",
+        "删掉 nginx 主干仍活"
+      ],
+      "route": [
+        "浏览器 :8081",
+        "nginx",
+        ":8000",
+        "pymysql",
+        "MySQL :3307"
+      ],
+      "page": "第 9 页",
+      "page_id": "page-09",
+      "position": {
+        "x": 1172,
+        "y": 352
+      },
+      "size": {
+        "w": 376,
+        "h": 180
+      },
+      "crit_on_map": true
+    }
+  ],
+  "roads": [
+    {
+      "key": "citizen-to-gate",
+      "from": "citizen",
+      "to": "P9",
+      "flow": "request",
+      "label": "市民进城 :8081",
+      "via": [
+        [
+          1484,
+          700
+        ],
+        [
+          1484,
+          532
+        ]
+      ],
+      "label_at": [
+        1484,
+        700
+      ],
+      "label_rotate": 0
+    },
+    {
+      "key": "gate-to-window",
+      "from": "P9",
+      "to": "P4",
+      "flow": "request",
+      "label": "门户转发 /api",
+      "via": [
+        [
+          1150,
+          446
+        ],
+        [
+          1150,
+          310
+        ]
+      ],
+      "label_at": [
+        1150,
+        380
+      ],
+      "label_rotate": -90
+    },
+    {
+      "key": "window-to-desk",
+      "from": "P4",
+      "to": "P5",
+      "flow": "request",
+      "label": "转给前台",
+      "via": [],
+      "label_at": [
+        774,
+        310
+      ],
+      "label_rotate": 0
+    },
+    {
+      "key": "desk-to-rules",
+      "from": "P5",
+      "to": "P6",
+      "flow": "request",
+      "label": "抽词",
+      "via": [],
+      "label_at": [
+        588,
+        402
+      ],
+      "label_rotate": -90
+    },
+    {
+      "key": "rules-to-pickup",
+      "from": "P6",
+      "to": "P7",
+      "flow": "request",
+      "label": "拼 SQL",
+      "via": [],
+      "label_at": [
+        774,
+        494
+      ],
+      "label_rotate": 0
+    },
+    {
+      "key": "pickup-to-warehouse",
+      "from": "P7",
+      "to": "P2",
+      "flow": "request",
+      "label": "pymysql 连 :3307 取数",
+      "via": [
+        [
+          960,
+          606
+        ],
+        [
+          392,
+          606
+        ],
+        [
+          392,
+          578
+        ]
+      ],
+      "label_at": [
+        670,
+        606
+      ],
+      "label_rotate": 0
+    },
+    {
+      "key": "warehouse-to-belt",
+      "from": "P2",
+      "to": "P8",
+      "flow": "response",
+      "label": "查询结果上传送带",
+      "via": [
+        [
+          214,
+          760
+        ],
+        [
+          404,
+          760
+        ],
+        [
+          404,
+          682
+        ]
+      ],
+      "label_at": [
+        300,
+        760
+      ],
+      "label_rotate": 0
+    },
+    {
+      "key": "belt-to-gate",
+      "from": "P8",
+      "to": "P9",
+      "flow": "response",
+      "label": "SSE · 12 条 progress",
+      "via": [
+        [
+          1250,
+          682
+        ],
+        [
+          1250,
+          532
+        ]
+      ],
+      "label_at": [
+        1250,
+        620
+      ],
+      "label_rotate": -90
+    },
+    {
+      "key": "gate-to-citizen",
+      "from": "P9",
+      "to": "citizen",
+      "flow": "response",
+      "label": "页面显示 41099.5",
+      "via": [
+        [
+          1560,
+          442
+        ],
+        [
+          1560,
+          826
+        ]
+      ],
+      "label_at": [
+        1560,
+        650
+      ],
+      "label_rotate": -90
+    },
+    {
+      "key": "site-to-warehouse",
+      "from": "P0",
+      "to": "P1",
+      "flow": "utility",
+      "label": "配套就位",
+      "via": [
+        [
+          40,
+          208
+        ],
+        [
+          40,
+          344
+        ]
+      ],
+      "label_at": [
+        40,
+        300
+      ],
+      "label_rotate": -90
+    },
+    {
+      "key": "site-to-service",
+      "from": "P0",
+      "to": "P3",
+      "flow": "utility",
+      "label": "环境就位",
+      "via": [
+        [
+          400,
+          208
+        ],
+        [
+          400,
+          358
+        ]
+      ],
+      "label_at": [
+        400,
+        290
+      ],
+      "label_rotate": -90
+    }
+  ],
+  "notes": [
+    {
+      "id": "granularity",
+      "tone": "note",
+      "title": "粒度提醒：楼里的是房间，不是新楼",
+      "lines": [
+        "P4 是窗口（端点）、P5 / P6 是柜台后的办事员（函数）、P7 是楼内取货通道；",
+        "P2 是仓库楼里的分区 / 货架（库表）。它们都不单独占一座运行单元，所以画在同一座楼里。",
+        "全市只有 P1、P3 两座楼，加 P9 的城门与路网；橙色 = 已建成。"
+      ],
+      "rect": {
+        "x": 430,
+        "y": 766,
+        "w": 688,
+        "h": 86
+      }
+    },
+    {
+      "id": "inventory",
+      "tone": "info",
+      "title": "库存口径（数据行）",
+      "lines": [
+        "fact_order 115 行；华北 19 单（region_id = R004）",
+        "金额口径：SUM(fact_order.order_amount)",
+        "入库：docker exec -i … < fixtures/dw.sql（-i 必加）"
+      ],
+      "rect": {
+        "x": 48,
+        "y": 780,
+        "w": 332,
+        "h": 86
+      }
+    },
+    {
+      "id": "portal-route",
+      "tone": "note",
+      "title": "道路网 = nginx 反代 + 页面",
+      "lines": [
+        "进：浏览器 :8081 → nginx → :8000",
+        "出：12 条 progress → 页面停在 41099.5",
+        "拆一刀：删掉 nginx，直连 :8000 仍出 41099.5"
+      ],
+      "rect": {
+        "x": 1172,
+        "y": 158,
+        "w": 360,
+        "h": 92
+      }
+    }
+  ],
+  "titles": [
+    {
+      "page": "P0",
+      "page_id": "page-00",
+      "level": "L1 造",
+      "problem": "没工具、没依赖、端口还被占，怎么开工？",
+      "solution": "装齐工具依赖，腾出 3307 / 8000 / 8081",
+      "criterion": "`make doctor` 末行 `12/12 通过`，三个端口行全 ✓"
+    },
+    {
+      "page": "P1",
+      "page_id": "page-01",
+      "level": "L1 造",
+      "problem": "连仓库都还没有，数据往哪儿放？",
+      "solution": "起一个只开给本机 3307 的空库容器",
+      "criterion": "`SELECT VERSION()` 回 8.0 开头；`SHOW DATABASES` 只有 4 个系统库，没有 `dw`"
+    },
+    {
+      "page": "P2",
+      "page_id": "page-02",
+      "level": "L1 造",
+      "problem": "空库空空如也，来了问题无货可取？",
+      "solution": "导入 dw.sql：隔 5 个分区、灌 115 行库存",
+      "criterion": "`SHOW TABLES` 5 张齐；`COUNT(*) = 115`；华北 19 单"
+    },
+    {
+      "page": "P3",
+      "page_id": "page-03",
+      "level": "L1 造",
+      "problem": "货备好了，谁来常驻值班接问题？",
+      "solution": "把 uvicorn 跑在 8000，先让 /health 回 ok",
+      "criterion": "`curl /health` 回 `{\"ok\":true}`，进程停在 `Uvicorn running`"
+    },
+    {
+      "page": "P4",
+      "page_id": "page-04",
+      "level": "L1 造",
+      "problem": "问题从哪儿递进系统？",
+      "solution": "开一个窗口收 JSON，先把收发修通",
+      "criterion": "两次 `POST` 回同一串固定 JSON（`question` 写死也不变）"
+    },
+    {
+      "page": "P5",
+      "page_id": "page-05",
+      "level": "L1 造",
+      "problem": "一句话里哪几个词才算数？",
+      "solution": "纯字符串规则抽出「地区 + 指标」",
+      "criterion": "「华北销售额」→ `[\"华北\",\"销售额\"]`；「的 / 多少」不进词表"
+    },
+    {
+      "page": "P6",
+      "page_id": "page-06",
+      "level": "L1 造",
+      "problem": "凭什么规矩把关键词拼成 SQL？",
+      "solution": "照契约拼出带 JOIN 的 SELECT（只 print）",
+      "criterion": "指标 `SUM(order_amount)`、带 `JOIN`、地区 `'华北'`、有 `GROUP BY`"
+    },
+    {
+      "page": "P7",
+      "page_id": "page-07",
+      "level": "L1 造",
+      "problem": "SQL 拼好了，谁去仓库真取货？",
+      "solution": "pymysql 把 SQL 交给 MySQL:3307 执行",
+      "criterion": "`rows[0].sales` 是不带引号的数字 `41099.5`"
+    },
+    {
+      "page": "P8",
+      "page_id": "page-08",
+      "level": "L1 造",
+      "problem": "答案一口气砸下来，中间在干什么看不见？",
+      "solution": "12 条 progress 一条条推，最后 1 条 result",
+      "criterion": "`curl -N` 数到 12 条 `progress` + 1 条 `result`，`sales = 41099.5`"
+    },
+    {
+      "page": "P9",
+      "page_id": "page-09",
+      "level": "L1 造",
+      "problem": "市民怎么从城门口走到服务中心？",
+      "solution": "8081 反代 8000，页面用 EventSource 接流",
+      "criterion": "浏览器 8081 点「问一句」停在 `41099.5`；删掉 nginx 主干仍活"
+    },
+    {
+      "page": "P10",
+      "page_id": "page-10",
+      "level": "L2 换",
+      "problem": "只有演示数据，凭什么说真的假不了？",
+      "solution": "把自己的数据域换进 fixtures/dw.sql，同步契约的行数 / 总额 / 日期域，再重建元知识",
+      "criterion": "`make stage1` → `S1 PASS`；`make stage2` → `S2 PASS`（dry-run→fresh→verify→幂等）"
+    },
+    {
+      "page": "P11",
+      "page_id": "page-11",
+      "level": "L2 换",
+      "problem": "契约内联在页面里，改一处别处不知道，真的假不了吗？",
+      "solution": "换成 contracts/ 四份契约当唯一事实源：改契约 → 重生成 → 查新鲜度",
+      "criterion": "`contracts_gen --check` → `S7 CONTRACT GEN PASS`（3 个文件与契约一致）"
+    },
+    {
+      "page": "P12",
+      "page_id": "page-12",
+      "level": "L2 换",
+      "problem": "root 直连的 pymysql 太裸，真的假不了吗？",
+      "solution": "换成只读执行器：策略先行 → 执行 → DECIMAL / DATE 归一化 → 自动 LIMIT / 超时",
+      "criterion": "`pytest -q tests/security/test_executor.py tests/agent/test_values.py` → `31 passed`"
+    },
+    {
+      "page": "P13",
+      "page_id": "page-13",
+      "level": "L2 换",
+      "problem": "手工 docker run 换台机器就散了，真的假不了吗？",
+      "solution": "换成 compose 六服务 + 一键 smoke：健康门控、一次性 init、nginx 关缓冲",
+      "criterion": "`make docker-up` → `make docker-smoke` → `DOCKER SMOKE PASS`（8 步 + init 幂等）"
+    },
+    {
+      "page": "P14",
+      "page_id": "page-14",
+      "level": "L3 审",
+      "problem": "召回空了，机器靠不靠谱凭什么由它说了算？",
+      "solution": "用 20 题检索黄金集预注册三条判据（该命中 / 不该出现 / 规模上限），再停 ES 看哪些题变红",
+      "criterion": "`make stage3` → `S3 PASS`；离线 `pytest -q tests/recall` → `18 passed, 23 skipped`；停 ES 后线上答案照旧"
+    },
+    {
+      "page": "P15",
+      "page_id": "page-15",
+      "level": "L3 审",
+      "problem": "确定性生成器和 LLM 同题不同答，机器靠不靠谱怎么量？",
+      "solution": "同一组 10 题基线先确定性跑、再切 LLM 跑，写清哪个可复现、哪个必须多次采样",
+      "criterion": "`make stage4` → `S4 PASS`；`generate --baseline` → `基线：10/10 通过（拒答 2）`"
+    },
+    {
+      "page": "P16",
+      "page_id": "page-16",
+      "level": "L3 审",
+      "problem": "错误的 SQL 会不会直接执行，机器靠不靠谱谁来拦？",
+      "solution": "摊开生成与执行之间的闸：单语句 / 只读 / 白名单 / 常量投影 / ORDER BY / LIMIT，16 个错误码配「该给谁看」",
+      "criterion": "`make stage5` → `S5 PASS`；`failures --check` → `S6 PASS`（9 场景 + 16 码）"
+    },
+    {
+      "page": "P17",
+      "page_id": "page-17",
+      "level": "L3 审",
+      "problem": "重试一次就信了，机器靠不靠谱？",
+      "solution": "把纠错当一次有上限的赌博审：只重试 1 次、必须重新校验、只对可重试错误生效",
+      "criterion": "`make stage6` → `S6 PASS`；`test_correct.py` → `14 passed`；拆检索后结局变 `SQL_UNKNOWN_COLUMN`"
+    },
+    {
+      "page": "P18",
+      "page_id": "page-18",
+      "level": "L4 守",
+      "problem": "谁都能进仓库拿货，出了事兜不兜得住？",
+      "solution": "开通只读账号 dw_reader，把「只读」从提示词搬进数据库权限，亲手验证它写不了",
+      "criterion": "`make stage5-live` → `S5 LIVE PASS`；`--verify-ro-account` 写操作被拒"
+    },
+    {
+      "page": "P19",
+      "page_id": "page-19",
+      "level": "L4 守",
+      "problem": "36 条注入要全拒、11 条正常要零误杀，出了事兜不兜得住？",
+      "solution": "用注入语料审六道 AST 拦截，理解 UNION / 可执行注释为什么要整类拒",
+      "criterion": "`security --check` → `36/36 拒绝 + 11/11 放行 + 8/8 基线`"
+    },
+    {
+      "page": "P20",
+      "page_id": "page-20",
+      "level": "L4 守",
+      "problem": "点了停止系统还在跑，出了事兜不兜得住？",
+      "solution": "让取消成为独立状态（不是 done、不是 failure）：服务端真停下、发 CANCELLED、界面标已取消",
+      "criterion": "`make stage6-ui` 浏览器 6 类失败 + 取消；离线 `pytest` → `40 passed`"
+    },
+    {
+      "page": "P21",
+      "page_id": "page-21",
+      "level": "L4 守",
+      "problem": "出了事不知道错在哪一步，兜不兜得住？",
+      "solution": "把 12 条 progress、/api/steps + /api/errors 目录、14 条录制夹具当观测面，划清应用层观测 ≠ 运维可观测",
+      "criterion": "`make stage7` → `S7 PASS`；`record_sse --check` → `S7 SSE RECORD PASS（14 个夹具）`；`npm test` → `40 passed`"
+    },
+    {
+      "page": "P22",
+      "page_id": "page-22",
+      "level": "L4 守",
+      "problem": "一套门禁真的能替你值班、兜住退化吗？",
+      "solution": "把 8 步 smoke + stage0–7 当值班网，逐条说清每条防哪类退化；拆只读账号看第 7 步是否红",
+      "criterion": "`make docker-smoke` → `DOCKER SMOKE PASS`；`pytest -q` → `813 passed, 30 skipped`；`npm test` → `40 passed`"
+    }
+  ]
+}
