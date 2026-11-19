@@ -78,6 +78,9 @@ naive_sum_amount
 1144735.50
 ```
 
+![第 10 页 · dw-real.checks.sql 全 37 行对账输出（D1–D7 计数、清洗后 405 行 / 1136341.10、naive 1144735.50）](images/page-10-checks.png)
+![第 10 页 · 门禁两屏对照：换真数据后仍绿 S1 PASS（115 行旧快照），expected_fact_rows 改 410 后红 FAIL: 1](images/page-10-gate.png)
+
 ## 对账
 
 - 两个预测都错：**换数据后门禁没红，它也不看 MySQL**。`backend/app/schema_contract.py` 里 `DDL_PATH = REBUILD_ROOT / "fixtures" / "dw.sql"`，`load_ddl()` 把这份仓库文件读进**内存 SQLite** 再核对；文件头也写着“不需要 MySQL / Docker”。**第 4 步那一刻**有三份数据在说话：运行库（`dw`，410 行真数据）、门禁快照（`fixtures/dw.sql`，115 行演示数据）、契约期望值（`expected_fact_rows: 115`）。门禁只读后两份，所以绿。第 5 步把契约期望值改成 410 只是**探针**：它立刻红（`FAIL: 1`），正好证明门禁不读运行库。只换运行库这一份，另外两份还在讲旧故事——**门禁绿，不代表数据真**。

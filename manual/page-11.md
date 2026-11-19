@@ -70,6 +70,9 @@ PASS: 5 张表 / 24 列 / 115 行 / GMV=279159.5 / 销量=622
 …（负向夹具、文档新鲜度两段都 PASS）
 S1 PASS
 ```
+
+![第 11 页 · python -m lab.app 打出的 5 行 SQL（与第 6 页逐字一致）+ 契约门禁 S1 PASS 的真输出](images/page-11-contract.png)
+
 ## 对账
 
 - 你猜 SQL 会变吗？**一字没变**。契约里 GMV 的 `formula` 就是 `SUM(fact_order.order_amount)`，`region_name.value_domain.values` 里也有 `华北`——手抄字典抄的本就是契约，换来源只是删掉副本、留下原文。

@@ -99,6 +99,8 @@ float   ： 1144735.4994544983 float
 超时    ： OperationalError (2013, 'Lost connection to MySQL server during query (The read operation timed out)')
 ```
 
+![第 12 页 · 执行器接管验证回 1000 行 + python -m lab.db 自检 7 行的真输出（超时那行真等 5 秒）](images/page-12-executor.png)
+
 ## 对账
 
 - 猜 1：差 **-0.0005455017**，不到一分钱，所以看着像对的。证据在类型和位数：float 印成 `1144735.4994544983`（10 位小数），真实金额只该有 2 位；`DECIMAL` 才是 `1144735.50`。金额要 DECIMAL 两位，SQL 里就得先逐值 `CAST(order_amount AS DECIMAL(16,2))` 再 `SUM`（自检里那条就是）；执行器只负责把它原样交出来。`order_amount` 的物理类型是 `FLOAT`（第 2 页建表就写 FLOAT），二进制浮点存不下 0.01 的整数倍，MySQL 拿 DOUBLE 累加 408 个近似值，末尾就长出 `0.000545...` 的尾巴（尾数随 MySQL 版本可能略有不同，但一定不等于 `1144735.50`，类型也一定是 float）。
