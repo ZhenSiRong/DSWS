@@ -1,6 +1,6 @@
 # 第 19 页 · 守策略：36 条注入全拒、11 条正常零误杀
 
-> 前置：L4（守）第二页。本页一条服务都不用——第 2、3 步的判据只读 `contracts/` 与 `fixtures/`，不访问网络，不需要 MySQL、`.env`、模型 key。命令都在仓库根目录、同一个终端里整段连续执行；括号是子 shell，跑完你还在仓库根目录。第 18 页守的是账号（数据库层写不了），本页守的是策略（危险 SQL 根本到不了执行）。
+> 前置：L4（守）第二页。本页一条服务都不用——判据只读 `contracts/`、`fixtures/`，第 2 步还读 S4 基线 `backend/tests/generate/baseline.yaml`；不访问网络，不需要 MySQL、`.env`、模型 key，但要用 `backend/.venv`（第 0 页 `make install` 建好，缺了先回第 0 页补）。命令都在仓库根目录、同一个终端里整段连续执行；括号是子 shell，跑完你还在仓库根目录。第 18 页守的是账号（数据库层写不了），本页守的是策略（危险 SQL 根本到不了执行）。
 
 ## 这一页构建什么
 
@@ -13,7 +13,7 @@
 
 ## 动手
 
-**第 1 步：拍快照。** 拆一刀要改契约，先留退路（同名快照会被拒，重做本页换个名字；回显 `已保存快照 "p19-before"：169 个文件。`，数字因工作区而异）：
+**第 1 步：拍快照。** 拆一刀要改契约，先留退路（同名快照会被拒，重做本页换个名字——换了名字，下文出现的 `p19-before` 也一起替换；回显 `已保存快照 "p19-before"：169 个文件。`，数字因工作区而异）：
 
 ```bash
 scripts/lab save p19-before
@@ -25,17 +25,19 @@ scripts/lab save p19-before
 (cd backend && .venv/bin/python -m app.scripts.security --check)
 ```
 
-**第 3 步：打判定表，看每条注入被归到哪个原因码。** 表共 47 行（36 拒 + 11 放）；下面的 `grep` 只留四类构造，末行统计走 stderr，`2>&1` 把它并回来：
+**第 3 步：打判定表，看每条注入被归到哪个原因码。** 表共 47 行（36 拒 + 11 放；看全表就把下面的 `grep` 那段去掉）；管道里的 `grep` 只留**三类构造**（多语句 / 可执行注释 / 集合运算），末行统计走 stderr，`2>&1` 把它并回来；`PYTHONUNBUFFERED=1` 保证汇总落在表尾（去掉它，汇总会先跑到表头——stdout 被管道缓冲、stderr 不会）。这一步全 PASS 时退出码 0，有 FAIL 时会非 0：
 
 ```bash
 (cd backend && PYTHONUNBUFFERED=1 .venv/bin/python -m app.scripts.security --corpus) 2>&1 | grep -E "multi_statement|executable_comment|union|语料："
 ```
 
-**第 4 步（可选）：`make stage5`。** 前提：本机有 `uv` 且 `backend/.venv` 依赖已装好（没有就跳过，第 2 步的判据已经在手上）；不需要 MySQL / `.env` / 模型 key。本机实测约 44 秒（先跑 179 条安全测试，再跑 813 条全后端、占 40 秒），末行 `S5 PASS`：
+**第 4 步（可选）：`make stage5`。** 前提：本机有 `uv` 且 `backend/.venv` 依赖已装好——先自查 `(cd backend && .venv/bin/python -c "import app, app.security") && command -v uv`（退出码 0 才继续；非 0 就跳过本步，**跳过不影响第 2 步的判据**：第 2、3 步只用 `.venv`，不经过 `uv`）；不需要 MySQL / `.env` / 模型 key。本机实测约 44 秒（先跑安全测试 179 passed + 2 skipped，再跑全后端 843 条 = 813 passed + 30 skipped、约 40 秒），末行 `S5 PASS`：
 
 ```bash
 make stage5
 ```
+
+**跑完看 `git status`：`backend/uv.lock` 很可能被改。** `uv run` 会按本机 uv 配的镜像源重写锁文件——本机实测 1,250 行 registry / packages 地址从 `pypi.org` 换成 `pypi.tuna.tsinghua.edu.cn`（你这里跑完看 `git status` 就知道中没中）。它不在 `lab` 白名单里，`scripts/lab reset` 不管它——所以拆一刀末尾 reset 之后输出仍说“完全一致”，`git status` 里 `backend/uv.lock` 却还是脏的；用 `git checkout -- backend/uv.lock` 还原。
 
 ## 你应该看到
 
@@ -59,7 +61,8 @@ S5 PASS
 | union_all_exfiltration | SQL_FORBIDDEN_CONSTRUCT | SQL_FORBIDDEN_CONSTRUCT | PASS |
 语料：47 条，失败 0 条
 # 第 4 步（节选）
-813 passed, 30 skipped in 40.05s
+179 passed, 2 skipped in 1.29s
+813 passed, 30 skipped in 37.45s
 S5 PASS
 ```
 
@@ -76,10 +79,10 @@ S5 PASS
 
 ## 拆一刀
 
-打开 `contracts/sql.policy.yaml`，找到 `forbid_set_operations: true`，只把这处改成 `false`。重跑第 2 步的判据（`tail -8` 只看结尾）：
+打开 `contracts/sql.policy.yaml`，找到 `statement:` 段里 L31 的 `forbid_set_operations: true`（2 空格缩进；4 行后还有一个 `forbid_executable_comments: true`，别改错），只把这处改成 `false`。重跑第 2 步的判据（`tail -8` 只看结尾；管道末尾是 `tail`，门禁本体的退出码靠命令里的 `gate=` 打出来）：
 
 ```bash
-(cd backend && PYTHONUNBUFFERED=1 .venv/bin/python -m app.scripts.security --check) 2>&1 | tail -8
+(cd backend && PYTHONUNBUFFERED=1 .venv/bin/python -m app.scripts.security --check) 2>&1 | tail -8; echo "gate=${PIPESTATUS[0]}"
 ```
 
 ```text
@@ -91,11 +94,12 @@ S5 PASS
 FAIL: 2 项不符合预期
   - union_exfiltration: 原因码不符（期望 SQL_FORBIDDEN_CONSTRUCT，实际 SQL_NOT_READ_ONLY）
   - union_all_exfiltration: 原因码不符（期望 SQL_FORBIDDEN_CONSTRUCT，实际 SQL_NOT_READ_ONLY）
+gate=1
 ```
 
-退出码 1。**漏到执行的是 0 条**（根节点规则又把两条 UNION 兜了一次），**漏掉的是这 2 条的原因码**——判定表上它们从 PASS 变 FAIL，门禁红。再确认一次不误杀：11/11 与 8/8 一位没动。
+末行 `gate=1` 是门禁本体的退出码——管道末尾是 `tail`，不带 `gate=` 直接看 `$?` 只会拿到它的 0（门禁本体看 `PIPESTATUS[0]`）。**漏到执行的是 0 条**（根节点规则又把两条 UNION 兜了一次），**漏掉的是这 2 条的原因码**——判定表上它们从 PASS 变 FAIL，门禁红。再确认一次不误杀：11/11 与 8/8 一位没动。
 
-还原并回绿（`reset` 会先拍一张 `pre-reset-<时间戳>` 安全快照，只贴末两行）：
+还原并回绿（`reset` 会先拍一张 `pre-reset-<时间戳>` 安全快照，只贴末两行；这里的“完全一致”只算 `lab` 白名单文件——第 4 步跑过的话 `backend/uv.lock` 仍要按上面单独还原）：
 
 ```bash
 scripts/lab reset p19-before --yes
