@@ -97,6 +97,7 @@ docker compose exec backend python -c "from app.generate.provider import HttpLlm
 - 真模型成功态**不可复现**：本机这一次出了能过 `check_sql` 的 SQL，不代表每次、每台机器都行。结论只能写「多次采样（`trials>=3`）+ 成功率 + 失败分类」，不许写「已修复」（p17 对账；`eval/live_probe.py` 是采样探针，要跑着的服务 + 真 key）。
 - **本附录不改变 ACCEPTANCE 任何判据**：真模型仍不在验收清单里；主线回归仍用确定性一侧 + 录制夹具。
 - 本机只实测了 DeepSeek + `deepseek-flash`；Ark / Ollama / vLLM 是形状示例，未在本机验证。
+- 真模型纠错实测证据（2026-11-20，隔离栈，8 题 × 3 次 = 24 次真实请求）：[`llm-live-probe.md`](llm-live-probe.md)。
 
 ## 8. 成本提示
 
