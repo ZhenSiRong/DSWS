@@ -27,7 +27,7 @@
 
 ## 四阶段成熟度：同一片城区，一段一段接通管网
 
-> 口径同 `humen-desicions/09-ablation-course.md` **D44**：四级 = 造 / 换 / 审 / 守，10 + 4 + 4 + 5 = 23 页。城市版四阶段的阶段名 / 一句话 / 横切系统与单源 [`city/stages-city.json`](city/stages-city.json) 逐字同源（图与表同源）；改口径时 JSON 与本表四行要一起改，改完重跑 `python3 manual/shots/render_map.py` 做逐字校验。
+> 口径同 `humen-desicions/09-ablation-course.md` **D44**：四级 = 造 / 换 / 审 / 守，10 + 4 + 4 + 5 = 23 页。城市版四阶段的阶段名 / 一句话 / 横切系统与单源 [`city/stages-city.json`](city/stages-city.json) 逐字同源（[城市四阶段图](images/city-4stages.png) 与表同源）；改口径时 JSON 与本表四行要一起改，改完重跑 `python3 manual/shots/render_map.py` 做逐字校验。
 
 | 级 | 城市阶段 | 城市里长什么样 | 软件里对应（横切系统） | 学生动作 | 页 |
 |:--:|---|---|---|---|---|
