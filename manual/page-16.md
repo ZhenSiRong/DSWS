@@ -4,7 +4,7 @@
 
 ## 这一页构建什么
 
-校验是**执行前的门**，不是出错后的日志：用 20 条带 `expect_code` 的错单语料 + 16 个错误码 + 9 个失败场景，审“每条错单到底被哪个码、在哪一步拦下”；再拆掉一条校验规则，看语料从“拦”变“放”。
+校验是**执行前的门**，不是出错后的日志：用 20 条带 `expect_code` 的错单语料 + 16 个错误码 + 9 个场景（6 类失败 + 3 条对照：happy / slow / corrected），审“每条错单到底被哪个码、在哪一步拦下”；再拆掉一条校验规则，看语料从“拦”变“放”。
 
 ## 猜一猜
 
@@ -38,12 +38,14 @@ PYTHONPATH=backend backend/.venv/bin/python eval/probe_correction.py | tail -1
 grep -o '"expect_code": "[A-Z_]*"' eval/correction.jsonl | awk -F'"' '{print $4}' | sort | uniq -c | sort -rn
 ```
 
+**注意：** `eval/probe_correction.py` 里写的旧用法（`cd backend && .venv/bin/python ../eval/probe_correction.py`）会报 `No module named 'app'`——按上面 `PYTHONPATH=backend ...` 这条跑就是对的，报错不是环境坏了。
+
 ## 你应该看到
 
 三条判据的输出（依次是第 2 / 3 / 4 步；块里 `#` 开头的行是标注，不是程序输出）：
 
 ```text
-# 第 2 步
+# 第 2 步（秒数随机器变，看 passed/failed 就行）
 26 passed in 0.41s
 # 第 3 步（节选）
   sql_unknown_column   期望 SQL_UNKNOWN_COLUMN   实际 SQL_UNKNOWN_COLUMN
@@ -71,9 +73,9 @@ S6 PASS
 
 ## 拆一刀
 
-1. 打开 `backend/app/generate/guard.py`，找到第 3 条「表与列存在」里的循环（搜 `for column in tree.find_all`），把 `for column in tree.find_all(exp.Column):` 改写成 `for column in []:  # 拆一刀：关掉列存在校验`——只改这一行，缩进别动。
+1. 打开 `backend/app/generate/guard.py`，找到第 3 条「表与列存在」里的循环（搜 `for column in tree.find_all`），把 `for column in tree.find_all(exp.Column):` 改写成 `for column in []:  # 拆一刀：关掉列存在校验`——**只改 `guard.py` 这一处**，缩进别动；`backend/app/security/policy.py:460` 有一模一样的 `for column in tree.find_all(exp.Column):`，别用 IDE 全局替换把它也拆了（两处一起拆会把第二道关也关掉，错 SQL 被放行到执行，实验结论就失真了）。
 
-2. 重跑第 2–4 步里的三条判据（`1 failed` 的是 `test_unknown_column_is_rejected`；下面只留判红的那几行）：
+2. 重跑第 2–4 步里的三条判据（`1 failed` 的是 `test_unknown_column_is_rejected`；秒数随机器变，看 passed/failed 就行；下面只留判红的那几行）：
 
 ```bash
 backend/.venv/bin/python -m pytest backend/tests/generate/test_guard.py -q
@@ -91,6 +93,8 @@ FAIL c07 expected SQL_UNKNOWN_COLUMN actual []
 {"total": 20, "mismatch": 3}
 ```
 
+三条命令的退出码都是 1：前两条是判据在报红，第三条是 probe 有 3 条 mismatch——都是预期，不是脚本崩了；别用 `set -e` 或遇错即停的 runner，三条都要跑完再看输出。
+
 3. 还原并回绿：
 
 ```bash
@@ -100,7 +104,10 @@ PYTHONPATH=backend backend/.venv/bin/python eval/probe_correction.py | tail -1
 ```
 
 ```text
+# 第 3 步 reset（节选，末行是；真实输出还有恢复计划、pre-reset-<时间戳> 安全快照、覆盖明细，时间戳每次不同）
+已先拍安全快照 "pre-reset-<时间戳>"（恢复前的现场，169 个文件）。
 现在工作区与快照 "p16-before" 完全一致。
+# 后两条命令各取末行
 S6 PASS
 {"total": 20, "mismatch": 0}
 ```
