@@ -39,7 +39,7 @@ scripts/lab save p20-before
 
 ## 你应该看到
 
-第 1–4 步（节选：只留判据行，第 1 步略去 2 行回显、第 2 步略去 `...... [100%]` 进度行；`#` 开头是标注，不是程序输出；秒数随机器变）：
+第 1–4 步（节选：只留判据行——第 1 步略去 2 行回显，第 2 步略去 pytest 进度行如 `...... [100%]`；`#` 开头是标注，不是程序输出；秒数随机器变）：
 
 ```text
 # 第 1 步
@@ -78,7 +78,7 @@ S7 SSE RECORD PASS（14 个夹具与真实输出一致）
 ```
 
 ```text
-# pytest（节选：原文 FAILURES 在前、汇总在末）：6 条里红 2 条
+# pytest（节选：只留判据行，原文 FAILURES 在前、汇总在末）：6 条里红 2 条
 FAILED tests/agent/test_orchestrator.py::test_cancel_stops_the_run_and_reports_cancelled
 FAILED tests/agent/test_orchestrator.py::test_cancel_midway_stops_the_remaining_steps
 2 failed, 4 passed, 108 deselected in 0.72s
