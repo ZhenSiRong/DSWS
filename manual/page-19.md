@@ -66,6 +66,8 @@ S5 PASS
 S5 PASS
 ```
 
+![第 19 页 · `security --check`：36/36 拒 + 11/11 放行 + 8/8 基线，S5 PASS](images/page-19-policy.png)
+
 ## 对账
 
 - **猜 1：10 条。** 按原因码数：`SQL_COMMENT_OBFUSCATION` 2 条 + `SQL_FORBIDDEN_CONSTRUCT` 8 条（集合运算 2 + 危险函数 6）。剩下 26 条不是靠类别规则：21 条是结构（18 条“不是只读查询” + 3 条多语句），5 条是白名单（表 4 + 列 1）。类别规则不到三分之一，却接住了最会变形的那些载荷。

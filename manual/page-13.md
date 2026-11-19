@@ -84,6 +84,9 @@ DOCKER SMOKE PASS
 
 第 5 步那行 `sse_verdict` 可能是 `streamed`，也可能是 `too-fast`：后者表示整个响应 200 毫秒内就结束、时间上分辨不出是否流式，脚本于是拿 `nginx -T` 的生效配置定性——只要跟着打出 `nginx: /api/query 的代理缓冲已关闭`，这一档照样算**通过**，不是失败。
 
+![第 13 页 · `docker compose ps`：五个长驻服务全 healthy；`ps -a` 里 init `Exited (0)`](images/page-13-ps.png)
+![第 13 页 · `make docker-smoke`：8 步逐条验，末行 DOCKER SMOKE PASS](images/page-13-smoke.png)
+
 ## 对账
 
 - 猜 1：只跑一次的是 **init**。`docker compose ps` 默认只列 running，所以第一张表里没有它；`ps -a` 才看到 `Exited (0)`。它退出码 0，backend 才被允许启动。

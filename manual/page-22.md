@@ -57,6 +57,9 @@ DOCKER INIT PASS
 DOCKER SMOKE PASS
 ```
 
+![第 22 页 · 全量 pytest 813 passed, 30 skipped + npm 40 passed + DOCKER SMOKE PASS](images/page-22-smoke.png)
+![第 22 页 · L4 级考核：init 退出窗口内 GRANT ALL，smoke 第 7 步红 FAIL: 3 项问题](images/page-22-ablation.png)
+
 ## 对账
 
 - **猜 1：843 条里跑 813、跳 30。** 跳的 30 条不是「不需要栈所以跳过」，相反——23 条检索集成测试要真 Elasticsearch / Qdrant / 元知识（`REBUILD_INTEGRATION=1` 才跑），5 条是生成契约对齐的已知形状问题，2 条是拒答题本来就不产 SQL。所以 `30 skipped` 不等于 30 个通过：没起三存储时，检索这一层今天**没有验**；smoke 第 8 步在同样三座存储上只对账元知识，不补这 23 条召回题。
