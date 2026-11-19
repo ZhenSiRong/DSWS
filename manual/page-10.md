@@ -21,7 +21,7 @@
 ```bash
 scripts/lab save p10-before
 ```
-`lab` 只跟踪白名单文件（`contracts/`、`compose.yaml`、`backend/app/`、`backend/tests/`、`fixtures/`、`frontend/src/`），**不含数据库**——库里那 115 行它记不住，第 2 步换完数据后要靠本页末的拆一刀 3 手动重灌回来；**也不含 `lab/`**（`lab/app.py` 不进快照）。名字只能用字母、数字、点、下划线、短横线，且**必须以字母或数字开头**、最多 64 字符；快照只读，同名 save 会被拒绝——复跑本页要换个名字（如 `p10-before-2`）。
+`lab` 只跟踪白名单文件（`contracts/`、`compose.yaml`、`lab/`、`backend/app/`、`backend/tests/`、`fixtures/`、`frontend/src/`）——快照含 `lab/`（`lab/app.py`、`lab/db.py` 都能回滚），但**不含数据库**（库里那 115 行它记不住，第 2 步换完数据后要靠本页末的拆一刀 3 手动重灌回来）。名字只能用字母、数字、点、下划线、短横线，且**必须以字母或数字开头**、最多 64 字符；快照只读，同名 save 会被拒绝——复跑本页要换个名字（如 `p10-before-2`）。
 
 **第 2 步：换数据。** 命令和第 2 页灌 `dw.sql` 同款，只换文件（唯一多出的是那句可省略的 `--default-character-set=utf8mb4`）：
 ```bash
