@@ -1,10 +1,10 @@
 # 第 15 页 · 审生成：同一把尺子，量模板也量模型
 
-> 前置：第 13 页的整栈可以继续跑着，本页一条服务都不用——`make stage4` 完全离线，不需要 MySQL/ES/Qdrant、不需要 `.env`、也不需要模型 key。命令都在仓库根目录、同一个终端里整段连续执行。
+> 前置：第 13 页起的整栈到上一页（第 14 页）结束时仍在跑，可以继续开着，本页一条服务都不用——`make stage4` 完全离线，不需要 MySQL/ES/Qdrant、不需要 `.env`、也不需要模型 key。命令都在仓库根目录、同一个终端里整段连续执行。
 
 ## 这一页构建什么
 
-给生成层立一把可重复的尺子：10 题黄金集 `baseline`（问题 → SQL/拒答 → 判定）+ 一套语义断言。生成器是确定性的、不走模型；你审的不是“像不像人写的”，而是**同一个判据能不能同时量模板和模型**——改契约、改生成逻辑，同一把尺立刻红，改回来立刻绿。
+给生成层立一把可重复的尺子：10 题基线 `baseline`（问题 → SQL/拒答 → 判定；`backend/tests/generate/baseline.yaml`——和第 14 页 `backend/tests/recall/golden.yaml` 的 20 题召回黄金集不是同一个东西：这 10 题是 8 题复用那 20 题的题面 + 2 题越界拒答）+ 一套语义断言。生成器是确定性的、不走模型；你审的不是“像不像人写的”，而是**同一个判据能不能同时量模板和模型**——改契约、改生成逻辑，同一把尺立刻红，改回来立刻绿。
 
 ## 猜一猜
 
@@ -15,7 +15,9 @@
 
 ## 动手
 
-**第 1 步：拍快照。** 拆一刀要改契约，先留退路（同名快照会被拒，重做本页就换个名字）：
+> 若跑完 `make stage4` / `make baseline` 后 `git status` 里出现 `backend/uv.lock` 被改（本机 uv 配了镜像源时会发生——`uv run` 自动改写 lock 里的 registry URL，`lab` 白名单不含它、`reset` 也不还原），**不用管，跑完敲 `git checkout -- backend/uv.lock` 还原即可**。
+
+**第 1 步：拍快照。** 拆一刀要改契约，先留退路（同名快照会被拒绝；重做本页就换个名字，如 `p15-before-2`，本页后面第 3 步 `reset` 的名字也一起换）：
 
 ```bash
 scripts/lab save p15-before
@@ -57,6 +59,8 @@ make stage4
 S4 PASS
 ```
 
+第 3 步最后那个 `30 skipped` 也不是失败：其中 23 条是 `REBUILD_INTEGRATION` 集成测试（没设 `REBUILD_INTEGRATION=1` 时按设计跳过，和第 14 页那 23 条同源）、5 条是第 2 步同款的提示词形状、2 条是安全语料的拒答题；要看逐条原因，单独跑 `(cd backend && .venv/bin/python -m pytest -q -rs)` 的 `short test summary info`。
+
 ## 对账
 
 - **猜 2：模板，不是模型。** 默认生成器是 `backend/app/generate/deterministic.py` 里的确定性实现：指标公式直接抄契约的 `formula`，表/列/取值/时间边界也都来自契约。`sql_or_refusal` 输出契约、`app.generate.guard` 静态校验、`baseline.yaml` 的语义断言，三道都不认“谁写的 SQL”。换真模型只替换 `HttpLlmGenerator` 这个实现（配三个 `REBUILD_LLM_*` 变量），模型写出的 SQL 过的是同一个输出形状、同一套 `check_sql`；`baseline.yaml` 断言的是 SQL 里的事实，也不认识生成器——所以尺子量得动两边。本页不配 key，只跑可复现的确定性一侧。
@@ -69,7 +73,7 @@ S4 PASS
 
 ## 拆一刀
 
-1. 把契约里 GMV 的公式改坏（看尺子红在哪几题）：打开 `contracts/schema.contract.yaml`，找到 `metrics:` 下 `name: GMV` 那段，**只改 `formula` 这一行**（`relevant_columns` 等别动）。改前是 `SUM(fact_order.order_amount)`，改成：
+1. 把契约里 GMV 的公式改坏（看尺子红在哪几题）：打开 `contracts/schema.contract.yaml`，找到 `metrics:` 下 `name: GMV` 那段，**只改 `formula` 这一行**（`relevant_columns` 等别动）——**别用全局替换**：`SUM(fact_order.order_amount)` 在 AOV、平均件单价公式里也出现，Ctrl+H 会一次改坏 3 个指标（契约自检红 8 处而不是 3 处），红的不止 b01/b04；只动 `name: GMV` 下面那一行。改前是 `SUM(fact_order.order_amount)`，改成：
 
 ```yaml
     formula: "SUM(fact_order.order_amount) / COUNT(DISTINCT fact_order.order_id)"
@@ -91,7 +95,9 @@ make baseline
   - b04: 期望 SQL，实际拒答 SQL_UNKNOWN_COLUMN
 ```
 
-末尾 `make: *** [Makefile:88: baseline] Error 1` 是判据在报红，不是命令敲错。红的原因是一条链：公式多了 `COUNT(DISTINCT fact_order.order_id)` → 生成器把它原样拼进 SQL → 但 GMV 的 `relevant_columns` 只有 `fact_order.order_amount`，上下文里没有 `order_id` → 静态校验按“列存在”拒绝 → 生成降级成拒答 → 期望 SQL 的两题 FAIL。同一处改动还让 `pytest backend/tests/generate -q` 变成 `12 failed, 110 passed, 5 skipped`（12 条里只有 2 条是基线题，其余是“生成的 SQL 只能用上下文里的列”这类断言被连带打红），第 11 页的契约自检也会报 3 处矛盾。**一处契约、三处闸门同时响。**
+末尾 `make: *** [Makefile:88: baseline] Error 1` 是判据在报红，不是命令敲错。红的原因是一条链：公式多了 `COUNT(DISTINCT fact_order.order_id)` → 生成器把它原样拼进 SQL → 但 GMV 的 `relevant_columns` 只有 `fact_order.order_amount`，上下文里没有 `order_id` → 静态校验按“列存在”拒绝 → 生成降级成拒答 → 期望 SQL 的两题 FAIL。同一处改动还让 `pytest backend/tests/generate -q` 变成 `12 failed, 110 passed, 5 skipped`（12 条里只有 2 条是基线题，其余是“生成的 SQL 只能用上下文里的列”这类断言被连带打红），第 11 页的契约自检也会报 3 处矛盾——在仓库根目录补跑这一条就能当场验证：
+
+`(cd backend && .venv/bin/python -m app.schema_contract --check)` 末行 `FAIL: 3 个契约问题`，三个码 `METRIC_RELEVANT_COLUMNS`（公式引用的列 ≠ `relevant_columns`）、`METRIC_VALUE_MISMATCH`（公式实际值 ≠ 契约期望）、`METRIC_FORMULA_SEMANTICS`（公式语义不对）。**一处契约、三处闸门同时响。**
 
 3. 还原并回绿（`reset` 会先拍一张 `pre-reset-…` 安全快照，末行确认恢复成功）：
 
