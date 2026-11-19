@@ -1,6 +1,7 @@
 # 第 21 页 · 守可观测：12 条进度 + 14 条夹具能证明什么
 
 > 前置：L4（守）第四页。本页判据全部离线：不启服务、不用 MySQL、`.env`、模型 key、浏览器。命令都在仓库根目录、同一个终端里整段连续执行；括号是子 shell，跑完你还在仓库根目录。第 18–20 页分别守账号、策略、取消；本页守可观测——系统「现在在干什么、错在哪一步」靠哪三样证据说清，以及这些证据不能证明什么。
+> 承接第 20 页：先跑 `(cd backend && .venv/bin/python -m app.scripts.record_sse --check)`，看到 PASS 再开始本页（第 20 页的拆一刀没还原时，本页第 2 步只会红 `cancelled.json` 一条，红法与下面那 10 条不同）。
 
 ## 这一页构建什么
 
@@ -37,22 +38,24 @@ for sid in ('happy', 'llm_refusal'):
 (cd backend && .venv/bin/python -m app.scripts.record_sse --check)
 ```
 
-**第 3 步：两组协议测试。** 第一条命令验夹具每一帧都合契约（14 条 × 形状 + 帧契约）；第二条验前端解析器与结果渲染。前提：`frontend/node_modules` 已存在（没有就先 `npm install`，要联网）：
+**第 3 步：两组协议测试。** 第一条命令验夹具每一帧都合契约（14 条 × 形状 + 帧契约）；第二条验前端解析器与结果渲染。前提：`backend/.venv` 由第 0 页 `make install` 生成；`frontend/node_modules` 缺了就先 `npm ci`（要联网），`frontend/package-lock.json` 不在 `lab` 白名单，若被改就 `git checkout -- frontend/package-lock.json` 还原：
 
 ```bash
 (cd backend && .venv/bin/python -m pytest tests/frontend/test_sse_fixtures.py -q)
 (cd frontend && npm test)
 ```
 
-**第 4 步（可选）：`make stage7`。** 前提：本机装了 `uv` 且 `backend/.venv` 依赖已同步；不需要 MySQL / 浏览器。6 段门禁（契约新鲜度、夹具对账、`tests/frontend` 45 条、前端 40 条、前端构建、全后端 813 条），本机实测约 54 秒，末行 `S7 PASS`；不跑不影响前面判据：
+**第 4 步（可选）：`make stage7`。** 前提：本机装了 `uv` 且 `backend/.venv` 依赖已同步；不需要 MySQL / 浏览器。6 段门禁（契约新鲜度、夹具对账、`tests/frontend` 45 条、前端 40 条、前端构建、全后端 843 条 = 813 passed + 30 skipped），本机实测约 54 秒，末行 `S7 PASS`；不跑不影响前面判据：
 
 ```bash
 make stage7
 ```
 
+**跑完看 `git status`：`backend/uv.lock` 可能被改。** `uv run` 会按本机 uv 配的镜像源重写锁文件（本机实测 1,250 行 registry / packages 地址 `pypi.org` → `pypi.tuna.tsinghua.edu.cn`，你这台看 `git status` 就知道中没中）；它不在 `lab` 白名单里，`lab reset` 回显的“完全一致”只算白名单文件——跑完敲 `git checkout -- backend/uv.lock` 单独还原（口径同第 15 / 19 页）。
+
 ## 你应该看到
 
-第 1–3 步（`#` 开头是标注；耗时随机器变）：
+第 1–3 步（`#` 开头是标注；耗时随机器变；下面是节选）：
 
 ```text
 # 第 1 步
@@ -68,6 +71,8 @@ S7 SSE RECORD PASS（14 个夹具与真实输出一致）
      Tests  40 passed (40)
 ```
 
+![第 21 页 · `/api/steps = 12`、`/api/errors = 16`、S7 SSE RECORD PASS、30 passed + 40 passed](images/page-21-observe.png)
+
 ## 对账
 
 - **猜 1：`correct_sql`，以及失败路径上根本没出现的步骤。** 正常流里条件步骤只发一条 `status: "skipped"`，没有 running+success——所以 happy 是 23 条 progress 帧（11 个节点各 2 条 + 1 条 skipped），不是 12×2。生成阶段就拒答时更少：`llm_refusal` 只出现 10 个步骤名，`validate_sql`、`run_sql` 一条都没有。判据不能要求「12 个名字每次都出现」，只能要求：出现的名字都在目录里、条件步骤显式 `skipped`、流必有终态。最容易漏的不是跑过的步骤，是**没跑又没人替它说话**的步骤。
@@ -80,7 +85,7 @@ S7 SSE RECORD PASS（14 个夹具与真实输出一致）
 
 ## 拆一刀
 
-打开 `backend/app/scripts/record_sse.py`，找到 `_normalize`，删掉两处归一化（把 `duration_ms` 改成 12.5 的那段、`detail.pop("request_id")` 的那段），只留解析与 `json.dumps`。重跑第 2 步（退出码 1）：
+打开 `backend/app/scripts/record_sse.py`，找到 `_normalize`（L195）。归一化是 L199–205 一整块：progress 分支 L201 `payload["duration_ms"] = FIXED_DURATION_MS`（12.5 在 L39 的常量里），error 分支 L205 `detail.pop("request_id", None)`；把这两个分支连同外层的 `if`/`elif` 头一起删掉，函数只剩解析与 `json.dumps`。只删 L201 / L205 这两行赋值会缩进报错（“录制失败”），不是 10 条红；也别删整个函数。重跑第 2 步（退出码 1）：
 
 ```bash
 (cd backend && .venv/bin/python -m app.scripts.record_sse --check)
@@ -94,7 +99,7 @@ FAIL: SSE 夹具与真实输出不同步：
 请运行：cd backend && uv run python -m app.scripts.record_sse
 ```
 
-为什么红：`happy.json` 里那帧是 `"duration_ms": 12.5`，今天录出来是 `"duration_ms": 2.9`（下次又是别的数）；`cancelled.json` 的 `detail` 里多了一个 `"request_id": "ed13…"`。**别照着提示去重录**：把今天的噪音写死进夹具，明天还会红，判据就废了。用快照还原，再重跑第 2 步：
+为什么红：`happy.json` 里那几帧是 `"duration_ms": 12.5`，今天录出来首个 duration 帧约 3.3、11 个带 duration 的 progress 帧全与 12.5 不同（0 到几十毫秒不等，每次不同）；`cancelled.json` 的 `detail` 里还多了一个随机 32-hex 的 `request_id`（每次不同，形如 `9d5221…`）。**别照着提示去重录**：把今天的噪音写死进夹具，明天还会红，判据就废了。用快照还原，再重跑第 2 步：
 
 ```bash
 scripts/lab reset p21-before --yes
@@ -102,6 +107,7 @@ scripts/lab reset p21-before --yes
 ```
 
 ```text
+# 还原（节选；实际还会先打印“已先拍安全快照 pre-reset-…”等 8 行非空输出）
 已恢复快照 "p21-before"：
   覆盖 1 个文件（内容不同）
 S7 SSE RECORD PASS（14 个夹具与真实输出一致）
