@@ -42,7 +42,7 @@ h1{margin:2px 0 0;font-size:26px;font-weight:900;letter-spacing:.4px;line-height
 .reset-btn:disabled{opacity:.35;cursor:default;}
 .mode-hint{font-size:11.5px;color:var(--mute);text-align:right;line-height:1.45;}
 
-/* ---------- 视图切换：物料清单 / 工地地图 ---------- */
+/* ---------- 视图切换：物料清单 / 城市地图 ---------- */
 .view-row{display:flex;align-items:center;gap:9px;}
 .views{display:flex;border:2px solid var(--ink);border-radius:6px;overflow:hidden;}
 .view-btn{border:0;border-right:1.5px solid var(--ink);background:#fff;color:var(--ink);
@@ -53,7 +53,7 @@ h1{margin:2px 0 0;font-size:26px;font-weight:900;letter-spacing:.4px;line-height
 .view-btn.is-on{background:var(--ink);color:#fff;}
 .view-hint{font-size:10.6px;color:var(--mute);white-space:nowrap;overflow:hidden;
            text-overflow:ellipsis;max-width:330px;}
-.app.view-map .mode-row{display:none;}
+.app.view-city .mode-row{display:none;}
 
 /* ---------- 状态条 ---------- */
 .statusbar{display:flex;align-items:center;gap:9px;padding:6px 22px;
@@ -219,104 +219,129 @@ a.pg:hover{background:var(--ink);color:#fff;}
            line-height:1.4;overflow-wrap:anywhere;}
 .card-foot code{font-family:"DejaVu Sans Mono",monospace;font-size:9.2px;background:#f2f2f2;padding:0 2px;}
 
-/* ---------- 工地地图视图（工地十动作 ↔ 十页） ---------- */
-#mapview{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;background:#fff;}
-#mapview[hidden],.split[hidden],.statusbar[hidden],.aon[hidden]{display:none;}
-.map-head{display:flex;align-items:baseline;gap:12px;padding:6px 20px;
-          border-bottom:1.5px solid var(--ink);background:var(--soft);flex:0 0 auto;}
-.mh-kicker{font-family:"DejaVu Sans Mono","Noto Sans CJK SC",monospace;font-size:10.5px;
+/* ---------- 城市地图视图（4 区 · 10 设施 ↔ 10 页） ---------- */
+#cityview{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;background:#fff;}
+#cityview[hidden],.split[hidden],.statusbar[hidden],.aon[hidden]{display:none;}
+.city-head{display:flex;align-items:baseline;gap:12px;padding:6px 20px;
+           border-bottom:1.5px solid var(--ink);background:var(--soft);flex:0 0 auto;}
+.ch-kicker{font-family:"DejaVu Sans Mono","Noto Sans CJK SC",monospace;font-size:10.5px;
            font-weight:900;letter-spacing:.4px;white-space:nowrap;}
-.mh-title{font-size:12.3px;color:var(--ink2);white-space:nowrap;overflow:hidden;
+.ch-title{font-size:12.3px;color:var(--ink2);white-space:nowrap;overflow:hidden;
           text-overflow:ellipsis;min-width:0;}
-.mh-pair{margin-left:auto;flex:0 0 auto;font-size:10.8px;color:#333;white-space:nowrap;}
-.mh-pair b{font-family:"DejaVu Sans Mono","Noto Sans CJK SC",monospace;font-weight:900;}
-.map-body{display:flex;flex:1 1 auto;min-height:0;}
-.map-col{display:flex;flex-direction:column;min-width:0;min-height:0;}
-.map-left{flex:0 0 41%;border-right:2px solid var(--ink);}
-.map-right{flex:1 1 59%;background:#fafafa;}
-.mv-head{display:flex;align-items:baseline;gap:8px;padding:5px 16px;
+.ch-pair{margin-left:auto;flex:0 0 auto;font-size:10.8px;color:#333;white-space:nowrap;}
+.ch-pair b{font-family:"DejaVu Sans Mono","Noto Sans CJK SC",monospace;font-weight:900;}
+.city-body{display:flex;flex:1 1 auto;min-height:0;}
+.city-col{display:flex;flex-direction:column;min-width:0;min-height:0;}
+.city-left{flex:0 0 42%;border-right:2px solid var(--ink);}
+.city-right{flex:1 1 58%;background:#fafafa;}
+.cv-head{display:flex;align-items:baseline;gap:8px;padding:5px 16px;
          border-bottom:1.4px solid var(--ink);background:#efefef;flex:0 0 auto;}
-.mv-head b{font-size:11.3px;font-weight:900;letter-spacing:.2px;}
-.mv-head .mv-note{font-size:9.8px;color:var(--mute);white-space:nowrap;}
-.mv-head .mv-n{margin-left:auto;font-family:"DejaVu Sans Mono","Noto Sans CJK SC",monospace;
+.cv-head b{font-size:11.3px;font-weight:900;letter-spacing:.2px;}
+.cv-head .cv-note{font-size:9.8px;color:var(--mute);white-space:nowrap;}
+.cv-head .cv-n{margin-left:auto;font-family:"DejaVu Sans Mono","Noto Sans CJK SC",monospace;
                font-size:10px;color:#555;white-space:nowrap;}
-.site-list{flex:1 1 auto;min-height:0;overflow:auto;margin:0;list-style:none;
-           padding:7px 12px 10px 31px;display:flex;flex-direction:column;gap:5px;
-           position:relative;}
-.site-list::before{content:"";position:absolute;left:18px;top:11px;bottom:11px;width:2px;
-                   background:#cfcfcf;}
-.site-line{margin:0;padding:0;display:flex;flex:1 0 auto;min-height:0;}
-.site-item{display:flex;align-items:center;gap:9px;width:100%;height:100%;text-align:left;
-           border:1.4px solid var(--ink);border-radius:6px;background:#fff;color:var(--ink);
-           font:inherit;padding:5px 9px 6px;cursor:pointer;min-width:0;
-           box-shadow:0 1px 0 #e5e5e5;}
-.site-item:hover{background:#f0f0f0;}
-.site-no{flex:0 0 auto;width:24px;height:24px;border:1.6px solid var(--ink);border-radius:50%;
-         display:flex;align-items:center;justify-content:center;background:#fff;color:var(--ink);
-         font-family:"DejaVu Sans Mono","Noto Sans CJK SC",monospace;font-size:12.5px;
-         font-weight:900;line-height:1;margin-top:1px;}
-.site-txt{min-width:0;}
-.site-name{display:block;font-size:13.2px;font-weight:900;line-height:1.25;}
-.site-meta{display:block;font-size:10.3px;color:#444;line-height:1.38;margin-top:1px;}
-.site-item.is-hot{background:var(--ink);color:#fff;border-color:var(--ink);
-                  box-shadow:0 0 0 2px #999,0 1px 0 #999;}
-.site-item.is-hot .site-no{background:#fff;color:var(--ink);}
-.site-item.is-hot .site-meta{color:#e8e8e8;}
-.site-item.is-dim{opacity:.35;}
-.page-cards{flex:1 1 auto;min-height:0;overflow:auto;padding:7px 16px 11px;
-            display:flex;flex-direction:column;gap:5px;}
-.map-card{display:grid;grid-template-columns:32px minmax(0,1fr) auto;gap:9px;
-          align-items:center;border:1.4px solid var(--ink);border-radius:6px;background:#fff;
-          padding:5px 10px 6px;cursor:pointer;min-width:0;box-shadow:0 1px 0 #e5e5e5;
-          flex:1 0 auto;}
-.map-card:hover{background:#f0f0f0;}
-.map-card:focus-visible{outline:2px solid var(--ink);outline-offset:1px;}
-.mc-no{font-family:"DejaVu Sans Mono","Noto Sans CJK SC",monospace;font-size:11px;
-       font-weight:900;background:var(--ink);color:#fff;border-radius:4px;
-       padding:2px 0;text-align:center;}
-.mc-main{min-width:0;}
-.mc-title{margin:0;font-size:13.4px;font-weight:900;line-height:1.24;white-space:nowrap;
-          overflow:hidden;text-overflow:ellipsis;}
-.mc-build{font-size:10.5px;color:#333;line-height:1.35;margin-top:1px;overflow:hidden;
-          display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
-.mc-build .mc-lbl,.mc-arts .mc-lbl{font-family:"DejaVu Sans Mono","Noto Sans CJK SC",monospace;
-          font-size:9.2px;font-weight:800;color:#777;letter-spacing:.3px;margin-right:4px;}
-.mc-side{display:flex;flex-direction:column;align-items:flex-end;gap:2px;white-space:nowrap;}
-.mc-arts{display:flex;align-items:center;gap:3px;flex-wrap:nowrap;}
-.art-badge{font-family:"DejaVu Sans Mono","Noto Sans CJK SC",monospace;font-size:9.6px;
-           font-weight:900;border:1.2px solid var(--ink);border-radius:3px;padding:0 4px;
-           background:#f2f2f2;color:var(--ink);}
-.mc-open{font-size:9.8px;color:var(--ink);text-decoration:none;border-bottom:1px solid var(--ink);}
-.mc-open:hover{background:var(--ink);color:#fff;}
-.map-card.is-hot{background:var(--ink);color:#fff;border-color:var(--ink);
+.city-list{flex:1 1 auto;min-height:0;overflow:auto;padding:6px 12px 10px;
+           display:flex;flex-direction:column;gap:6px;}
+.zone-group{flex:0 0 auto;border:1.4px solid #9a9a9a;border-radius:7px;background:#fcfcfc;overflow:hidden;}
+.zone-head{display:flex;align-items:baseline;gap:7px;padding:3px 10px;background:#e9e9e9;
+           border-bottom:1px solid #bdbdbd;}
+.zone-name{font-size:11.4px;font-weight:900;letter-spacing:.2px;white-space:nowrap;}
+.zone-layer{font-family:"DejaVu Sans Mono","Noto Sans CJK SC",monospace;font-size:9.4px;
+            font-weight:800;color:#555;border:1px solid #999;border-radius:3px;
+            padding:0 4px;background:#fff;white-space:nowrap;}
+.zone-maps{font-size:9.6px;color:#555;overflow:hidden;text-overflow:ellipsis;
+           white-space:nowrap;min-width:0;}
+.zone-n{margin-left:auto;font-family:"DejaVu Sans Mono","Noto Sans CJK SC",monospace;
+        font-size:9.6px;color:#555;white-space:nowrap;}
+.zone-items{display:flex;flex-direction:column;gap:4px;padding:5px 6px 6px;}
+.fac-line{margin:0;padding:0;display:flex;min-width:0;}
+.fac-item{display:flex;align-items:flex-start;gap:8px;width:100%;text-align:left;
+          border:1.4px solid var(--ink);border-radius:6px;background:#fff;color:var(--ink);
+          font:inherit;padding:4px 8px 5px;cursor:pointer;min-width:0;
+          box-shadow:0 1px 0 #e5e5e5;}
+.fac-item:hover{background:#f0f0f0;}
+.fac-no{flex:0 0 auto;min-width:28px;height:22px;border:1.6px solid var(--ink);border-radius:11px;
+        display:flex;align-items:center;justify-content:center;background:#fff;color:var(--ink);
+        font-family:"DejaVu Sans Mono","Noto Sans CJK SC",monospace;font-size:11px;
+        font-weight:900;line-height:1;margin-top:1px;}
+.fac-txt{min-width:0;}
+.fac-top{display:flex;align-items:baseline;gap:5px;flex-wrap:wrap;}
+.fac-name{font-size:12.6px;font-weight:900;line-height:1.22;}
+.fac-kind{font-family:"DejaVu Sans Mono","Noto Sans CJK SC",monospace;font-size:9.2px;
+          font-weight:800;color:#444;border:1px solid #999;border-radius:3px;
+          padding:0 4px;white-space:nowrap;background:#f4f4f4;}
+.fac-problem{display:block;font-size:10.1px;color:#444;line-height:1.33;margin-top:1px;}
+.fac-parent{display:inline-block;font-family:"DejaVu Sans Mono","Noto Sans CJK SC",monospace;
+            font-size:9.2px;color:#333;border:1px dashed #888;border-radius:3px;
+            padding:0 4px;margin-top:2px;background:#f7f7f7;white-space:nowrap;}
+.fac-item.is-hot{background:var(--ink);color:#fff;border-color:var(--ink);
                  box-shadow:0 0 0 2px #999,0 1px 0 #999;}
-.map-card.is-hot .mc-no{background:#fff;color:var(--ink);}
-.map-card.is-hot .mc-title{color:#fff;}
-.map-card.is-hot .mc-build{color:#f0f0f0;}
-.map-card.is-hot .mc-build .mc-lbl,.map-card.is-hot .mc-arts .mc-lbl{color:#cfcfcf;}
-.map-card.is-hot .art-badge{background:#fff;color:var(--ink);border-color:#fff;}
-.map-card.is-hot .mc-open{color:#fff;border-bottom-color:#fff;}
-.map-card.is-dim{opacity:.33;}
-.map-stages{flex:0 0 auto;display:flex;align-items:center;gap:10px;padding:6px 20px 7px;
-            border-top:2px solid var(--ink);background:#fff;}
-.ms-title{font-size:10.6px;font-weight:900;white-space:nowrap;}
-.ms-title span{font-size:9.6px;font-weight:400;color:#666;}
-.ms-bar{display:flex;gap:6px;flex:1 1 auto;min-width:0;}
-.ms-seg{flex:1 1 0;min-width:0;border:1.4px solid var(--ink);border-radius:5px;
+.fac-item.is-hot .fac-no{background:#fff;color:var(--ink);}
+.fac-item.is-hot .fac-kind{color:#111;background:#fff;border-color:#fff;}
+.fac-item.is-hot .fac-problem{color:#e8e8e8;}
+.fac-item.is-hot .fac-parent{color:#f0f0f0;border-color:#bbb;background:transparent;}
+.fac-item.is-dim{opacity:.35;}
+.city-cards{flex:1 1 auto;min-height:0;overflow:auto;padding:6px 16px 10px;
+            display:flex;flex-direction:column;gap:5px;}
+.city-card{display:grid;grid-template-columns:32px minmax(0,1fr) auto;gap:9px;
+           align-items:center;border:1.4px solid var(--ink);border-radius:6px;background:#fff;
+           padding:4px 10px 5px;cursor:pointer;min-width:0;box-shadow:0 1px 0 #e5e5e5;
+           flex:1 0 auto;}
+.city-card:hover{background:#f0f0f0;}
+.city-card:focus-visible{outline:2px solid var(--ink);outline-offset:1px;}
+.cc-no{font-family:"DejaVu Sans Mono","Noto Sans CJK SC",monospace;font-size:12px;
+       font-weight:900;background:var(--ink);color:#fff;border-radius:4px;
+       padding:3px 0;text-align:center;}
+.cc-main{min-width:0;}
+.cc-title{margin:0;font-size:13.2px;font-weight:900;line-height:1.22;white-space:nowrap;
+          overflow:hidden;text-overflow:ellipsis;}
+.cc-build{font-size:10.4px;color:#333;line-height:1.33;margin-top:1px;overflow:hidden;
+          display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
+.cc-soft{font-size:9.8px;color:#555;line-height:1.3;margin-top:1px;overflow:hidden;
+         display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;}
+.cc-build .lbl,.cc-soft .lbl,.cc-arts .lbl{font-family:"DejaVu Sans Mono","Noto Sans CJK SC",monospace;
+         font-size:9.2px;font-weight:800;color:#777;letter-spacing:.3px;margin-right:4px;}
+.cc-side{display:flex;flex-direction:column;align-items:flex-end;gap:2px;white-space:nowrap;}
+.cc-arts{display:flex;align-items:center;gap:3px;}
+.art-badge{font-family:"DejaVu Sans Mono","Noto Sans CJK SC",monospace;font-size:11.5px;
+           font-weight:900;border:1.2px solid var(--ink);border-radius:50%;min-width:19px;
+           height:19px;display:inline-flex;align-items:center;justify-content:center;
+           background:#f2f2f2;color:var(--ink);padding:0 2px;}
+.cc-open{font-size:9.8px;color:var(--ink);text-decoration:none;border-bottom:1px solid var(--ink);}
+.cc-open:hover{background:var(--ink);color:#fff;}
+.city-card.is-hot{background:var(--ink);color:#fff;border-color:var(--ink);
+                  box-shadow:0 0 0 2px #999,0 1px 0 #999;}
+.city-card.is-hot .cc-no{background:#fff;color:var(--ink);}
+.city-card.is-hot .cc-title{color:#fff;}
+.city-card.is-hot .cc-build{color:#f0f0f0;}
+.city-card.is-hot .cc-soft{color:#dcdcdc;}
+.city-card.is-hot .cc-build .lbl,.city-card.is-hot .cc-soft .lbl,
+.city-card.is-hot .cc-arts .lbl{color:#cfcfcf;}
+.city-card.is-hot .art-badge{background:#fff;color:var(--ink);border-color:#fff;}
+.city-card.is-hot .cc-open{color:#fff;border-bottom-color:#fff;}
+.city-card.is-dim{opacity:.33;}
+.city-stages{flex:0 0 auto;display:flex;align-items:center;gap:10px;padding:6px 20px 7px;
+             border-top:2px solid var(--ink);background:#fff;}
+.cs-title{font-size:10.6px;font-weight:900;white-space:nowrap;}
+.cs-title span{font-size:9.6px;font-weight:400;color:#666;}
+.cs-bar{display:flex;gap:6px;flex:1 1 auto;min-width:0;}
+.cs-seg{flex:1 1 0;min-width:0;border:1.4px solid var(--ink);border-radius:5px;
         padding:2px 8px 2px;display:flex;align-items:baseline;gap:6px;white-space:nowrap;
         overflow:hidden;background:#fff;}
-.ms-seg b{font-size:10.8px;font-weight:900;}
-.ms-count{font-family:"DejaVu Sans Mono","Noto Sans CJK SC",monospace;font-size:11px;
+.cs-seg b{font-size:10.8px;font-weight:900;}
+.cs-count{font-family:"DejaVu Sans Mono","Noto Sans CJK SC",monospace;font-size:11px;
           font-weight:900;letter-spacing:.3px;}
-.ms-sub{font-size:9.7px;color:#555;overflow:hidden;text-overflow:ellipsis;}
-.ms-seg.l4{background:var(--ink);color:#fff;}
-.ms-seg.l4 .ms-sub{color:#dcdcdc;}
+.cs-sub{font-size:9.7px;color:#555;overflow:hidden;text-overflow:ellipsis;}
+.cs-seg.l1{background:#f3f3f3;border-style:dashed;}
+.cs-seg.l4{background:var(--ink);color:#fff;}
+.cs-seg.l4 .cs-sub{color:#dcdcdc;}
 @media (max-width:1280px){
-  .map-left{flex-basis:44%;}
-  .mh-title{display:none;}
-  .ms-sub{display:none;}
+  .city-left{flex-basis:45%;}
+  .ch-title{display:none;}
+  .cs-sub{display:none;}
 }
 
+/* ---------- 提示条 ---------- */
 /* ---------- 提示条 ---------- */
 .toast{position:fixed;left:50%;top:14px;transform:translateX(-50%) translateY(-8px);
        background:var(--ink);color:#fff;font-size:12.5px;font-weight:700;letter-spacing:.3px;
@@ -345,8 +370,8 @@ a.pg:hover{background:var(--ink);color:#fff;}
         <div class="views" role="group" aria-label="视图切换">
           <button type="button" class="view-btn is-on" data-view="material"
                   aria-pressed="true">物料清单</button>
-          <button type="button" class="view-btn" data-view="map"
-                  aria-pressed="false">工地地图</button>
+          <button type="button" class="view-btn" data-view="city"
+                  aria-pressed="false">城市地图</button>
         </div>
         <span class="view-hint" id="view-hint">视图：物料清单 · 12 件 × 24 检验点</span>
       </div>
@@ -422,33 +447,33 @@ a.pg:hover{background:var(--ink);color:#fff;}
     </aside>
   </main>
 
-  <section class="mapview" id="mapview" hidden aria-label="全书地图：工地十动作 ↔ 十页">
-    <div class="map-head">
-      <span class="mh-kicker" id="map-kicker">全书地图 · 工地十动作 ↔ 十页</span>
-      <span class="mh-title" id="map-title"></span>
-      <span class="mh-pair" id="map-pair">点左列动作 → 右列同号页卡高亮并滚入视野；点右列页卡 → 左列同号动作高亮</span>
+  <section class="cityview" id="cityview" hidden aria-label="城市地图：4 区 · 10 设施 ↔ 10 页">
+    <div class="city-head">
+      <span class="ch-kicker" id="city-kicker">城市地图 · 4 区 · 10 设施 ↔ 10 页</span>
+      <span class="ch-title" id="city-title"></span>
+      <span class="ch-pair" id="city-pair">点左列设施 → 右列同页页卡高亮并滚入视野；点右列页卡 → 左列同号设施高亮</span>
     </div>
-    <div class="map-body">
-      <section class="map-col map-left" aria-label="左列：工地十动作（比喻层）">
-        <div class="mv-head">
-          <b>① 工地 · 我们做了什么动作</b>
-          <span class="mv-note">比喻层：为什么按这个顺序</span>
-          <span class="mv-n" id="map-action-n">10 个动作</span>
+    <div class="city-body">
+      <section class="city-col city-left" aria-label="左列：按 4 个区分组的 10 个设施">
+        <div class="cv-head">
+          <b>① 城市 · 按 4 个区分组的 10 个设施</b>
+          <span class="cv-note">设施 = 运行单元；楼内房间不单独占楼</span>
+          <span class="cv-n" id="city-fac-n">10 设施 · 4 区</span>
         </div>
-        <ol class="site-list" id="site-timeline"></ol>
+        <div class="city-list" id="city-list"></div>
       </section>
-      <section class="map-col map-right" aria-label="右列：十页页卡（交付层）">
-        <div class="mv-head">
+      <section class="city-col city-right" aria-label="右列：十页页卡（交付层）">
+        <div class="cv-head">
           <b>② 我们的页面 · 这一页造出什么</b>
-          <span class="mv-note">交付层：盖完应该看到什么</span>
-          <span class="mv-n" id="map-page-n">10 页 · 12 件交付物</span>
+          <span class="cv-note">交付层：盖完应该看到什么</span>
+          <span class="cv-n" id="city-page-n">10 页 · 12 件交付物</span>
         </div>
-        <div class="page-cards" id="page-cards"></div>
+        <div class="city-cards" id="city-cards"></div>
       </section>
     </div>
-    <div class="map-stages" id="map-stages" aria-label="四阶段成熟度（只读口径，不参与勾选）">
-      <span class="ms-title">四阶段成熟度 <span>· 口径同 maturity/stages.json · 不参与勾选</span></span>
-      <div class="ms-bar" id="ms-bar"></div>
+    <div class="city-stages" id="city-stages" aria-label="城市四阶段（只读口径，不参与勾选）">
+      <span class="cs-title">城市四阶段 <span>· D44 口径 · 不参与勾选</span></span>
+      <div class="cs-bar" id="cs-bar"></div>
     </div>
   </section>
 </div>
@@ -847,31 +872,490 @@ a.pg:hover{background:var(--ink);color:#fff;}
   ],
   "rerun": "python3 manual/shots/render_completeness.py（海报）· python3 manual/shots/build_explorer.py --shots（交互页+截图）"
 }</script>
-<script id="map-data" type="application/json">{
-  "schema": "explorer-map/1",
-  "title": "全书地图 · 我们不是在发明系统，是在把一栋毛坯房盖到能开门接客",
-  "kicker": "全书地图 · 一页图看懂十页",
-  "one_liner": "先立骨架、再通水电、最后精装与安防——软件也是这么盖起来的。",
+<script id="city-data" type="application/json">{
+  "schema": "explorer-city/1",
+  "decision": "D45",
+  "title": "L1 城市地图 · 三座楼、一块场地与十二件交付物",
+  "kicker": "D45 · 城市隐喻样例 · 一级「造」· 真楼嵌套",
+  "one_liner": "我们不是在发明系统，是在一片空地上，为问题一座一座盖设施、一段一段接管网。",
+  "note": "单源：四区 / 10 件设施（3 座楼 + 1 块场地 + 5 个楼内房间 + 1 条流线）/ 12 件交付物 / 11 条道路 / 23 页标题都只改本文件；重跑渲染脚本会重建 city-map.html 与 titles-v2.md。artifacts 用 1–12，对应 completeness/v2 的 ①–⑫（渲染时转圈号）。流线 P8 用 flow_path + flow_width 定位，box 是由它派生的外接框（不是独立地块）。",
   "sources": {
-    "rows": "manual/map/data.json（page / site_action / metaphor / build）",
+    "city": "manual/city/data.json（4 区 / 10 设施 / 真楼嵌套 / page_id ↔ 页码）",
     "titles": "manual/page-00.md – page-09.md 的 H1（运行期读取，不手写）",
-    "artifacts": "manual/completeness/v2/data.json 的 pages 字段反转（page → 长出哪些交付物）",
-    "stages": "manual/maturity/stages.json（artifacts_grown 累积件数）"
+    "artifacts": "manual/completeness/v2/data.json 的 1–12 件交付物（名字逐字取它）",
+    "stages": "manual/city/stages-city.json"
   },
+  "zones": [
+    {
+      "id": "municipal",
+      "name": "市政配套区",
+      "layer": "地基",
+      "level": "L0",
+      "maps_to": "环境准备（工具 / 依赖 / 端口）",
+      "facilities": [
+        {
+          "index": 0,
+          "no": "P0",
+          "name": "市政配套 · 场地平整",
+          "kind": "场地",
+          "soft": "环境准备：工具 / 依赖 / 端口",
+          "problem": "没工具、没依赖、端口还被占，怎么开工？",
+          "solution": "装齐工具依赖，腾出 3307 / 8000 / 8081",
+          "zone": "municipal",
+          "parent": null,
+          "page": "第 0 页",
+          "page_no": 0,
+          "page_id": "page-00",
+          "artifacts": [
+            {
+              "no": 1,
+              "name": "开发机环境（工具 + venv + 端口）"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "storage",
+      "name": "仓储区",
+      "layer": "数据层",
+      "level": "L1",
+      "maps_to": "数据（容器 / 库表 / 数据行）",
+      "facilities": [
+        {
+          "index": 1,
+          "no": "P1",
+          "name": "数据仓库大楼",
+          "kind": "楼",
+          "soft": "MySQL 容器 lab-mysql（空库）:3307",
+          "problem": "连仓库都还没有，数据往哪儿放？",
+          "solution": "起一个只开给本机 3307 的空库容器",
+          "zone": "storage",
+          "parent": null,
+          "page": "第 1 页",
+          "page_no": 1,
+          "page_id": "page-01",
+          "artifacts": [
+            {
+              "no": 2,
+              "name": "容器 `lab-mysql`"
+            }
+          ]
+        },
+        {
+          "index": 2,
+          "no": "P2",
+          "name": "仓库分区与入库通道",
+          "kind": "货架",
+          "soft": "dw + 5 张表 + 灌 115 行",
+          "problem": "空库空空如也，来了问题无货可取？",
+          "solution": "导入 dw.sql：隔 5 个分区、灌 115 行库存",
+          "zone": "storage",
+          "parent": "P1",
+          "page": "第 2 页",
+          "page_no": 2,
+          "page_id": "page-02",
+          "artifacts": [
+            {
+              "no": 3,
+              "name": "库 `dw` + 5 张表"
+            },
+            {
+              "no": 4,
+              "name": "数据 115 行"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "service",
+      "name": "服务区",
+      "layer": "服务层",
+      "level": "L1",
+      "maps_to": "服务（进程 / 端点 / 函数 / 执行链 / 流）",
+      "facilities": [
+        {
+          "index": 3,
+          "no": "P3",
+          "name": "查询服务中心",
+          "kind": "楼",
+          "soft": "uvicorn 进程 :8000",
+          "problem": "货备好了，谁来常驻值班接问题？",
+          "solution": "把 uvicorn 跑在 8000，先让 /health 回 ok",
+          "zone": "service",
+          "parent": null,
+          "page": "第 3 页",
+          "page_no": 3,
+          "page_id": "page-03",
+          "artifacts": [
+            {
+              "no": 5,
+              "name": "服务进程"
+            }
+          ]
+        },
+        {
+          "index": 4,
+          "no": "P4",
+          "name": "对外服务窗口",
+          "kind": "窗口",
+          "soft": "POST /api/query（端点）",
+          "problem": "问题从哪儿递进系统？",
+          "solution": "开一个窗口收 JSON，先把收发修通",
+          "zone": "service",
+          "parent": "P3",
+          "page": "第 4 页",
+          "page_no": 4,
+          "page_id": "page-04",
+          "artifacts": [
+            {
+              "no": 6,
+              "name": "端点 `POST /api/query`"
+            }
+          ]
+        },
+        {
+          "index": 5,
+          "no": "P5",
+          "name": "前台接待台",
+          "kind": "柜台",
+          "soft": "extract_keywords（函数）",
+          "problem": "一句话里哪几个词才算数？",
+          "solution": "纯字符串规则抽出「地区 + 指标」",
+          "zone": "service",
+          "parent": "P3",
+          "page": "第 5 页",
+          "page_no": 5,
+          "page_id": "page-05",
+          "artifacts": [
+            {
+              "no": 7,
+              "name": "函数 `extract_keywords`"
+            }
+          ]
+        },
+        {
+          "index": 6,
+          "no": "P6",
+          "name": "办事指南与规则室",
+          "kind": "楼内房间",
+          "soft": "契约 CONTRACT + build_sql（函数）",
+          "problem": "凭什么规矩把关键词拼成 SQL？",
+          "solution": "照契约拼出带 JOIN 的 SELECT（只 print）",
+          "zone": "service",
+          "parent": "P3",
+          "page": "第 6 页",
+          "page_no": 6,
+          "page_id": "page-06",
+          "artifacts": [
+            {
+              "no": 8,
+              "name": "函数 `build_sql` + 契约 `CONTRACT`"
+            }
+          ]
+        },
+        {
+          "index": 7,
+          "no": "P7",
+          "name": "取货通道",
+          "kind": "楼内通道",
+          "soft": "pymysql 真执行 → 41099.5",
+          "problem": "SQL 拼好了，谁去仓库真取货？",
+          "solution": "pymysql 把 SQL 交给 MySQL:3307 执行",
+          "zone": "service",
+          "parent": "P3",
+          "page": "第 7 页",
+          "page_no": 7,
+          "page_id": "page-07",
+          "artifacts": [
+            {
+              "no": 9,
+              "name": "执行链路"
+            }
+          ]
+        },
+        {
+          "index": 8,
+          "no": "P8",
+          "name": "传送带",
+          "kind": "流道",
+          "soft": "SSE /api/stream（12 条 progress）",
+          "problem": "答案一口气砸下来，中间在干什么看不见？",
+          "solution": "12 条 progress 一条条推，最后 1 条 result",
+          "zone": "service",
+          "parent": "P3",
+          "page": "第 8 页",
+          "page_no": 8,
+          "page_id": "page-08",
+          "artifacts": [
+            {
+              "no": 10,
+              "name": "端点 `GET /api/stream`"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "portal",
+      "name": "门户区",
+      "layer": "入口层",
+      "level": "L1",
+      "maps_to": "入口（nginx / 页面 / 端到端链路）",
+      "facilities": [
+        {
+          "index": 9,
+          "no": "P9",
+          "name": "城市门户 + 道路网",
+          "kind": "门户",
+          "soft": "nginx + 页面 + 端到端链路",
+          "problem": "市民怎么从城门口走到服务中心？",
+          "solution": "8081 反代 8000，页面用 EventSource 接流",
+          "zone": "portal",
+          "parent": null,
+          "page": "第 9 页",
+          "page_no": 9,
+          "page_id": "page-09",
+          "artifacts": [
+            {
+              "no": 11,
+              "name": "容器 `lab-nginx` + 页面"
+            },
+            {
+              "no": 12,
+              "name": "端到端链路"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "facilities": [
+    {
+      "index": 0,
+      "no": "P0",
+      "name": "市政配套 · 场地平整",
+      "kind": "场地",
+      "soft": "环境准备：工具 / 依赖 / 端口",
+      "problem": "没工具、没依赖、端口还被占，怎么开工？",
+      "solution": "装齐工具依赖，腾出 3307 / 8000 / 8081",
+      "zone": "municipal",
+      "parent": null,
+      "page": "第 0 页",
+      "page_no": 0,
+      "page_id": "page-00",
+      "artifacts": [
+        {
+          "no": 1,
+          "name": "开发机环境（工具 + venv + 端口）"
+        }
+      ]
+    },
+    {
+      "index": 1,
+      "no": "P1",
+      "name": "数据仓库大楼",
+      "kind": "楼",
+      "soft": "MySQL 容器 lab-mysql（空库）:3307",
+      "problem": "连仓库都还没有，数据往哪儿放？",
+      "solution": "起一个只开给本机 3307 的空库容器",
+      "zone": "storage",
+      "parent": null,
+      "page": "第 1 页",
+      "page_no": 1,
+      "page_id": "page-01",
+      "artifacts": [
+        {
+          "no": 2,
+          "name": "容器 `lab-mysql`"
+        }
+      ]
+    },
+    {
+      "index": 2,
+      "no": "P2",
+      "name": "仓库分区与入库通道",
+      "kind": "货架",
+      "soft": "dw + 5 张表 + 灌 115 行",
+      "problem": "空库空空如也，来了问题无货可取？",
+      "solution": "导入 dw.sql：隔 5 个分区、灌 115 行库存",
+      "zone": "storage",
+      "parent": "P1",
+      "page": "第 2 页",
+      "page_no": 2,
+      "page_id": "page-02",
+      "artifacts": [
+        {
+          "no": 3,
+          "name": "库 `dw` + 5 张表"
+        },
+        {
+          "no": 4,
+          "name": "数据 115 行"
+        }
+      ]
+    },
+    {
+      "index": 3,
+      "no": "P3",
+      "name": "查询服务中心",
+      "kind": "楼",
+      "soft": "uvicorn 进程 :8000",
+      "problem": "货备好了，谁来常驻值班接问题？",
+      "solution": "把 uvicorn 跑在 8000，先让 /health 回 ok",
+      "zone": "service",
+      "parent": null,
+      "page": "第 3 页",
+      "page_no": 3,
+      "page_id": "page-03",
+      "artifacts": [
+        {
+          "no": 5,
+          "name": "服务进程"
+        }
+      ]
+    },
+    {
+      "index": 4,
+      "no": "P4",
+      "name": "对外服务窗口",
+      "kind": "窗口",
+      "soft": "POST /api/query（端点）",
+      "problem": "问题从哪儿递进系统？",
+      "solution": "开一个窗口收 JSON，先把收发修通",
+      "zone": "service",
+      "parent": "P3",
+      "page": "第 4 页",
+      "page_no": 4,
+      "page_id": "page-04",
+      "artifacts": [
+        {
+          "no": 6,
+          "name": "端点 `POST /api/query`"
+        }
+      ]
+    },
+    {
+      "index": 5,
+      "no": "P5",
+      "name": "前台接待台",
+      "kind": "柜台",
+      "soft": "extract_keywords（函数）",
+      "problem": "一句话里哪几个词才算数？",
+      "solution": "纯字符串规则抽出「地区 + 指标」",
+      "zone": "service",
+      "parent": "P3",
+      "page": "第 5 页",
+      "page_no": 5,
+      "page_id": "page-05",
+      "artifacts": [
+        {
+          "no": 7,
+          "name": "函数 `extract_keywords`"
+        }
+      ]
+    },
+    {
+      "index": 6,
+      "no": "P6",
+      "name": "办事指南与规则室",
+      "kind": "楼内房间",
+      "soft": "契约 CONTRACT + build_sql（函数）",
+      "problem": "凭什么规矩把关键词拼成 SQL？",
+      "solution": "照契约拼出带 JOIN 的 SELECT（只 print）",
+      "zone": "service",
+      "parent": "P3",
+      "page": "第 6 页",
+      "page_no": 6,
+      "page_id": "page-06",
+      "artifacts": [
+        {
+          "no": 8,
+          "name": "函数 `build_sql` + 契约 `CONTRACT`"
+        }
+      ]
+    },
+    {
+      "index": 7,
+      "no": "P7",
+      "name": "取货通道",
+      "kind": "楼内通道",
+      "soft": "pymysql 真执行 → 41099.5",
+      "problem": "SQL 拼好了，谁去仓库真取货？",
+      "solution": "pymysql 把 SQL 交给 MySQL:3307 执行",
+      "zone": "service",
+      "parent": "P3",
+      "page": "第 7 页",
+      "page_no": 7,
+      "page_id": "page-07",
+      "artifacts": [
+        {
+          "no": 9,
+          "name": "执行链路"
+        }
+      ]
+    },
+    {
+      "index": 8,
+      "no": "P8",
+      "name": "传送带",
+      "kind": "流道",
+      "soft": "SSE /api/stream（12 条 progress）",
+      "problem": "答案一口气砸下来，中间在干什么看不见？",
+      "solution": "12 条 progress 一条条推，最后 1 条 result",
+      "zone": "service",
+      "parent": "P3",
+      "page": "第 8 页",
+      "page_no": 8,
+      "page_id": "page-08",
+      "artifacts": [
+        {
+          "no": 10,
+          "name": "端点 `GET /api/stream`"
+        }
+      ]
+    },
+    {
+      "index": 9,
+      "no": "P9",
+      "name": "城市门户 + 道路网",
+      "kind": "门户",
+      "soft": "nginx + 页面 + 端到端链路",
+      "problem": "市民怎么从城门口走到服务中心？",
+      "solution": "8081 反代 8000，页面用 EventSource 接流",
+      "zone": "portal",
+      "parent": null,
+      "page": "第 9 页",
+      "page_no": 9,
+      "page_id": "page-09",
+      "artifacts": [
+        {
+          "no": 11,
+          "name": "容器 `lab-nginx` + 页面"
+        },
+        {
+          "no": 12,
+          "name": "端到端链路"
+        }
+      ]
+    }
+  ],
   "pages": [
     {
       "page": "page-00",
       "no": 0,
       "title": "第 0 页 · 开课前准备",
-      "site_action": "三通一平",
-      "metaphor": "开工前先三通一平：Docker 通、依赖通、端口通，场地干净",
-      "build": "装 Docker/uv/Node/curl + make install + make doctor",
+      "solution": "装齐工具依赖，腾出 3307 / 8000 / 8081",
+      "soft": "环境准备：工具 / 依赖 / 端口",
+      "facility": {
+        "no": "P0",
+        "name": "市政配套 · 场地平整"
+      },
       "artifacts": [
         {
           "no": 1,
-          "id": "env",
-          "name": "开发机环境（工具 + venv + 端口）",
-          "kind": "工具 + venv + 端口"
+          "name": "开发机环境（工具 + venv + 端口）"
         }
       ]
     },
@@ -879,15 +1363,16 @@ a.pg:hover{background:var(--ink);color:#fff;}
       "page": "page-01",
       "no": 1,
       "title": "第 1 页 · 创建 MySQL 容器（空库）",
-      "site_action": "打地基",
-      "metaphor": "地基一浇，后面所有重量都压在它上面",
-      "build": "docker run 起一个空库，先不导入数据",
+      "solution": "起一个只开给本机 3307 的空库容器",
+      "soft": "MySQL 容器 lab-mysql（空库）:3307",
+      "facility": {
+        "no": "P1",
+        "name": "数据仓库大楼"
+      },
       "artifacts": [
         {
           "no": 2,
-          "id": "mysql-container",
-          "name": "容器 `lab-mysql`",
-          "kind": "容器"
+          "name": "容器 `lab-mysql`"
         }
       ]
     },
@@ -895,21 +1380,20 @@ a.pg:hover{background:var(--ink);color:#fff;}
       "page": "page-02",
       "no": 2,
       "title": "第 2 页 · 导入 dw.sql：建表灌数据",
-      "site_action": "隔墙 + 材料进场",
-      "metaphor": "先隔出房间，再把材料搬进去",
-      "build": "导入 dw.sql：5 张表 + 115 行",
+      "solution": "导入 dw.sql：隔 5 个分区、灌 115 行库存",
+      "soft": "dw + 5 张表 + 灌 115 行",
+      "facility": {
+        "no": "P2",
+        "name": "仓库分区与入库通道"
+      },
       "artifacts": [
         {
           "no": 3,
-          "id": "dw-tables",
-          "name": "库 `dw` + 5 张表",
-          "kind": "数据库对象"
+          "name": "库 `dw` + 5 张表"
         },
         {
           "no": 4,
-          "id": "dw-data",
-          "name": "数据 115 行",
-          "kind": "数据行"
+          "name": "数据 115 行"
         }
       ]
     },
@@ -917,15 +1401,16 @@ a.pg:hover{background:var(--ink);color:#fff;}
       "page": "page-03",
       "no": 3,
       "title": "第 3 页 · 让服务在 8000 端口回答问题",
-      "site_action": "装锅炉（常驻）",
-      "metaphor": "锅炉一点着火就不熄——服务进程就是那台常驻锅炉",
-      "build": "最小 HTTP 服务 /health",
+      "solution": "把 uvicorn 跑在 8000，先让 /health 回 ok",
+      "soft": "uvicorn 进程 :8000",
+      "facility": {
+        "no": "P3",
+        "name": "查询服务中心"
+      },
       "artifacts": [
         {
           "no": 5,
-          "id": "service",
-          "name": "服务进程",
-          "kind": "进程（uvicorn）"
+          "name": "服务进程"
         }
       ]
     },
@@ -933,15 +1418,16 @@ a.pg:hover{background:var(--ink);color:#fff;}
       "page": "page-04",
       "no": 4,
       "title": "第 4 页 · 加一个能收问题的接口",
-      "site_action": "装门铃/对讲",
-      "metaphor": "门口先装对讲机：外面喊话，屋里听得见",
-      "build": "POST /api/query 能收问题",
+      "solution": "开一个窗口收 JSON，先把收发修通",
+      "soft": "POST /api/query（端点）",
+      "facility": {
+        "no": "P4",
+        "name": "对外服务窗口"
+      },
       "artifacts": [
         {
           "no": 6,
-          "id": "api-query",
-          "name": "端点 `POST /api/query`",
-          "kind": "HTTP 端点"
+          "name": "端点 `POST /api/query`"
         }
       ]
     },
@@ -949,15 +1435,16 @@ a.pg:hover{background:var(--ink);color:#fff;}
       "page": "page-05",
       "no": 5,
       "title": "第 5 页 · 从一句话里抽出关键词",
-      "site_action": "装感应器（耳朵）",
-      "metaphor": "听见“华北销售额”，能分辨出“华北”和“销售额”",
-      "build": "extract_keywords",
+      "solution": "纯字符串规则抽出「地区 + 指标」",
+      "soft": "extract_keywords（函数）",
+      "facility": {
+        "no": "P5",
+        "name": "前台接待台"
+      },
       "artifacts": [
         {
           "no": 7,
-          "id": "keywords-fn",
-          "name": "函数 `extract_keywords`",
-          "kind": "纯函数（纯字符串规则）"
+          "name": "函数 `extract_keywords`"
         }
       ]
     },
@@ -965,15 +1452,16 @@ a.pg:hover{background:var(--ink);color:#fff;}
       "page": "page-06",
       "no": 6,
       "title": "第 6 页 · 照契约生成那条带 JOIN 的 SQL",
-      "site_action": "照图纸接线",
-      "metaphor": "接线不能凭手感，得照图纸；契约是图纸，SQL 是接出来的线",
-      "build": "契约 + build_sql（只 print）",
+      "solution": "照契约拼出带 JOIN 的 SELECT（只 print）",
+      "soft": "契约 CONTRACT + build_sql（函数）",
+      "facility": {
+        "no": "P6",
+        "name": "办事指南与规则室"
+      },
       "artifacts": [
         {
           "no": 8,
-          "id": "sql-fn",
-          "name": "函数 `build_sql` + 契约 `CONTRACT`",
-          "kind": "函数 + 契约"
+          "name": "函数 `build_sql` + 契约 `CONTRACT`"
         }
       ]
     },
@@ -981,15 +1469,16 @@ a.pg:hover{background:var(--ink);color:#fff;}
       "page": "page-07",
       "no": 7,
       "title": "第 7 页 · 把 SQL 真交给 MySQL",
-      "site_action": "接市政水管 + 装水表",
-      "metaphor": "接上市政管网才真的有水；水表只许你量，不许倒灌",
-      "build": "pymysql 真执行 → 41099.5",
+      "solution": "pymysql 把 SQL 交给 MySQL:3307 执行",
+      "soft": "pymysql 真执行 → 41099.5",
+      "facility": {
+        "no": "P7",
+        "name": "取货通道"
+      },
       "artifacts": [
         {
           "no": 9,
-          "id": "exec-chain",
-          "name": "执行链路",
-          "kind": "运行时链路"
+          "name": "执行链路"
         }
       ]
     },
@@ -997,15 +1486,16 @@ a.pg:hover{background:var(--ink);color:#fff;}
       "page": "page-08",
       "no": 8,
       "title": "第 8 页 · 让答案一条条推送出来（SSE）",
-      "site_action": "装水龙头，一滴一滴",
-      "metaphor": "水是一滴一滴出来的，不是一桶砸下来",
-      "build": "SSE /api/stream（12 progress）",
+      "solution": "12 条 progress 一条条推，最后 1 条 result",
+      "soft": "SSE /api/stream（12 条 progress）",
+      "facility": {
+        "no": "P8",
+        "name": "传送带"
+      },
       "artifacts": [
         {
           "no": 10,
-          "id": "stream-endpoint",
-          "name": "端点 `GET /api/stream`",
-          "kind": "HTTP 端点（SSE）"
+          "name": "端点 `GET /api/stream`"
         }
       ]
     },
@@ -1013,21 +1503,20 @@ a.pg:hover{background:var(--ink);color:#fff;}
       "page": "page-09",
       "no": 9,
       "title": "第 9 页 · 给浏览器一个入口：nginx 反代 + 一个页面",
-      "site_action": "装窗户 + 交钥匙",
-      "metaphor": "屋里再漂亮，没窗户外面也看不见；验收只做一件事：开门、问一句、数出来",
-      "build": "nginx + 页面，浏览器出数",
+      "solution": "8081 反代 8000，页面用 EventSource 接流",
+      "soft": "nginx + 页面 + 端到端链路",
+      "facility": {
+        "no": "P9",
+        "name": "城市门户 + 道路网"
+      },
       "artifacts": [
         {
           "no": 11,
-          "id": "nginx-page",
-          "name": "容器 `lab-nginx` + 页面",
-          "kind": "容器 + 静态页"
+          "name": "容器 `lab-nginx` + 页面"
         },
         {
           "no": 12,
-          "id": "e2e-chain",
-          "name": "端到端链路",
-          "kind": "端到端链路"
+          "name": "端到端链路"
         }
       ]
     }
@@ -1035,37 +1524,34 @@ a.pg:hover{background:var(--ink);color:#fff;}
   "stages": [
     {
       "level": "L1",
-      "name": "毛坯房",
-      "count": 0,
-      "total": 12,
-      "live": "能站人不能住",
-      "software": "能站人：拓扑齐全，12 件全是壳"
+      "name": "荒地工地",
+      "count": "0/10",
+      "sub": "只有围挡和毛坯设施，能站人不能用",
+      "desc": "一件一件把骨架造出来：每页一个设施，看到它能跑。"
     },
     {
       "level": "L2",
-      "name": "通水通电",
-      "count": 5,
-      "total": 12,
-      "live": "能住",
-      "software": "能住：管线进墙、水箱蓄水、锅炉烧热"
+      "name": "通水电网",
+      "count": "4 页",
+      "sub": "楼立起来、水电管网接通",
+      "desc": "把实验室替身换成真件：数据 / 契约 / 执行器 / 编排各换一处。"
     },
     {
       "level": "L3",
-      "name": "智能家居",
-      "count": 8,
-      "total": 12,
-      "live": "好用",
-      "software": "好用：灯亮、网通、听懂话"
+      "name": "智慧城市",
+      "count": "4 页",
+      "sub": "城市大脑上线：会看、会算、会自查",
+      "desc": "机器输出不确定，先预注册判据再让错误发生。"
     },
     {
       "level": "L4",
-      "name": "物业安防",
-      "count": 12,
-      "total": 12,
-      "live": "敢交付",
-      "software": "敢交付：只读、拍下、盯得住"
+      "name": "城市安防",
+      "count": "5 页",
+      "sub": "门禁、城管、监控、应急都到位，敢交付",
+      "desc": "制造故障与越权，证明防线有效。"
     }
-  ]
+  ],
+  "stages_source": "manual/city/stages-city.json"
 }</script>
 <script>
 (function () {
@@ -1095,10 +1581,12 @@ a.pg:hover{background:var(--ink);color:#fff;}
   if (!E2E_ART) { E2E_ART = ARTS[ARTS.length - 1]; }
   var TOTAL_CHECKS = ARTS.reduce(function (sum, art) { return sum + art.checkpoints.length; }, 0);
 
-  // 全书地图（工地十动作 ↔ 十页）：数据由生成器从 map/data.json + page-0X.md 的 H1 +
-  // v2 data 的 pages 反转 + maturity/stages.json 合成后内联；页标题不在这里手写。
-  var MAP = JSON.parse(document.getElementById('map-data').textContent);
-  var MAP_PAGES = MAP.pages || [];
+  // 城市地图（4 区 / 10 设施 ↔ 10 页）：数据由生成器从 manual/city/data.json + page-0X.md 的 H1
+  // + v2 data 的交付物名 + D44 四阶段文字合成后内联；页标题不在这里手写。
+  var CITY = JSON.parse(document.getElementById('city-data').textContent);
+  var CITY_ZONES = CITY.zones || [];
+  var CITY_FACS = CITY.facilities || [];
+  var CITY_PAGES = CITY.pages || [];
 
   // AON 导航的活动 → 交付物 id（由生成器从 flow.mmd 映射后写进 data-arts）
   var ACTIVITY_ARTS = {};
@@ -1117,9 +1605,9 @@ a.pg:hover{background:var(--ink);color:#fff;}
     } catch (err) { return false; }
   })();
 
-  // 唯一可变状态：view（物料清单 / 工地地图）、mode（答案态 / 空白态）、
-  // checks（检验点级真源）、open（打开的卡片）、navhl、mapSel（地图选中的页）
-  var state = { view: 'material', mode: 'answer', checks: {}, open: [], navhl: null, mapSel: null };
+  // 唯一可变状态：view（物料清单 / 城市地图）、mode（答案态 / 空白态）、
+  // checks（检验点级真源）、open（打开的卡片）、navhl、citySel（城市地图选中的页）
+  var state = { view: 'material', mode: 'answer', checks: {}, open: [], navhl: null, citySel: null };
 
   function esc(value) {
     return String(value === null || value === undefined ? '' : value)
@@ -1453,99 +1941,121 @@ a.pg:hover{background:var(--ink);color:#fff;}
     renderNavState();
   }
 
-  // ---------- 全书地图视图（工地十动作 ↔ 十页） ----------
-  function siteItemHTML(page, index) {
-    var tip = '工地动作 ' + index + ' · ' + page.site_action + ' · 比喻：' + page.metaphor +
-      ' · 点它高亮第 ' + index + ' 页页卡';
-    return '<li class="site-line"><button type="button" class="site-item"' +
-      ' data-map-action="' + index + '" data-page="' + esc(page.page) + '"' +
-      ' aria-pressed="false" title="' + esc(tip) + '">' +
-      '<span class="site-no">' + index + '</span>' +
-      '<span class="site-txt"><span class="site-name">' + esc(page.site_action) + '</span>' +
-      '<span class="site-meta">' + esc(page.metaphor) + '</span></span></button></li>';
+  // ---------- 城市地图视图（4 区 · 10 设施 ↔ 10 页） ----------
+  function circleNo(number) {
+    var n = Number(number);
+    return n >= 1 && n <= 20 ? String.fromCharCode(0x2460 + n - 1) : '#' + pad2(n);
   }
 
-  function mapCardHTML(page, index) {
+  function facilityItemHTML(fac) {
+    var tip = fac.no + ' ' + fac.name + ' · ' + fac.kind + ' · 问题：' + fac.problem +
+      ' · 点它高亮第 ' + fac.page_no + ' 页页卡';
+    var parent = fac.parent
+      ? '<span class="fac-parent">楼内 · 属于 ' + esc(fac.parent) + '</span>'
+      : '';
+    return '<li class="fac-line"><button type="button" class="fac-item"' +
+      ' data-city-fac="' + fac.index + '" data-facility="' + esc(fac.no) +
+      '" data-page="' + esc(fac.page) + '" aria-pressed="false" title="' + esc(tip) + '">' +
+      '<span class="fac-no">' + esc(fac.no) + '</span>' +
+      '<span class="fac-txt"><span class="fac-top"><span class="fac-name">' + esc(fac.name) +
+      '</span><span class="fac-kind">' + esc(fac.kind) + '</span></span>' +
+      '<span class="fac-problem">' + esc(fac.problem) + '</span>' + parent +
+      '</span></button></li>';
+  }
+
+  function zoneGroupHTML(zone) {
+    var items = (zone.facilities || []).map(facilityItemHTML).join('');
+    return '<section class="zone-group" data-city-zone="' + esc(zone.id) + '">' +
+      '<div class="zone-head"><span class="zone-name">' + esc(zone.name) + '</span>' +
+      '<span class="zone-layer">' + esc(zone.layer + ' · ' + zone.level) + '</span>' +
+      '<span class="zone-maps">' + esc(zone.maps_to) + '</span>' +
+      '<span class="zone-n">' + (zone.facilities || []).length + ' 设施</span></div>' +
+      '<div class="zone-items">' + items + '</div></section>';
+  }
+
+  function cityCardHTML(page) {
     var badges = (page.artifacts || []).map(function (art) {
-      var tip = '#' + pad2(art.no) + ' ' + String(art.name).replace(/`/g, '') +
-        ' · ' + String(art.kind).replace(/`/g, '');
+      var tip = '#' + pad2(art.no) + ' ' + String(art.name).replace(/`/g, '');
       return '<span class="art-badge" data-art-no="' + esc(art.no) + '" title="' + esc(tip) +
-        '">#' + pad2(art.no) + '</span>';
+        '">' + circleNo(art.no) + '</span>';
     }).join('');
-    var tipCard = '第 ' + index + ' 页 · ' + page.title + ' · 该页长出 ' +
-      (page.artifacts || []).length + ' 件交付物 · 点它高亮左列同号动作';
-    return '<article class="map-card" data-map-page="' + esc(page.page) + '" data-page-no="' +
-      index + '" tabindex="0" role="button" aria-pressed="false" title="' + esc(tipCard) + '">' +
-      '<span class="mc-no">#' + pad2(index) + '</span>' +
-      '<div class="mc-main"><h3 class="mc-title">' + esc(page.title) + '</h3>' +
-      '<div class="mc-build"><span class="mc-lbl">这一页造什么</span>' +
-      rich(page.build) + '</div></div>' +
-      '<div class="mc-side"><div class="mc-arts"><span class="mc-lbl">长出</span>' +
-      badges + '</div><a class="mc-open" href="../' + esc(page.page) + '.md" title="打开 ' +
+    var tipCard = '城市页卡 ' + page.no + ' · ' + page.title + ' · 这一页长出 ' +
+      (page.artifacts || []).length + ' 件交付物 · 点它高亮左列同号设施';
+    return '<article class="city-card" data-city-page="' + esc(page.page) + '" data-page-no="' +
+      page.no + '" tabindex="0" role="button" aria-pressed="false" title="' + esc(tipCard) + '">' +
+      '<span class="cc-no">#' + pad2(page.no) + '</span>' +
+      '<div class="cc-main"><h3 class="cc-title">' + esc(page.title) + '</h3>' +
+      '<div class="cc-build"><span class="lbl">这一页造什么</span>' + rich(page.solution) + '</div>' +
+      '<div class="cc-soft"><span class="lbl">软件对应</span>' + rich(page.soft) + '</div></div>' +
+      '<div class="cc-side"><div class="cc-arts"><span class="lbl">长出</span>' + badges +
+      '</div><a class="cc-open" href="../' + esc(page.page) + '.md" title="打开 ' +
       esc(page.page) + '.md（相对路径 ../）">打开这一页</a></div></article>';
   }
 
-  function stageHTML(stage) {
-    return '<div class="ms-seg' + (stage.level === 'L4' ? ' l4' : '') + '" data-stage="' +
-      esc(stage.level) + '" title="' + esc(stage.software || '') + '">' +
-      '<b>' + esc(stage.level + ' ' + stage.name) + '</b>' +
-      '<span class="ms-count">' + stage.count + '/' + stage.total + '</span>' +
-      '<span class="ms-sub">' + esc(stage.live || '') + '</span></div>';
+  function cityStageHTML(stage) {
+    var cls = 'cs-seg' + (stage.level === 'L1' ? ' l1' : '') +
+      (stage.level === 'L4' ? ' l4' : '');
+    return '<div class="' + cls + '" data-stage="' + esc(stage.level) + '" title="' +
+      esc(stage.desc || '') + '"><b>' + esc(stage.level + ' ' + stage.name) + '</b>' +
+      '<span class="cs-count">' + esc(stage.count) + '</span>' +
+      '<span class="cs-sub">' + esc(stage.sub || '') + '</span></div>';
   }
 
-  function sumArtifacts() {
-    return MAP_PAGES.reduce(function (sum, page) {
+  function sumCityArtifacts() {
+    return CITY_PAGES.reduce(function (sum, page) {
       return sum + (page.artifacts || []).length;
     }, 0);
   }
 
-  function renderMap() {
-    var timeline = document.getElementById('site-timeline');
-    var host = document.getElementById('page-cards');
-    if (!timeline || !host) { return; }
-    timeline.innerHTML = MAP_PAGES.map(siteItemHTML).join('');
-    host.innerHTML = MAP_PAGES.map(mapCardHTML).join('');
-    var kicker = document.getElementById('map-kicker');
-    var title = document.getElementById('map-title');
-    var actionN = document.getElementById('map-action-n');
-    var pageN = document.getElementById('map-page-n');
-    var bar = document.getElementById('ms-bar');
-    if (kicker) { kicker.textContent = MAP.kicker || '全书地图'; }
-    if (title) { title.textContent = MAP.title || ''; }
-    if (actionN) { actionN.textContent = MAP_PAGES.length + ' 个动作'; }
+  function renderCity() {
+    var list = document.getElementById('city-list');
+    var host = document.getElementById('city-cards');
+    if (!list || !host) { return; }
+    list.innerHTML = CITY_ZONES.map(zoneGroupHTML).join('');
+    host.innerHTML = CITY_PAGES.map(cityCardHTML).join('');
+    var kicker = document.getElementById('city-kicker');
+    var title = document.getElementById('city-title');
+    var facN = document.getElementById('city-fac-n');
+    var pageN = document.getElementById('city-page-n');
+    var bar = document.getElementById('cs-bar');
+    if (kicker) { kicker.textContent = CITY.kicker || '城市地图'; }
+    if (title) { title.textContent = CITY.title || ''; }
+    if (facN) { facN.textContent = CITY_FACS.length + ' 设施 · ' + CITY_ZONES.length + ' 区'; }
     if (pageN) {
-      pageN.textContent = MAP_PAGES.length + ' 页 · ' + sumArtifacts() + ' 件交付物';
+      pageN.textContent = CITY_PAGES.length + ' 页 · ' + sumCityArtifacts() + ' 件交付物';
     }
-    if (bar) { bar.innerHTML = (MAP.stages || []).map(stageHTML).join(''); }
-    renderMapSelection();
+    if (bar) { bar.innerHTML = (CITY.stages || []).map(cityStageHTML).join(''); }
+    renderCitySelection();
   }
 
-  function renderMapSelection() {
-    var sel = state.mapSel;
+  function renderCitySelection() {
+    var sel = state.citySel;
     Array.prototype.forEach.call(
-      document.querySelectorAll('#site-timeline [data-map-action]'), function (node) {
-        var on = sel !== null && Number(node.getAttribute('data-map-action')) === sel;
+      document.querySelectorAll('#city-list [data-city-fac]'), function (node) {
+        var on = sel !== null && Number(node.getAttribute('data-city-fac')) === sel;
         node.classList.toggle('is-hot', on);
         node.classList.toggle('is-dim', sel !== null && !on);
         node.setAttribute('aria-pressed', on ? 'true' : 'false');
       });
     Array.prototype.forEach.call(
-      document.querySelectorAll('#page-cards [data-map-page]'), function (node) {
+      document.querySelectorAll('#city-cards [data-city-page]'), function (node) {
         var on = sel !== null && Number(node.getAttribute('data-page-no')) === sel;
         node.classList.toggle('is-hot', on);
         node.classList.toggle('is-dim', sel !== null && !on);
         node.setAttribute('aria-pressed', on ? 'true' : 'false');
       });
-    var pair = document.getElementById('map-pair');
+    var pair = document.getElementById('city-pair');
     if (!pair) { return; }
-    if (sel === null || !MAP_PAGES[sel]) {
-      pair.textContent = '点左列动作 → 右列同号页卡高亮并滚入视野；' +
-        '点右列页卡 → 左列同号动作高亮';
+    if (sel === null || !CITY_PAGES[sel] || !CITY_FACS[sel]) {
+      pair.textContent = '点左列设施 → 右列同页页卡高亮并滚入视野；' +
+        '点右列页卡 → 左列同号设施高亮';
       return;
     }
-    var page = MAP_PAGES[sel];
-    pair.innerHTML = '<b>' + sel + ' ' + esc(page.site_action) + '</b> ↔ ' +
-      esc(page.title) + ' · 长出 <b>' + (page.artifacts || []).length + '</b> 件交付物';
+    var page = CITY_PAGES[sel];
+    var fac = CITY_FACS[sel];
+    var arts = (page.artifacts || []).map(function (art) { return circleNo(art.no); }).join('');
+    pair.innerHTML = '<b>' + esc(fac.no + ' ' + fac.name) + '</b> ↔ ' + esc(page.title) +
+      ' · 长出 ' + esc(arts);
   }
 
   function scrollInside(container, element) {
@@ -1558,36 +2068,36 @@ a.pg:hover{background:var(--ink);color:#fff;}
     if (delta) { container.scrollTop = Math.max(0, container.scrollTop + delta); }
   }
 
-  function scrollMapSelection() {
-    var sel = state.mapSel;
+  function scrollCitySelection() {
+    var sel = state.citySel;
     if (sel === null) { return; }
-    scrollInside(document.getElementById('page-cards'),
-      document.querySelector('#page-cards [data-page-no="' + sel + '"]'));
-    scrollInside(document.getElementById('site-timeline'),
-      document.querySelector('#site-timeline [data-map-action="' + sel + '"]'));
+    scrollInside(document.getElementById('city-cards'),
+      document.querySelector('#city-cards [data-page-no="' + sel + '"]'));
+    scrollInside(document.getElementById('city-list'),
+      document.querySelector('#city-list [data-city-fac="' + sel + '"]'));
   }
 
-  function mapSelect(index) {
+  function citySelect(index) {
     var at = Number(index);
-    if (!(at >= 0 && at < MAP_PAGES.length)) { return false; }
-    state.mapSel = at;
-    renderMapSelection();
-    if (state.view === 'map') { scrollMapSelection(); }
+    if (!(at >= 0 && at < CITY_PAGES.length)) { return false; }
+    state.citySel = at;
+    renderCitySelection();
+    if (state.view === 'city') { scrollCitySelection(); }
     return true;
   }
 
   function applyViewUI() {
-    var isMap = state.view === 'map';
+    var isCity = state.view === 'city';
     var app = document.getElementById('app');
-    if (app) { app.classList.toggle('view-map', isMap); }
-    var mapview = document.getElementById('mapview');
+    if (app) { app.classList.toggle('view-city', isCity); }
+    var cityview = document.getElementById('cityview');
     var split = document.querySelector('.split');
     var statusbar = document.querySelector('.statusbar');
     var aon = document.getElementById('aon');
-    if (mapview) { mapview.hidden = !isMap; }
-    if (split) { split.hidden = isMap; }
-    if (statusbar) { statusbar.hidden = isMap; }
-    if (aon) { aon.hidden = isMap; }
+    if (cityview) { cityview.hidden = !isCity; }
+    if (split) { split.hidden = isCity; }
+    if (statusbar) { statusbar.hidden = isCity; }
+    if (aon) { aon.hidden = isCity; }
     Array.prototype.forEach.call(document.querySelectorAll('.view-btn'), function (button) {
       var on = button.getAttribute('data-view') === state.view;
       button.classList.toggle('is-on', on);
@@ -1595,29 +2105,30 @@ a.pg:hover{background:var(--ink);color:#fff;}
     });
     var hint = document.getElementById('view-hint');
     if (hint) {
-      hint.textContent = isMap
-        ? '视图：工地地图 · 只读联动，不改勾选'
+      hint.textContent = isCity
+        ? '视图：城市地图 · ' + CITY_ZONES.length + ' 区 / ' + CITY_FACS.length + ' 设施 / ' +
+          CITY_PAGES.length + ' 页 · 只读联动'
         : '视图：物料清单 · ' + ARTS.length + ' 件 × ' + TOTAL_CHECKS + ' 检验点';
     }
-    if (isMap) {
+    if (isCity) {
       var modeHint = document.getElementById('mode-hint');
       if (modeHint) {
-        modeHint.textContent = '地图视图（只读联动）：点左列工地动作 → 右列同号页卡高亮并' +
-          '滚入视野；点右列页卡 → 左列同号动作高亮。物料清单的勾选 / 空白态进度不受影响。';
+        modeHint.textContent = '城市地图（只读联动）：点左列设施 → 右列同页页卡高亮并滚入视野；' +
+          '点右列页卡 → 左列同号设施高亮。物料清单的勾选 / 空白态进度不受影响。';
       }
       var reset = document.getElementById('reset');
       if (reset) { reset.disabled = state.mode !== 'blank'; }
     } else {
       applyModeUI();
     }
-    if (isMap) {
-      renderMapSelection();
-      if (state.mapSel !== null) { scrollMapSelection(); }
+    if (isCity) {
+      renderCitySelection();
+      if (state.citySel !== null) { scrollCitySelection(); }
     }
   }
 
   function switchView(view) {
-    if (view !== 'material' && view !== 'map') { return false; }
+    if (view !== 'material' && view !== 'city') { return false; }
     if (view === state.view) { return false; }
     state.view = view;
     applyViewUI();
@@ -1778,36 +2289,36 @@ a.pg:hover{background:var(--ink);color:#fff;}
     renderNavState();
   });
 
-  // ---------- 视图切换：物料清单 / 工地地图 ----------
+  // ---------- 视图切换：物料清单 / 城市地图 ----------
   Array.prototype.forEach.call(document.querySelectorAll('.view-btn'), function (button) {
     button.addEventListener('click', function () {
       switchView(button.getAttribute('data-view'));
     });
   });
 
-  // 地图左列：点工地动作 → 右列同号页卡高亮并滚入视野
-  document.getElementById('site-timeline').addEventListener('click', function (ev) {
-    var node = ev.target.closest ? ev.target.closest('[data-map-action]') : null;
+  // 城市地图左列：点设施 → 右列同页页卡高亮并滚入视野
+  document.getElementById('city-list').addEventListener('click', function (ev) {
+    var node = ev.target.closest ? ev.target.closest('[data-city-fac]') : null;
     if (!node) { return; }
-    mapSelect(node.getAttribute('data-map-action'));
+    citySelect(node.getAttribute('data-city-fac'));
   });
 
-  // 地图右列：点页卡 → 左列同号动作高亮；「打开这一页」是普通相对链接，不拦截
-  var pageCardsHost = document.getElementById('page-cards');
-  pageCardsHost.addEventListener('click', function (ev) {
+  // 城市地图右列：点页卡 → 左列同号设施高亮；「打开这一页」是普通相对链接，不拦截
+  var cityCardsHost = document.getElementById('city-cards');
+  cityCardsHost.addEventListener('click', function (ev) {
     var target = ev.target;
     if (target.closest && target.closest('a')) { return; }
-    var card = target.closest ? target.closest('[data-map-page]') : null;
+    var card = target.closest ? target.closest('[data-city-page]') : null;
     if (!card) { return; }
-    mapSelect(card.getAttribute('data-page-no'));
+    citySelect(card.getAttribute('data-page-no'));
   });
-  pageCardsHost.addEventListener('keydown', function (ev) {
+  cityCardsHost.addEventListener('keydown', function (ev) {
     if (ev.key !== 'Enter' && ev.key !== ' ') { return; }
     if (ev.target.closest && ev.target.closest('a')) { return; }
-    var card = ev.target.closest ? ev.target.closest('[data-map-page]') : null;
+    var card = ev.target.closest ? ev.target.closest('[data-city-page]') : null;
     if (!card) { return; }
     ev.preventDefault();
-    mapSelect(card.getAttribute('data-page-no'));
+    citySelect(card.getAttribute('data-page-no'));
   });
 
   // ---------- 静态文案 ----------
@@ -1866,16 +2377,12 @@ a.pg:hover{background:var(--ink);color:#fff;}
       renderRows();
       renderNavState();
     },
-    mapData: MAP,
-    mapPages: MAP_PAGES,
-    mapArtifactsOfPage: function (pageId) {
-      for (var i = 0; i < MAP_PAGES.length; i++) {
-        if (MAP_PAGES[i].page === pageId) { return MAP_PAGES[i].artifacts; }
-      }
-      return null;
-    },
+    cityData: CITY,
+    cityZones: CITY_ZONES,
+    cityFacilities: CITY_FACS,
+    cityPages: CITY_PAGES,
     setView: switchView,
-    mapSelect: mapSelect,
+    citySelect: citySelect,
     render: renderAll,
     savedRaw: savedRaw
   };
@@ -1891,7 +2398,7 @@ a.pg:hover{background:var(--ink);color:#fff;}
   }
   applyModeUI();
   renderCriteria();
-  renderMap();
+  renderCity();
   renderAll();
   applyViewUI();
 })();
