@@ -10,7 +10,9 @@
 
 先确认你已经克隆好仓库，终端停在**仓库根目录**（`ls` 能看到 `Makefile`、`backend/`、`fixtures/` 的那一层），并且用的是 **bash**（Windows 用 Git Bash 或 WSL；macOS 默认是 zsh，先敲一下 `bash`）。以下命令都在这一层敲。
 
-**安装**好五样（安装方法见官方安装页）：**Docker**（https://docs.docker.com/get-docker/ ；装完要让它**运行**起来，口语常说“跑起来”）、**uv**（https://docs.astral.sh/uv/ ）、**Node.js LTS + npm**（https://nodejs.org/ ）、**GNU Make**（装好就是 `make` 命令）、**curl**（第 3–9 页全靠它，多数系统自带）。
+**安装**好五样（安装方法见官方安装页）：**Docker**（https://docs.docker.com/get-docker/ ；装完要让它**运行**起来，口语常说“跑起来”）、**uv**（https://docs.astral.sh/uv/ ）、**Node.js LTS + npm**（https://nodejs.org/ ）、**GNU Make**（装好就是 `make` 命令）、**curl**（第 3–9 页全靠它，多数系统自带）。`make doctor` 把 daemon 单列成一项，所以工具行是 6 项（docker / daemon / uv / node / make / curl）。
+
+> **注意**：`make doctor` 不查宿主机 Python——只装了 `uv` 时，它管理的解释器不在系统 PATH 上；`make docker-env` 会回退到 `uv python find`，若仍报错，装 Python 3.8+ 或先 `uv python install`。
 
 `.env`、`backend/.venv`、`frontend/node_modules` 都被 `.gitignore` 忽略，克隆下来没有：`.env` 不用你建（第 1 页会从 `.env.example` 读），后两个由 `make install` 生成，**别手动 pip 装**。
 
@@ -105,5 +107,5 @@ ss -tln | grep -E ':(3307|8000|8081) ' || echo "端口全空"              # 验
 | 想回到 | 删掉 | 保留 |
 |---|---|---|
 | 第 3 页 | `lab-nginx`、整个 `lab/` | `lab-mysql`（数据不用重新导入） |
-| 第 7 页 | `lab-nginx`，并把 `lab/app.py` 退回第 6 页的版本 | `lab-mysql`、`lab/` |
+| 第 7 页 | `lab-nginx`，并把 `lab/app.py` 退回第 6 页的版本（重抄第 6 页代码；或先 `scripts/lab save` 再 `reset`——第 10 页起介绍） | `lab-mysql`、`lab/` |
 | 只重第 9 页 | 只删 `lab-nginx` | `lab-mysql`、`lab/`（配置和页面直接重用） |

@@ -48,6 +48,28 @@ for candidate in python3 python; do
   fi
 done
 
+# 系统 PATH 上的候选都失败，不代表宿主机上没有 Python：只装了 uv 的机器上，
+# uv 自己管理的解释器（`uv python install` 装的）不在系统 PATH 里，于是
+# `make doctor` 12/12 全绿，`make docker-env` / `make docker-smoke` 却报找不到
+# python3/python。这里问一次 uv；输出到 stdout 的才是候选路径，它失败时的诊断
+# 走 stderr——原样放行，不重定向：这句话区分「没装解释器」和「uv 本身坏了」。
+if command -v uv >/dev/null 2>&1; then
+  uv_path="$(uv python find)"
+  if [ -n "$uv_path" ]; then
+    # 与上面的系统候选同一条判定：真的执行一次，且版本 >= MIN_VERSION。
+    if "$uv_path" -c 'import sys; raise SystemExit(0 if sys.version_info >= (3, 8) else 1)' \
+      >/dev/null 2>&1; then
+      printf '%s\n' "$uv_path"
+      exit 0
+    fi
+    # 同出一条：问得到版本 = 跑得起来、只是太老；问不到 = 跑不起来。
+    uv_version="$("$uv_path" -c 'import sys; print("%d.%d" % sys.version_info[:2])' 2>/dev/null || true)"
+    if [ -n "$uv_version" ]; then
+      too_old="$too_old uv($uv_version)"
+    fi
+  fi
+fi
+
 # 诊断信息放在这里而不是 Makefile 配方里：Windows 上 make 的配方会经过
 # ANSI 代码页转换，中文会变成乱码，个别情况下还会把引号吃掉，直接让 shell
 # 报语法错。脚本文件是被 shell 直接读的，字节原样输出。
