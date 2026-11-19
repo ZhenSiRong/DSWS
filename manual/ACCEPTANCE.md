@@ -104,7 +104,7 @@ DOCKER SMOKE FAIL: 只读账号验证未通过
 | L1（p00–p09） | `review/walkthrough.md`、`review/replay-03-05.md`、`review/replay-06-09.md` |
 | L2（p10–p13） | `review/replay-page-10.md` … `review/replay-page-13.md` |
 | L3（p14–p17） | `review/replay-page-14.md` … `review/replay-page-17.md` |
-| L4（p18–p22） | `review/replay-page-18.md`、`review/replay-page-19.md`（p20–p22 暂无独立重放报告） |
+| L4（p18–p22） | `review/replay-page-18.md`、`review/replay-page-19.md`（p22 暂无独立重放报告；p20、p21 已补） |
 | 环境 / 工具 / 奇怪报错 | `../error-proofread/README.md`（真机实测台账）、`../docs/DOCKER-DEPLOY.md` §1 |
 
 报告里标「先修」的条目是写页时已知的坑：先按报告复现，再判是页面 bug 还是环境问题；复现不了再回到对应页「对账」。
