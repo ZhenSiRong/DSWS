@@ -15,7 +15,7 @@
 
 ## 动手
 
-> 若跑完 `make stage4` / `make baseline` 后 `git status` 里出现 `backend/uv.lock` 被改（本机 uv 配了镜像源时会发生——`uv run` 自动改写 lock 里的 registry URL，`lab` 白名单不含它、`reset` 也不还原），**不用管，跑完敲 `git checkout -- backend/uv.lock` 还原即可**。
+> `make stage4` / `make baseline` 走 `uv run --frozen`，不会改 lock；只有脚本里的裸 `uv run`（`make stage3`、`make stage0-ui`、`make stage6-ui`）或你手敲 `uv run` 会按本机镜像源重写 `backend/uv.lock`（`lab` 白名单不含它，`reset` 也不还原）。**仅当 `git status` 显示 lock 变脏时**再敲 `git checkout -- backend/uv.lock` 还原。
 
 **第 1 步：拍快照。** 拆一刀要改契约，先留退路（同名快照会被拒绝；重做本页就换个名字，如 `p15-before-2`，本页后面第 3 步 `reset` 的名字也一起换）：
 

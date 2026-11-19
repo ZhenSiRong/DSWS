@@ -51,7 +51,7 @@ for sid in ('happy', 'llm_refusal'):
 make stage7
 ```
 
-**跑完看 `git status`：`backend/uv.lock` 可能被改。** `uv run` 会按本机 uv 配的镜像源重写锁文件（本机实测 1,250 行 registry / packages 地址 `pypi.org` → `pypi.tuna.tsinghua.edu.cn`，你这台看 `git status` 就知道中没中）；它不在 `lab` 白名单里，`lab reset` 回显的“完全一致”只算白名单文件——跑完敲 `git checkout -- backend/uv.lock` 单独还原（口径同第 15 / 19 页）。
+**`make stage7` 已 `uv run --frozen`，不会改 `backend/uv.lock`；只有脚本里的裸 `uv run`（`make stage3`、`make stage0-ui`、`make stage6-ui`）或手敲 `uv run` 才会按本机镜像源重写它。** 它不在 `lab` 白名单里，`lab reset` 回显的“完全一致”只算白名单文件——仅当 `git status` 显示 lock 变脏时再 `git checkout -- backend/uv.lock` 单独还原（口径同第 15 / 19 页）。
 
 ## 你应该看到
 

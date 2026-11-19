@@ -6,6 +6,7 @@
 | 报告 | 一句话结论 |
 |:--|:--|
 | [orca-review-01](orca-review-01.md)（跨模型评审） | Orca worker · codebuddy 只读评审 SPEC/AGENTS：4 条对 23 页现状的漂移已全部修复。 |
+| [orca-review-02](orca-review-02.md)（跨模型评审） | Orca worker · codebuddy + opencode2 各 10 条只读评审：去重 18 个唯一问题——16 条文档已修、1 条证伪不改、1 条转并行脚本修复；另复核新增 1 条已修。 |
 | [page-10](replay-page-10.md) | 核心实验全部复现；先修前置阅读顺序自相矛盾、对账时序写错、拆一刀还原被写成可选 3 条。 |
 | [page-11](replay-page-11.md) | 能独立跟做；1 处 cwd 卡点（`cd backend` 后没提示回仓库根）+ 第 8 页交接事实错误。 |
 | [page-12](replay-page-12.md) | 指令链可照抄；`1144735.50` 口径与第 10 页冲突、拆一刀 `max_limit` 说明有歧义、第 10 页白名单过时。 |

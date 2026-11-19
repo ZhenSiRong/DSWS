@@ -92,7 +92,7 @@ DOCKER SMOKE PASS
 - 猜 1：只跑一次的是 **init**。`docker compose ps` 默认只列 running，所以第一张表里没有它；`ps -a` 才看到 `Exited (0)`。它退出码 0，backend 才被允许启动。
 - init 为什么必须一次性：它干三件事再退出——等 mysql / ES / qdrant 健康、开通并验证只读账号、校验元知识（不对就重建）。常驻只会白占资源，还让“初始化到底成功没有”没有信号；`restart: "no"` + 非零退出即失败。
 - `depends_on` 的健康检查：init 用 `service_healthy` 等三座存储；backend 用 `service_completed_successfully` 等 init 退出码 0；frontend 用 `service_healthy` 等 backend。少了这些条件，compose 只按启动顺序拉，init 可能比库快、backend 可能没初始化就接客——起得来，但没初始化。
-- 8 步各防什么：1/8 起整栈；2/8 打通 nginx→backend 入口链；3/8 五个常驻 healthy 且 init 退出 0（防“只看 running，不看 health 和 init”）；4/8 `/api/steps` 正好 12（防契约没进镜像）；5/8 真查询出结果（防接口通但查不出数；判据 = `rows=1` 且 `sse_verdict` 为 `streamed`，或为 `too-fast` 且 nginx 生效配置确认缓冲已关——`too-fast` 只因响应太快、时间上分不出流式，是合法的通过档，别当失败；`sse_chunks` 会有一两个出入，不用对）；6/8 nginx 的 `/api/` 真的 `proxy_buffering off`（防流被攒成整包）；7/8 只读账号真写不了（防“只读只在文档里”）；8/8 元知识对账 + 再跑一次 init 必须跳过重建（防初始化结果不对、一次性脚本不可重跑）。
+- 8 步各防什么：1/8 起整栈；2/8 打通 nginx→backend 入口链；3/8 五个常驻 healthy 且 init 退出 0（防“只看 running，不看 health 和 init”）；4/8 `/api/steps` 正好 12（防契约没进镜像）；5/8 真查询出结果（防接口通但查不出数；判据 = `rows=1` 且 `sse_verdict` 为 `streamed`，或为 `too-fast` 且 nginx 生效配置确认缓冲已关——`too-fast` 只因响应太快、时间上分不出流式，是合法的通过档，别当失败；`sse_chunks` 是客户端收到的 SSE 分片数（不是 12 条 progress 事件），有一两个出入不用对）；6/8 nginx 的 `/api/` 真的 `proxy_buffering off`（防流被攒成整包）；7/8 只读账号真写不了（防“只读只在文档里”）；8/8 元知识对账 + 再跑一次 init 必须跳过重建（防初始化结果不对、一次性脚本不可重跑）。
 - 起得来 ≠ 部署好：`docker compose up` 成功只说明容器建起来了——健康可能还在 starting、init 可能已失败退出（默认 `ps` 还看不到）、查询可能 502、流可能被 nginx 攒住。smoke 每一步都是一条判据，红一步就 `DOCKER SMOKE FAIL`，并把 `ps -a` 和相关日志全打出来。
 
 > **你现在拥有**：一套“一条命令重建、一条命令验收”的部署——`compose.yaml` 写清怎么起和依赖顺序，`scripts/docker-smoke.sh` 写清“起对了没有”；换台机器 clone 下来，两条命令复跑同一套判据。

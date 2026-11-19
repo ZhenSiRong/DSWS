@@ -1,6 +1,6 @@
 # 第 17 页 · 审纠错：一次重试能修好什么、修不好什么
 
-> 前置：开始前确认第 16 页的拆一刀已用 `scripts/lab reset p16-before --yes` 还原——否则第 2 步会变成 `1 failed, 13 passed`、没有 `S6 PASS`、probe `mismatch: 3`。本页一条服务都不用——14 条单元测试、9 个失败场景、20 条纠错语料全在离线跑，不需要 MySQL / ES / Qdrant、不需要 `.env`、也不需要模型 key。命令都在仓库根目录、同一个终端里整段连续执行；括号是子 shell，跑完你还在仓库根目录。
+> 前置：开始前确认第 16 页的拆一刀已用 `scripts/lab reset p16-before --yes` 还原——否则第 2 步会变成 `1 failed, 13 passed`、没有 `S6 PASS`、probe `mismatch: 3`。**可执行自查**：`(cd backend && .venv/bin/python -m app.scripts.failures --check | tail -2)` 应见 `S6 PASS`；不是就先 `scripts/lab reset p16-before --yes` 再往下。本页一条服务都不用——14 条单元测试、9 个失败场景、20 条纠错语料全在离线跑，不需要 MySQL / ES / Qdrant、不需要 `.env`、也不需要模型 key。命令都在仓库根目录、同一个终端里整段连续执行；括号是子 shell，跑完你还在仓库根目录。
 
 ## 这一页构建什么
 

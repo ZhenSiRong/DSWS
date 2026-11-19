@@ -35,7 +35,7 @@ docker run -d --name lab-mysql \
 - `-p 127.0.0.1:3307:3306`：冒号左边是宿主机端口，右边是容器内端口。3306 常被本机已装的 MySQL 占着，所以这一课统一用 3307；3307 若也被占，换一个没被占的端口（比如 3308），后面写 3307 的页跟着改。
 - 这一页**故意不加 `-v`**：没有脚本挂载（mount）进容器的 `/docker-entrypoint-initdb.d/`，容器第一次启动时没有脚本自动执行，`dw` 库不会被建出来——空库就是这一页的产物。
 - `MYSQL_ROOT_PASSWORD=labpass`：设 root 账号的密码，后面所有 `mysql -uroot -plabpass` 都用它。
-- `MYSQL_USER` / `MYSQL_PASSWORD`：MySQL 不会自动建 `didilili` 这个用户；第 2 页导入的 `dw.sql` 里有一句 `GRANT ... TO 'didilili'@'%'`，用户不存在时导入会报错中断——所以这里先把它建好。
+- `MYSQL_USER` / `MYSQL_PASSWORD`：官方 mysql 镜像启动时会用这两个变量建 `didilili` 这个用户（并设好密码）；第 2 页导入的 `dw.sql` 里那句 `GRANT ALL PRIVILEGES ON dw.* TO 'didilili'@'%'` 只是**补 `dw` 库的权限**（镜像建出来的用户默认没有库权限），用户不存在时 GRANT 会报错中断——所以这两个变量不能省。
 - `LANG=C.UTF-8`：让容器里的 `mysql` 认 UTF-8，少了它，第 2 页按中文筛数据会一条也筛不到。
 - 最后一行不手抄镜像名，从仓库自带的 `.env.example` 里读 `MYSQL_IMAGE`（`.env` 是你本地的密钥配置，被 `.gitignore` 忽略，克隆下来没有）。这行一旦被改名或删除，命令会**静默传空**、拉不到镜像——所以别删它。
 

@@ -102,7 +102,7 @@ FAIL: 2 个契约问题
 
 2. 还原：`scripts/lab reset p10-before --yes`，末行是 `现在工作区与快照 "p10-before" 完全一致。`；再跑 `--check` 回到 `S1 PASS`。这个绿是**假绿**：门禁又对着 115 行的旧快照说“没问题”。
 
-3. **数据库不跟着还原**：`lab` 只管文件。先数一次 `docker exec lab-mysql mysql -uroot -plabpass -N -B dw -e "SELECT COUNT(*) FROM fact_order;"`——还是 `410`。**本页的收尾动作，缺一不可**：① 拆一刀 2 的 `reset` 把契约和文件还原（不做的话下一关第 11 页验收的 `--check` 会红）；② **必须重灌 `fixtures/dw.sql` 回到 115 行，再从下一页开始**——第 12 页开篇就假定库已回到 115 行演示集；不重灌的话真数据下 `WHERE region_name='华北'` 是 35 行 / 61890.00，不是演示集的 19 行 / 41099.5。重灌命令：
+3. **数据库不跟着还原**：`lab` 只管文件。先数一次 `docker exec lab-mysql mysql -uroot -plabpass -N -B dw -e "SELECT COUNT(*) FROM fact_order;"`——还是 `410`。**本页的收尾动作**：① 拆一刀 2 的 `reset` 把契约和文件还原（不做的话下一关第 11 页验收的 `--check` 会红）——必做；② **要回 L1 演示态才需重灌 `fixtures/dw.sql` 回到 115 行**——第 12 页第 1 步会自己重灌 `dw-real`，不重灌也能直接进下一页；只是真数据下 `WHERE region_name='华北'` 是 35 行 / 61890.00，不是演示集的 19 行 / 41099.5，留着演示态才对得上。重灌命令：
 ```bash
 docker exec -i lab-mysql mysql -uroot -plabpass < fixtures/dw.sql
 ```

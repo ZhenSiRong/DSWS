@@ -37,7 +37,7 @@ scripts/lab save p19-before
 make stage5
 ```
 
-**跑完看 `git status`：`backend/uv.lock` 很可能被改。** `uv run` 会按本机 uv 配的镜像源重写锁文件——本机实测 1,250 行 registry / packages 地址从 `pypi.org` 换成 `pypi.tuna.tsinghua.edu.cn`（你这里跑完看 `git status` 就知道中没中）。它不在 `lab` 白名单里，`scripts/lab reset` 不管它——所以拆一刀末尾 reset 之后输出仍说“完全一致”，`git status` 里 `backend/uv.lock` 却还是脏的；用 `git checkout -- backend/uv.lock` 还原。
+**Makefile 直接调的 `stage*` 全走 `uv run --frozen`，不会改 `backend/uv.lock`；只有脚本里的裸 `uv run`（`make stage3`、`make stage0-ui`、`make stage6-ui`）或手敲 `uv run` 会。** 它不在 `lab` 白名单里，`scripts/lab reset` 不管它——若 `git status` 里确实出现 `backend/uv.lock` 变脏（本机实测 1,250 行 registry / packages 地址从 `pypi.org` 换成镜像源），用 `git checkout -- backend/uv.lock` 还原。
 
 ## 你应该看到
 

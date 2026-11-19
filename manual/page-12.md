@@ -13,7 +13,10 @@
 
 ## 动手
 
-**第 1 步：把真数据灌回库**（命令都在仓库根目录执行：有 `fixtures/`、`backend/` 的那一层）。第 10 页收尾时你重灌回了演示集（115 行），带分金额的 `dw-real` 才看得出漂移，用第 10 页同一条命令：`docker exec -i lab-mysql mysql -uroot -plabpass --default-character-set=utf8mb4 < fixtures/dw-real.sql`
+**第 1 步：把真数据灌回库**（命令都在仓库根目录执行：有 `fixtures/`、`backend/` 的那一层）。第 10 页收尾时你重灌回了演示集（115 行），带分金额的 `dw-real` 才看得出漂移，用第 10 页同一条命令：
+```bash
+docker exec -i lab-mysql mysql -uroot -plabpass --default-character-set=utf8mb4 < fixtures/dw-real.sql
+```
 
 **第 2 步：新建 `lab/db.py`，把下面整段粘进去，Ctrl+S 保存：**
 

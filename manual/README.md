@@ -1,6 +1,6 @@
 # 全书地图 · 23 页 / 四级（造 → 换 → 审 → 守）
 
-> 配套参考书：dev-book.pdf（162 页完整版，查字典用；本手册是主线）。
+> 配套参考书：仓库根 `design/book-editorial/pdf/dev-book.pdf`（162 页完整版，查字典用；本手册是主线）；设计图集见 `design/design-doc.pdf`。
 
 这本练本让你**亲手构建一个电商问数系统**：从空的 MySQL 容器开始，一路做到浏览器里问一句、看到 `41099.5`。全书 **23 页 = 四级工程动作**（口径见 [`humen-desicions/09-ablation-course.md`](../humen-desicions/09-ablation-course.md) **D44**：10 + 4 + 4 + 5 = 23 页）：
 
@@ -9,7 +9,7 @@
 - **L3 审（page-14 – page-17，4 页）**：机器输出不确定，先预注册判据，再让错误发生，看判据抓没抓住。
 - **L4 守（page-18 – page-22，5 页）**：制造故障与越权，证明防线有效；兜不住时知道红在哪一层。
 
-每页的「你应该看到」就是该页的**完成判据**——看到它才算做完；每级最后一页的「拆一刀」升级为**级考核**。验证不单独成页。
+每页的「你应该看到」就是该页的**完成判据**——看到它才算做完；L2–L4 每级最后一页的「拆一刀」升级为**级考核**（L1 无拆一刀，另用建成证明海报对账）。验证不单独成页。
 
 ![单代号网络图（AON / PDM）：L1 十页（A0–A9）的紧前关系、关键路径与完成判据](images/flow-aon.png)
 
@@ -56,7 +56,7 @@ L2–L4 十三页不在这张网络里（L2 换 → L3 审 → L4 守）；L3 �
 | 页 | 构建活动 | 完成判据 |
 |---|---|---|
 | [第 0 页 · 开课前准备](page-00.md) | A0 环境准备 | `make doctor` 12/12 通过（工具 6 + 依赖 3 + 端口 3） |
-| [第 1 页](page-01.md) | A1 创建 MySQL 容器 | 容器 running、`SELECT VERSION()` 有输出 |
+| [第 1 页](page-01.md) | A1 创建 MySQL 容器 | 容器 running、`SELECT VERSION()` 有输出、`SHOW DATABASES` 看不到 `dw` |
 | [第 2 页](page-02.md) | A2 导入 dw.sql | `SHOW TABLES` 5 行、`COUNT(*)` = 115 |
 | [第 3 页](page-03.md) | A3 最小 HTTP 服务 | `curl /health` → `{"ok":true}` |
 | [第 4 页](page-04.md) | A4 POST /api/query | 返回固定 JSON |
