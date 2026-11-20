@@ -1,0 +1,232 @@
+{
+  "evidence": "第 17 页 · 自动纠错被触发并成功（真模型 · 成熟版原版前端 · 隔离栈）",
+  "captured_at_local": "2026-11-20 10:19 +08:00",
+  "engine": {
+    "llm_generator": "http-llm",
+    "llm_model": "deepseek-flash",
+    "llm_injection": "docker compose 从仓库 .env 注入（REBUILD_LLM_*；key 不落盘）",
+    "verified_in_container": "python -c 'from app.generate.provider import HttpLlmGenerator; print(HttpLlmGenerator.from_env().name)' -> http-llm",
+    "frontend": "deliverable/v2/original-frontend/dist（原版成熟版，nginx 反代 /api）",
+    "isolated_stack": "docker compose -p p17corr（mysql 13387 / ES 19287 / Qdrant 16387 / backend 18187；成熟版入口 18097）"
+  },
+  "request": {
+    "method": "POST",
+    "path": "/api/query",
+    "body": {
+      "query": "查询销售额大于平均销售额的商品"
+    },
+    "accept": "text/event-stream",
+    "attempt": 1,
+    "attempt_note": "第 1 次 UI 真跑即触发校正并成功；未重试（任务允许最多重试 2 次）",
+    "llm_calls": 2,
+    "llm_calls_note": "本次问数 2 次模型调用：generate_sql 1 次 + correct_sql 1 次（上下文 8 阶段为离线检索，不调模型）"
+  },
+  "sse": {
+    "file": "manual/review/correction-live-trigger.sse",
+    "bytes": 2766,
+    "sha256": "1919a0e83464f35392e3596907daaf9b31879498746ba552f551fc2b4c5e7af0",
+    "frames": 27,
+    "progress_events": 26,
+    "frame_sequence": [
+      "extract_keywords:running",
+      "extract_keywords:success",
+      "recall_column:running",
+      "recall_column:success",
+      "recall_value:running",
+      "recall_value:success",
+      "recall_metric:running",
+      "recall_metric:success",
+      "merge_retrieved_info:running",
+      "merge_retrieved_info:success",
+      "filter_table:running",
+      "filter_table:success",
+      "filter_metric:running",
+      "filter_metric:success",
+      "add_extra_context:running",
+      "add_extra_context:success",
+      "generate_sql:running",
+      "generate_sql:success",
+      "validate_sql:running",
+      "validate_sql:error",
+      "correct_sql:running",
+      "correct_sql:success",
+      "validate_sql:running",
+      "validate_sql:success",
+      "run_sql:running",
+      "run_sql:success"
+    ],
+    "sql_step_durations_ms": {
+      "generate_sql": 13086.1,
+      "correct_sql": 10954.3,
+      "run_sql": 18.6
+    },
+    "validate_sql_attempts": [
+      "running",
+      "error",
+      "running",
+      "success"
+    ],
+    "correction_attempts": 1,
+    "result": {
+      "columns": [
+        "商品名称",
+        "销售额"
+      ],
+      "row_count": 5,
+      "rows": [
+        [
+          "iPhone 15 Pro",
+          71992.0
+        ],
+        [
+          "Mate 60 Pro",
+          55992.0
+        ],
+        [
+          "Galaxy S24 Ultra",
+          56994.0
+        ],
+        [
+          "美的空调 KFR-35GW",
+          22400.0
+        ],
+        [
+          "戴森 V15 吸尘器",
+          32994.0
+        ]
+      ]
+    }
+  },
+  "ui_run": {
+    "question_typed_ms": 1063,
+    "click_at_ms": 1487,
+    "result_at_ms": 25733,
+    "total_ms": 25733,
+    "paint_state_sequence": [
+      {
+        "t_ms": 0
+      },
+      {
+        "t_ms": 1607
+      },
+      {
+        "t_ms": 1654,
+        "生成SQL": "running"
+      },
+      {
+        "t_ms": 14711,
+        "生成SQL": "success",
+        "校验SQL": "error",
+        "校正SQL": "running"
+      },
+      {
+        "t_ms": 25691,
+        "生成SQL": "success",
+        "校验SQL": "success",
+        "校正SQL": "success",
+        "执行SQL": "success"
+      }
+    ],
+    "final_nodes": {
+      "抽取关键词": "success",
+      "召回字段信息": "success",
+      "召回指标信息": "success",
+      "召回字段取值": "success",
+      "合并召回信息": "success",
+      "过滤指标信息": "success",
+      "过滤表信息": "success",
+      "添加额外上下文": "success",
+      "生成SQL": "success",
+      "校验SQL": "success",
+      "校正SQL": "success",
+      "执行SQL": "success"
+    },
+    "final_table": {
+      "headers": [
+        "商品名称",
+        "销售额"
+      ],
+      "row_count": 5,
+      "cells": [
+        "iPhone 15 Pro",
+        "71992",
+        "Mate 60 Pro",
+        "55992",
+        "Galaxy S24 Ultra",
+        "56994",
+        "美的空调 KFR-35GW",
+        "22400",
+        "戴森 V15 吸尘器",
+        "32994"
+      ]
+    },
+    "console_errors": 0,
+    "page_errors": 0,
+    "request_failed": [],
+    "revalidate_note": "二次 validate_sql running→success 仅 5.9ms（<16.7ms 一帧），浏览器从未单独绘制 running 状态；paint 记录直接由「校验红+校正转圈」跳到「全绿」，SSE 第 23–24 帧是重新校验的硬证据"
+  },
+  "artifacts": {
+    "manual/images/page-17-live-correct.png": {
+      "size": "1440x1720",
+      "bytes": 148961,
+      "sha256": "83b1cedd40d474362a882a4e3ceed4af7f6e9178c92c19b61bc82e9871770b0a",
+      "what": "校正成功后：校验SQL 绿 / 校正SQL 绿（非「未触发」） / 执行SQL 绿 + 结果表 5 行"
+    },
+    "manual/images/page-17-live-correct-mid.png": {
+      "size": "1440x1720",
+      "bytes": 129556,
+      "sha256": "f2021a0105553566570eff0f73f2a4675816c2a02d6c0a53585c049ef1b606b1",
+      "what": "补充：校正执行中——校验SQL 红叉「有误」 + 校正SQL 转圈「执行中」 + 执行SQL 灰待"
+    },
+    "manual/images/page-17-live-correct.gif": {
+      "size": "1440x1720",
+      "frames": 50,
+      "delay_cs": 15,
+      "loop_seconds": 7.5,
+      "bytes": 298806,
+      "sha256": "4bb3a9fab30f796fd1b2db153acf824a7b8dc4c7f614aff17bd3e8628e858b86",
+      "what": "真跑逐帧截图（150ms/帧时间压缩）：输入→生成SQL→校验红/校正执行中→重新校验通过→结果"
+    }
+  },
+  "ocr": {
+    "engine": "tesseract 5（chi_sim + eng，仓库外临时语言包）",
+    "final_png_reads": [
+      "校验SQL",
+      "校正SQL",
+      "执行SQL",
+      "执行流程",
+      "查询结果",
+      "5 行",
+      "71992",
+      "55992",
+      "56994",
+      "22400",
+      "32994"
+    ],
+    "gif_mid_frame_reads": [
+      "正在执行: 校正SQL",
+      "校验SQL",
+      "校正SQL",
+      "生成SQL",
+      "执行流程"
+    ],
+    "gif_last_frame_reads": [
+      "校验SQL",
+      "校正SQL",
+      "执行SQL",
+      "查询结果",
+      "5 行"
+    ]
+  },
+  "cost": {
+    "live_requests": 2,
+    "live_requests_detail": "1 次触发探测（Python POST）+ 1 次 UI 真跑",
+    "llm_calls_total": 4,
+    "wall_clock_s": 48.5,
+    "tokens": "未记录（本任务不计费口径）"
+  },
+  "offline_fallback": {
+    "pytest": "backend/.venv/bin/python -m pytest backend/tests/agent/test_correct.py -q -> 14 passed",
+    "failure_matrix": "backend/.venv/bin/python -m app.scripts.failures --check -> 失败矩阵 only corrected 期望 result 实际 result；S6 PASS"
+  }
+}
