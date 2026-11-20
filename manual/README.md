@@ -2,6 +2,12 @@
 
 > 配套参考书：仓库根 `design/book-editorial/pdf/dev-book.pdf`（162 页完整版，查字典用；本手册是主线）；设计图集见 `design/design-doc.pdf`。
 
+**交付物对照（PRD 数量要求：设计文档 ≥30 页 / 源代码 1 套 / 开发手册 1 套）**
+
+- 设计文档：[`design/design-doc.pdf`](../design/design-doc.pdf)（78 页 = 32 张图 + 读图地图；精选 30 图版：[`design-doc-30.pdf`](../design/design-doc-30.pdf)（32 页 = 封面 + 选图页 + 30 图一图一页））
+- 源代码：本仓库 `backend/` + `frontend/`（一套可运行代码，`make docker-up` 起整栈）
+- 开发手册：本手册 24 页（page-00 – page-23，`make audit` 验收）
+
 这本练本让你**亲手构建一个电商问数系统**：从空的 MySQL 容器开始，一路做到浏览器里问一句、看到 `41099.5`。全书 **24 页 = 五级工程动作**（口径见 [`humen-desicions/09-ablation-course.md`](../humen-desicions/09-ablation-course.md) **D44** 四级 23 页 + **D50** 追加 L5：10+4+4+5+1 = 24 页）：
 
 - **L1 造（page-00 – page-09，10 页）**：一件一件把骨架造出来——每页造一个零件，看到它能跑。
@@ -124,6 +130,21 @@ L2–L5 十四页不在这张网络里（L2 换 → L3 审 → L4 守 → L5 装
 - **范围**：v2 物料清单覆盖 **L1 的 12 件交付物**；L2–L5 的验收由各级「拆一刀」+ 失败矩阵 / 黄金集 / 门禁覆盖（见各页），不在这张 12 行海报里。
 - 单源数据 [`completeness/v2/data.json`](completeness/v2/data.json)：海报与交互页共用同一份（v1「行=架构节点的四层矩阵」已按 D43 归档到 [`completeness/archive-v1/`](completeness/archive-v1/README.md)，仅作历史证据）。
 - [建成证明 · 可交互原型](completeness/explorer.html)：一个文件两个视图「物料清单 / 城市地图」，默认「物料清单」——行=交付物，检验点级三态 ▢/◧/■ 可编辑、行状态由检验点派生、空白/答案态实时判定；切「城市地图」——左列按 4 区分组的十设施（城市名 + 问题句，楼内房间标「楼内 · 属于 P1/P3」）、右列十页页卡（页标题运行期取自正文 H1，「长出」徽章=该页交付物编号、`../page-0X.md` 相对链接离线可开）、底部城市四阶段 D44 只读，点设施↔页卡双向高亮（单文件离线；数据源 [`completeness/v2/data.json`](completeness/v2/data.json) + [`city/data.json`](city/data.json) + [`city/stages-city.json`](city/stages-city.json)，生成 `python3 manual/shots/build_explorer.py`）。
+
+## PRD 功能清单 → 页面覆盖（映射层；24 页正文不动）
+
+> PRD 按**功能清单**验收交付物，本书按**工程动作**（造 → 换 → 审 → 守 → 装）组织教学——两把尺子不同，这张表把它们钉在一起。
+
+| PRD 要求（原文要点） | 书里在哪 | 判据 / 证据 | 深度 |
+|---|---|---|---|
+| **NL2SQL**：自然语言问数——中文提问，系统自动生成 SQL 并执行 | [p5](page-05.md) → [p6](page-06.md) → [p7](page-07.md)（手工版）；[p10](page-10.md)–[p12](page-12.md) 换真（真数据 / 真契约 / 真执行器） | p7 `rows[0].sales = 41099.5`；p12 真执行器回 `Decimal('1144735.50')`（上限 1000 行、非 SELECT 抛 `PermissionError`） | ★★ 够用但分散 |
+| **LangGraph 12 节点 / 10 步**：多节点工作流分阶段执行 | [p8](page-08.md)（12 条 progress）；[p21](page-21.md)（12 节点目录 / 10 步分组 + 「深入探讨」：12 节点 = StateGraph、`correct_sql` = 条件边） | `/api/steps = 12`（条件步骤 `correct_sql`）；`make stage7` → `S7 PASS`；p8 12 条 progress + 1 条 result | ★★ **p21「深入探讨」是入口** |
+| **自校验 + 自纠错**：`validate_sql` + `correct_sql` 双保险，校验失败自动重试 | [p16](page-16.md)（守卫：16 个错误码 / 9 个场景失败矩阵）；[p17](page-17.md)（`correct_sql` 一次重试 / 14 条测试 / `trials≥3` 采样） | p16 `pytest backend/tests/generate/test_guard.py -q` → `26 passed`、`failures --check` → `S6 PASS`；p17 `pytest backend/tests/agent/test_correct.py -q` → `14 passed`、契约 `max_attempts: 1` | ★★★ **全书最深** |
+| **React 19 + Tailwind**：聊天式提问、可视化结果表格 | [p23](page-23.md)（真前端：17 行 HTML → React 构建版，聊天式提问 + 结果表） | p23 浏览器问一句 → `41099.5`；`(cd frontend && npm test)` → `40 passed (40)`；`frontend/package.json`：`react ^19.0.0`、`tailwindcss ^4.3.4` | ★★ 装修不换承重墙 |
+
+- **为什么书按造 / 换 / 审 / 守组织、而 PRD 按功能验收**：书是**教学结构**（每页一个工程动作、一条判据，按依赖顺序排），PRD 是**交付清单**（验收时按功能打勾）；同一套系统的两种切法，上表就是两者的映射——读的顺序按书，验收的口径按 PRD。
+- **自校验自纠错 = PRD 的「双保险」，也是本书最强项（★★★）**：16 个错误码 + 9 个场景失败矩阵 + `max_attempts: 1` 的有上限重试 + `trials≥3` 的采样口径，是全书唯一把「先预注册判据、再让错误发生」这个闭环走完的地方（[p16](page-16.md) / [p17](page-17.md)）。
+- 深挖入口：[第 21 页的「深入探讨」小节](page-21.md)（12 节点 = StateGraph、`correct_sql` = 条件边）与 PRD 原文 [`prd.md`](../prd.md)（13 行：3 项功能 + 2 项数量要求）。
 
 ## 附录：换成双代号（AOA）会怎样（L1 十页）
 

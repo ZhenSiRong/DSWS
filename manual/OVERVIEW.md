@@ -57,3 +57,14 @@
 - **先左后右**：左边回答「为什么是这十座设施、按这个顺序」，右边回答「这一页做完手里有什么」。
 - **同号对齐**：中间 0–9 的编号就是页码，第 N 页永远对 P N 编号的设施。
 - **四阶段看底部**：L1 十页不是十个孤立设施，而是同一片城区从荒地工地到城市安防的四个版本；L2–L4 十三页是后三级的横切系统，已在 page-10…page-22 交付；L5 装一页（page-23）只是换入口，不对应城市阶段；比喻只借骨架，不借结论。
+
+## 答辩一页：PRD 三条主线（90 秒怎么讲）
+
+> 90 秒 = 四条各 20–25 秒：每条主线 = 打开一页 + 跑一条命令 + 屏幕上出现一个数。覆盖矩阵与证据在 [README 的「PRD 功能清单 → 页面覆盖」一节](README.md)；耗时的门禁（如 `make stage7`，约 54 秒）提前跑好，现场只讲末行。
+
+| 主线 | 打开 | 跑 / 点 | 看到 |
+|---|---|---|---|
+| ① NL2SQL 全链路（手工造 → 换真件） | [p5](page-05.md) → [p6](page-06.md) → [p7](page-07.md)；[p12](page-12.md) 收真执行器 | p6 `backend/.venv/bin/python -m lab.app`；p7 `curl -s -X POST http://127.0.0.1:8000/api/query -H 'Content-Type: application/json' -d '{"question":"华北销售额"}'` | p6 打印 5 行带 `JOIN` 的 SELECT；p7 末段 `"sales": 41099.5`；p12 回 `Decimal('1144735.50')` |
+| ② LangGraph 工作流（12 节点 / 10 步） | [p21](page-21.md)（「深入探讨」小节）；[p8](page-08.md) 看流 | p21 `make stage7`；p8 `curl -sN -G 'http://127.0.0.1:8000/api/stream' --data-urlencode 'q=华北销售额'` | p21 末行 `S7 PASS`、`/api/steps = 12`（条件步骤 `correct_sql` = 条件边）；p8 12 条 progress + 1 条 result |
+| ③ 自校验自纠错（双保险，全书最强项） | [p16](page-16.md) → [p17](page-17.md) | p16 `pytest backend/tests/generate/test_guard.py -q`；p17 `pytest backend/tests/agent/test_correct.py -q` | p16 `26 passed` + 16 个错误码 + 9 个场景 `S6 PASS`；p17 `14 passed`、`max_attempts: 1`、`trials≥3` |
+| ④（附）前端 React 19 + Tailwind 4（装修不换承重墙） | [p23](page-23.md) | 浏览器开 `http://127.0.0.1:8080` 问一句；另开 `(cd frontend && npm test)` | 聊天式提问 + 结果表出 `41099.5`；`40 passed (40)`；技术栈事实见 `frontend/package.json` |

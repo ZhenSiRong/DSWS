@@ -97,14 +97,14 @@ DOCKER SMOKE FAIL: 只读账号验证未通过
 
 ## 6. L5 验收（page-23，「装」体验层）
 逐页对账（L5 只有一页）：
-- [p23](page-23.md) `make docker-up` 起整栈后，浏览器打开 `http://127.0.0.1:8080`（compose 的 `frontend` 服务）问一句 → 结果表出 `41,099.5`（数值即 `41099.5`）；`(cd frontend && npm test)` → `40 passed (40)`。判据与 L1 第 9 页同一条（同一问题、同一个数），但入口是真前端：React 构建版由 compose `frontend` 服务提供，不再是第 9 页那份手写 HTML。命令与期望输出以 [page-23](page-23.md)「动手」「你应该看到」为准。
+- [p23](page-23.md) 按「动手」第 1 步起整栈（镜像已在就 `docker compose up -d`；第一次/代码改过用 `make docker-up`，约 8 分钟）后，浏览器打开 `http://127.0.0.1:8080`（默认端口；改过 `.env` 的 `FRONTEND_HOST_PORT` 用你的；compose 的 `frontend` 服务）问一句 → 结果表出 `41,099.5`（数值即 `41099.5`）；`(cd frontend && npm test)` → `40 passed (40)`（汇总行；末行是 `Duration`）。判据与 L1 第 9 页同一条（同一问题、同一个数），但入口是真前端：React 构建版由 compose `frontend` 服务提供，不再是第 9 页那份手写 HTML。命令与期望输出以 [page-23](page-23.md)「动手」「你应该看到」为准。
 
 **级考核（第 23 页「拆一刀」：把真前端换回第 9 页同款简陋页）**——验的不是「真前端能跑」，而是「前端只是入口，不是承重墙」（命令与期望输出均取自 [page-23](page-23.md)「拆一刀」）：
 1. 停掉真前端、整栈留着：`docker compose stop frontend`（MySQL / ES / Qdrant / backend 都不停）。
-2. 写回第 9 页同款页面 `p23-html/index.html`：`form + pre + 事件处理`骨架不变（骨架还是第 9 页那 17 行），只补 3 处接线——入口换 `POST /api/query`、`EventSource` 换 `fetch` 读流、结果行取 `rows[0][0]`（完整内容照 [page-23](page-23.md)「拆一刀」第 2 步抄）。
-3. 用真前端镜像起 nginx 占 8080（反代沿用镜像里的 `docker/nginx.conf`：`proxy_pass http://backend:8100`），并进 compose 网络——`backend` 才解析得到（不进网络回 502；proxy 写 `host.docker.internal:8100` 也连不上，`backend` 只绑宿主 127.0.0.1）：`docker run -d --name p23-html --network shopkeeper-rebuild_default -p 127.0.0.1:8080:80 -v "$PWD/p23-html/index.html:/usr/share/nginx/html/index.html:ro" shopkeeper-rebuild/frontend:local`。
-4. 浏览器 `http://127.0.0.1:8080` 强刷、问同一句 → `<pre>` 里先闪 `extract_keywords`、`generate_sql` 等步骤名，约 6 秒后停在 `41099.5`：接口、契约、SQL、SSE 流都没变，变的只是入口载体。
-5. 还原：`docker rm -f p23-html && docker compose up -d frontend`（等 `frontend` `healthy`）→ 刷新 8080 再问一句 → `41,099.5`。
+2. 写回第 9 页同款页面 `p23-html/index.html`（先 `mkdir -p p23-html`）：`form + pre + 事件处理`骨架不变（骨架还是第 9 页那 17 行），只补 3 处接线——入口换 `POST /api/query`、`EventSource` 换 `fetch` 读流、结果行取 `rows[0][0]`（读流样板让整页到 29 行；L5 不在 SPEC 的 L1 行数预算内，完整内容照 [page-23](page-23.md)「拆一刀」第 2 步抄）。
+3. 用真前端镜像起 nginx 占 8080（反代沿用镜像里的 `docker/nginx.conf`：`proxy_pass http://backend:8100`），并进 compose 网络——`backend` 才解析得到（不进网络回 502；proxy 写 `host.docker.internal:8100` 也连不上，`backend` 只绑宿主 127.0.0.1）。网络名是项目名派生：`compose.yaml` 第 1 行 `name: shopkeeper-rebuild` + `_default`（用 `-p` 或 `COMPOSE_PROJECT_NAME` 改过项目名就先 `docker network ls | grep default` 查）；8080 是默认端口，改过 `.env` 的 `FRONTEND_HOST_PORT` 就换成你的；失败先用 `docker ps -a --filter name=p23-html` 查残留、`docker rm -f p23-html` 再重跑：`docker run -d --name p23-html --network shopkeeper-rebuild_default -p 127.0.0.1:8080:80 -v "$PWD/p23-html/index.html:/usr/share/nginx/html/index.html:ro" shopkeeper-rebuild/frontend:local`。
+4. 浏览器 `http://127.0.0.1:8080`（改过 `.env` 的 `FRONTEND_HOST_PORT` 用你的端口）强刷、问同一句 → `<pre>` 里先闪 `extract_keywords`、`generate_sql` 等步骤名，约 6 秒后停在 `41099.5`：接口、契约、SQL、SSE 流都没变，变的只是入口载体。
+5. 还原：`docker rm -f p23-html && docker compose up -d frontend && rm -rf p23-html`（等 `frontend` `healthy`）→ 刷新 8080 再问一句 → `41,099.5`。
 
 > 口径：界面只是入口（第 9 页「拆一刀」就是模板：删掉 nginx，主干仍活着）；L5 把这一刀升级到整栈——换掉真前端，接口层与判据纹丝不动，才叫「装修不改变承重墙」。两次结果相同、契约相同（23 条 `progress` + 1 条 `result`），差的只是「谁负责渲染」。
 

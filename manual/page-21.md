@@ -83,6 +83,19 @@ S7 SSE RECORD PASS（14 个夹具与真实输出一致）
 
 > **你现在拥有**：一条可被第三方重放的观测判据（14 条夹具 + 30 条契约测试 + 40 条协议测试），和一句可复用的话：**可观测的边界，就是判据能断言什么、不能断言什么。**
 
+### 深入探讨：12 个节点就是一张 LangGraph 图
+
+你刚对账的 12 个节点，在代码里是一张编译出来的图：`contracts/steps.yaml` 声明 12 个节点（`stages` 把它们按 10 步分组，是教学与验收的分组，SSE 仍每节点一条 `progress`）→ `backend/app/agent/graph.py:428` 的 `StateGraph(AgentState)` 用 `add_node` 逐个挂上（8 个上下文节点 + 生成/校验/校正/执行各一，L430-436）→ `START → 8 个上下文节点串行 → generate_sql → validate_sql`（L438-442）。
+`validate_sql` 后面是**条件边**（L444-452）：通过 → `run_sql`、可重试 → `correct_sql`、否则 → `END`；`correct_sql → validate_sql` 是回边（L453），`run_sql → END`（L454）。
+
+| 你前面验的证据 | 图里对应哪块 |
+|---|---|
+| 第 8 页：12 条 `progress` | 12 个图节点，一条进度对应一个节点 |
+| 第 16 页：执行前的守卫 | `validate_sql` 节点里的 guard + policy |
+| 第 17 页：一次重试的上限 | `validate_sql` 的条件边 → `correct_sql`，改完从回边再校验 |
+
+为什么值得看：图把「节点顺序」和「回边」变成可枚举的结构，测试能直接拿编译后的节点集合对契约（`backend/tests/test_s6_langgraph.py:96` 断言节点数 = 12）——这正是 PRD 说的「LangGraph 多节点工作流」。完整图结构说明见 `design/book/chapters/20-s5-s8.md`。指针：`backend/app/agent/graph.py:428-456`；本页不要求新增截图。
+
 ## 拆一刀
 
 打开 `backend/app/scripts/record_sse.py`，找到 `_normalize`（L195）。归一化是 L199–205 一整块：progress 分支 L201 `payload["duration_ms"] = FIXED_DURATION_MS`（12.5 在 L39 的常量里），error 分支 L205 `detail.pop("request_id", None)`；把这两个分支连同外层的 `if`/`elif` 头一起删掉，函数只剩解析与 `json.dumps`。只删 L201 / L205 这两行赋值会缩进报错（“录制失败”），不是 10 条红；也别删整个函数。重跑第 2 步（退出码 1）：
