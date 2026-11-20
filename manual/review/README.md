@@ -19,6 +19,6 @@
 | [page-19](replay-page-19.md) | 判据与拆一刀逐字复现；最大问题是 uv run 改 uv.lock 而 reset 救不回，其次管道退出码矛盾。 |
 | [page-20](replay-page-20.md) | 核心判据全逐字复现；缺「先还原第 19 页拆一刀」前置检查，重录假绿缺后果说明。 |
 | [page-21](replay-page-21.md) | 第 1–3 步与拆一刀逐字复现；最该先修 stage7 的 uv.lock 副作用、拆一刀两处定位按字面搜不到。 |
-| [page-23](replay-page-23.md) | 五项判据全复现（`npm test` 40 passed、真前端 `41,099.5`、拆一刀骨架 `41099.5` + 还原回绿）；先修拆一刀 8080+网络名写死（照抄可失败）、:53 修法指向 lab-mysql、:39「你应该看到」有行文本不存在。 |
+| [page-23](replay-page-23-v2.md) | 成熟版重放（v2，2026-11-20）：成熟版 `41099.5`+12 节点 11✓/1 未触发、教学版同数 `41,099.5`、`npm test` 40 passed、拆一刀 29 行 HTML `41099.5` + 还原干净全复现；先修 :128/:52 把成熟版数值写成 `41,099.5`、:23 `make docker-up` 恒 `--build` 与前置相反、:35 取 `.env.example` 未读 `.env`。v1 见 [replay-page-23](replay-page-23.md)（已过时，保留）。 |
 
 > 旧格式：`replay-03-05.md`、`replay-06-09.md`、`walkthrough.md` 属 L1，未套本模板，仍可参照。
