@@ -12,8 +12,12 @@
 | 看 32 张图的目录 | `inventory/diagram-catalog.md` |
 | 读开发教材正文 | `book/chapters/*.md` |
 | 读设计文档（32 图 + 地图） | `design-doc.pdf` |
+| 读精选版设计文档（30 图 / 32 页 / 一图一页） | `design-doc-30.pdf` |
 | 读开发教材成书 | `book-editorial/pdf/dev-book.pdf` |
 | 生成 PDF | `python3 scripts/build_book.py` + `python3 scripts/build_pdf.py` |
+
+- 精选版用途：`design-doc-30.pdf` 从 78 页完整版精选 30 图、一图一页、共 32 页（PRD「≥30 页」），比原版更有重点。
+- 选图表/重跑：32→30 的保留与删除理由见该 PDF 第 2 页「精选目录 · 32 图选 30」；重跑 `uv venv /tmp/dd30 && uv pip install --python /tmp/dd30/bin/python weasyprint && /tmp/dd30/bin/python design/scripts/build_design_doc_30.py`。
 
 ## 一条命令重建
 
