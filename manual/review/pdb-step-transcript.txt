@@ -1,0 +1,120 @@
+> manual/shots/pdb_step_demo.py(3)<module>()
+-> """离线 pdb 单步演示（第 21 页补图用）。
+(Pdb) b app/generate/guard.py:306
+Breakpoint 1 at backend/app/generate/guard.py:306
+(Pdb) b app/agent/correct.py:169
+Breakpoint 2 at backend/app/agent/correct.py:169
+(Pdb) b app/agent/correct.py:176
+Breakpoint 3 at backend/app/agent/correct.py:176
+(Pdb) b app/agent/correct.py:183
+Breakpoint 4 at backend/app/agent/correct.py:183
+(Pdb) b app/generate/provider.py:257
+Breakpoint 5 at backend/app/generate/provider.py:257
+(Pdb) b app/agent/validate.py:71
+Breakpoint 6 at backend/app/agent/validate.py:71
+(Pdb) c
+=== NODE validate_sql ===
+> backend/app/generate/guard.py(306)check_sql()
+-> if violations:
+(Pdb) p violations[0].code
+'SQL_UNKNOWN_COLUMN'
+(Pdb) p violations[0].message
+'列 dim_region.no_such_column 不在契约上下文里'
+(Pdb) up
+> manual/shots/pdb_step_demo.py(119)main()
+-> report = check_sql(sql_before, context, QUERY)
+(Pdb) p sql_before
+'SELECT dim_region.no_such_column AS `地区` FROM fact_order JOIN dim_region ON fact_order.region_id = dim_region.region_id'
+(Pdb) down
+> backend/app/generate/guard.py(306)check_sql()
+-> if violations:
+(Pdb) disable 1
+Disabled breakpoint 1 at backend/app/generate/guard.py:306
+(Pdb) c
+guard.check_sql -> ok=False 违规=1 条
+  首条违规 = SQL_UNKNOWN_COLUMN · 列 dim_region.no_such_column 不在契约上下文里
+validate_sql -> error.code=SQL_UNKNOWN_COLUMN retryable=True
+=== NODE correct_sql ===
+契约 correction -> max_attempts=1 revalidate=True
+> backend/app/agent/correct.py(169)propose_correction()
+-> if corrector is None:
+(Pdb) p corrector
+None
+(Pdb) c
+触发条件① corrector=None -> attempted=False note=没有配置校正器
+> backend/app/agent/correct.py(169)propose_correction()
+-> if corrector is None:
+(Pdb) p corrector.name
+'fixture'
+(Pdb) n
+> backend/app/agent/correct.py(176)propose_correction()
+-> if not error.retryable:
+(Pdb) p error.code
+'SQL_REJECTED'
+(Pdb) p error.retryable
+False
+(Pdb) c
+触发条件② code=SQL_REJECTED -> attempted=False note=SQL_REJECTED 不可重试
+> backend/app/agent/correct.py(169)propose_correction()
+-> if corrector is None:
+(Pdb) p corrector.name
+'llm'
+(Pdb) n
+> backend/app/agent/correct.py(176)propose_correction()
+-> if not error.retryable:
+(Pdb) p error.code
+'SQL_UNKNOWN_COLUMN'
+(Pdb) p error.retryable
+True
+(Pdb) n
+> backend/app/agent/correct.py(183)propose_correction()
+-> if policy.max_attempts < 1:
+(Pdb) p policy.max_attempts
+1
+(Pdb) p policy.revalidate
+True
+(Pdb) up
+> manual/shots/pdb_step_demo.py(141)main()
+-> proposal = propose_correction(context, sql_before, error, corrector=LlmCorrector(fake_llm))
+(Pdb) p attempts
+0
+(Pdb) down
+> backend/app/agent/correct.py(183)propose_correction()
+-> if policy.max_attempts < 1:
+(Pdb) n
+> backend/app/agent/correct.py(191)propose_correction()
+-> slots = build_correct_slots(context, sql, error.message)
+(Pdb) c
+> backend/app/generate/provider.py(257)parse_model_payload()
+-> return payload
+(Pdb) p list(payload)
+['sql']
+(Pdb) p payload['sql'][:48]
+'SELECT dim_region.region_name AS `地区`, SUM(fact_'
+(Pdb) c
+触发条件③ 全满足 -> attempted=True ok=True attempts=1/1
+候选 sql_after = SELECT dim_region.region_name AS `地区`, SUM(fact_order.order_amount) AS `销售额` FROM fact_order JOIN dim_region ON fact_order.region_id = dim_region.region_id GROUP BY dim_region.region_name
+=== NODE validate_sql ===
+> backend/app/agent/validate.py(71)validate_sql()
+-> return None
+(Pdb) p report.ok
+True
+(Pdb) up
+> manual/shots/pdb_step_demo.py(148)main()
+-> revalidated = validate_sql(sql_after, context, QUERY)
+(Pdb) p attempts
+1
+(Pdb) p sql_after
+'SELECT dim_region.region_name AS `地区`, SUM(fact_order.order_amount) AS `销售额` FROM fact_order JOIN dim_region ON fact_order.region_id = dim_region.region_id GROUP BY dim_region.region_name'
+(Pdb) down
+> backend/app/agent/validate.py(71)validate_sql()
+-> return None
+(Pdb) c
+二次 validate_sql -> error=None
+=== NODE run_sql ===
+run_sql（假执行器，不连 MySQL）-> ok=True rows=({'地区': '华北', '销售额': 128400.0},)
+=== DONE · 演示结束（真代码路径 / 假模型 + 假数据库）===
+The program finished and will be restarted
+> manual/shots/pdb_step_demo.py(3)<module>()
+-> """离线 pdb 单步演示（第 21 页补图用）。
+(Pdb) q
