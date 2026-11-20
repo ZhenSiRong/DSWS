@@ -14,7 +14,7 @@
 - **L2 换（page-10 – page-13，4 页）**：把实验室替身换成真件——数据 / 契约 / 执行器 / 部署各换一处。
 - **L3 审（page-14 – page-17，4 页）**：机器输出不确定，先预注册判据，再让错误发生，看判据抓没抓住。
 - **L4 守（page-18 – page-22，5 页）**：制造故障与越权，证明防线有效；兜不住时知道红在哪一层。
-- **L5 装（page-23，1 页）**：把第 9 页那 17 行 HTML 的入口换成真前端（React 构建版，由 compose 的 `frontend` 服务提供），接口、契约与判据都不动——体验是第五个横切系统，装修不改变承重墙。
+- **L5 装（page-23，1 页）**：把浏览器入口换成**成熟版原版前端**（`deliverable/v2/original-frontend/`，`shopkeeper-agent`，交付时的样子）；`frontend/` 教学版重建前端降为脚手架对照（compose 默认 8080，自带 40 条协议测试）。接口、契约与判据都不动——体验是第五个横切系统，装修不改变承重墙。
 - **附录（不进 24 页）**：[LLM 端点配置](appendix/llm-endpoint.md)——真模型是可选支线；主线不配 key 也能全绿。
 
 每页的「你应该看到」就是该页的**完成判据**——看到它才算做完；L2–L5 每级最后一页的「拆一刀」升级为**级考核**（L1 无拆一刀，另用建成证明海报对账）。验证不单独成页。
@@ -118,13 +118,13 @@ L2–L5 十四页不在这张网络里（L2 换 → L3 审 → L4 守 → L5 装
 
 ### L5 装（page-23，1 页）
 
-> 装的是**体验**：第 9 页那 17 行 HTML 只是入口原型；L5 换成真前端（React 构建版，由 compose 的 `frontend` 服务提供），接口、契约、判据、城市都不动——装修不改变承重墙。只此一页，因为体验是第五个横切系统，且它不新增交付物。
+> 装的是**体验**：同一套后端有三种装修，从简到成熟——第 9 页 17 行 HTML（入口原型）→ `frontend/` 教学版重建前端（**脚手架**，compose 默认 8080，自带 40 条协议测试）→ **成熟版原版 `shopkeeper-agent`**（交付时的样子，`deliverable/v2/original-frontend/`）。L5 把成熟版真跑起来并与教学版并排对照，接口、契约、判据、城市都不动——装修不改变承重墙。只此一页，因为体验是第五个横切系统，且它不新增交付物。
 
 | 页 | 主题 | 判据（可执行命令 / 输出摘要） |
 |---|---|---|
-| [第 23 页 · 装前端：从 17 行 HTML 到真前端](page-23.md) | 体验 | `make docker-up` → 浏览器 `http://127.0.0.1:8080` 问一句 → `41099.5`；`(cd frontend && npm test)` → `40 passed (40)`；真前端 = React 构建版，由 compose `frontend` 服务提供 |
+| [第 23 页 · 装体验：从 17 行 HTML 到成熟版前端](page-23.md) | 体验 | 起成熟版（`docker run` 的 nginx 容器占 `http://127.0.0.1:8088`）问一句 → `41099.5`；对照教学版 `http://127.0.0.1:8080` → 同一个数；`(cd frontend && npm test)` → `40 passed (40)`（教学版脚手架的测试）；成熟版 = 交付时的前端 `deliverable/v2/original-frontend/` |
 
-> 级考核在 page-23（拆一刀）：停 `frontend`，用真前端镜像的 nginx 占 8080 挂第 9 页同款简陋页（`p23-html/index.html`，只补 3 处接线、进 compose 网络），同一问题仍出 `41099.5`；还原 `docker compose up -d frontend`。
+> 级考核在 page-23（拆一刀）：把 8088 的成熟版换成第 9 页的 17 行 HTML（`lab-mature/index.html`，只补 3 处接线、进 compose 网络、用教学版镜像的 nginx 占 8088），同一问题仍出 `41099.5`；还原 `docker rm -f lab-mature && rm -rf lab-mature`，8080 教学版不受影响。
 
 - [建成证明海报 · 物料清单 + 检验单](completeness/poster-answer.png)：**12 件交付物 × 24 个检验点**，勾满一行 = 这件东西建成、12 行全满 = 系统完备；空白打印版 [poster-blank.png](completeness/poster-blank.png)。判据全部取自第 0–9 页「你应该看到」，渲染 `python3 manual/shots/render_completeness.py`。
 - **范围**：v2 物料清单覆盖 **L1 的 12 件交付物**；L2–L5 的验收由各级「拆一刀」+ 失败矩阵 / 黄金集 / 门禁覆盖（见各页），不在这张 12 行海报里。
@@ -140,7 +140,7 @@ L2–L5 十四页不在这张网络里（L2 换 → L3 审 → L4 守 → L5 装
 | **NL2SQL**：自然语言问数——中文提问，系统自动生成 SQL 并执行 | [p5](page-05.md) → [p6](page-06.md) → [p7](page-07.md)（手工版）；[p10](page-10.md)–[p12](page-12.md) 换真（真数据 / 真契约 / 真执行器） | p7 `rows[0].sales = 41099.5`；p12 真执行器回 `Decimal('1144735.50')`（上限 1000 行、非 SELECT 抛 `PermissionError`） | ★★ 够用但分散 |
 | **LangGraph 12 节点 / 10 步**：多节点工作流分阶段执行 | [p8](page-08.md)（12 条 progress）；[p21](page-21.md)（12 节点目录 / 10 步分组 + 「深入探讨」：12 节点 = StateGraph、`correct_sql` = 条件边） | `/api/steps = 12`（条件步骤 `correct_sql`）；`make stage7` → `S7 PASS`；p8 12 条 progress + 1 条 result | ★★ **p21「深入探讨」是入口** |
 | **自校验 + 自纠错**：`validate_sql` + `correct_sql` 双保险，校验失败自动重试 | [p16](page-16.md)（守卫：16 个错误码 / 9 个场景失败矩阵）；[p17](page-17.md)（`correct_sql` 一次重试 / 14 条测试 / `trials≥3` 采样） | p16 `pytest backend/tests/generate/test_guard.py -q` → `26 passed`、`failures --check` → `S6 PASS`；p17 `pytest backend/tests/agent/test_correct.py -q` → `14 passed`、契约 `max_attempts: 1` | ★★★ **全书最深** |
-| **React 19 + Tailwind**：聊天式提问、可视化结果表格 | [p23](page-23.md)（真前端：17 行 HTML → React 构建版，聊天式提问 + 结果表） | p23 浏览器问一句 → `41099.5`；`(cd frontend && npm test)` → `40 passed (40)`；`frontend/package.json`：`react ^19.0.0`、`tailwindcss ^4.3.4` | ★★ 装修不换承重墙 |
+| **React 19 + Tailwind**：聊天式提问、可视化结果表格 | [p23](page-23.md)（成熟版原版 `shopkeeper-agent`：17 行 HTML → 教学版脚手架 → 交付时的前端） | 浏览器开 `http://127.0.0.1:8088` 成熟版问一句 → `41099.5`；对照 `http://127.0.0.1:8080` 教学版同一个数；`(cd frontend && npm test)` → `40 passed (40)`（教学版脚手架测试）；技术栈事实：成熟版 `deliverable/v2/original-frontend/package.json` `react ^19.0.0` + `tailwindcss ^3.4.17`，教学版 `frontend/package.json` `tailwindcss ^4.3.4` | ★★ 装修不换承重墙 |
 
 - **为什么书按造 / 换 / 审 / 守组织、而 PRD 按功能验收**：书是**教学结构**（每页一个工程动作、一条判据，按依赖顺序排），PRD 是**交付清单**（验收时按功能打勾）；同一套系统的两种切法，上表就是两者的映射——读的顺序按书，验收的口径按 PRD。
 - **自校验自纠错 = PRD 的「双保险」，也是本书最强项（★★★）**：16 个错误码 + 9 个场景失败矩阵 + `max_attempts: 1` 的有上限重试 + `trials≥3` 的采样口径，是全书唯一把「先预注册判据、再让错误发生」这个闭环走完的地方（[p16](page-16.md) / [p17](page-17.md)）。

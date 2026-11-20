@@ -13,7 +13,7 @@
     "geometry": "manual/city/data.json（L1 十件设施 / 四区 / 11 条道路 / 市民，只读比对，不改）",
     "previous": "manual/city/data-23.json（23 页版本历史快照，只读：L1 十件 + 改造层 P10–P22 逐字保留）",
     "pages": "manual/page-10.md … page-23.md（H1 与「你应该看到」定设施命名与判据）",
-    "actions": "humen-desicions/09-ablation-course.md D44：L1 造（纵向）+ L2 换 / L3 审 / L4 守（横向横切系统）；D50：L5 装 = 体验层，真前端换掉第 9 页 17 行 HTML，入口 / 契约不变",
+    "actions": "humen-desicions/09-ablation-course.md D44：L1 造（纵向）+ L2 换 / L3 审 / L4 守（横向横切系统）；D50：L5 装 = 体验层，成熟版原版前端换掉第 9 页 17 行 HTML，入口 / 契约不变",
     "metaphor": "GLOSSARY.md「城市隐喻」（D45）：设施 = 运行单元、道路/管网 = 网络与数据流、市民 = 用户",
     "stages": "manual/city/stages-city.json（四阶段口径与 12 件接线点，本图不镜像它，只借横切系统的说法）"
   },
@@ -125,7 +125,7 @@
       "theme": "同一套承重墙，换更好的装修",
       "pages": "P23",
       "count": 1,
-      "desc": "同一栋楼、同一扇门：入口和契约都不动，只把第 9 页那 17 行 HTML 换成正经前端。"
+      "desc": "同一栋楼、同一扇门：入口和契约都不动，只把第 9 页那 17 行 HTML 换成成熟版原版前端（shopkeeper-agent 前端）。"
     }
   ],
   "zones": [
@@ -825,7 +825,7 @@
         "pages": "P23",
         "layer": "门面",
         "color": "#7B4FA0",
-        "desc": "真前端 · 同一入口 / 契约"
+        "desc": "成熟版前端 · 同一入口 / 契约"
       }
     ]
   },
@@ -1507,13 +1507,13 @@
       "level_key": "L5",
       "theme": "体验升级",
       "layer": "门户门面层",
-      "name": "前端体验馆",
+      "name": "成熟前端体验馆",
       "kind": "体验馆",
-      "soft": "真实前端（React 构建产物）",
-      "goal": "真前端只换入口载体：接口 / 契约 / SSE / 判据全部不动，同一句问题仍出 41099.5",
-      "short": "换真装修",
-      "foot": "React 构建产物 · :8080 仍出 41099.5",
-      "criterion": "make docker-up → 8080 问一句停在 41099.5；拆一刀换回 17 行 HTML（占 8080）仍停在 41099.5",
+      "soft": "成熟版原版前端（shopkeeper-agent · React 19 + Tailwind 3.4 · dist 现成）",
+      "goal": "成熟版前端只换入口载体：17 行 HTML → 原版 shopkeeper-agent 前端，接口 / 契约 / SSE / 判据全不动，同一句问题仍出 41099.5",
+      "short": "换成熟装修",
+      "foot": "成熟版原版前端 · :8088 仍出 41099.5",
+      "criterion": "docker compose up -d 起栈 + 成熟版 nginx 容器 8088 → 问「华北销售额」→ 41,099.5（数值 41099.5）；教学版 8080 为脚手架对照",
       "from": "P9",
       "from_name": "城市门户 + 道路网",
       "also": [
@@ -1542,7 +1542,7 @@
         1360,
         300
       ],
-      "link_note": "体验馆挂在门户屋顶：页面层从 17 行 HTML 换成 React 构建产物，P4 窗口的 /api 契约不动",
+      "link_note": "体验馆挂在门户屋顶：页面层从 17 行 HTML 换成成熟版原版前端（nginx 容器 8088），P4 窗口的 /api 契约不动",
       "target_note": "P9 门户屋顶（页面层）"
     }
   ],

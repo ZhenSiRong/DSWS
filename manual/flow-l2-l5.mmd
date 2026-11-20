@@ -51,7 +51,7 @@ flowchart LR
         P22 -->|FS| G4
     end
     subgraph L5["L5 装 ｜ P23 + G5 级考核"]
-        P23["<b>P23 装真前端</b><br/>工期 20（估）<br/>ES300 EF320 LS300 LF320<br/>判据：make docker-up<br/>→ 8080 出 41099.5<br/>npm test 40 passed"]
+        P23["<b>P23 装成熟前端</b><br/>工期 20（估）<br/>ES300 EF320 LS300 LF320<br/>判据：docker compose up -d<br/>+ 成熟版 nginx 8088<br/>→ 41,099.5（41099.5）<br/>教学版 8080 = 脚手架"]
         G5["<b>G5 L5 级考核</b><br/>工期 10（估）· 拆前端<br/>ES320 EF330 LS320 LF330<br/>判据：换回 17 行 HTML<br/>仍出 41099.5"]
         P23 -->|FS| G5
     end

@@ -65,7 +65,7 @@ NAMES = {
     "P10": "换真数据", "P11": "换真契约", "P12": "换真执行器", "P13": "换真部署",
     "P14": "审召回", "P15": "审生成", "P16": "审校验", "P17": "审纠错",
     "P18": "守账号", "P19": "守策略", "P20": "守取消", "P21": "守可观测", "P22": "守回归",
-    "P23": "装真前端", "G2": "级考核", "G3": "级考核", "G4": "级考核", "G5": "级考核",
+    "P23": "装成熟前端", "G2": "级考核", "G3": "级考核", "G4": "级考核", "G5": "级考核",
 }
 
 
@@ -274,6 +274,13 @@ def verify_cpm(parsed: dict, quiet: bool) -> dict:
     for nid, name in NAMES.items():
         if name not in fields[nid]["title"]:
             raise CheckError(f"{nid} 的标题应含活动名「{name}」，实际「{fields[nid]['title']}」")
+    # P23 = L5 装成熟版原版前端：判据里必须同时有 8088 成熟版与 8080 教学版脚手架口径
+    p23_crit = "".join(fields["P23"]["crit"])
+    for tok, why in [("docker compose up -d", "起栈命令"), ("8088", "成熟版 nginx 容器端口"),
+                     ("41,099.5", "结果 41,099.5"), ("41099.5", "数值 41099.5"),
+                     ("教学版", "教学版脚手架对照"), ("8080", "教学版 8080 端口")]:
+        if tok not in p23_crit:
+            raise CheckError(f"P23 的判据里缺「{tok}」——{why}")
 
     if parsed["solid"] != SOLID:
         raise CheckError(f"级内实线依赖应为 {SOLID}，实际 {parsed['solid']}")

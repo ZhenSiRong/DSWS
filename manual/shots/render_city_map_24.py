@@ -12,7 +12,8 @@
       facilities    L1 十件设施（逐字等于 data.json：位置 / 尺寸 / 道路 / 图注内容全部复用）
       retrofits     14 件改造层设施（P10–P23）：前 13 件 P10–P22 逐字等于 data-23.json
                     （L2 蓝 / L3 橙 / L4 红），新增 P23 = L5 装（紫）体验层：
-                    真实 React 前端替换第 9 页 17 行 HTML，改造对象 = P9 门户 + P4 窗外层，
+                    成熟版原版前端（shopkeeper-agent · React 19 + Tailwind 3.4，dist 现成，
+                    nginx 容器 8088）替换第 9 页 17 行 HTML，改造对象 = P9 门户 + P4 窗外层，
                     画在门户区 P9 屋顶，不新增楼
       zones/citizen/roads/notes/granularity/levels/legend  L1 原样 + 改造层图例（含 L5 紫）
       registry      门户区「改造层登记处」面板（14 条改造关系 + 整图图注）
@@ -298,14 +299,14 @@ def validate_data(data: dict, old_l1: dict, old_23: dict) -> dict:
                  f"改造层 {retros[i]['no']} 与 {retros[j]['no']} 卡片重叠")
     need(len(markers) == 14, "14 件改造层设施应各有 1 个落点")
 
-    # —— P23 = L5 装：真实前端 / 店铺装修（同一栋楼、同一入口，不新增楼）——
+    # —— P23 = L5 装：成熟版原版前端（shopkeeper-agent）/ 店铺装修（同一栋楼、同一入口，不新增楼）——
     by_retro = {r["no"]: r for r in retros}
     p23 = by_retro.get("P23")
     need(p23 is not None, "缺少 P23（L5 装 · 体验层）")
     if p23 is not None:
         need(p23["level"] == "L5 装", f"P23 的 level 应为 L5 装，实为 {p23['level']!r}")
-        need(p23["soft"] == "真实前端（React 构建产物）",
-             f"P23 的 soft 应为「真实前端（React 构建产物）」，实为 {p23['soft']!r}")
+        need(p23["soft"] == "成熟版原版前端（shopkeeper-agent · React 19 + Tailwind 3.4 · dist 现成）",
+             f"P23 的 soft 应为成熟版原版前端（shopkeeper-agent · React 19 + Tailwind 3.4 · dist 现成），实为 {p23['soft']!r}")
         need(p23["from"] == "P9", f"P23 改造对象主目标应为 P9 门户，实为 {p23['from']}")
         need(p23.get("also") == ["P4"], f"P23 的 also 应含 P4 窗外层，实为 {p23.get('also')}")
         need("P9" in p23["relation"] and "P4" in p23["relation"],
@@ -320,6 +321,9 @@ def validate_data(data: dict, old_l1: dict, old_23: dict) -> dict:
         # 这里再钉死「入口 / 契约不变」这句话。
         need("入口" in p23["goal"] and "契约" in p23["goal"], "P23 goal 要写清入口 / 契约不变")
         need("41099.5" in p23["criterion"], "P23 判据要写 41099.5（换前端不改结果）")
+        need("8088" in p23["criterion"], "P23 判据要写成熟版 nginx 容器 8088")
+        need("教学版" in p23["criterion"] and "8080" in p23["criterion"],
+             "P23 判据要写清教学版 8080 是脚手架对照")
         need("17 行" in p23["criterion"] or "17 行" in p23["goal"], "P23 要对照第 9 页 17 行 HTML")
 
     # —— 屋顶 / 仓门图标（P21 / P18，不新增）——
@@ -375,7 +379,8 @@ def validate_data(data: dict, old_l1: dict, old_23: dict) -> dict:
           f"与 data-23.json 逐字一致（23 页版冻结为历史快照）")
     print(f"  ✓ 改造层：14 件 P10–P23（L2 4 + L3 4 + L4 5 + L5 1），件件有 from（← 被改造的 "
           f"L1 设施）与横平竖直的接入线；终点全部落在目标 40px 内")
-    print(f"  ✓ L5 装：P23 前端体验馆 = 真实前端（React 构建产物），画在门户区 P9 屋顶，"
+    print(f"  ✓ L5 装：P23 成熟前端体验馆 = 成熟版原版前端（shopkeeper-agent 前端，nginx 8088），"
+          f"画在门户区 P9 屋顶，"
           f"改造对象 P9 门户 + P4 窗外层，不新增楼")
     print(f"  ✓ 版面：改造层卡片互不重叠；P11/P12 贴在父楼 P3 里；登记处面板在门户区，"
           f"不压任何设施 / 图注 / 市民")
@@ -698,7 +703,7 @@ __CSS__
   <footer id="ftr">
     <div class="ftr-row ftr-r1"><span>数据源：<b>manual/city/data-24.json</b>（单源）· 一条命令重跑：<b>python3 manual/shots/render_city_map_24.py</b></span><span>旧图：<b>manual/images/city-map-23.png</b>（23 页版，历史快照，本图不改它）</span></div>
     <div class="ftr-row ftr-r2"><span>图注：同一片城区、同一套坐标 —— L1 十件设施原样保留，叠加 L2 换 4 / L3 审 4 / L4 守 5 / L5 装 1，共 24 件 = 24 页（P0–P23）。</span><span>改造关系表在门户区「改造层登记处」</span></div>
-    <div class="ftr-row ftr-r3"><span class="hint">虚线 = 改造接入线：从改造层设施指向被改造的 L1 设施（如 <b>P23 前端体验馆 ← P9 门户 + P4 窗外层</b>）· 悬停看详情</span><span>答辩 / 概览用：不进程页面、不替代 page-00…page-23 验收</span></div>
+    <div class="ftr-row ftr-r3"><span class="hint">虚线 = 改造接入线：从改造层设施指向被改造的 L1 设施（如 <b>P23 成熟前端体验馆 ← P9 门户 + P4 窗外层</b>）· 悬停看详情</span><span>答辩 / 概览用：不进程页面、不替代 page-00…page-23 验收</span></div>
   </footer>
 </div>
 <script type="application/json" id="city-data">__DATA_JSON__</script>
@@ -972,11 +977,11 @@ def check_html_static(page: str, data: dict, info: dict) -> None:
     for token in ("P10 真实供水管线", "P11 契约校准站", "P12 执行器车间",
                   "P13 部署调度塔", "P14 抽检站", "P15 生成审计室", "P16 校验门禁",
                   "P17 纠错法庭", "P18 门禁闸机", "P19 策略哨所", "P20 应急通道",
-                  "P21 监控塔", "P22 回归演练场", "P23 前端体验馆"):
+                  "P21 监控塔", "P22 回归演练场", "P23 成熟前端体验馆"):
         if token not in page:
             fail(f"HTML 里 24 件清单缺 {token}")
-    for token in ("真实前端（React 构建产物）", "同一套承重墙，换更好的装修",
-                  "make docker-up", "41099.5"):
+    for token in ("成熟版原版前端（shopkeeper-agent", "同一套承重墙，换更好的装修",
+                  "docker compose up -d", "8088", "41,099.5", "41099.5"):
         if token not in page:
             fail(f"HTML 里 P23 说明缺 {token!r}")
     if page.count('style="left:') < 10:
@@ -1070,7 +1075,7 @@ def check_metrics(metrics: dict, data: dict, info: dict) -> None:
     if not metrics.get("tip11Shown") or "P6 办事指南与规则室" not in hit11 or "校准站" not in hit11:
         errs.append(f"悬停 P11 的 tooltip 不对：{hit11[:120]}")
     if (not metrics.get("tip23Shown") or "L5 装" not in hit23
-            or "真实前端" not in hit23 or "P9 门户屋顶" not in hit23):
+            or "成熟版前端" not in hit23 or "P9 门户屋顶" not in hit23):
         errs.append(f"悬停 P23 的 tooltip 不对：{hit23[:160]}")
     if not metrics.get("tipHidden"):
         errs.append("悬停移开后 tooltip 没有收起")
@@ -1095,7 +1100,7 @@ def check_metrics(metrics: dict, data: dict, info: dict) -> None:
           f"渲染坐标与 data 逐张一致（±1px）")
     print(f"    接入线 14 条 + 落点 14 个 + 屋顶图标 {len(data['icons'])} 个 + 登记处 14 行；"
           f"悬停 P6 显示「属于 P3 查询服务中心」、P11 显示「← P6 办事指南与规则室」、"
-          f"P23 显示「L5 装 / 真实前端 / P9 门户屋顶」；")
+          f"P23 显示「L5 装 / 成熟版原版前端 / P9 门户屋顶」；")
     print(f"    无外部请求、无溢出 / 截断、区标题不压卡片、改造层四色与图例就位")
 
 
@@ -1366,7 +1371,7 @@ def main() -> int:
     print(f"  {OUT_PNG.relative_to(REPO)}  {OUT_W}×{OUT_H}  {OUT_PNG.stat().st_size // 1024} KB")
     print(f"  {OUT_HTML.relative_to(REPO)}  {OUT_HTML.stat().st_size // 1024} KB")
     print("  24 件设施：L1 P0–P9（原样）+ L2 换 P10–P13 / L3 审 P14–P17 / L4 守 P18–P22 / "
-          "L5 装 P23（真实前端 · 前端体验馆）")
+          "L5 装 P23（成熟版原版前端 · 成熟前端体验馆）")
     print(f"  重跑：{RERUN}")
     return 0
 
