@@ -1,0 +1,432 @@
+{
+ "artifact": "exec-trace-v2",
+ "generated_at_local": "2026-11-20T13:33:10+08:00",
+ "query": "查询销售额大于平均销售额的商品",
+ "url": "http://127.0.0.1:8088",
+ "viewport": {
+  "width": 1440,
+  "height": 1640
+ },
+ "device_scale_factor": 1.5,
+ "stack": {
+  "project": "p17t2",
+  "backend_container": "p17t2-backend-1",
+  "app_url": "http://127.0.0.1:8088",
+  "trace_in_container": "/tmp/trace.jsonl"
+ },
+ "attempts": [
+  {
+   "attempt": 1,
+   "triggered": false,
+   "note": "首次真跑：校验一次通过，校正未触发（校正SQL=未触发）",
+   "seconds": 20.7,
+   "frames": 29,
+   "trace_lines": 0
+  },
+  {
+   "attempt": 2,
+   "triggered": true,
+   "note": "触发但 trace 落进已删除 inode（rm 了 trace 文件），作废",
+   "seconds": 28.6,
+   "frames": 41,
+   "trace_lines": 0
+  },
+  {
+   "attempt": 3,
+   "triggered": true,
+   "note": "触发且 trace 完整，但探针还没有 rect 字段",
+   "seconds": 32.9,
+   "frames": 48,
+   "trace_lines": 2694
+  },
+  {
+   "attempt": 4,
+   "triggered": true,
+   "note": "保留：触发且成功；探针含节点/rect/标题",
+   "seconds": 27.8,
+   "frames": 42,
+   "trace_lines": 2514
+  }
+ ],
+ "kept_attempt": "4",
+ "timeline_s": {
+  "click_s": 0.0,
+  "request_s": 0.044,
+  "generate_running_s": 0.153,
+  "generate_success_s": 11.117,
+  "validate1_running_s": 11.119,
+  "validate1_error_s": 11.153,
+  "correct_running_s": 11.17,
+  "correct_success_s": 18.468,
+  "validate2_success_s": 18.541,
+  "run_sql_success_s": 18.604,
+  "result_s": 18.606,
+  "generate_wait_s": 10.983,
+  "validate1_ms_s": 0.033,
+  "correct_wait_s": 7.309,
+  "validate2_wait_s": 0.067,
+  "run_wait_s": 0.06,
+  "real_total_s": 18.562
+ },
+ "trigger": {
+  "triggered": true,
+  "validate_errors": 1,
+  "correct_runs": 1,
+  "correct_success": 1,
+  "events": 27,
+  "rows": 5,
+  "note": ""
+ },
+ "frames": {
+  "role_counts": {
+   "input": 1,
+   "t0": 1,
+   "a": 4,
+   "b": 1,
+   "c": 4,
+   "d": 1,
+   "e": 1
+  },
+  "crop": {
+   "x": 450,
+   "y": 0,
+   "w": 1710,
+   "h": 2460,
+   "css": {
+    "x": 300,
+    "w": 1140,
+    "h": 1640
+   }
+  },
+  "out_width": 800
+ },
+ "trace": {
+  "records_total": 2514,
+  "records_kept": 2514,
+  "bytes": 294704,
+  "thinned": false,
+  "limit_bytes": 512000
+ },
+ "client_sse": [
+  {
+   "t_rel_ms": 99,
+   "event": {
+    "type": "progress",
+    "step": "extract_keywords",
+    "status": "running",
+    "duration_ms": null
+   }
+  },
+  {
+   "t_rel_ms": 99,
+   "event": {
+    "type": "progress",
+    "step": "extract_keywords",
+    "status": "success",
+    "duration_ms": 3.6
+   }
+  },
+  {
+   "t_rel_ms": 108,
+   "event": {
+    "type": "progress",
+    "step": "recall_column",
+    "status": "running",
+    "duration_ms": null
+   }
+  },
+  {
+   "t_rel_ms": 108,
+   "event": {
+    "type": "progress",
+    "step": "recall_column",
+    "status": "success",
+    "duration_ms": 0.8
+   }
+  },
+  {
+   "t_rel_ms": 119,
+   "event": {
+    "type": "progress",
+    "step": "recall_value",
+    "status": "running",
+    "duration_ms": null
+   }
+  },
+  {
+   "t_rel_ms": 119,
+   "event": {
+    "type": "progress",
+    "step": "recall_value",
+    "status": "success",
+    "duration_ms": 0.5
+   }
+  },
+  {
+   "t_rel_ms": 119,
+   "event": {
+    "type": "progress",
+    "step": "recall_metric",
+    "status": "running",
+    "duration_ms": null
+   }
+  },
+  {
+   "t_rel_ms": 119,
+   "event": {
+    "type": "progress",
+    "step": "recall_metric",
+    "status": "success",
+    "duration_ms": 0.9
+   }
+  },
+  {
+   "t_rel_ms": 119,
+   "event": {
+    "type": "progress",
+    "step": "merge_retrieved_info",
+    "status": "running",
+    "duration_ms": null
+   }
+  },
+  {
+   "t_rel_ms": 119,
+   "event": {
+    "type": "progress",
+    "step": "merge_retrieved_info",
+    "status": "success",
+    "duration_ms": 0.1
+   }
+  },
+  {
+   "t_rel_ms": 129,
+   "event": {
+    "type": "progress",
+    "step": "filter_table",
+    "status": "running",
+    "duration_ms": null
+   }
+  },
+  {
+   "t_rel_ms": 129,
+   "event": {
+    "type": "progress",
+    "step": "filter_table",
+    "status": "success",
+    "duration_ms": 0.5
+   }
+  },
+  {
+   "t_rel_ms": 129,
+   "event": {
+    "type": "progress",
+    "step": "filter_metric",
+    "status": "running",
+    "duration_ms": null
+   }
+  },
+  {
+   "t_rel_ms": 129,
+   "event": {
+    "type": "progress",
+    "step": "filter_metric",
+    "status": "success",
+    "duration_ms": 0.2
+   }
+  },
+  {
+   "t_rel_ms": 129,
+   "event": {
+    "type": "progress",
+    "step": "add_extra_context",
+    "status": "running",
+    "duration_ms": null
+   }
+  },
+  {
+   "t_rel_ms": 132,
+   "event": {
+    "type": "progress",
+    "step": "add_extra_context",
+    "status": "success",
+    "duration_ms": 0.4
+   }
+  },
+  {
+   "t_rel_ms": 153,
+   "event": {
+    "type": "progress",
+    "step": "generate_sql",
+    "status": "running",
+    "duration_ms": null
+   }
+  },
+  {
+   "t_rel_ms": 11117,
+   "event": {
+    "type": "progress",
+    "step": "generate_sql",
+    "status": "success",
+    "duration_ms": 10982.9
+   }
+  },
+  {
+   "t_rel_ms": 11119,
+   "event": {
+    "type": "progress",
+    "step": "validate_sql",
+    "status": "running",
+    "duration_ms": null
+   }
+  },
+  {
+   "t_rel_ms": 11153,
+   "event": {
+    "type": "progress",
+    "step": "validate_sql",
+    "status": "error",
+    "duration_ms": 33.4
+   }
+  },
+  {
+   "t_rel_ms": 11170,
+   "event": {
+    "type": "progress",
+    "step": "correct_sql",
+    "status": "running",
+    "duration_ms": null
+   }
+  },
+  {
+   "t_rel_ms": 18468,
+   "event": {
+    "type": "progress",
+    "step": "correct_sql",
+    "status": "success",
+    "duration_ms": 7309
+   }
+  },
+  {
+   "t_rel_ms": 18472,
+   "event": {
+    "type": "progress",
+    "step": "validate_sql",
+    "status": "running",
+    "duration_ms": null
+   }
+  },
+  {
+   "t_rel_ms": 18541,
+   "event": {
+    "type": "progress",
+    "step": "validate_sql",
+    "status": "success",
+    "duration_ms": 66.9
+   }
+  },
+  {
+   "t_rel_ms": 18560,
+   "event": {
+    "type": "progress",
+    "step": "run_sql",
+    "status": "running",
+    "duration_ms": null
+   }
+  },
+  {
+   "t_rel_ms": 18604,
+   "event": {
+    "type": "progress",
+    "step": "run_sql",
+    "status": "success",
+    "duration_ms": 60.3
+   }
+  },
+  {
+   "t_rel_ms": 18606,
+   "event": {
+    "type": "result",
+    "data": {
+     "columns": [
+      {
+       "name": "商品ID",
+       "type": "string"
+      },
+      {
+       "name": "商品名称",
+       "type": "string"
+      },
+      {
+       "name": "销售额",
+       "type": "number"
+      }
+     ],
+     "rows": [
+      [
+       "P001",
+       "iPhone 15 Pro",
+       71992
+      ],
+      [
+       "P003",
+       "Mate 60 Pro",
+       55992
+      ],
+      [
+       "P002",
+       "Galaxy S24 Ultra",
+       56994
+      ],
+      [
+       "P005",
+       "美的空调 KFR-35GW",
+       22400
+      ],
+      [
+       "P004",
+       "戴森 V15 吸尘器",
+       32994
+      ]
+     ]
+    }
+   }
+  }
+ ],
+ "dom_final": {
+  "nodes": {
+   "抽取关键词": "success",
+   "召回字段信息": "success",
+   "召回指标信息": "success",
+   "召回字段取值": "success",
+   "合并召回信息": "success",
+   "过滤指标信息": "success",
+   "过滤表信息": "success",
+   "添加额外上下文": "success",
+   "生成SQL": "success",
+   "校验SQL": "success",
+   "校正SQL": "success",
+   "执行SQL": "success"
+  },
+  "tableRows": 5,
+  "title": "电商问数 | Shopkeeper Agent",
+  "lang": "zh-CN",
+  "consoleErrors": [],
+  "scroll": {
+   "scrollHeight": 1447,
+   "clientHeight": 1441,
+   "scrollTop": 6,
+   "bodyText": "电商问数 shopkeeper-agent 新会话 样例 统计 2025 年第一季度各大区的 GMV，并按 GMV 从高到低排序统计 2025 年 3 月各商品品类的销量和销售额查询华东地区 2025 年第一季度销售额最高的前 5 个商品按会员等级统计 2025 年第一季度的订单数和销售额 API /api 完成 1 智能数据分析 Agent FastAPI SSE / LangGraph 查询销售额大于平均销售额的商品 12:49 查询完成，共 5 行结果。 执行流程 LangGraph 有误 无误 抽取关键词 召回字段信息 召回指标信息 召回字段取值 合并召回信息 过滤指标信息 过滤表信息 添加额外上下文 生成SQL 校验SQL 校正SQL 执行SQL 查询结果 5 行 商品ID 商品名称 销售额 P001 iPhone 15 Pro 71992 P003 Mate 60 Pro 55992 P002 Galaxy S24 Ultra 56994 P005 美的空调 KFR-35GW 22400 P004 戴森 V15 吸尘器 32994 12:49 就绪"
+  }
+ },
+ "method": {
+  "left": "成熟版前端真截图（headless Chrome 1440×1640 @1.5x，点击后每 ~360ms 一帧）",
+  "right": "同一请求的 backend uvicorn 进程内 sys.settrace + threading.settrace 行级轨迹（sitecustomize 注入，只追 4 个文件），按左帧时间戳取 ≤ 该时刻的决定性 trace 事件",
+  "clock": "浏览器 Date.now() 与后端 time.time() 同为宿主 wall clock（epoch 秒/毫秒）",
+  "trigger": "LLM 采样不保证每次触发校正；本证据只保留触发且成功的那一次，其余尝试列在 attempts"
+ },
+ "model": "deepseek-flash",
+ "generator": "http-llm",
+ "llm_calls": 2,
+ "llm_calls_all_attempts": 7,
+ "llm_evidence": "保留这次：generate_sql 1 次（graph.py:239 draft_sql(...) 只出现 1 次）+ correct_sql 1 次（correct.py:203 corrector.correct(...) 只出现 1 次）；对应 SSE 两段真实等待 10.983s / 7.309s。全部 4 次尝试合计 7 次（第 1 次未触发校正，只用了 1 次）。"
+}

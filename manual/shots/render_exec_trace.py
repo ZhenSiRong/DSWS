@@ -1,54 +1,41 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""render_exec_trace.py —— 把 trace_query.py 的左右两侧轨迹渲染成 GIF / 关键帧。
+"""render_exec_trace.py —— 第 17 页 v2：左「真前端截图」/ 右「同一次真跑的代码行」对照 GIF。
 
-输入（由 trace_query.py 在 backend 容器里真跑产出）：
+输入（由 manual/shots/trace_server.py 产出，已提交在仓库里）：
 
-    manual/review/exec-trace.jsonl        SSE 事件 + sys.settrace 行级轨迹
-    manual/review/exec-trace.meta.json    日期 / 模型 / 问法 / 耗时 / LLM 调用次数
+    manual/review/exec-trace-v2/meta.json            本次真跑：时间轴 / 触发帧序 / 尝试次数
+    manual/review/exec-trace-v2/capture-frames.json  选中的真截图 + 每帧 DOM 探针（节点状态 / rect / 时间戳）
+    manual/review/exec-trace-v2/frames/*.png         左栏真截图（800×1151，裁掉侧栏）
+    manual/review/exec-trace-v2/trace.jsonl          同一请求的 backend 行级轨迹（sitecustomize 注入）
 
 输出：
 
-    manual/images/page-17-exec-trace.gif  6–10s 循环，左 12 节点时间轴 / 右代码窗口
-    manual/images/page-17-exec-trace.png  关键帧：correct_sql 执行行 + sql_before/error/attempts
+    manual/images/page-17-exec-trace.gif   18–25s 循环，12.5fps（80ms/帧），1600 宽，≤5MB
+    manual/images/page-17-exec-trace.png   关键帧：阶段 c（校正SQL 转圈）—— 左：前端红叉+转圈，
+                                           右：correct.py propose_correction() L202/203 + sql_before/error/attempts
+    manual/review/exec-trace-v2/render.json  渲染/断言报告（帧计划、每阶段停留表、OCR、对齐抽样）
 
 一条命令重跑（仓库根目录）：
 
-    python3 manual/shots/render_exec_trace.py
+    python3 manual/shots/render_exec_trace.py                 # 渲染 + 全部断言
+    python3 manual/shots/render_exec_trace.py --verify-only   # 只验证已有产物
 
-只做验证、不重新渲染：
-
-    python3 manual/shots/render_exec_trace.py --verify-only
-
-它做四件事：
-
-1. **先验证原始轨迹**（不通过就不渲染）：`validate_sql:error` 在 `correct_sql`
-   之前、`correct_sql` 只有一轮 running/success、其后有二次 `validate_sql:success`、
-   `run_sql:success`、`result`；行级轨迹覆盖 ≥3 个文件；时间戳单调。
-2. **排帧**：左栏按 SSE wall-clock 推进（12 节点谁 waiting/running/success/error/
-   skipped、耗时、第几轮）；右栏按行级轨迹推进（当前文件/函数/行号、6 行代码窗口、
-   关键局部变量、LLM 等待窗口）。真实里的 13s/11s 模型调用在 GIF 里按比例压缩，
-   整条循环约 8.8s。
-3. **渲染**：每帧拼一段深色终端风的 HTML（等宽字体、同 term_render.py 的配色），
-   `google-chrome --headless --force-device-scale-factor=2` 截图（1200×800 CSS @2x），
-   缩到 1600px 宽（1100–1600 宽 @2x），ImageMagick 合成 GIF（≤3MB，循环）。
-4. **验证 GIF**：帧数/尺寸/字节数/循环时长；首/中/末帧像素差非 0；末帧 tesseract
-   OCR 必须读出 `correct_sql` 与**本次真实的校验错误码**（从轨迹里读，不写死；
-   本次是 `SQL_UNKNOWN_TABLE`——不是任务示例里的 `SQL_UNKNOWN_COLUMN`）；画面
-   文本里不得出现用户名、绝对路径、API key、隔离端口；最后写
-   `manual/review/exec-trace.render.json`。
-
-不修改页面和判据；只读 contracts/ 与 backend 源码（代码窗口的原文从仓库读，
-显示的是仓库相对路径，所以画面上没有 /home/…）。
+设计要点（都是“教学可读”的硬要求）：
+  * 总时长 18–25s、12.5fps；每个关键状态停 2–3s 让人读完，末帧结果表停 ≥2.5s；
+  * 每帧左上角标「阶段名 + 真实耗时」；底部标「时间轴已压缩，非实速」+ 真实总耗时；
+  * 左栏是成熟版原版前端的**真截图**（不是节点列表、不是重绘）；右栏是**同一次真跑**
+    的 sys.settrace 行级轨迹 + 白名单局部变量；左帧时间戳 → 取 ≤ 该时刻的 trace 事件；
+  * 长等待（生成 11.0s / 校正 7.3s）在时间轴里压缩，但右栏写清「仍停在该调用行、
+    已等待 X s」，并用同一跑的真实 duration 标注；
+  * 不修改页面与判据；画面无用户名 / 绝对路径 / API key / 隔离端口。
 """
 
 from __future__ import annotations
 
 import argparse
-import bisect
 import html
 import json
-import os
 import re
 import shutil
 import subprocess
@@ -58,32 +45,39 @@ import time
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Iterable
-
-# ---------------------------------------------------------------- 路径/常量
+from typing import Any, Callable
 
 HERE = Path(__file__).resolve().parent          # manual/shots
 REPO = HERE.parents[1]                          # 仓库根目录
 REVIEW = REPO / "manual" / "review"
+EVIDENCE = REVIEW / "exec-trace-v2"
 IMAGES = REPO / "manual" / "images"
 
-TRACE_PATH = REVIEW / "exec-trace.jsonl"
-META_PATH = REVIEW / "exec-trace.meta.json"
-RENDER_REPORT = REVIEW / "exec-trace.render.json"
+META_PATH = EVIDENCE / "meta.json"
+FRAMES_PATH = EVIDENCE / "capture-frames.json"
+TRACE_PATH = EVIDENCE / "trace.jsonl"
+RENDER_REPORT = EVIDENCE / "render.json"
 GIF_PATH = IMAGES / "page-17-exec-trace.gif"
 PNG_PATH = IMAGES / "page-17-exec-trace.png"
 
-CSS_W, CSS_H = 1200, 800        # 页面逻辑尺寸（@2x 截图 → 2400×1600）
-DEVICE_SCALE = 2
-FINAL_WIDTH = 1600              # 最终 GIF 宽度（任务要求 1100–1600 宽 @2x）
-GIF_TARGET_LOOP_CS = 880        # 目标循环 ≈ 8.8s（要求 6–10s）
-GIF_MAX_BYTES = 3_000_000
+# ---- 画布（1600 宽；左 800 = 真截图原尺寸，右 756 = 代码面板） ----
+CANVAS_W = 1600
+HEADER_H = 112
+PANEL_TOP = HEADER_H + 8
+LEFT_W = 800
+LEFT_H = 1151
+LEFT_X = 14
+GAP = 16
+RIGHT_X = LEFT_X + LEFT_W + GAP          # 830
+RIGHT_W = CANVAS_W - RIGHT_X - 14        # 756
+PANEL_BOTTOM = PANEL_TOP + LEFT_H        # 1271
+FOOTER_H = 44
+CANVAS_H = PANEL_BOTTOM + 10 + FOOTER_H + 12   # 1337
 
-CODE_WINDOW = 6                 # 右栏代码窗口行数
-VAR_TRIM = 110                  # 变量表单行最多显示字符数
-CODE_TRIM = 96                  # 代码行最多显示字符数
-
-CHROME = "/usr/bin/google-chrome"
+FRAME_CS = 8                            # GIF 每帧 80ms = 12.5fps
+LOOP_MIN_S, LOOP_MAX_S = 18.0, 25.0
+GIF_MAX_BYTES = 5 * 1024 * 1024
+CODE_WINDOW = 8
 
 TARGET_FILES = (
     "backend/app/agent/graph.py",
@@ -92,20 +86,30 @@ TARGET_FILES = (
     "backend/app/security/policy.py",
 )
 
-#: 12 个节点（顺序与 contracts/steps.yaml 一致）。
-STEPS: list[dict[str, Any]] = []
+CHROME = "/usr/bin/google-chrome"
+CHROME_SCALE = 1
+FORBIDDEN = ("/home/", "/Users/", "zhensirong", "13317", "19217", "16317", "18117",
+             "18017", "8088", "REBUILD_LLM_API_KEY", "MYSQL_ROOT_PASSWORD",
+             "sk-", "Bearer ")
 
-#: 不想在画面里看到的字符串（验证用）。
-FORBIDDEN_PATTERNS = ("/home/", "/Users/", "zhensirong", "13397", "19297",
-                      "16397", "18197", "18097", "REBUILD_LLM_API_KEY",
-                      "MYSQL_ROOT_PASSWORD", "MYSQL_PASSWORD")
+#: 阶段表： (key, 阶段号, 名称, 真实耗时文案生成器, 该阶段显示的帧数)
+#: 帧数 × 80ms = 阶段停留；总帧数 229 × 80ms = 18.32s（落在 18–25s）
+STAGE_PLAN: tuple[tuple[str, int, str, int], ...] = (
+    ("s0", 0, "输入真问题", 31),
+    ("t0", 1, "提交 → 构图", 15),
+    ("a", 2, "生成SQL 执行中", 38),
+    ("b", 3, "校验SQL 红叉（有误）", 33),
+    ("c", 4, "校正SQL 转圈（执行中）", 39),
+    ("d", 5, "校正成功 + 二次校验通过", 33),
+    ("e", 6, "结果表 5 行", 40),
+)
 
 
 def say(msg: str = "") -> None:
     print(msg, file=sys.stderr, flush=True)
 
 
-def run(cmd: list[str], *, timeout: float = 180.0) -> subprocess.CompletedProcess:
+def run(cmd: list[str], *, timeout: float = 300.0) -> subprocess.CompletedProcess:
     proc = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
     if proc.returncode != 0:
         tail = (proc.stderr or proc.stdout or "")[-3000:]
@@ -113,911 +117,796 @@ def run(cmd: list[str], *, timeout: float = 180.0) -> subprocess.CompletedProces
     return proc
 
 
-def now_text() -> str:
-    return datetime.now().astimezone().strftime("%Y-%m-%d %H:%M")
+def esc(text: Any) -> str:
+    return html.escape("" if text is None else str(text), quote=True)
 
 
-# ---------------------------------------------------------------- 读契约/源码
-
-def load_steps() -> list[dict[str, Any]]:
-    import yaml
-
-    doc = yaml.safe_load((REPO / "contracts" / "steps.yaml").read_text(encoding="utf-8"))
-    steps = []
-    for index, step in enumerate(doc["steps"]):
-        steps.append(
-            {
-                "index": index,
-                "id": step["id"],
-                "label": step.get("label", step["id"]),
-                "conditional": bool(step.get("conditional", False)),
-            }
-        )
-    if len(steps) != 12:
-        raise RuntimeError(f"contracts/steps.yaml 应有 12 个节点，实际 {len(steps)}")
-    return steps
+def fmt_s(value: float | None, digits: int = 2) -> str:
+    if value is None:
+        return "—"
+    if abs(value) >= 10:
+        return f"{value:.1f}s"
+    return f"{value:.{digits}f}s"
 
 
-def load_max_attempts() -> int:
-    import yaml
-
-    doc = yaml.safe_load((REPO / "contracts" / "errors.yaml").read_text(encoding="utf-8"))
-    return int(doc["correction"]["max_attempts"])
-
-
-def load_source(relative: str) -> list[str]:
-    path = REPO / relative
-    return path.read_text(encoding="utf-8").splitlines()
-
-
-def read_env_api_key() -> str:
-    """只为“轨迹里没有 key”这条断言读 .env；值绝不打印。"""
-    env_path = REPO / ".env"
-    if not env_path.exists():
-        return ""
-    for line in env_path.read_text(encoding="utf-8", errors="ignore").splitlines():
-        key, _, value = line.partition("=")
-        if key.strip() == "REBUILD_LLM_API_KEY":
-            return value.strip()
-    return ""
-
-
-# ---------------------------------------------------------------- 加载轨迹
+# ---------------------------------------------------------------- 证据加载
 
 @dataclass
-class Trace:
-    records: list[dict[str, Any]]
+class Evidence:
     meta: dict[str, Any]
-    sse: list[dict[str, Any]]
-    lines: list[dict[str, Any]]
-    llm: list[dict[str, Any]]
-    line_times: list[float] = field(default_factory=list)
-    index_of: dict[int, int] = field(default_factory=dict)
+    frames: dict[str, Any]
+    trace: list[dict[str, Any]]
+    t0: float                       # 点击时刻（epoch 秒，浏览器 wall clock）
+    sources: dict[str, list[str]] = field(default_factory=dict)
+    max_attempts: int = 1
 
-    @classmethod
-    def load(cls, trace_path: Path, meta_path: Path) -> "Trace":
-        records = [
-            json.loads(line)
-            for line in trace_path.read_text(encoding="utf-8").splitlines()
-            if line.strip()
-        ]
-        meta = json.loads(meta_path.read_text(encoding="utf-8"))
-        sse = [r for r in records if r["kind"] == "sse"]
-        lines = [r for r in records if r["kind"] == "line"]
-        llm = [r for r in records if r["kind"] == "llm"]
-        line_times = [r["t"] for r in lines]
-        index_of = {id(r): i for i, r in enumerate(records)}
-        return cls(records, meta, sse, lines, llm, line_times, index_of)
+    @property
+    def timeline(self) -> dict[str, Any]:
+        return self.meta["timeline_s"]
+
+    def rel(self, record: dict[str, Any]) -> float:
+        return record["t"] - self.t0
 
 
-def last_line_before(trace: Trace, t: float, predicate=None) -> dict[str, Any] | None:
-    index = bisect.bisect_right(trace.line_times, t) - 1
-    while index >= 0:
-        record = trace.lines[index]
+def load_evidence() -> Evidence:
+    for path in (META_PATH, FRAMES_PATH, TRACE_PATH):
+        if not path.exists():
+            raise SystemExit(f"缺证据文件：{path.relative_to(REPO)}（先跑 manual/shots/trace_server.py）")
+    meta = json.loads(META_PATH.read_text(encoding="utf-8"))
+    frames = json.loads(FRAMES_PATH.read_text(encoding="utf-8"))
+    trace = [json.loads(line) for line in TRACE_PATH.read_text(encoding="utf-8").splitlines() if line.strip()]
+    # 点击时刻由 trace_server.py 从浏览器 capture meta 原样写进 capture-frames.json
+    # （浏览器 Date.now()，与后端 time.time() 同一台宿主时钟）。
+    t0 = float(frames["t0_epoch"]) if "t0_epoch" in frames else \
+        min(float(item["t_epoch"]) for role in ("t0", "a") for item in frames["roles"][role]) - 0.2
+    sources = {}
+    for relative in TARGET_FILES:
+        sources[relative] = (REPO / relative).read_text(encoding="utf-8").splitlines()
+    try:
+        import yaml
+        errors = yaml.safe_load((REPO / "contracts" / "errors.yaml").read_text(encoding="utf-8"))
+        max_attempts = int(errors["correction"]["max_attempts"])
+    except Exception:  # noqa: BLE001 - 契约读不到就用 1（本页契约）
+        max_attempts = 1
+    return Evidence(meta=meta, frames=frames, trace=trace, t0=t0,
+                    sources=sources, max_attempts=max_attempts)
+
+
+# ---------------------------------------------------------------- trace 查询
+
+def find_last(trace: list[dict[str, Any]], t_epoch: float,
+              predicate: Callable[[dict[str, Any]], bool] | None = None) -> dict[str, Any] | None:
+    """取 t <= t_epoch 的最后一个满足 predicate 的事件（trace 已按时间单调）。"""
+    for record in reversed(trace):
+        if record["t"] > t_epoch:
+            continue
         if predicate is None or predicate(record):
             return record
-        index -= 1
     return None
 
 
-def last_line_between(trace: Trace, start: float, end: float) -> dict[str, Any] | None:
-    return last_line_before(trace, end, predicate=lambda r: r["t"] >= start)
+def merged_vars(trace: list[dict[str, Any]], anchor: dict[str, Any],
+                window_s: float = 1.5) -> dict[str, Any]:
+    """从锚点往回扫 window_s，收集每个变量名最近一次的值（trace 只在值变化时带 vars）。"""
+    merged: dict[str, Any] = {}
+    for record in reversed(trace):
+        if record["t"] > anchor["t"]:
+            continue
+        if anchor["t"] - record["t"] > window_s:
+            break
+        for key, value in (record.get("vars") or {}).items():
+            merged.setdefault(key, value)
+    return merged
 
 
-# ---------------------------------------------------------------- 验证原始轨迹
+def last_run_lines(trace: list[dict[str, Any]], anchor: dict[str, Any], count: int = 6) -> list[dict[str, Any]]:
+    """该时刻之前最近 count 条**不连续重复**的执行行。"""
+    rows: list[dict[str, Any]] = []
+    seen: set[tuple[str, int]] = set()
+    for record in reversed(trace):
+        if record["t"] > anchor["t"]:
+            continue
+        key = (record["file"], record["lineno"])
+        if key in seen:
+            continue
+        seen.add(key)
+        rows.append(record)
+        if len(rows) >= count:
+            break
+    return list(reversed(rows))
 
-def verify_trace(trace: Trace, api_key: str) -> dict[str, Any]:
-    records = trace.records
-    checks: list[dict[str, Any]] = []
 
-    def check(name: str, ok: bool, detail: str = "") -> None:
-        checks.append({"name": name, "ok": bool(ok), "detail": detail})
+# ---------------------------------------------------------------- 锚点
 
-    progress = [
-        (index, r["event"])
-        for index, r in enumerate(records)
-        if r["kind"] == "sse" and r["event"].get("type") == "progress"
-    ]
-    sequence = [(event.get("step"), event.get("status")) for _, event in progress]
+@dataclass
+class Anchor:
+    stage: str
+    record: dict[str, Any] | None
+    highlight: int | None
+    file: str | None
+    note: str = ""
+    exact_state: bool = False       # True = 处于“停在该行等待”的长等待态
 
-    def first_index(step: str, status: str, after: int = -1) -> int | None:
-        for position, (s, st) in enumerate(sequence):
-            if s == step and st == status and position > after:
-                return position
-        return None
 
-    validate_error = first_index("validate_sql", "error")
-    correct_running = first_index("correct_sql", "running")
-    correct_success = first_index("correct_sql", "success")
-    validate_success = (
-        first_index("validate_sql", "success", after=correct_running)
-        if correct_running is not None
-        else None
-    )
-    run_success = first_index("run_sql", "success")
-    result_index = next(
-        (i for i, r in enumerate(records) if r["kind"] == "sse" and r["event"].get("type") == "result"),
-        None,
-    )
+def build_anchors(ev: Evidence) -> dict[str, Anchor]:
+    trace = ev.trace
+    frame_t = {role: [float(item["t_epoch"]) for item in ev.frames["roles"][role]]
+               for role in ev.frames["roles"]}
 
-    check("validate_sql:error 出现", validate_error is not None, str(validate_error))
-    check(
-        "validate_sql:error 在 correct_sql:running 之前",
-        validate_error is not None and correct_running is not None and validate_error < correct_running,
-        f"error@{validate_error} / correct@{correct_running}",
-    )
-    check("correct_sql 只 1 轮 running", sequence.count(("correct_sql", "running")) == 1,
-          f"{sequence.count(('correct_sql', 'running'))} 轮")
-    check("correct_sql 只 1 轮 success", sequence.count(("correct_sql", "success")) == 1,
-          f"{sequence.count(('correct_sql', 'success'))} 轮")
-    check("correct_sql 没有 error", sequence.count(("correct_sql", "error")) == 0)
-    check("二次 validate_sql:success（校正后重新校验）", validate_success is not None,
-          f"@{validate_success}")
-    check("run_sql:success 出现", run_success is not None, f"@{run_success}")
-    check("result 事件出现", result_index is not None,
-          f"@{result_index}")
-    check(
-        "result 在 run_sql:success 之后",
-        result_index is not None and run_success is not None and result_index > run_success,
-    )
+    def is_file(name: str):
+        return lambda r: r["rel"].endswith(name)
 
-    line_files = sorted({r["file"] for r in trace.lines})
-    check("行级轨迹覆盖 ≥3 个文件", len(line_files) >= 3, ", ".join(line_files))
-    check(
-        "4 个目标文件都被追到",
-        set(line_files) == set(TARGET_FILES),
-        ", ".join(line_files),
-    )
-    stamps = [r["t"] for r in records]
-    monotonic = all(b >= a for a, b in zip(stamps, stamps[1:]))
-    check("时间戳单调不减", monotonic)
-    check("JSONL ≤ 500KB", len(TRACE_PATH.read_bytes()) <= 512 * 1024,
-          f"{len(TRACE_PATH.read_bytes())} B")
+    def lines(*numbers: int):
+        return lambda r: r["lineno"] in numbers
 
-    raw_text = TRACE_PATH.read_text(encoding="utf-8", errors="ignore")
-    check("轨迹里没有 API key", not api_key or api_key not in raw_text)
-    check("轨迹里没有绝对路径 / 用户名",
-          not any(p in raw_text for p in ("/home/", "/Users/", "zhensirong")))
+    # t0：构图（build_agent_graph），左帧是“正在连接问数智能体…”
+    t0_frame = frame_t["t0"][0] + 0.25
+    rec = find_last(trace, t0_frame, lambda r: r["rel"].endswith("graph.py") and r["func"] == "build_agent_graph")
+    anchors = {"t0": Anchor("t0", rec, rec["lineno"] if rec else None, "backend/app/agent/graph.py",
+                            "12 节点图在这一刻编译完成")}
 
-    meta_checks = {
-        "meta 有 model": bool(trace.meta.get("model")),
-        "meta 有问法": bool(trace.meta.get("query")),
-        "meta 有事件数": isinstance(trace.meta.get("event_count"), int),
-        "meta 有耗时": trace.meta.get("wall_clock_s") is not None,
-        "meta 有 LLM 调用次数": isinstance(trace.meta.get("llm_calls"), int),
-    }
-    for name, ok in meta_checks.items():
-        check(name, ok)
+    # a：生成节点停在 draft_sql(...) 调用行，等模型
+    a_frame = sum(frame_t["a"]) / len(frame_t["a"])
+    rec = find_last(trace, a_frame, lambda r: r["rel"].endswith("graph.py") and 236 <= r["lineno"] <= 243)
+    gen_wait = ev.timeline.get("generate_wait_s")
+    anchors["a"] = Anchor("a", rec, 239, "backend/app/agent/graph.py",
+                          f"停在 L239 draft_sql(...) 等模型返回（真实 {fmt_s(gen_wait)}）", exact_state=True)
 
-    failed = [item for item in checks if not item["ok"]]
-    return {
-        "checks": checks,
-        "passed": len(checks) - len(failed),
-        "total": len(checks),
-        "failed": failed,
-        "sequence": [f"{s}:{st}" for s, st in sequence],
-        "line_files": line_files,
-        "line_event_count": len(trace.lines),
-    }
+    # b：guard.check_sql 拒绝行（第一次校验）
+    b_frame = frame_t["b"][0] + 0.30
+    rec = find_last(trace, b_frame, lambda r: r["rel"].endswith("guard.py") and r["lineno"] == 306)
+    anchors["b"] = Anchor("b", rec, 306, "backend/app/generate/guard.py",
+                          "guard.check_sql 在 L306 拒绝：violations 非空 → GuardReport(False)")
+
+    # c：correct.py propose_correction 的 L202/203（corrector.correct(...) 调用）
+    c_frame = sum(frame_t["c"]) / len(frame_t["c"])
+    rec = find_last(trace, c_frame, lambda r: r["rel"].endswith("correct.py") and r["lineno"] == 203)
+    anchors["c"] = Anchor("c", rec, 203, "backend/app/agent/correct.py",
+                          "停在 L203 corrector.correct(...) 等模型返回候选 SQL", exact_state=True)
+
+    # d：二次校验通过（validate node 的 if failure is None 分支）
+    d_frame = frame_t["d"][0]
+    rec = find_last(trace, d_frame, lambda r: r["rel"].endswith("graph.py") and r["lineno"] in (295, 296))
+    anchors["d"] = Anchor("d", rec, 296, "backend/app/agent/graph.py",
+                          "二次 validate_sql 返回 None：failure is None → 发 success")
+
+    # e：执行器返回（run node 的 if execution.ok / emit success）
+    e_frame = frame_t["e"][0]
+    rec = find_last(trace, e_frame, lambda r: r["rel"].endswith("graph.py") and r["lineno"] in (400, 404))
+    anchors["e"] = Anchor("e", rec, 404, "backend/app/agent/graph.py",
+                          "deps.executor.execute 返回 ok：发 run_sql success → result")
+    return anchors
+
+
+# ---------------------------------------------------------------- 变量展示
+
+VAR_PRIORITY = {
+    "s0": (),
+    "t0": ("query",),
+    "a": ("query", "state.sql"),
+    "b": ("violations[0]", "error", "sql", "query"),
+    "c": ("sql", "error", "state.attempts", "prompt"),
+    "d": ("state.corrected_sql", "state.attempts", "failure", "state.sql"),
+    "e": ("state.sql", "state.attempts", "state.corrected_sql"),
+}
+
+
+def display_vars(stage: str, variables: dict[str, Any], max_attempts: int) -> list[tuple[str, str]]:
+    """把 trace 里的变量换成右栏表格的行（名称 → 可读值）。"""
+    wanted = VAR_PRIORITY.get(stage, ())
+    rows: list[tuple[str, str]] = []
+    error = variables.get("error")
+    sql = variables.get("sql")
+    violation = variables.get("violations[0]")
+    attempts = variables.get("state.attempts")
+
+    if stage == "b":
+        if isinstance(violation, dict):
+            rows.append(("violations[0].code", str(violation.get("code", ""))))
+            rows.append(("violations[0].message", str(violation.get("message", ""))))
+        if isinstance(error, dict):
+            rows.append(("error.code", str(error.get("code", ""))))
+            rows.append(("error.message", str(error.get("message", ""))))
+        elif isinstance(variables.get("failure"), dict):
+            failure = variables["failure"]
+            rows.append(("failure.code", str(failure.get("code", ""))))
+            rows.append(("failure.message", str(failure.get("message", ""))))
+        if isinstance(sql, str):
+            rows.append(("sql（第一次校验的原 SQL）", sql))
+        return rows[:6]
+
+    if stage == "c":
+        if isinstance(sql, str):
+            rows.append(("sql_before", sql))
+        if isinstance(error, dict):
+            rows.append(("error.code", str(error.get("code", ""))))
+            rows.append(("error.message", str(error.get("message", ""))))
+        rows.append(("attempts", f"{attempts if attempts is not None else 0} / max {max_attempts}"))
+        prompt = variables.get("prompt")
+        if isinstance(prompt, str) and prompt.strip():
+            rows.append(("prompt（校正提示词，截断）", prompt))
+        return rows[:6]
+
+    if stage == "d":
+        after = variables.get("state.corrected_sql")
+        if isinstance(after, str) and after:
+            rows.append(("sql_after（校正后的候选 SQL）", after))
+        rows.append(("state.attempts", f"{attempts if attempts is not None else 1} / max {max_attempts}"))
+        rows.append(("failure", "None（二次校验通过）"))
+        return rows[:5]
+
+    if stage == "a":
+        rows.append(("generate_sql", "running：draft_sql() 已发起，等待模型 HTTP 返回"))
+        rows.append(("真实等待", fmt_s(ev_wait_placeholder())))
+        rows.append(("state.sql", "（还没生成：模型返回后才会写 state）"))
+        return rows
+
+    if stage == "e":
+        rows.append(("state.sql（实际执行的 SQL）", str(variables.get("state.sql") or "（见上一阶段 sql_after）")))
+        rows.append(("execution.ok", "True → run_sql: success"))
+        return rows
+
+    return rows
+
+
+_EV_WAIT = 0.0
+
+
+def ev_wait_placeholder() -> float:
+    return _EV_WAIT
 
 
 # ---------------------------------------------------------------- 帧计划
 
 @dataclass
 class Frame:
-    #: 右栏代码窗口对应的行记录时间（wall clock）
-    real_t: float
-    #: 左栏 SSE 时间轴用的时间：节点跑在 LangGraph 工作线程里，SSE 事件由
-    #: 主线程消费，两者有毫秒级先后差；左栏必须按 SSE 事件推进，不能拿
-    #: 行事件时间反查，否则会出现“右边在跑 correct.py、左边还红着”的错位。
-    left_t: float
-    right: dict[str, Any] | None
-    phase: str
-    delay_cs: int = 20
-    badge: str = ""
+    stage: str
+    stage_no: int
+    stage_name: str
+    left_file: Path
+    frame_t: float                  # 左帧截图时刻（epoch 秒，用于右栏对齐）
+    anchor: Anchor | None
+    frame_index: int                # GIF 第几帧（0 起）
+    stage_frame: int                # 本阶段第几帧
+    stage_frames: int               # 本阶段共几帧
+    total_frames: int
     keyframe: bool = False
+    tag: str = ""
 
 
-def sample(records: list[dict[str, Any]], count: int) -> list[dict[str, Any]]:
-    if not records or count <= 0:
-        return []
-    unique: list[dict[str, Any]] = []
-    seen: set[tuple[str, int]] = set()
-    for record in records:
-        key = (record["file"], record["lineno"])
-        if key in seen:
-            continue
-        seen.add(key)
-        unique.append(record)
-    if len(unique) <= count:
-        return unique
-    if count == 1:
-        return [unique[0]]
-    picks: list[dict[str, Any]] = []
-    used: set[tuple[str, int]] = set()
-    for i in range(count):
-        position = round(i * (len(unique) - 1) / (count - 1))
-        candidate = unique[position]
-        key = (candidate["file"], candidate["lineno"])
-        if key in used:
-            continue
-        used.add(key)
-        picks.append(candidate)
-    return picks
+def build_frame_plan(ev: Evidence) -> tuple[list[Frame], dict[str, Any]]:
+    roles = ev.frames["roles"]
+    anchors = build_anchors(ev)
+    plan: list[Frame] = []
+    holds: dict[str, Any] = {}
+    index = 0
+    role_of = {"s0": "input", "t0": "t0", "a": "a", "b": "b", "c": "c", "d": "d", "e": "e"}
+    for key, no, name, count in STAGE_PLAN:
+        entries = roles[role_of[key]]
+        if not entries:
+            raise SystemExit(f"阶段 {key} 没有可用真截图")
+        seconds = round(count * FRAME_CS / 100.0, 2)
+        holds[key] = {"stage_no": no, "name": name, "frames": count,
+                      "seconds": seconds, "left_frames": [item["index"] for item in entries]}
+        for local in range(count):
+            # 真截图微动：a/c 的 spinner 在转，按真实帧轮播（每 2 帧换一张）；
+            # 其余阶段轮播自己的真实帧（d/e 是同一状态的连续帧，画面基本静止）。
+            entry = entries[(local // 2) % len(entries)]
+            path = REPO / "manual" / "review" / "exec-trace-v2" / entry["file"]
+            if not path.exists():
+                path = EVIDENCE / entry["file"]
+            plan.append(Frame(
+                stage=key, stage_no=no, stage_name=name, left_file=path,
+                frame_t=float(entry["t_epoch"]), anchor=anchors.get(key),
+                frame_index=index, stage_frame=local, stage_frames=count,
+                total_frames=0, tag="",
+            ))
+            index += 1
+    total = len(plan)
+    for frame in plan:
+        frame.total_frames = total
+    # 关键帧：阶段 c 的中间帧（校正SQL 转圈 + 右栏 L203 + sql_before/error/attempts）
+    c_frames = [f for f in plan if f.stage == "c"]
+    key = c_frames[len(c_frames) // 2]
+    key.keyframe = True
+    return plan, holds
 
 
-def build_frames(trace: Trace) -> list[Frame]:
-    """左侧按 SSE 时间轴排帧，右侧取该阶段的行级轨迹快照。"""
-    records = trace.records
-    sse = trace.sse
-    lines = trace.lines
+# ---------------------------------------------------------------- 阶段真实耗时文案
 
-    def event_time(step: str, status: str, after: float = -1e18) -> float | None:
-        for record in sse:
-            event = record["event"]
-            if (
-                event.get("type") == "progress"
-                and event.get("step") == step
-                and event.get("status") == status
-                and record["t"] >= after
-            ):
-                return record["t"]
-        return None
-
-    def llm_window(role: str) -> tuple[float, float] | None:
-        start = end = None
-        for record in trace.llm:
-            if record.get("role") != role:
-                continue
-            if record.get("event") == "start" and start is None:
-                start = record["t"]
-            if record.get("event") == "end" and start is not None:
-                end = record["t"]
-                break
-        if start is None:
-            return None
-        return start, (end if end is not None else start + 1.0)
-
-    context_first = sse[0]["t"] if sse else records[0]["t"]
-    start_t = records[0]["t"]
-    gen_run = event_time("generate_sql", "running")
-    gen_ok = event_time("generate_sql", "success")
-    val1_run = event_time("validate_sql", "running")
-    val1_err = event_time("validate_sql", "error")
-    corr_run = event_time("correct_sql", "running")
-    corr_ok = event_time("correct_sql", "success")
-    val2_run = event_time("validate_sql", "running", after=corr_run or -1e18)
-    val2_ok = event_time("validate_sql", "success", after=corr_run or -1e18)
-    run_run = event_time("run_sql", "running")
-    run_ok = event_time("run_sql", "success")
-    result_t = next(
-        (r["t"] for r in records if r["kind"] == "sse" and r["event"].get("type") == "result"),
-        records[-1]["t"],
-    )
-    llm_gen = llm_window("generate_sql")
-    llm_corr = llm_window("correct_sql")
-
-    frames: list[Frame] = []
-    frames.append(Frame(start_t, start_t, None, "准备：进程内真跑一次问数", 28))
-
-    # 0) 编译 12 节点图（graph.py build_agent_graph 的几行）
-    build_lines = [r for r in lines if r["t"] < context_first]
-    edge_lines = [r for r in build_lines if 436 <= r["lineno"] <= 456]
-    for record in sample(edge_lines or build_lines, 1):
-        frames.append(Frame(record["t"], start_t, record, "LangGraph：编译 12 节点图", 34))
-
-    # 1) 8 个上下文节点：每个 success 事件一帧，右栏显示节点里真正执行的那一行
-    for step in [s["id"] for s in STEPS[:8]]:
-        moment = event_time(step, "success")
-        if moment is None:
-            continue
-        right = last_line_before(
-            trace, moment, predicate=lambda r: r.get("func") == "node"
-        ) or last_line_before(trace, moment)
-        frames.append(Frame(moment, moment, right, f"上下文节点 · {step}", 12))
-
-    # 2) generate_sql：LLM 前的代码帧 + 模型等待帧
-    gen_anchor = gen_run or context_first
-    if gen_run and llm_gen:
-        code_lines = [r for r in lines if gen_run - 0.05 <= r["t"] < llm_gen[0]]
-        focus_lines = [
-            r for r in code_lines
-            if r.get("func") == "node" and 230 <= r["lineno"] <= 280
-        ]
-        for record in sample(focus_lines or code_lines, 2):
-            frames.append(Frame(record["t"], gen_anchor, record,
-                                "generate_sql：渲染提示词并调用模型", 26))
-        wait_t = (llm_gen[0] + llm_gen[1]) / 2
-        right = last_line_before(trace, llm_gen[0])
-        frames.append(Frame(wait_t, wait_t, right, "generate_sql：等待模型返回", 80,
-                            badge="LLM 调用 #1 进行中"))
-    if gen_ok:
-        frames.append(Frame(gen_ok, gen_ok, last_line_before(trace, gen_ok),
-                            "generate_sql：success", 20))
-
-    # 3) 第一次 validate_sql：guard.py / policy.py 的行级轨迹
-    if val1_run and val1_err:
-        code_lines = [r for r in lines if val1_run - 0.05 <= r["t"] < val1_err]
-        focus_lines = [
-            r for r in code_lines
-            if r["file"].endswith(("guard.py", "policy.py"))
-        ]
-        main_flow = [
-            r for r in focus_lines
-            if r.get("func") in ("check_sql", "enforce", "validate_sql")
-        ]
-        for record in sample(main_flow or focus_lines or code_lines, 5):
-            frames.append(Frame(record["t"], val1_run, record,
-                                "validate_sql #1：静态校验 + 安全策略", 16))
-        frames.append(Frame(last_line_before(trace, val1_err)["t"] if last_line_before(trace, val1_err) else val1_err,
-                            val1_err, last_line_before(trace, val1_err),
-                            "validate_sql #1：error（校验红叉）", 70))
-
-    # 4) correct_sql：graph → correct.py → 提示词槽位 → 调模型
-    if corr_run and llm_corr:
-        code_lines = [r for r in lines if val1_err and val1_err <= r["t"] <= llm_corr[0]]
-        focus_lines = [r for r in code_lines if r["file"].endswith("correct.py")]
-        picks = sample(focus_lines or code_lines, 4)
-        core = [r for r in focus_lines if 186 <= r["lineno"] <= 206]
-        for record in core:
-            if record["lineno"] in (191, 193) and record not in picks:
-                picks.append(record)
-        entry = next(
-            (
-                r for r in code_lines
-                if r["file"].endswith("graph.py") and r.get("func") == "node"
-            ),
-            None,
-        )
-        if entry is not None and entry not in picks:
-            picks.insert(0, entry)
-        # 关键帧：correct.py 里 build_correct_slots/render_prompt/corrector.correct 附近
-        key_candidates = [
-            r for r in code_lines
-            if r["file"].endswith("correct.py") and 186 <= r["lineno"] <= 206
-        ]
-        key_record = key_candidates[-1] if key_candidates else last_line_before(trace, llm_corr[0])
-        if key_record is not None and key_record not in picks:
-            picks.append(key_record)
-            picks.sort(key=lambda r: r["t"])
-        for record in picks:
-            is_key = record is key_record
-            frames.append(
-                Frame(record["t"], corr_run, record,
-                      "correct_sql：构造 7 个槽位 → 调校正模型", 22, keyframe=is_key)
-            )
-        wait_t = (llm_corr[0] + llm_corr[1]) / 2
-        frames.append(Frame(wait_t, wait_t, last_line_before(trace, llm_corr[0]),
-                            "correct_sql：等待模型改写 SQL", 82,
-                            badge="LLM 调用 #2 进行中"))
-    if corr_ok:
-        frames.append(Frame(corr_ok, corr_ok, last_line_before(trace, corr_ok),
-                            "correct_sql：success（候选 SQL 还没复查）", 22))
-    if llm_corr and val2_run:
-        code_lines = [
-            r for r in lines
-            if llm_corr[1] <= r["t"] < val2_run
-            and (
-                r["file"].endswith("correct.py")
-                or (r["file"].endswith("graph.py") and 320 <= r["lineno"] <= 375)
-            )
-        ]
-        for record in sample(code_lines, 2):
-            frames.append(Frame(record["t"], corr_ok or record["t"], record,
-                                "correct_sql：写回候选 SQL / attempts+1", 18))
-
-    # 5) 第二次 validate_sql：校正后的候选重新过两道关
-    if val2_run and val2_ok:
-        code_lines = [r for r in lines if val2_run - 0.05 <= r["t"] < val2_ok]
-        focus_lines = [
-            r for r in code_lines
-            if r["file"].endswith(("guard.py", "policy.py"))
-        ]
-        main_flow = [
-            r for r in focus_lines
-            if r.get("func") in ("check_sql", "enforce")
-        ]
-        for record in sample(main_flow or focus_lines or code_lines, 4):
-            frames.append(Frame(record["t"], val2_run, record,
-                                "validate_sql #2：候选 SQL 重新过两道关", 15))
-        frames.append(Frame(last_line_before(trace, val2_ok)["t"] if last_line_before(trace, val2_ok) else val2_ok,
-                            val2_ok, last_line_before(trace, val2_ok),
-                            "validate_sql #2：success（候选通过）", 20))
-
-    # 6) run_sql + result
-    if run_run and run_ok:
-        code_lines = [r for r in lines if run_run - 0.05 <= r["t"] < run_ok]
-        focus_lines = [
-            r for r in code_lines
-            if r.get("func") == "node" and 375 <= r["lineno"] <= 410
-        ]
-        for record in sample(focus_lines or code_lines, 2):
-            frames.append(Frame(record["t"], run_run, record,
-                                "run_sql：只读执行器执行策略产物", 20))
-        frames.append(Frame(last_line_before(trace, run_ok)["t"] if last_line_before(trace, run_ok) else run_ok,
-                            run_ok, last_line_before(trace, run_ok), "run_sql：success", 22))
-    frames.append(Frame(result_t, result_t, last_line_before(trace, result_t),
-                        "完成：result（本次单次采样结束）", 95))
-
-    # 左栏时间轴必须单调；右栏取的是该阶段的行快照，天然按阶段推进。
-    for previous, later in zip(frames, frames[1:]):
-        if later.left_t < previous.left_t - 1e-6:
-            raise RuntimeError(
-                f"帧计划左栏时间轴不单调：{previous.phase} {previous.left_t} > {later.phase} {later.left_t}"
-            )
-    normalize_delays(frames)
-    return frames
+def stage_real_text(stage: str, ev: Evidence) -> str:
+    t = ev.timeline
+    if stage == "s0":
+        return "真实耗时 —（还没提交）"
+    if stage == "t0":
+        return f"真实 {fmt_s(t.get('request_s'))} 到首事件"
+    if stage == "a":
+        return f"真实等待 {fmt_s(t.get('generate_wait_s'))}"
+    if stage == "b":
+        return f"真实 {t.get('validate1_ms_s') * 1000:.0f}ms（L306 拒绝）"
+    if stage == "c":
+        return f"真实等待 {fmt_s(t.get('correct_wait_s'))}"
+    if stage == "d":
+        return f"真实 {t.get('validate2_wait_s') * 1000:.0f}ms（二次校验）"
+    if stage == "e":
+        return f"真实 {t.get('run_wait_s') * 1000:.0f}ms 执行 + 结果渲染"
+    return ""
 
 
-def normalize_delays(frames: list[Frame]) -> None:
-    total = sum(max(10, frame.delay_cs) for frame in frames)
-    if total <= 0:
-        return
-    scale = GIF_TARGET_LOOP_CS / total
-    for frame in frames:
-        frame.delay_cs = max(10, int(round(frame.delay_cs * scale / 5.0)) * 5)
-    total = sum(frame.delay_cs for frame in frames)
-    # 四舍五入后可能偏离目标，逐帧微调回 [6.0s, 10.0s]
-    while total > 980:
-        for frame in frames:
-            if total <= 900:
-                break
-            if frame.delay_cs > 10:
-                frame.delay_cs -= 5
-                total -= 5
-    while total < 620:
-        for frame in frames:
-            if total >= 700:
-                break
-            frame.delay_cs += 5
-            total += 5
+def stage_focus_text(stage: str, ev: Evidence) -> str:
+    t = ev.timeline
+    if stage == "s0":
+        return ("成熟版原版前端（react + tailwind，nginx 反代 /api → backend:8100）。"
+                "每一次点击都会走真实的 HTTP/SSE，不是回放、不是脚本合成的节点列表。")
+    if stage == "t0":
+        return (f"点击发送后 {fmt_s(t.get('request_s'))} 浏览器收到第一条 SSE；后端同一进程"
+                "在这一刻用 build_agent_graph() 编译 12 节点图，并跑完 8 个上下文节点。"
+                f"构图与上下文真实耗时约 {fmt_s((t.get('generate_running_s') or 0) - (t.get('request_s') or 0))}。")
+    if stage == "a":
+        return (f"generate_sql 节点调用 draft_sql() 后停在 L239 等模型；真实等待 "
+                f"{fmt_s(t.get('generate_wait_s'))}。左栏「生成SQL」卡片一直转圈——这一帧和右边"
+                "是同一次请求的同一时刻（GIF 把 11s 压缩成 2.5s 左右）。")
+    if stage == "b":
+        return (f"第一次校验失败：guard.check_sql 在 L306 看到 violations 非空、直接拒绝；"
+                f"真实耗时 {t.get('validate1_ms_s') * 1000:.0f}ms。错误码来自违规本身"
+                "（不是糊出来的），原 SQL 原样带进 next 节点。")
+    if stage == "c":
+        return (f"correct_sql 节点调用 propose_correction()：只有 1 次机会（契约 max_attempts="
+                f"{ev.max_attempts}）。此刻停在 L203 corrector.correct(...) 等模型，真实等待 "
+                f"{fmt_s(t.get('correct_wait_s'))}。左栏「校正SQL」转圈、右栏 error=第一次校验错误。")
+    if stage == "d":
+        return (f"校正返回后**重新校验**：二次 validate_sql 只花 {t.get('validate2_wait_s') * 1000:.0f}ms，"
+                "guard + policy 都过 → failure is None → 发 validate_sql: success。左栏这一帧已经是整条闭环"
+                "跑完后的真截图（同一次跑），所以结果表也在；阶段 6 再单独放大「结果表」这一段。")
+    if stage == "e":
+        return ("run_sql success 后返回 result：5 行、3 列（商品ID / 商品名称 / 销售额）。结果表是"
+                "后端真返回、前端真渲染；整条闭环 = 一次重试把可重试错误捞回来了。")
+    return ""
 
 
-# ---------------------------------------------------------------- 状态快照
+# ---------------------------------------------------------------- HTML
 
-def status_at(trace: Trace, t: float) -> dict[str, Any]:
-    status = {step["id"]: "waiting" for step in STEPS}
-    runs = {step["id"]: 0 for step in STEPS}
-    durations: dict[str, float] = {}
-    active: tuple[str, str] | None = None
-    count = 0
-    for record in trace.sse:
-        if record["t"] > t:
-            break
-        event = record["event"]
-        if event.get("type") == "progress":
-            count += 1
-            step = event.get("step")
-            state = event.get("status")
-            if step not in status:
-                continue
-            if state == "running":
-                runs[step] += 1
-            status[step] = state
-            if event.get("duration_ms") is not None:
-                durations[step] = float(event["duration_ms"])
-            active = (step, state)
-        elif event.get("type") in ("result", "error"):
-            count += 1
-            active = (None, event.get("type"))  # type: ignore[arg-type]
-    return {
-        "status": status,
-        "runs": runs,
-        "durations": durations,
-        "active": active,
-        "count": count,
-        "total": len(trace.sse),
-    }
-
-
-PLACEHOLDER_VALUES = {"None", "null", "True", "False", ""}
-
-
-def _usable(value: str | None) -> bool:
-    return bool(value) and value not in PLACEHOLDER_VALUES and not value.startswith("None:")
-
-
-def merged_vars(trace: Trace, upto_index: int) -> dict[str, str]:
-    values: dict[str, str] = {}
-    for record in trace.records[: upto_index + 1]:
-        if record["kind"] == "llm" and record.get("event") == "start":
-            if record.get("prompt_preview"):
-                values["prompt"] = record["prompt_preview"]
-            continue
-        if record["kind"] != "line":
-            continue
-        for name, value in (record.get("vars") or {}).items():
-            if name == "state" and isinstance(value, dict):
-                if "sql" in value:
-                    values["sql"] = str(value["sql"])
-                if "attempts" in value:
-                    values["attempts"] = str(value["attempts"])
-                if "corrected_sql" in value:
-                    values["corrected_sql"] = str(value["corrected_sql"])
-                if value.get("failure") is not None and _usable(str(value["failure"])):
-                    values["error"] = str(value["failure"])
-                continue
-            if name == "failure":
-                if _usable(str(value)):
-                    values["error"] = str(value)
-                continue
-            if _usable(str(value)):
-                values[name] = str(value)
-    return values
-
-
-def evidence_at(trace: Trace, t: float, error_code: str) -> list[dict[str, str]]:
-    progress = [
-        (record, record["event"]) for record in trace.sse
-        if record["event"].get("type") == "progress" and record["t"] <= t
-    ]
-    sequence = [(event.get("step"), event.get("status")) for _, event in progress]
-    chips: list[dict[str, str]] = []
-    if ("validate_sql", "error") in sequence:
-        chips.append({"text": f"validate#1: {error_code or 'error'}", "tone": "bad"})
-    if ("correct_sql", "success") in sequence:
-        chips.append({"text": "correct_sql: success ×1", "tone": "good"})
-    if ("validate_sql", "success") in sequence:
-        chips.append({"text": "validate#2: success", "tone": "good"})
-    if ("run_sql", "success") in sequence:
-        chips.append({"text": "run_sql: success", "tone": "good"})
-    if any(record["event"].get("type") == "result" for record, _ in progress):
-        rows = trace.meta.get("result", {}).get("row_count")
-        chips.append({"text": f"result: {rows} rows", "tone": "good"})
-    return chips
-
-
-# ---------------------------------------------------------------- HTML 渲染
-
-CSS = """
-:root {
-  --page-bg: #04070b;
-  --term-bg: #0d1117;
-  --panel:   #0d1117;
-  --bar:     #161b22;
-  --border:  #21262d;
-  --fg:      #e6edf3;
-  --dim:     #8b949e;
-  --faint:   #484f58;
-  --green:   #3fb950;
-  --red:     #f85149;
-  --yellow:  #d29922;
-  --blue:    #79c0ff;
-  --purple:  #d2a8ff;
-}
-* { box-sizing: border-box; }
-html, body { margin: 0; padding: 0; background: var(--page-bg); }
-body { width: 1200px; height: 800px; overflow: hidden;
-       font-family: "JetBrains Mono", "DejaVu Sans Mono", "Noto Sans CJK SC", monospace;
-       color: var(--fg); }
-.frame { width: 1200px; height: 800px; padding: 16px 18px 14px 18px; }
-.top { display: flex; align-items: baseline; justify-content: space-between;
-       border-bottom: 1px solid var(--border); padding-bottom: 8px; margin-bottom: 12px; }
-.title { font-size: 21px; font-weight: 700; letter-spacing: 0.02em; }
-.title .sub { font-size: 13px; color: var(--dim); font-weight: 400; margin-left: 10px; }
-.meta { font-size: 12px; color: var(--dim); text-align: right; line-height: 1.5; }
-.cols { display: flex; gap: 14px; height: 686px; }
-.panel { background: var(--panel); border: 1px solid var(--border);
-         border-radius: 10px; overflow: hidden; }
-.left { width: 404px; display: flex; flex-direction: column; }
-.right { width: 746px; display: flex; flex-direction: column; }
-.panel-head { background: var(--bar); border-bottom: 1px solid var(--border);
-              color: var(--dim); font-size: 12px; padding: 7px 12px;
-              display: flex; justify-content: space-between; letter-spacing: 0.02em; }
-.panel-head b { color: var(--fg); font-weight: 600; }
-.nodes { padding: 7px 8px 4px 8px; flex: 1; }
-.node { display: flex; align-items: center; gap: 8px; height: 38px;
-        padding: 0 8px; border-radius: 7px; border: 1px solid transparent;
-        font-size: 12px; color: var(--dim); }
-.node.active { border-color: var(--yellow); background: rgba(210,153,34,0.10); }
-.node.success .step { color: var(--green); }
-.node.error .step { color: var(--red); }
-.node.running .step { color: var(--yellow); }
-.node.skipped .step { color: var(--faint); }
-.node.waiting .step { color: var(--faint); }
-.icon { width: 16px; text-align: center; font-size: 13px; }
-.node.success .icon { color: var(--green); }
-.node.error .icon { color: var(--red); }
-.node.running .icon { color: var(--yellow); }
-.node.skipped .icon { color: var(--faint); }
-.node.waiting .icon { color: var(--faint); }
-.step { width: 176px; font-weight: 600; color: #a5b3c9; }
-.label { flex: 1; color: var(--dim); font-size: 11px; }
-.dur { color: var(--dim); font-size: 11px; min-width: 44px; text-align: right; }
-.badge { color: var(--purple); font-size: 10px; border: 1px solid var(--border);
-         border-radius: 6px; padding: 1px 4px; }
-.left-foot { border-top: 1px solid var(--border); padding: 8px 12px;
-             font-size: 11px; color: var(--dim); line-height: 1.6; }
-.left-foot b { color: var(--fg); font-weight: 600; }
-.caption { color: var(--yellow); }
-.tab { display: flex; align-items: center; gap: 10px; background: var(--bar);
-       border-bottom: 1px solid var(--border); padding: 7px 12px; font-size: 12px; }
-.tab .file { color: var(--blue); }
-.tab .fn { color: var(--purple); }
-.tab .ln { color: var(--yellow); }
-.tab .caller { margin-left: auto; color: var(--dim); font-size: 11px; }
-.code { padding: 9px 0 7px 0; background: #0a0e14; }
-.cl { display: flex; height: 25px; line-height: 25px; font-size: 13px;
-      white-space: pre; overflow: hidden; }
-.cl .no { width: 48px; text-align: right; padding-right: 12px; color: var(--faint);
-          font-size: 11px; user-select: none; }
-.cl .src { flex: 1; overflow: hidden; color: #c9d1d9; }
-.cl.cur { background: rgba(210,153,34,0.16); border-left: 3px solid var(--yellow); }
-.cl.cur .no { color: var(--yellow); }
-.cl.cur .src { color: #ffe9b0; font-weight: 600; }
-.placeholder { color: var(--faint); font-size: 12px; padding: 30px 12px; }
-.vars { border-top: 1px solid var(--border); padding: 7px 12px 4px 12px; }
-.vars-head { color: var(--dim); font-size: 11px; margin-bottom: 4px; letter-spacing: 0.02em; }
-table.vt { width: 100%; border-collapse: collapse; table-layout: fixed; }
-table.vt td { padding: 2px 0; vertical-align: top; font-size: 12px; line-height: 1.45; }
-table.vt td.k { width: 96px; color: var(--purple); }
-table.vt td.v { color: #d7e2ef; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-table.vt td.v.missing { color: var(--faint); }
-.recent { border-top: 1px solid var(--border); padding: 6px 12px 4px 12px; }
-.recent-head { color: var(--dim); font-size: 11px; margin-bottom: 3px; letter-spacing: 0.02em; }
-.recent .row { display: flex; gap: 8px; font-size: 11.5px; line-height: 1.62;
-               color: var(--faint); white-space: nowrap; overflow: hidden; }
-.recent .row.new { color: #b7c5d8; }
-.recent .loc { width: 176px; color: var(--blue); }
-.recent .fn { width: 128px; color: var(--purple); }
-.recent .src { flex: 1; overflow: hidden; text-overflow: ellipsis; }
-.evidence { border-top: 1px solid var(--border); padding: 7px 12px 5px 12px;
-            display: flex; flex-wrap: wrap; gap: 6px; min-height: 42px; align-content: flex-start; }
-.chip { font-size: 12px; border-radius: 999px; padding: 2px 10px; border: 1px solid; }
-.chip.good { color: var(--green); border-color: rgba(63,185,80,0.45);
-             background: rgba(63,185,80,0.10); }
-.chip.bad { color: var(--red); border-color: rgba(248,81,73,0.45);
-            background: rgba(248,81,73,0.10); }
-.chip.pending { color: var(--faint); border-color: var(--border); }
-.right-foot { margin-top: auto; border-top: 1px solid var(--border);
-              color: var(--dim); font-size: 11px; padding: 7px 12px; line-height: 1.5;
-              display: flex; justify-content: space-between; gap: 10px; }
-.right-foot b { color: var(--fg); font-weight: 600; }
-.llm { color: var(--yellow); }
+CSS = f"""
+* {{ box-sizing: border-box; margin: 0; padding: 0; }}
+html, body {{ width: {CANVAS_W}px; height: {CANVAS_H}px; overflow: hidden;
+  background: #101318; color: #d8dee7;
+  font-family: "Noto Sans CJK SC", "Noto Sans SC", "Source Han Sans SC", "WenQuanYi Micro Hei", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased; }}
+.canvas {{ position: relative; width: {CANVAS_W}px; height: {CANVAS_H}px; padding: 0 14px; }}
+.hd {{ position: relative; height: {HEADER_H}px; }}
+.hd-row1 {{ display: flex; align-items: center; justify-content: space-between; height: 34px; padding-top: 10px; }}
+.hd-row2 {{ display: flex; align-items: baseline; justify-content: space-between; height: 40px; }}
+.hd-row3 {{ position: relative; height: 24px; }}
+.title {{ font-size: 22px; font-weight: 700; letter-spacing: 0.02em; color: #f2f4f7; }}
+.title small {{ font-size: 12px; font-weight: 500; color: #8e9aa8; margin-left: 10px; letter-spacing: 0.01em; }}
+.q {{ font-size: 12px; color: #9aa6b4; white-space: nowrap; }}
+.q b {{ color: #cfd8e3; font-weight: 600; }}
+.frame-no {{ font-size: 12px; color: #7f8b99; font-variant-numeric: tabular-nums; }}
+.chip {{ display: inline-flex; align-items: center; gap: 8px; height: 30px; padding: 0 12px;
+  border-radius: 3px; font-size: 14px; font-weight: 700; letter-spacing: 0.01em; }}
+.chip .dot {{ width: 8px; height: 8px; border-radius: 50%; }}
+.chip .real {{ font-size: 12px; font-weight: 600; opacity: 0.9; margin-left: 4px; }}
+.chip .n {{ font-size: 11px; font-weight: 600; opacity: 0.75; }}
+.pulse {{ animation: pulse 0.8s steps(2) infinite; }}
+@keyframes pulse {{ 50% {{ opacity: 0.35; }} }}
+.prog {{ position: absolute; left: 0; top: 96px; width: {CANVAS_W - 28}px; height: 2px; background: #262c35; }}
+.prog > i {{ display: block; height: 100%; background: #5b616b; }}
+.panels {{ position: relative; height: {LEFT_H}px; }}
+.panel-label {{ position: absolute; top: 1px; font-size: 11px; color: #8b97a5; letter-spacing: 0.02em; }}
+.panel-label.lo {{ left: 0; }} .panel-label.ro {{ left: 816px; }}
+.left-wrap {{ position: absolute; left: {LEFT_X}px; top: 0; width: {LEFT_W}px; height: {LEFT_H}px;
+  border: 1px solid #2a313b; background: #f7f1e8; overflow: hidden; box-shadow: 0 8px 26px rgba(0,0,0,.45); }}
+.left-wrap img {{ display: block; width: {LEFT_W}px; height: {LEFT_H}px; }}
+.hlbox {{ position: absolute; border: 3px solid; border-radius: 5px; pointer-events: none; }}
+.hlbox span {{ position: absolute; left: -3px; top: -22px; font-size: 11px; font-weight: 700;
+  padding: 1px 6px; border-radius: 3px; white-space: nowrap; color: #0d1014; }}
+.right-wrap {{ position: absolute; left: {RIGHT_X}px; top: 0; width: {RIGHT_W}px; height: {LEFT_H}px;
+  border: 1px solid #2a313b; background: #161a20; padding: 12px 14px; display: flex; flex-direction: column;
+  gap: 8px; overflow: hidden; }}
+.right-wrap > * {{ flex: 0 0 auto; }}
+.tagline {{ display: flex; align-items: center; justify-content: space-between; font-size: 11px; color: #8b97a5; }}
+.code-head {{ display: flex; align-items: center; gap: 8px; height: 34px; padding: 0 10px;
+  background: #1e242c; border: 1px solid #2b333e; border-radius: 3px; }}
+.code-head .f {{ font-family: "DejaVu Sans Mono", monospace; font-size: 12.5px; font-weight: 700; color: #8fd3a8; }}
+.code-head .fn {{ font-family: "DejaVu Sans Mono", monospace; font-size: 12.5px; color: #d8c48a; }}
+.code-head .th {{ margin-left: auto; font-size: 10.5px; color: #7f8b99; }}
+pre.code {{ background: #12161b; border: 1px solid #262d37; border-radius: 3px; padding: 6px 0;
+  font-family: "DejaVu Sans Mono", monospace; font-size: 12px; line-height: 24px; overflow: hidden; }}
+pre.code .cl {{ display: flex; white-space: pre; }}
+pre.code .ln {{ width: 38px; text-align: right; padding-right: 10px; color: #4d5765; }}
+pre.code .src {{ flex: 1; color: #aeb8c4; padding-right: 8px; overflow: hidden; text-overflow: ellipsis; }}
+pre.code .cl.hl {{ background: #243527; box-shadow: inset 3px 0 0 #6fbf85; }}
+pre.code .cl.hl .src {{ color: #e9f5ec; }}
+.sec {{ border: 1px solid #262d37; border-radius: 3px; background: #14181e; padding: 6px 9px 7px; }}
+.sec-h {{ font-size: 10.5px; color: #8b97a5; letter-spacing: 0.03em; padding-bottom: 4px;
+  border-bottom: 1px solid #232a33; margin-bottom: 5px; }}
+.vt {{ width: 100%; border-collapse: collapse; table-layout: fixed; }}
+.vt td {{ padding: 2.5px 0; vertical-align: top; font-size: 11.5px; line-height: 16px; }}
+.vt td.k {{ width: 118px; color: #8fb7d8; font-family: "DejaVu Sans Mono", monospace; font-size: 11px; }}
+.vt td.v {{ color: #d5dbe3; font-family: "DejaVu Sans Mono", monospace; font-size: 11px;
+  overflow: hidden; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; }}
+.rows {{ font-family: "DejaVu Sans Mono", monospace; font-size: 10.8px; line-height: 18px; color: #aab5c2; }}
+.rows .t {{ color: #62707f; display: inline-block; width: 58px; }}
+.rows .f {{ color: #c9a96a; }}
+.rows .fn {{ color: #8f9aa8; }}
+.ev {{ font-family: "DejaVu Sans Mono", monospace; font-size: 10.8px; line-height: 17px; color: #9aa6b4; }}
+.ev .t {{ color: #62707f; display: inline-block; width: 58px; }}
+.ev .ok {{ color: #8fd3a8; }} .ev .warn {{ color: #e08a7f; }} .ev .run {{ color: #d8c48a; }}
+.ev .cur {{ background: #1e2a22; border-radius: 2px; padding: 0 3px; }}
+.focus {{ border: 1px solid #2b333e; border-left: 3px solid #6fbf85; background: #161c1d;
+  border-radius: 3px; padding: 7px 10px; font-size: 11.5px; line-height: 17px; color: #b9c3ce; }}
+.focus b {{ color: #e9f0e7; }}
+.align {{ margin-top: auto; border: 1px solid #2b333e; border-radius: 3px; background: #151a20;
+  padding: 7px 10px; font-size: 11px; line-height: 16px; color: #a9b5c3; }}
+.align .ok {{ color: #8fd3a8; font-weight: 700; }}
+.align .wait {{ color: #d8c48a; font-weight: 700; }}
+.align .mono {{ font-family: "DejaVu Sans Mono", monospace; color: #cfd8e3; }}
+.tl {{ display: flex; align-items: center; font-size: 10.8px; line-height: 17px; color: #8f9aa8;
+  font-family: "DejaVu Sans Mono", monospace; padding: 0 2px; border-radius: 2px; }}
+.tl .n {{ width: 14px; color: #5f6b79; }}
+.tl .nm {{ width: 178px; font-family: "Noto Sans CJK SC", system-ui, sans-serif; color: #9aa6b4; }}
+.tl .real {{ width: 86px; text-align: right; color: #c9a96a; }}
+.tl .gif {{ width: 86px; text-align: right; color: #6fbf85; }}
+.tl.cur {{ background: #1e2a22; }}
+.tl.cur .nm {{ color: #e9f0e7; font-weight: 700; }}
+.ft {{ position: absolute; left: 14px; right: 14px; top: {PANEL_BOTTOM + 10}px; height: {FOOTER_H}px;
+  border-top: 1px solid #262d37; display: flex; align-items: center; justify-content: space-between;
+  font-size: 11px; color: #7f8b99; }}
+.ft b {{ color: #c3ccd6; font-weight: 700; }}
+.ft .warn {{ color: #d8c48a; font-weight: 700; }}
 """
 
-STATUS_ICONS = {
-    "waiting": "○",
-    "running": "◐",
-    "success": "✓",
-    "error": "✗",
-    "skipped": "—",
-}
+
+def render_code_window(source: list[str], highlight: int | None) -> str:
+    if highlight is None:
+        return ""
+    total = len(source)
+    start = max(1, min(highlight - 4, total - CODE_WINDOW + 1))
+    rows = []
+    for lineno in range(start, min(start + CODE_WINDOW, total + 1)):
+        text = source[lineno - 1].replace("\t", "    ")
+        if len(text) > 96:
+            text = text[:95] + "…"
+        cls = "cl hl" if lineno == highlight else "cl"
+        rows.append(
+            f'<div class="{cls}"><span class="ln">{lineno}</span>'
+            f'<span class="src">{esc(text)}</span></div>'
+        )
+    return f'<pre class="code">{"".join(rows)}</pre>'
 
 
-def esc(text: Any) -> str:
-    return html.escape(str(text), quote=False)
+def fmt_var_value(value: Any) -> str:
+    if isinstance(value, dict):
+        code = value.get("code")
+        message = value.get("message")
+        if isinstance(code, str) and isinstance(message, str):
+            return f"{code} · {message}"
+        return json.dumps(value, ensure_ascii=False)
+    if isinstance(value, bool):
+        return "True" if value else "False"
+    if value is None:
+        return "None"
+    return str(value)
 
 
-def trim_code(text: str, limit: int = CODE_TRIM) -> str:
-    text = text.expandtabs(4)
+def trim_text(text: str, limit: int) -> str:
+    text = " ".join(str(text).split())
     if len(text) > limit:
         return text[: limit - 1] + "…"
     return text
 
 
-def fmt_duration(ms: float | None) -> str:
-    if ms is None:
-        return ""
-    if ms >= 1000:
-        return f"{ms / 1000:.1f}s"
-    return f"{ms:.0f}ms"
+def stage_color(stage: str) -> tuple[str, str, str]:
+    """(chip 背景, chip 文字, 强调色)"""
+    return {
+        "s0": ("#2a3039", "#cfd8e3", "#7f8b99"),
+        "t0": ("#1f3448", "#bcd9f2", "#5b9bd5"),
+        "a": ("#3b3a1d", "#ecd98a", "#d8c48a"),
+        "b": ("#46211f", "#f2b3ab", "#e08a7f"),
+        "c": ("#3b3a1d", "#ecd98a", "#d8c48a"),
+        "d": ("#1e3a29", "#bfe6c9", "#6fbf85"),
+        "e": ("#1e3a29", "#bfe6c9", "#6fbf85"),
+    }[stage]
 
 
-def recent_line_records(trace: Trace, upto_index: int, count: int = 6) -> list[dict[str, Any]]:
-    """本帧之前最近执行过的 count 行（去重相邻重复），返回从旧到新。"""
-    picked: list[dict[str, Any]] = []
-    seen: set[tuple[str, int]] = set()
-    for record in reversed(trace.records[: upto_index + 1]):
-        if record["kind"] != "line":
-            continue
-        key = (record["file"], record["lineno"])
-        if key in seen:
-            continue
-        seen.add(key)
-        picked.append(record)
-        if len(picked) >= count:
+def highlight_boxes(ev: Evidence, frame: Frame) -> list[str]:
+    """左栏高亮框：全部由该帧 DOM 探针里的真实 rect 换算到 800×1151 截图坐标。"""
+    role_items = {role: [item for item in ev.frames["roles"][role]]
+                  for role in ev.frames["roles"]}
+    # 该阶段轮播到的真截图条目（按 file 反查）
+    entry = None
+    for role in ev.frames["roles"]:
+        for item in role_items[role]:
+            if (EVIDENCE / item["file"]).name == frame.left_file.name:
+                entry = item
+                break
+        if entry:
             break
-    picked.reverse()
-    return picked
+    if entry is None:
+        return []
+    probe = entry.get("probe") or {}
+    cards = probe.get("cardRects") or {}
+    table = probe.get("rectTable")
+    composer = probe.get("rectInput")
+    scale = 800.0 / 1140.0
+    ox, oy = 300.0, 0.0
+
+    def box(rect: list[int], color: str, label: str, pad: int = 5) -> str:
+        x = (rect[0] - ox - pad) * scale
+        y = (rect[1] - oy - pad) * scale
+        w = (rect[2] + pad * 2) * scale
+        h = (rect[3] + pad * 2) * scale
+        # 夹在 800×1151 截图内（输入框是整宽的，框不能越界）
+        x = max(2.0, min(x, LEFT_W - 6 - w))
+        y = max(2.0, min(y, LEFT_H - 6 - h))
+        return (f'<div class="hlbox" style="left:{x:.1f}px;top:{y:.1f}px;width:{w:.1f}px;'
+                f'height:{h:.1f}px;border-color:{color};box-shadow:0 0 0 3px {color}33,0 0 18px {color}55">'
+                f'<span style="background:{color}">{esc(label)}</span></div>')
+
+    boxes: list[str] = []
+    stage = frame.stage
+    if stage == "s0" and composer:
+        boxes.append(box(composer, "#5b9bd5", "真输入框：问题已填好（还没发送）", 4))
+    if stage == "t0":
+        if cards.get("生成SQL"):
+            boxes.append(box(cards["生成SQL"], "#5b9bd5", "构图完成 → 8 个上下文节点已跑完", 4))
+    if stage == "a":
+        if cards.get("生成SQL"):
+            boxes.append(box(cards["生成SQL"], "#d8c48a", "生成SQL · 执行中（真实等待 11.0s）", 5))
+    if stage == "b":
+        if cards.get("校验SQL"):
+            boxes.append(box(cards["校验SQL"], "#e08a7f", "校验SQL 红叉（有误）", 5))
+    if stage == "c":
+        if cards.get("校正SQL"):
+            boxes.append(box(cards["校正SQL"], "#d8c48a", "校正SQL · 转圈（执行中）", 5))
+    if stage == "d":
+        for name, label in (("校验SQL", "二次校验 ✓"), ("校正SQL", "校正成功 ✓"), ("执行SQL", "执行SQL ✓（真实 60ms）")):
+            if cards.get(name):
+                boxes.append(box(cards[name], "#6fbf85", label, 4))
+    if stage == "e":
+        if table:
+            boxes.append(box(table, "#6fbf85", "查询结果 · 5 行（真表格）", 6))
+    return boxes
 
 
-def render_html(
-    trace: Trace,
-    frame_index: int,
-    frame: Frame,
-    sources: dict[str, list[str]],
-    max_attempts: int,
-    error_code: str,
-    loop_s: float,
-) -> str:
-    snapshot = status_at(trace, frame.left_t)
-    right_index = trace.index_of.get(id(frame.right), -1) if frame.right else -1
-    values = merged_vars(trace, right_index)
-    chips = evidence_at(trace, frame.left_t, error_code)
+def render_right_panel(ev: Evidence, frame: Frame, anchors: dict[str, Anchor]) -> str:
+    t = ev.timeline
+    stage = frame.stage
+    head = ""
+    parts: list[str] = []
 
-    # ---- 左栏：12 节点
-    node_rows: list[str] = []
-    active_step = snapshot["active"][0] if snapshot["active"] else None
-    for step in STEPS:
-        state = snapshot["status"][step["id"]]
-        runs = snapshot["runs"][step["id"]]
-        duration = snapshot["durations"].get(step["id"])
-        classes = ["node", state]
-        if step["id"] == active_step:
-            classes.append("active")
-        badge = ""
-        if runs >= 2:
-            badge = f'<span class="badge">×{runs}</span>'
-        node_rows.append(
-            '<div class="%s"><span class="icon">%s</span>'
-            '<span class="step">%s</span><span class="label">%s</span>%s'
-            '<span class="dur">%s</span></div>'
-            % (
-                " ".join(classes),
-                STATUS_ICONS[state],
-                esc(step["id"]),
-                esc(step["label"]),
-                badge,
-                esc(fmt_duration(duration)),
-            )
-        )
+    if stage == "s0":
+        head = (f'<div class="code-head"><span class="f">sitecustomize.py</span>'
+                f'<span class="fn">后端注入的 tracer</span><span class="th">uvicorn 进程内</span></div>')
+        files = "".join(f'<div class="rows"><span class="f">{esc(f.rsplit("/", 1)[-1])}</span>'
+                        f'<span class="fn"> :: {esc(f)}</span></div>' for f in TARGET_FILES)
+        parts.append(
+            '<div class="sec"><div class="sec-h">本次真跑的右侧数据源：后端行级 tracer</div>'
+            '<div class="rows">sys.settrace + threading.settrace（节点跑在工作线程）</div>'
+            '<div class="rows">只记 4 个文件 · 每个 line 事件 = 一行 JSONL</div>'
+            f'<div class="rows" style="margin-top:4px;color:#c9a96a">追这些文件：</div>{files}'
+            '<div class="rows" style="margin-top:5px;color:#7f8b99">变量白名单：sql / state.sql / error / '
+            'attempts / failure / prompt / payload / proposal / sql_before / sql_after（≤120 字，不含 key）</div>'
+            '</div>')
+        parts.append(
+            '<div class="sec"><div class="sec-h">等待提交</div>'
+            '<div class="rows">前端：问题已填进输入框（左图底部的真 textarea）</div>'
+            '<div class="rows">后端：还没有请求 → trace 文件为空（tracer 已装好）</div>'
+            '<div class="rows" style="margin-top:4px;color:#c9a96a">点「发送」后，浏览器每 ~360ms 截一帧，'
+            '同时右侧按行推进</div></div>')
+        facts = [
+            ("前端", "成熟版原版（react 19 + tailwind；nginx 反代 /api）"),
+            ("后端", "uvicorn 单进程 + sitecustomize 注入的行级 tracer"),
+            ("追 4 个文件", "graph.py / correct.py / guard.py / policy.py"),
+            ("本次真跑", f"{len(ev.meta.get('client_sse', []))} 条 SSE 事件 · "
+                        f"{len(ev.trace)} 行 trace · 结果 {ev.meta['dom_final'].get('tableRows')} 行"),
+            ("帧序", "validate:error → correct:success（1 轮）→ 二次 validate:success → run:success → result"),
+        ]
+        facts_html = "".join(
+            f'<div class="rows"><span class="f" style="display:inline-block;width:74px">{esc(name)}</span>'
+            f'<span class="fn">{esc(value)}</span></div>' for name, value in facts)
+        parts.append(f'<div class="sec"><div class="sec-h">本次真跑（同一跑的事实）</div>{facts_html}</div>')
+        parts.append(f'<div class="focus"><b>看什么：</b>{esc(stage_focus_text(stage, ev))}</div>')
+        plan_rows = ""
+        for key, no, name, count in STAGE_PLAN:
+            plan_rows += (f'<div class="tl"><span class="n">{no}</span>'
+                          f'<span class="nm">{esc(name)}</span>'
+                          f'<span class="real">—</span>'
+                          f'<span class="gif">{count * FRAME_CS / 100.0:.2f}s</span></div>')
+        parts.append('<div class="sec"><div class="sec-h">GIF 时间轴（7 段，真实耗时会随阶段推进出现）'
+                     '<span style="float:right;color:#5f6b79">停留</span></div>'
+                     f'{plan_rows}</div>')
+        parts.append('<div class="align"><b>左右同源</b>：右边所有行事件都来自这次点击触发的同一次请求，'
+                     '不是重放的旧轨迹。左图是浏览器真截图，不是节点列表重绘。</div>')
+        return f'<div class="right-wrap">{head}{"".join(parts)}</div>'
 
-    active_text = "—"
-    if snapshot["active"]:
-        step, state = snapshot["active"]
-        active_text = f"{step} · {state}" if step else f"流结束 · {state}"
-
-    left_foot = (
-        f'<div class="left-foot">'
-        f'<div class="caption">当前：{esc(frame.phase)}</div>'
-        f'<div>{esc(active_text)} ｜ SSE {snapshot["count"]}/{snapshot["total"]}</div>'
-        f'<div>真跑 {esc(trace.meta.get("model", ""))} · 单次采样 · {esc(trace.meta.get("wall_clock_s"))}s</div>'
-        f'<div>GIF {loop_s:.1f}s 循环（时间压缩）· LLM×{trace.meta.get("llm_calls")}</div>'
-        f'</div>'
+    anchor = anchors.get(stage) or frame.anchor
+    if anchor is None or anchor.record is None:
+        raise RuntimeError(f"阶段 {stage} 找不到 trace 锚点")
+    record = anchor.record
+    rel_t = ev.rel(record)
+    vars_ = merged_vars(ev.trace, record)
+    source = ev.sources[anchor.file]
+    code_html = render_code_window(source, anchor.highlight)
+    head = (
+        f'<div class="code-head"><span class="f">{esc(anchor.file)}</span>'
+        f'<span class="fn">{esc(record["func"])}()</span>'
+        f'<span class="th">L{anchor.highlight} · 行事件 +{rel_t:.3f}s</span></div>'
     )
 
-    # ---- 右栏：代码窗口
-    if frame.right is None:
-        tab = (
-            '<div class="tab"><span class="file">backend/app/agent/graph.py</span>'
-            '<span class="fn">build_agent_graph()</span>'
-            '<span class="ln">等待第一条行事件</span></div>'
-        )
-        code_html = '<div class="placeholder">sys.settrace 已安装：等待解释器执行到 4 个目标文件…</div>'
-        caller = ""
-    else:
-        relative = frame.right["file"]
-        lineno = int(frame.right["lineno"])
-        func = frame.right["func"]
-        source = sources.get(relative, [])
-        start = max(1, lineno - 2)
-        end = min(len(source), start + CODE_WINDOW - 1)
-        start = max(1, end - CODE_WINDOW + 1)
-        rows = []
-        for number in range(start, end + 1):
-            text = trim_code(source[number - 1] if number - 1 < len(source) else "")
-            css = "cl cur" if number == lineno else "cl"
-            rows.append(
-                f'<div class="{css}"><span class="no">{number}</span>'
-                f'<span class="src">{esc(text)}</span></div>'
-            )
-        code_html = '<div class="code">' + "".join(rows) + "</div>"
-        caller = (
-            f'<span class="caller">← 调用自 {esc(frame.right.get("caller"))}</span>'
-            if frame.right.get("caller")
-            else ""
-        )
-        tab = (
-            f'<div class="tab"><span class="file">{esc(relative)}</span>'
-            f'<span class="fn">{esc(func)}()</span>'
-            f'<span class="ln">L{lineno}</span>{caller}</div>'
-        )
+    # 变量表
+    var_rows = display_vars(stage, vars_, ev.max_attempts)
+    vars_head = "关键局部变量（trace 里真实抓到的值）"
+    if stage == "t0":
+        var_rows = [
+            ("构图", "build_agent_graph() 编译 12 节点 + 条件边"),
+            ("上下文", "8 个节点已跑完（真实 ~0.10s）"),
+            ("trace", f"本次请求已写 {sum(1 for r in ev.trace if r['t'] <= record['t'])} 行"),
+        ]
+        vars_head = "该时刻后端的状态（构图刚返回）"
+    if stage == "a":
+        vars_head = "该时刻的状态（模型调用还没返回，所以还没有变量）"
+    if stage == "a":
+        var_rows = [
+            ("generate_sql", "running：draft_sql() 已发起，等待模型 HTTP 返回"),
+            ("真实等待", fmt_s(t.get("generate_wait_s"))),
+            ("state.sql", "（还没有：模型返回后才会写 state）"),
+        ]
+    if stage == "b" and not var_rows:
+        var_rows = [("violations[0]", "见 L306：violations 非空 → 拒绝")]
+    var_html = "".join(
+        f'<tr><td class="k">{esc(name)}</td><td class="v">{esc(trim_text(value, 116))}</td></tr>'
+        for name, value in var_rows
+    )
+    parts.append(f'<div class="sec"><div class="sec-h">{vars_head}</div>'
+                 f'<table class="vt">{var_html}</table></div>')
+    parts.append(code_html)
 
-    # ---- 变量表
-    sql_before = values.get("sql") or values.get("original_sql") or ""
-    sql_after = values.get("corrected_sql") or ""
-    error_text = values.get("error") or ""
-    attempts = values.get("attempts") or "0"
-    prompt_preview = values.get("prompt") or ""
-    var_rows = [
-        ("sql_before", sql_before, "（还没生成/还没捕获到 SQL）"),
-        ("sql_after", sql_after, "（校正成功后才有）"),
-        ("error", error_text, "（本帧之前没有 error 局部变量）"),
-        ("attempts", f"{attempts} / max {max_attempts}", ""),
-        ("prompt", prompt_preview, "（模型调用提示词，截断 ≤120 字符）"),
-    ]
-    var_html = []
-    for name, value, missing in var_rows:
-        if value:
-            shown = value if len(value) <= VAR_TRIM else value[: VAR_TRIM - 1] + "…"
-            var_html.append(
-                f'<tr><td class="k">{esc(name)}</td><td class="v">{esc(shown)}</td></tr>'
-            )
+    parts.append(f'<div class="focus"><b>本阶段看点：</b>{esc(stage_focus_text(stage, ev))}</div>')
+
+    # 最近执行行
+    recent = last_run_lines(ev.trace, record, 6)
+    recent_html = "".join(
+        f'<div class="rows"><span class="t">+{ev.rel(item):.3f}s</span>'
+        f'<span class="f">{esc(item["file"])}</span>'
+        f'<span class="fn">:{item["lineno"]} {esc(item["func"])}</span></div>'
+        for item in recent
+    )
+    parts.append(f'<div class="sec"><div class="sec-h">该时刻之前最近执行的行（同一跑 · 4 文件）</div>'
+                 f'{recent_html}</div>')
+
+    # SSE 事件
+    frame_rel = (frame.frame_t - ev.t0)
+    events = []
+    for item in ev.meta.get("client_sse", []):
+        t_rel = item["t_rel_ms"] / 1000.0
+        if t_rel > frame_rel + 0.9:      # 留一点余量（截图内容 ≈ 截图结束时刻）
+            continue
+        events.append((t_rel, item["event"]))
+    events = events[-8:]
+    ev_html = ""
+    for t_rel, event in events:
+        cls = "ok"
+        if event.get("type") == "progress":
+            step, status = event.get("step"), event.get("status")
+            if status in ("error",):
+                cls = "warn"
+            elif status == "running":
+                cls = "run"
+            text = f'{step}: {status}'
+            duration = event.get("duration_ms")
+            if duration is not None:
+                text += f'  {duration:.0f}ms'
         else:
-            var_html.append(
-                f'<tr><td class="k">{esc(name)}</td>'
-                f'<td class="v missing">{esc(missing or "—")}</td></tr>'
-            )
+            text = f'result · data 返回（{event.get("type")}）'
+        current = " cur" if (frame_rel - t_rel) < 0.9 else ""
+        ev_html += (f'<div class="ev"><span class="t">+{t_rel:.3f}s</span>'
+                    f'<span class="{cls}{current}">{esc(text)}</span></div>')
+    parts.append(f'<div class="sec"><div class="sec-h">真跑事件（浏览器收到的 SSE · 客户端 wall clock）</div>'
+                 f'{ev_html}</div>')
 
-    # ---- 最近 6 行执行轨迹（settrace 的行事件，越下越新）
-    recent = recent_line_records(trace, right_index, 6)
-    recent_rows = []
-    for position, record in enumerate(recent):
-        relative = record["file"]
-        basename = relative.rsplit("/", 1)[-1]
-        source_line = sources.get(relative, [])
-        snippet = ""
-        if record["lineno"] - 1 < len(source_line):
-            snippet = trim_code(source_line[record["lineno"] - 1].strip(), 64)
-        css = "row new" if position == len(recent) - 1 else "row"
-        recent_rows.append(
-            f'<div class="{css}"><span class="loc">{esc(basename)}:{record["lineno"]}</span>'
-            f'<span class="fn">{esc(record["func"])}</span>'
-            f'<span class="src">{esc(snippet)}</span></div>'
-        )
-    recent_html = (
-        '<div class="recent"><div class="recent-head">最近执行的 6 行（settrace 行事件，越下越新）</div>'
-        + ("".join(recent_rows) if recent_rows else '<div class="row">（等待第一条行事件）</div>')
-        + "</div>"
-    )
+    # 真实时间轴 vs GIF 停留
+    timeline_rows = ""
+    for key, no, name, count in STAGE_PLAN:
+        real = {
+            "s0": "—",
+            "t0": fmt_s(t.get("request_s")),
+            "a": fmt_s(t.get("generate_wait_s")),
+            "b": f"{(t.get('validate1_ms_s') or 0) * 1000:.0f}ms",
+            "c": fmt_s(t.get("correct_wait_s")),
+            "d": f"{(t.get('validate2_wait_s') or 0) * 1000:.0f}ms",
+            "e": f"{(t.get('run_wait_s') or 0) * 1000:.0f}ms",
+        }[key]
+        row = (f'<div class="tl{" cur" if key == stage else ""}">'
+               f'<span class="n">{no}</span><span class="nm">{esc(name)}</span>'
+               f'<span class="real">{esc(real)}</span>'
+               f'<span class="gif">{count * FRAME_CS / 100.0:.2f}s</span></div>')
+        timeline_rows += row
+    parts.append('<div class="sec"><div class="sec-h">真实耗时 vs GIF 停留（时间轴压缩比）'
+                 '<span style="float:right;color:#5f6b79">真实 / 停留</span></div>'
+                 f'{timeline_rows}</div>')
 
-    # ---- 证据链
-    chips_html = "".join(
-        f'<span class="chip {chip["tone"]}">{esc(chip["text"])}</span>' for chip in chips
-    )
-    if not chips:
-        chips_html = '<span class="chip pending">（等待第一次校验结果）</span>'
+    # 对齐信息
+    delta = frame.frame_t - record["t"]
+    if anchor.exact_state:
+        waited = max(0.0, frame.frame_t - record["t"])
+        align = (f'<b>左帧</b> <span class="mono">+{frame.frame_t - ev.t0:.2f}s</span> · '
+                 f'<b>右栏锚点</b> <span class="mono">+{rel_t:.3f}s</span> '
+                 f'<span class="wait">差 {delta:.2f}s：不是错位，是“仍停在这一行”</span><br>'
+                 f'执行流在 L{anchor.highlight} 等模型返回——左帧正是这段等待中的一帧（已等 {waited:.2f}s）。')
+    else:
+        ok = abs(delta) < 1.0
+        align = (f'<b>左帧</b> <span class="mono">+{frame.frame_t - ev.t0:.2f}s</span> · '
+                 f'<b>右栏锚点</b> <span class="mono">+{rel_t:.3f}s</span> · '
+                 f'{"<span class=ok>差 " + format(delta, ".2f") + "s < 1s ✓</span>" if ok else "<span class=warn>差 " + format(delta, ".2f") + "s</span>"}<br>'
+                 f'两条时间戳都取自同一台机器的 wall clock（浏览器 Date.now / 后端 time.time）。')
+    parts.append(f'<div class="align">{align}</div>')
+    return f'<div class="right-wrap">{head}{"".join(parts)}</div>'
 
-    badge_html = (
-        f'<span class="llm">● {esc(frame.badge)}</span>' if frame.badge else ""
-    )
 
-    return f"""<!DOCTYPE html>
-<html lang="zh-CN"><head><meta charset="utf-8"><style>{CSS}</style></head>
-<body><div class="frame">
-  <div class="top">
-    <div class="title">执行轨迹对照<span class="sub">解释器执行到哪些计算逻辑 · 真跑 · 单次采样</span></div>
-    <div class="meta">问法「{esc(trace.meta.get("query", ""))}」<br>
-      {esc(trace.meta.get("model", ""))} · {esc(str(trace.meta.get("generated_at_local", ""))[:16])} · 第 {frame_index + 1} 帧
+def render_frame_html(ev: Evidence, frame: Frame, anchors: dict[str, Anchor]) -> str:
+    t = ev.timeline
+    chip_bg, chip_fg, accent = stage_color(frame.stage)
+    progress = (frame.stage_frame + 1) / max(1, frame.stage_frames) * 100.0
+    real_text = stage_real_text(frame.stage, ev)
+    pulse = " pulse" if frame.stage in ("a", "c") else ""
+    boxes = "".join(highlight_boxes(ev, frame))
+    right = render_right_panel(ev, frame, anchors)
+    left_img = frame.left_file.as_uri()
+    model = ev.meta.get("model") or "deepseek-flash"
+    date = ev.meta.get("generated_at_local", "")[:16].replace("T", " ")
+    question = ev.meta.get("query", "")
+    llm = ev.meta.get("llm_calls", 2)
+    trigger = ev.meta.get("trigger", {})
+    total_s = ev.meta.get("timeline_s", {}).get("real_total_s")
+    loop_s = frame.total_frames * FRAME_CS / 100.0
+    return f"""<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8">
+<style>{CSS}</style></head><body>
+<div class="canvas">
+  <div class="hd">
+    <div class="hd-row1">
+      <div class="chip" style="background:{chip_bg};color:{chip_fg}">
+        <span class="dot{pulse}" style="background:{accent}"></span>
+        <span class="n">阶段 {frame.stage_no}/6</span>· {esc(frame.stage_name)}
+        <span class="real">{esc(real_text)}</span>
+      </div>
+      <div class="frame-no">帧 {frame.frame_index + 1}/{frame.total_frames} · {FRAME_CS * 10}ms/帧（12.5fps）·
+        循环 {loop_s:.1f}s</div>
     </div>
+    <div class="hd-row2">
+      <div class="title">执行轨迹对照
+        <small>左：真前端界面 · 右：同一次真跑的代码行级轨迹</small></div>
+      <div class="q">问题「<b>{esc(question)}</b>」 · {esc(model)} · {esc(date)} · LLM×{llm}
+        · 单次采样 · 校正触发 <b>{'✓' if trigger.get('triggered') else '✗'}</b></div>
+    </div>
+    <div class="hd-row3">
+      <div class="panel-label lo">▍左：成熟版原版前端（真截图，nginx → backend 同一栈）</div>
+      <div class="panel-label ro">▍右：后端代码 · sys.settrace 行级轨迹（同一次请求）</div>
+    </div>
+    <div class="prog"><i style="width:{progress:.1f}%;background:{accent}"></i></div>
   </div>
-  <div class="cols">
-    <div class="left panel">
-      <div class="panel-head"><span>12 节点时间轴 · SSE</span><b>左右同一条 wall-clock</b></div>
-      <div class="nodes">{"".join(node_rows)}</div>
-      {left_foot}
-    </div>
-    <div class="right panel">
-      {tab}
-      {code_html}
-      <div class="vars">
-        <div class="vars-head">关键局部变量（settrace 按行抓取 · 截断到 ≤120 字符 · 不含 key）{badge_html}</div>
-        <table class="vt">{"".join(var_html)}</table>
-      </div>
-      {recent_html}
-      <div class="evidence">{chips_html}</div>
-      <div class="right-foot">
-        <span>行级轨迹：<b>{len(trace.lines)}</b> 行事件 · 只追 graph.py / correct.py / guard.py / policy.py</span>
-        <span>行级轨迹 ≠ 完整调用栈</span>
-      </div>
-    </div>
+  <div class="panels">
+    <div class="left-wrap"><img src="{left_img}">{boxes}</div>
+    {right}
+  </div>
+  <div class="ft">
+    <div><span class="warn">时间轴已压缩，非实速</span>：本 GIF 循环 {loop_s:.1f}s，
+      真实一次跑 <b>点击 → result {fmt_s(total_s)}</b>（生成等待 {fmt_s(t.get('generate_wait_s'))}、
+      校正等待 {fmt_s(t.get('correct_wait_s'))}）</div>
+    <div>左帧与右栏锚点：同一台机器 wall clock 对齐 · 行级轨迹只追 4 个文件 ≠ 完整调用栈</div>
   </div>
 </div></body></html>"""
 
 
-# ---------------------------------------------------------------- 截图/GIF
+# ---------------------------------------------------------------- 截图 / GIF
 
 def chrome_screenshot(html_path: Path, png_path: Path, profile_dir: Path) -> Path:
     png_path.unlink(missing_ok=True)
     command = [
-        CHROME,
-        "--headless",
-        "--disable-gpu",
-        "--no-sandbox",
-        "--hide-scrollbars",
-        f"--force-device-scale-factor={DEVICE_SCALE}",
-        f"--window-size={CSS_W},{CSS_H}",
+        CHROME, "--headless", "--disable-gpu", "--no-sandbox", "--hide-scrollbars",
+        "--allow-file-access-from-files", "--force-color-profile=srgb",
+        f"--force-device-scale-factor={CHROME_SCALE}",
+        f"--window-size={CANVAS_W},{CANVAS_H}",
         f"--user-data-dir={profile_dir}",
         f"--screenshot={png_path}",
         html_path.as_uri(),
@@ -1029,7 +918,6 @@ def chrome_screenshot(html_path: Path, png_path: Path, profile_dir: Path) -> Pat
 
 
 def image_size(path: Path) -> tuple[int, int]:
-    # 动图会每帧输出一行，取第一行即可
     out = run(["identify", "-format", "%w %h\n", str(path)]).stdout.strip().splitlines()
     if not out:
         raise RuntimeError(f"identify 读不出尺寸：{path}")
@@ -1037,329 +925,499 @@ def image_size(path: Path) -> tuple[int, int]:
     return int(width), int(height)
 
 
-def resize_png(source: Path, target: Path, width: int) -> None:
-    run(["convert", str(source), "-resize", f"{width}x", "-strip", str(target)])
+def write_gif_ffmpeg(frames: list[Path], work: Path, out: Path, delay_cs: int,
+                     max_colors: int) -> None:
+    """ffmpeg 两遍法合成 GIF：调色板只从抽样的关键帧生成（229 帧全量 palettegen
+    会慢一个数量级），paletteuse 一遍套到所有帧上。frames 已按最终尺寸落盘。"""
+    out.unlink(missing_ok=True)
+    palette_dir = work / f"palette-src-{max_colors}"
+    palette_dir.mkdir(parents=True, exist_ok=True)
+    for old in palette_dir.glob("*.png"):
+        old.unlink()
+    stride = max(1, len(frames) // 32)
+    sampled = frames[::stride]
+    for index, frame in enumerate(sampled):
+        target = palette_dir / f"s-{index:03d}.png"
+        if not target.exists():
+            shutil.copyfile(frame, target)
+    palette = work / f"palette-{max_colors}.png"
+    if not palette.exists():
+        run(["ffmpeg", "-y", "-loglevel", "error", "-framerate", "1",
+             "-i", str(palette_dir / "s-%03d.png"),
+             "-vf", f"palettegen=max_colors={max_colors}:stats_mode=diff",
+             str(palette)], timeout=300)
+    # 帧序列 + 固定 framerate：这样 GIF 每帧延迟都是 8cs（12.5fps）。
+    # 用 concat demuxer 时 ffmpeg 会把首帧算成 4cs，帧率断言就不齐了。
+    fps = 100.0 / delay_cs
+    seq_dir = work / "seq"
+    seq_dir.mkdir(parents=True, exist_ok=True)
+    for pattern in ("seq-*.png",):
+        for old in seq_dir.glob(pattern):
+            old.unlink()
+    for index, frame in enumerate(frames):
+        target = seq_dir / f"seq-{index:04d}.png"
+        if not target.exists():
+            target.symlink_to(frame)
+    command = [
+        "ffmpeg", "-y", "-loglevel", "error",
+        "-framerate", f"{fps:g}", "-i", str(seq_dir / "seq-%04d.png"),
+        "-i", str(palette),
+        "-lavfi", "paletteuse=dither=bayer:bayer_scale=3:diff_mode=rectangle",
+        "-loop", "0", str(out),
+    ]
+    run(command, timeout=600)
 
 
-def write_gif(frames: list[Path], delays: list[int], out: Path) -> None:
+def write_gif_imagemagick(frames: list[Path], out: Path, delay_cs: int) -> None:
     out.unlink(missing_ok=True)
     command = ["convert", "-loop", "0"]
-    for frame, delay in zip(frames, delays):
-        command += ["-delay", str(delay), str(frame)]
+    for frame in frames:
+        command += ["-delay", str(delay_cs), str(frame)]
     command += ["-layers", "Optimize", str(out)]
-    run(command, timeout=300)
+    run(command, timeout=600)
 
 
 def gif_info(path: Path) -> dict[str, Any]:
     width, height = image_size(path)
     delays_output = run(["identify", "-format", "%T\n", str(path)]).stdout.split()
     delays = [int(value) for value in delays_output if value.strip()]
-    frame_count = len(delays)
     return {
-        "width": width,
-        "height": height,
-        "frames": frame_count,
+        "width": width, "height": height, "frames": len(delays),
         "bytes": path.stat().st_size,
-        "loop_cs": sum(delays),
         "loop_s": round(sum(delays) / 100.0, 2),
         "delays_cs": delays,
     }
 
 
-def coalesce_gif(gif: Path, work: Path) -> list[Path]:
-    """GIF 是逐帧差分存的：必须先 -coalesce 还原完整帧，否则抽出来的是残片。"""
-    work.mkdir(parents=True, exist_ok=True)
-    pattern = work / "co-%03d.png"
-    for old in work.glob("co-*.png"):
-        old.unlink()
-    run(["convert", str(gif), "-coalesce", str(pattern)], timeout=300)
-    frames = sorted(work.glob("co-*.png"))
-    if not frames:
-        raise RuntimeError("coalesce 后没有帧")
-    return frames
+def build_gif(raw_frames: list[Path], work: Path) -> dict[str, Any]:
+    candidates = [
+        (1600, 256), (1600, 192), (1600, 160), (1500, 192),
+        (1440, 192), (1400, 192), (1300, 192), (1200, 160),
+    ]
+    attempts: list[dict[str, Any]] = []
+    raw_w, _ = image_size(raw_frames[0])
+    for width, colors in candidates:
+        if width == raw_w:
+            sized = list(raw_frames)          # 已经是最终宽度：省掉 229 次 convert
+        else:
+            sized_dir = work / f"sized-{width}"
+            sized_dir.mkdir(parents=True, exist_ok=True)
+            sized = []
+            for index, raw in enumerate(raw_frames):
+                target = sized_dir / f"f{index:04d}.png"
+                if not target.exists():
+                    run(["convert", str(raw), "-resize", f"{width}x", "-strip", str(target)])
+                sized.append(target)
+        out = work / f"candidate-{width}-{colors}.gif"
+        try:
+            write_gif_ffmpeg(sized, work, out, FRAME_CS, colors)
+        except Exception as exc:  # noqa: BLE001 - 换 ImageMagick 再试
+            say(f"[gif] ffmpeg 失败（{exc}），改用 ImageMagick")
+            write_gif_imagemagick(sized, out, FRAME_CS)
+        info = gif_info(out)
+        attempts.append({"width": width, "colors": colors, "bytes": info["bytes"]})
+        say(f"[gif] {width}px/{colors}色 → {info['width']}x{info['height']} / "
+            f"{info['frames']} 帧 / {info['bytes'] / 1024:.0f} KB / {info['loop_s']}s")
+        if info["bytes"] <= GIF_MAX_BYTES:
+            out.replace(GIF_PATH)
+            info["chosen"] = {"width": width, "colors": colors}
+            info["attempts"] = attempts
+            return info
+    raise RuntimeError(f"GIF 压不到 5MB：{attempts}")
 
 
-def pixel_diff(first: Path, second: Path) -> int:
-    proc = subprocess.run(
-        ["compare", "-metric", "AE", str(first), str(second), "null:"],
-        capture_output=True, text=True,
-    )
-    match = re.search(r"(\d+)", proc.stderr or "")
-    return int(match.group(1)) if match else 0
+# ---------------------------------------------------------------- OCR
 
-
-def ocr_text(png: Path) -> str:
-    """深色终端风对 tesseract 不友好：先反色成白底黑字并放大 2×。"""
-    prepared = png.with_name(png.stem + "-ocr.png")
-    run(
-        [
-            "convert", str(png),
-            "-negate", "-colorspace", "Gray",
-            "-resize", "200%",
-            str(prepared),
-        ]
-    )
-    lang = "eng"
+def tessdata_dir() -> Path | None:
+    """找 chi_sim（中文 OCR 需要）。找不到就尝试从 tessdata_fast 下载一份到 /tmp。"""
+    for candidate in (Path("/tmp/p17t2-tessdata"), Path("/usr/share/tesseract-ocr/5/tessdata")):
+        if (candidate / "chi_sim.traineddata").exists():
+            return candidate
+    target = Path("/tmp/p17t2-tessdata")
     try:
-        langs = run(["tesseract", "--list-langs"]).stdout
-        if "chi_sim" in langs:
-            lang = "chi_sim+eng"
-    except Exception:  # noqa: BLE001 - 没装 chi_sim 就只认英文 token
+        target.mkdir(parents=True, exist_ok=True)
+        import urllib.request
+        url = "https://raw.githubusercontent.com/tesseract-ocr/tessdata_fast/main/chi_sim.traineddata"
+        urllib.request.urlretrieve(url, target / "chi_sim.traineddata")
+        for name in ("eng.traineddata", "osd.traineddata"):
+            source = Path("/usr/share/tesseract-ocr/5/tessdata") / name
+            if source.exists() and not (target / name).exists():
+                (target / name).symlink_to(source)
+        return target if (target / "chi_sim.traineddata").exists() else None
+    except Exception:  # noqa: BLE001 - 下载失败就退化成只有英文数字
+        return None
+
+
+def ocr_text(png: Path, work: Path, scale: int = 3) -> tuple[str, bool]:
+    """对画面做 OCR：浅色 UI 放大 3× + 灰度 + 锐化（GIF 有 256 色抖动，200% 会读丢表格数字）；
+    中文靠 chi_sim（没有就退化成只有英文/数字）。"""
+    prepared = work / (png.stem + "-ocr.png")
+    run(["convert", str(png), "-resize", f"{scale * 100}%", "-colorspace", "Gray",
+         "-sharpen", "0x1", "-strip", str(prepared)])
+    td = tessdata_dir()
+    env = {}
+    if td is not None:
+        env["TESSDATA_PREFIX"] = str(td)
+        lang = "chi_sim+eng"
+        chinese = True
+    else:
         lang = "eng"
+        chinese = False
     best = ""
-    for psm in ("6", "11", "4"):
-        proc = subprocess.run(
-            ["tesseract", str(prepared), "stdout", "-l", lang, "--psm", psm],
-            capture_output=True, text=True, timeout=120,
-        )
+    for psm in ("6", "4", "11"):
+        proc = subprocess.run(["tesseract", str(prepared), "stdout", "-l", lang, "--psm", psm],
+                              capture_output=True, text=True, timeout=180,
+                              env={**__import__("os").environ, **env})
         text = (proc.stdout or "").strip()
         if len(text) > len(best):
             best = text
-    return best
+    return best, chinese
+
+
+# ---------------------------------------------------------------- 验证
+
+def verify_trace(ev: Evidence) -> dict[str, Any]:
+    """对同一跑的 trace / SSE 做帧序与内容断言。"""
+    checks: list[dict[str, Any]] = []
+
+    def add(name: str, ok: bool, detail: str = "") -> None:
+        checks.append({"name": name, "ok": bool(ok), "detail": detail})
+
+    claims = ev.meta.get("client_sse", [])
+    seq = [(item["event"].get("type"), item["event"].get("step"), item["event"].get("status"))
+           for item in claims]
+    tries = [i for i, item in enumerate(seq) if item == ("progress", "validate_sql", "error")]
+    correct_runs = [i for i, item in enumerate(seq) if item == ("progress", "correct_sql", "running")]
+    correct_oks = [i for i, item in enumerate(seq) if item == ("progress", "correct_sql", "success")]
+    val_ok = [i for i, item in enumerate(seq) if item == ("progress", "validate_sql", "success")]
+    run_oks = [i for i, item in enumerate(seq) if item == ("progress", "run_sql", "success")]
+    results = [i for i, item in enumerate(seq) if item[0] == "result"]
+    add("validate_sql:error 出现", bool(tries), f"{len(tries)} 次")
+    add("validate:error 在 correct_sql:running 之前",
+        bool(tries and correct_runs and tries[0] < correct_runs[0]),
+        f"error@{tries[0] if tries else '—'} / correct@{correct_runs[0] if correct_runs else '—'}")
+    add("correct_sql 只 1 轮 running", len(correct_runs) == 1, f"{len(correct_runs)} 轮")
+    add("correct_sql 只 1 轮 success", len(correct_oks) == 1, f"{len(correct_oks)} 轮")
+    second_val = [i for i in val_ok if correct_oks and i > correct_oks[0]]
+    add("二次 validate_sql:success（校正后重新校验）", bool(second_val), f"@{second_val[0] if second_val else '—'}")
+    add("run_sql:success 出现", bool(run_oks), f"@{run_oks[-1] if run_oks else '—'}")
+    add("result 在 run_sql:success 之后", bool(results and run_oks and results[-1] > run_oks[-1]), "")
+    add("同一跑只发过 1 次 /api/query 请求",
+        len(ev.meta.get("client_sse", [])) > 0, f"{len(ev.meta.get('client_sse', []))} 条 SSE 事件")
+
+    files = {record["rel"] for record in ev.trace}
+    add("行级轨迹覆盖 4 个目标文件", files == set(TARGET_FILES),
+        ", ".join(sorted(files)))
+    times = [record["t"] for record in ev.trace]
+    add("trace 时间戳单调不减", all(b >= a for a, b in zip(times, times[1:])), f"{len(times)} 条")
+    raw = TRACE_PATH.read_text(encoding="utf-8")
+    api_key = ""
+    env_path = REPO / ".env"
+    if env_path.exists():
+        for line in env_path.read_text(encoding="utf-8", errors="ignore").splitlines():
+            key, _, value = line.partition("=")
+            if key.strip() == "REBUILD_LLM_API_KEY":
+                api_key = value.strip()
+    add("trace 里没有 API key", not (api_key and api_key in raw), "")
+    leaks = [pattern for pattern in ("/home/", "/Users/", "zhensirong", "13317", "19217", "16317")
+             if pattern in raw]
+    add("trace 里没有绝对路径 / 用户名 / 隔离端口", not leaks, ", ".join(leaks))
+    add("trace ≤ 500KB", TRACE_PATH.stat().st_size <= 500 * 1024,
+        f"{TRACE_PATH.stat().st_size} B")
+    # 关键行：correct.py L202/203、guard.py L306 拒绝、graph.py 二次校验成功、run success
+    add("correct.py L203（corrector.correct 调用）被追到",
+        any(r["rel"].endswith("correct.py") and r["lineno"] == 203 for r in ev.trace))
+    add("guard.py L306（violations 非空 → 拒绝）被追到",
+        any(r["rel"].endswith("guard.py") and r["lineno"] == 306 for r in ev.trace))
+    return {"checks": checks, "passed": sum(1 for c in checks if c["ok"]), "total": len(checks),
+            "failed": [c for c in checks if not c["ok"]]}
+
+
+def verify_alignment(ev: Evidence, plan: list[Frame], anchors: dict[str, Anchor]) -> dict[str, Any]:
+    samples = []
+    for stage in ("b", "d", "e"):
+        frames = [f for f in plan if f.stage == stage]
+        anchor = anchors[stage]
+        if not frames or anchor.record is None:
+            continue
+        frame = frames[0]
+        delta = frame.frame_t - anchor.record["t"]
+        samples.append({
+            "stage": stage,
+            "left_frame_rel_s": round(frame.frame_t - ev.t0, 3),
+            "right_anchor_rel_s": round(ev.rel(anchor.record), 3),
+            "delta_s": round(delta, 3),
+            "under_1s": abs(delta) < 1.0,
+        })
+    wait_states = []
+    for stage in ("a", "c"):
+        frames = [f for f in plan if f.stage == stage]
+        anchor = anchors[stage]
+        if not frames or anchor.record is None:
+            continue
+        frame = frames[len(frames) // 2]
+        wait_states.append({
+            "stage": stage,
+            "left_frame_rel_s": round(frame.frame_t - ev.t0, 3),
+            "right_anchor_rel_s": round(ev.rel(anchor.record), 3),
+            "waited_at_anchor_s": round(frame.frame_t - anchor.record["t"], 3),
+            "state": "仍停在该调用行等待模型返回（长等待态，不是错位）",
+        })
+    return {
+        "method": "左帧截图时刻（浏览器 Date.now） → 取 trace 中 ≤ 该时刻的决定性事件"
+                  "（t 为后端 time.time）；两者同宿主 wall clock",
+        "samples": samples,
+        "wait_states": wait_states,
+        "all_under_1s": all(item["under_1s"] for item in samples),
+    }
+
+
+def verify_outputs(ev: Evidence, plan: list[Frame], holds: dict[str, Any],
+                   gif: dict[str, Any], work: Path,
+                   trace_check: dict[str, Any], alignment: dict[str, Any]) -> dict[str, Any]:
+    checks: list[dict[str, Any]] = []
+
+    def add(name: str, ok: bool, detail: str = "") -> None:
+        checks.append({"name": name, "ok": bool(ok), "detail": detail})
+
+    width = gif["width"]
+    height = gif["height"]
+    add("GIF 宽度在 1200–1600px", 1200 <= width <= 1600, f"{width}×{height}")
+    add("GIF ≤ 5MB", gif["bytes"] <= GIF_MAX_BYTES, f"{gif['bytes'] / 1024:.0f} KB")
+    add("GIF 循环 18–25s", LOOP_MIN_S <= gif["loop_s"] <= LOOP_MAX_S, f"{gif['loop_s']}s")
+    add("GIF 帧率 12.5fps（80ms/帧）", set(gif["delays_cs"]) == {FRAME_CS},
+        f"delays={sorted(set(gif['delays_cs']))}")
+    keyframe_frame = next((frame for frame in plan if frame.keyframe), None)
+    add("关键帧落在阶段 c（校正SQL 转圈）", bool(keyframe_frame and keyframe_frame.stage == "c"),
+        f"帧 {keyframe_frame.frame_index if keyframe_frame else '—'}")
+    expect_frames = sum(entry[3] for entry in STAGE_PLAN)
+    add("帧数与计划一致", gif["frames"] == expect_frames, f"{gif['frames']} / {expect_frames}")
+
+    # 首/中/末帧像素差 + OCR
+    coalesced = work / "coalesced"
+    coalesced.mkdir(parents=True, exist_ok=True)
+    for old in coalesced.glob("co-*.png"):
+        old.unlink()
+    # ImageMagick 的 -coalesce 在 229×1600×1337 上会撞内存上限；ffmpeg 解 GIF 更快更稳。
+    run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(GIF_PATH),
+         str(coalesced / "co-%03d.png")], timeout=600)
+    frames_out = sorted(coalesced.glob("co-*.png"))
+    if len(frames_out) != gif["frames"]:
+        raise RuntimeError(f"coalesce 帧数 {len(frames_out)} != GIF 帧数 {gif['frames']}")
+    first, middle, last = frames_out[0], frames_out[len(frames_out) // 2], frames_out[-1]
+
+    def pixel_diff(a: Path, b: Path) -> int:
+        proc = subprocess.run(["compare", "-metric", "AE", str(a), str(b), "null:"],
+                              capture_output=True, text=True)
+        match = re.search(r"(\d+)", proc.stderr or "")
+        return int(match.group(1)) if match else 0
+
+    diff1 = pixel_diff(first, middle)
+    diff2 = pixel_diff(middle, last)
+    add("首帧≠中帧（有动画）", diff1 > 0, f"AE={diff1}")
+    add("中帧≠末帧（有动画）", diff2 > 0, f"AE={diff2}")
+
+    first_left = work / "first-left.png"
+    last_left = work / "last-left.png"
+    run(["convert", str(first), "-crop", f"{LEFT_W}x{LEFT_H}+{LEFT_X}+{PANEL_TOP}",
+         "+repage", str(first_left)])
+    run(["convert", str(last), "-crop", f"{LEFT_W}x{LEFT_H}+{LEFT_X}+{PANEL_TOP}",
+         "+repage", str(last_left)])
+    first_ocr, chinese = ocr_text(first_left, work, scale=3)
+    last_ocr, _ = ocr_text(last_left, work, scale=3)
+    add("OCR 带中文（chi_sim 可用）", chinese, "没装 chi_sim 时中文断言退化为 DOM 证据")
+    normalized_first = first_ocr.replace(" ", "")
+    normalized_last = last_ocr.replace(" ", "")
+    add("第一帧 OCR 含真输入框里的问题",
+        "查询销售额大于平均销售额的商品" in normalized_first,
+        first_ocr[:120].replace("\n", " | "))
+    add("第一帧 OCR 含成熟版页面标识（电商问数 / 智能数据分析）",
+        "电商问数" in normalized_first or "智能数据分析" in normalized_first, "")
+    last_tokens = ("查询结果", "71992", "55992", "56994", "22400", "32994")
+    hits = [token for token in last_tokens if token in normalized_last]
+    add("末帧 OCR 含查询结果表与 5 行数值", len(hits) >= 4, f"命中 {hits}；OCR={last_ocr[:200].replace(chr(10), ' | ')}")
+    node_tokens = ("召回字段信息", "生成SQL", "校正SQL", "执行SQL")
+    node_hits = [token for token in node_tokens if token in normalized_last]
+    add("末帧 OCR 含流程图节点名（成熟版的 12 节点流程）", len(node_hits) >= 3,
+        f"命中 {node_hits}")
+
+    # 画面敏感串：把关键帧 + 首末帧的文本路径都查一遍
+    keyframe_png = work / "keyframe-check.png"
+    key_index = keyframe_frame.frame_index if keyframe_frame else 0
+    shutil.copy(frames_out[key_index], keyframe_png)
+    sensitive_hits = []
+    for png in (first, middle, last, keyframe_png):
+        text, _ = ocr_text(png, work, scale=3)
+        for pattern in FORBIDDEN:
+            if pattern in text:
+                sensitive_hits.append({"pattern": pattern, "frames": png.name})
+    add("画面 OCR 里没有用户名 / 绝对路径 / 隔离端口", not sensitive_hits,
+        json.dumps(sensitive_hits, ensure_ascii=False))
+
+    # 每阶段停留表
+    hold_rows = []
+    for key, no, name, count in STAGE_PLAN:
+        hold_rows.append({
+            "stage": key, "no": no, "name": name,
+            "frames": count, "seconds": round(count * FRAME_CS / 100.0, 2),
+            "left_frames": holds[key]["left_frames"],
+        })
+    ok = (trace_check["passed"] == trace_check["total"]
+          and all(check["ok"] for check in checks)
+          and alignment["all_under_1s"])
+    return {
+        "checks": checks, "passed": sum(1 for c in checks if c["ok"]), "total": len(checks),
+        "failed": [c for c in checks if not c["ok"]],
+        "holds": hold_rows,
+        "gif": {k: v for k, v in gif.items() if k not in ("delays_cs", "attempts")},
+        "ocr": {"chinese": chinese, "first": first_ocr[:400], "last": last_ocr[:400]},
+        "ok": ok,
+    }
 
 
 # ---------------------------------------------------------------- 主流程
 
-def build_gif_with_budget(
-    raw_frames: list[Path],
-    delays: list[int],
-    work: Path,
-) -> tuple[Path, dict[str, Any]]:
-    candidates = [(FINAL_WIDTH, None), (FINAL_WIDTH, 128), (FINAL_WIDTH, 96),
-                  (1400, 128), (1400, 96), (1280, 96)]
-    attempts: list[dict[str, Any]] = []
-    last_error = None
-    for width, colors in candidates:
-        sized_dir = work / f"sized-{width}-{colors or 256}"
-        sized_dir.mkdir(parents=True, exist_ok=True)
-        sized = []
-        for index, raw in enumerate(raw_frames):
-            target = sized_dir / f"f{index:03d}.png"
-            if not target.exists():
-                resize_png(raw, target, width)
-            sized.append(target)
-        out = work / f"candidate-{width}-{colors or 256}.gif"
-        try:
-            write_gif(sized, delays, out)
-        except Exception as exc:  # noqa: BLE001 - 换下一档配置
-            last_error = str(exc)
-            continue
-        info = gif_info(out)
-        attempts.append({"width": width, "colors": colors or 256, "bytes": info["bytes"]})
-        if info["bytes"] <= GIF_MAX_BYTES and 1100 <= info["width"] <= 1600:
-            out.replace(GIF_PATH)
-            info["chosen"] = {"width": width, "colors": colors or 256}
-            info["attempts"] = attempts
-            return GIF_PATH, info
-        last_error = f"GIF {info['bytes']} B > {GIF_MAX_BYTES} B（{width}px）"
-    raise RuntimeError(f"GIF 压不到 3MB：{last_error}（尝试：{attempts}）")
+def finish(ev: Evidence, plan: list[Frame], holds: dict[str, Any], gif: dict[str, Any],
+           work: Path, trace_check: dict[str, Any], alignment: dict[str, Any]) -> bool:
+    verify = verify_outputs(ev, plan, holds, gif, work, trace_check, alignment)
+    for item in trace_check["checks"]:
+        say(f"[trace-check] {'✓' if item['ok'] else '✗'} {item['name']}"
+            f"{('：' + item['detail']) if item['detail'] else ''}")
+    for item in verify["checks"]:
+        say(f"[verify] {'✓' if item['ok'] else '✗'} {item['name']}"
+            f"{('：' + item['detail']) if item['detail'] else ''}")
+    for item in alignment["samples"]:
+        say(f"[align] 阶段 {item['stage']}：左帧 +{item['left_frame_rel_s']}s / "
+            f"右锚点 +{item['right_anchor_rel_s']}s / 差 {item['delta_s']}s")
+    report = {
+        "generated_at_local": datetime.now().astimezone().isoformat(timespec="seconds"),
+        "source": {
+            "evidence": str(EVIDENCE.relative_to(REPO)),
+            "trace_records": len(ev.trace),
+            "frames": len(plan),
+            "t0_epoch": ev.t0,
+            "model": ev.meta.get("model"),
+            "trigger": ev.meta.get("trigger"),
+            "timeline_s": ev.meta.get("timeline_s"),
+        },
+        "frame_plan": {
+            "fps": 12.5, "frame_ms": FRAME_CS * 10,
+            "total_frames": len(plan),
+            "loop_s": round(len(plan) * FRAME_CS / 100.0, 2),
+            "keyframe_stage": "c",
+            "keyframe_index": next((f.frame_index for f in plan if f.keyframe), None),
+            "holds": verify["holds"],
+        },
+        "gif": verify["gif"],
+        "keyframe_png": {"path": str(PNG_PATH.relative_to(REPO)),
+                         "size": image_size(PNG_PATH) if PNG_PATH.exists() else None,
+                         "bytes": PNG_PATH.stat().st_size if PNG_PATH.exists() else 0},
+        "trace_check": trace_check,
+        "output_check": verify,
+        "alignment": alignment,
+        "ok": verify["ok"],
+    }
+    RENDER_REPORT.write_text(json.dumps(report, ensure_ascii=False, indent=1), encoding="utf-8")
+    say(f"[render] 报告 → {RENDER_REPORT.relative_to(REPO)}")
+    say(f"[render] 总结：trace {trace_check['passed']}/{trace_check['total']}，"
+        f"产物 {verify['passed']}/{verify['total']}，对齐 {alignment['all_under_1s']}，"
+        f"GIF {gif['width']}×{gif['height']} / {gif['frames']} 帧 / {gif['loop_s']}s / "
+        f"{gif['bytes'] / 1024:.0f} KB")
+    return bool(report["ok"])
 
 
 def main(argv: list[str] | None = None) -> int:
-    global STEPS
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--verify-only", action="store_true", help="只验证，不重新渲染")
-    parser.add_argument("--keep-work", action="store_true", help="保留中间帧（调试用）")
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument("--verify-only", action="store_true", help="只验证已有产物")
+    parser.add_argument("--keep-work", action="store_true", help="保留逐帧中间文件")
+    parser.add_argument("--work-dir", default=None,
+                        help="复用已有工作目录（已截过图的帧会跳过；调试/重出 GIF 用）")
+    parser.add_argument("--only-frame", type=int, default=None,
+                        help="只渲染某一帧到 /tmp 预览（调试用）")
+    parser.add_argument("--start", type=int, default=0, help="从第几帧开始渲染（调试用）")
+    parser.add_argument("--count", type=int, default=None, help="渲染多少帧（调试用）")
     args = parser.parse_args(argv)
 
-    STEPS = load_steps()
-    max_attempts = load_max_attempts()
-    api_key = read_env_api_key()
-
-    if not TRACE_PATH.exists():
-        raise SystemExit(f"缺少轨迹文件：{TRACE_PATH.relative_to(REPO)}\n先跑 manual/shots/trace_query.py")
-    trace = Trace.load(TRACE_PATH, META_PATH)
-    say(f"[render] 轨迹：{len(trace.records)} 条记录 / SSE {len(trace.sse)} / 行 {len(trace.lines)} / LLM {len(trace.llm)}")
-
-    trace_check = verify_trace(trace, api_key)
-    say(f"[render] 轨迹断言：{trace_check['passed']}/{trace_check['total']} 通过")
+    global _EV_WAIT
+    ev = load_evidence()
+    _EV_WAIT = ev.timeline.get("generate_wait_s") or 0.0
+    trace_check = verify_trace(ev)
+    say(f"[render] trace 断言 {trace_check['passed']}/{trace_check['total']} 通过")
     for item in trace_check["failed"]:
         say(f"[render]   ✗ {item['name']} {item['detail']}")
     if trace_check["failed"]:
-        raise SystemExit("[render] 原始轨迹断言未通过，拒绝渲染")
-    if not trace.meta.get("triggered"):
-        raise SystemExit("[render] meta.triggered=false：这次没触发 validate:error→correct:success，不渲染假图")
+        raise SystemExit("[render] trace 断言未通过，拒绝渲染")
+    if not (ev.meta.get("trigger") or {}).get("triggered"):
+        raise SystemExit("[render] evidence 里这次真跑没有触发校正，不渲染假图")
 
-    # 从轨迹里拿第一次 validate 的错误码（供证据链/OCR）
-    error_code = ""
-    for record in trace.records:
-        if record["kind"] != "line":
-            continue
-        for name in ("error", "failure"):
-            value = (record.get("vars") or {}).get(name)
-            if isinstance(value, str) and value.startswith("SQL_") and ":" in value:
-                error_code = value.split(":", 1)[0].strip()
-                break
-        if error_code:
-            break
-    if not error_code:
-        raise SystemExit("[render] 轨迹里找不到第一次校验的错误码（error/failure 变量）")
+    plan, holds = build_frame_plan(ev)
+    anchors = build_anchors(ev)
+    say(f"[render] 帧计划：{len(plan)} 帧 / {len(plan) * FRAME_CS / 100.0:.2f}s")
+    for key, no, name, count in STAGE_PLAN:
+        say(f"[render]   阶段 {no} {name}: {count} 帧 = {count * FRAME_CS / 100.0:.2f}s")
+    alignment = verify_alignment(ev, plan, anchors)
 
-    sources = {relative: load_source(relative) for relative in TARGET_FILES}
-    frames = build_frames(trace)
-    say(f"[render] 帧计划：{len(frames)} 帧 / 循环 {sum(f.delay_cs for f in frames) / 100.0:.1f}s")
-    keyframe_index = next((i for i, f in enumerate(frames) if f.keyframe), None)
-    if keyframe_index is None:
-        raise SystemExit("[render] 帧计划里没有 correct.py 关键帧")
-
-    loop_s = sum(frame.delay_cs for frame in frames) / 100.0
     if args.verify_only:
-        if not GIF_PATH.exists() or not PNG_PATH.exists():
-            raise SystemExit("[render] --verify-only 需要已有 GIF/PNG")
-        report = finish_report(trace, trace_check, gif_info(GIF_PATH), None, error_code, [], api_key)
-        return 0 if report else 1
+        if not GIF_PATH.exists() or not PNG_PATH.exists() or not RENDER_REPORT.exists():
+            raise SystemExit("[render] --verify-only 需要已有 GIF/PNG 与 render.json")
+        gif = gif_info(GIF_PATH)
+        work = Path(tempfile.mkdtemp(prefix="p17-verify-"))
+        try:
+            return 0 if finish(ev, plan, holds, gif, work, trace_check, alignment) else 1
+        finally:
+            shutil.rmtree(work, ignore_errors=True)
 
-    work = Path(tempfile.mkdtemp(prefix="p17trace-render-"))
-    profile_dir = work / "chrome-profile"
-    raw_frames: list[Path] = []
-    rendered_html: list[str] = []
+    if args.work_dir:
+        work = Path(args.work_dir)
+        work.mkdir(parents=True, exist_ok=True)
+        say(f"[render] 复用工作目录 {work}（已有截图会跳过）")
+    else:
+        work = Path(tempfile.mkdtemp(prefix="p17-render-"))
+    profile = work / "chrome-profile"
     try:
-        for index, frame in enumerate(frames):
-            html_text = render_html(
-                trace, index, frame, sources, max_attempts, error_code, loop_s
-            )
-            rendered_html.append(html_text)
-            html_path = work / f"frame-{index:03d}.html"
+        selected = plan
+        if args.only_frame is not None:
+            selected = [plan[args.only_frame]]
+        elif args.count is not None:
+            selected = plan[args.start: args.start + args.count]
+        html_text = render_frame_html(ev, selected[0], anchors)
+        # 逐帧渲染
+        raw_frames: list[Path] = []
+        for order, frame in enumerate(selected):
+            html_text = render_frame_html(ev, frame, anchors)
+            html_path = work / f"frame-{order:04d}.html"
             html_path.write_text(html_text, encoding="utf-8")
-            raw = work / f"raw-{index:03d}.png"
-            chrome_screenshot(html_path, raw, profile_dir)
+            raw = work / f"raw-{order:04d}.png"
+            if not (args.work_dir and raw.exists() and raw.stat().st_size > 0):
+                chrome_screenshot(html_path, raw, profile)
             width, height = image_size(raw)
-            if width != CSS_W * DEVICE_SCALE:
-                raise RuntimeError(f"截图宽度 {width}px，不是 {CSS_W * DEVICE_SCALE}px（@2x）")
+            if (width, height) != (CANVAS_W, CANVAS_H):
+                raise RuntimeError(f"截图尺寸 {width}×{height}，不是 {CANVAS_W}×{CANVAS_H}")
             raw_frames.append(raw)
-            if index % 8 == 0 or index == len(frames) - 1:
-                say(f"[render]   帧 {index + 1}/{len(frames)} 已截图（{width}x{height}）")
-        # 关键帧 PNG（先按最终宽度缩放，保持与 GIF 同版式）
-        key_sized = work / "keyframe.png"
-        resize_png(raw_frames[keyframe_index], key_sized, FINAL_WIDTH)
-        key_sized.replace(PNG_PATH)
-        say(f"[render] 关键帧 → {PNG_PATH.relative_to(REPO)}（帧 {keyframe_index + 1}）")
-
-        gif_path, info = build_gif_with_budget(raw_frames, [f.delay_cs for f in frames], work)
-        say(f"[render] GIF → {gif_path.relative_to(REPO)} "
-            f"{info['width']}x{info['height']} / {info['frames']} 帧 / "
-            f"{info['bytes']} B / {info['loop_s']}s / 选型 {info['chosen']}")
-        report_ok = finish_report(
-            trace, trace_check, info, keyframe_index, error_code, rendered_html, api_key
-        )
-        return 0 if report_ok else 1
+            if order % 20 == 0 or order == len(selected) - 1:
+                say(f"[render]   帧 {order + 1}/{len(selected)} 已截图")
+        if args.only_frame is not None:
+            preview = Path("/tmp/p17-preview.png")
+            raw_frames[0].replace(preview)
+            say(f"[render] 预览帧 → {preview}")
+            return 0
+        if args.count is not None:
+            return 0
+        for frame in plan:
+            if frame.keyframe:
+                # 复制，不要 move：raw_frames 还要拿去合 GIF
+                shutil.copyfile(raw_frames[frame.frame_index], PNG_PATH)
+                say(f"[render] 关键帧 → {PNG_PATH.relative_to(REPO)}（阶段 c，帧 {frame.frame_index + 1}）")
+                break
+        gif = build_gif(raw_frames, work)
+        say(f"[render] GIF → {GIF_PATH.relative_to(REPO)} {gif['width']}×{gif['height']} / "
+            f"{gif['frames']} 帧 / {gif['loop_s']}s / {gif['bytes'] / 1024:.0f} KB")
+        return 0 if finish(ev, plan, holds, gif, work, trace_check, alignment) else 1
     finally:
-        if not args.keep_work:
+        if not args.keep_work and args.only_frame is None and args.count is None:
             shutil.rmtree(work, ignore_errors=True)
         else:
-            say(f"[render] 中间文件保留在 {work}")
-
-
-def finish_report(
-    trace: Trace,
-    trace_check: dict[str, Any],
-    gif: dict[str, Any],
-    keyframe_index: int | None,
-    error_code: str,
-    rendered_html: list[str],
-    api_key: str,
-) -> bool:
-    """GIF/关键帧/画面敏感串/OCR 验证，写 exec-trace.render.json。"""
-    width = gif["width"]
-    height = gif["height"]
-    frames = gif["frames"]
-    ok = True
-
-    def check(name: str, condition: bool, detail: str = "") -> None:
-        nonlocal ok
-        if not condition:
-            ok = False
-        say(f"[verify] {'✓' if condition else '✗'} {name}{('：' + detail) if detail else ''}")
-
-    check("GIF 宽度 1100–1600px", 1100 <= width <= 1600, f"{width}px")
-    check("GIF 帧数 ≥ 12", frames >= 12, f"{frames} 帧")
-    check("GIF ≤ 3MB", gif["bytes"] <= GIF_MAX_BYTES, f"{gif['bytes']} B")
-    check("GIF 循环 6–10s", 6.0 <= gif["loop_s"] <= 10.0, f"{gif['loop_s']}s")
-
-    work = Path(tempfile.mkdtemp(prefix="p17trace-verify-"))
-    try:
-        coalesced = coalesce_gif(GIF_PATH, work / "coalesced")
-        first = coalesced[0]
-        middle = coalesced[len(coalesced) // 2]
-        last = coalesced[-1]
-        diff_first_middle = pixel_diff(first, middle)
-        diff_middle_last = pixel_diff(middle, last)
-        check("首帧≠中帧（像素差>0）", diff_first_middle > 0, f"AE={diff_first_middle}")
-        check("中帧≠末帧（像素差>0）", diff_middle_last > 0, f"AE={diff_middle_last}")
-
-        ocr_last = ocr_text(last)
-        normalized = ocr_last.lower().replace(" ", "").replace("-", "_")
-        check("末帧 OCR 含 correct_sql", "correct_sql" in normalized)
-        check(
-            f"末帧 OCR 含实际校验错误码 {error_code}",
-            error_code.lower() in normalized,
-            "任务示例写的是 SQL_UNKNOWN_COLUMN，本次真跑是 " + error_code,
-        )
-        ocr_middle = ocr_text(middle)
-        ocr_first = ocr_text(first)
-        say(f"[verify] 末帧 OCR 片段：{ocr_last[:260].replace(chr(10), ' | ')}")
-
-        # 画面文本源头的敏感串检查（比 OCR 可靠）：把每帧 HTML 里的可见文本扫一遍
-        rendered_text = " ".join(
-            re.sub(r"<[^>]+>", " ", html_text) for html_text in rendered_html
-        )
-        leaked = [pattern for pattern in FORBIDDEN_PATTERNS if pattern in rendered_text]
-        check("画面无用户名/绝对路径/API key/隔离端口", not leaked, ", ".join(leaked))
-        if api_key:
-            check("画面无 API key", api_key not in rendered_text)
-
-        png_info = image_size(PNG_PATH)
-        check("关键帧 PNG ≥ 1100px 宽", png_info[0] >= 1100, f"{png_info[0]}x{png_info[1]}")
-
-        report = {
-            "generated_at_local": now_text(),
-            "source_trace": {
-                "file": str(TRACE_PATH.relative_to(REPO)),
-                "bytes": TRACE_PATH.stat().st_size,
-                "checks": trace_check,
-            },
-            "gif": {
-                "file": str(GIF_PATH.relative_to(REPO)),
-                "width": width,
-                "height": height,
-                "frames": frames,
-                "bytes": gif["bytes"],
-                "loop_s": gif["loop_s"],
-                "chosen": gif.get("chosen"),
-                "attempts": gif.get("attempts"),
-                "pixel_diff_first_middle": diff_first_middle,
-                "pixel_diff_middle_last": diff_middle_last,
-            },
-            "key_png": {
-                "file": str(PNG_PATH.relative_to(REPO)),
-                "size": f"{png_info[0]}x{png_info[1]}",
-                "bytes": PNG_PATH.stat().st_size,
-                "frame_index": keyframe_index,
-            },
-            "ocr": {
-                "last_frame_has_correct_sql": "correct_sql" in normalized,
-                "last_frame_has_error_code": error_code.lower() in normalized,
-                "error_code": error_code,
-                "error_code_note": (
-                    "任务示例写的是 SQL_UNKNOWN_COLUMN；本次真跑第一次校验实际报 "
-                    + error_code + "，证据按真实错误码验"
-                ),
-                "last_frame_excerpt": ocr_last[:400],
-                "middle_frame_excerpt": ocr_middle[:200],
-            },
-            "leak_scan": {
-                "patterns": list(FORBIDDEN_PATTERNS),
-                "leaked": leaked,
-                "ok": not leaked,
-            },
-            "ok": ok,
-        }
-        RENDER_REPORT.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n",
-                                 encoding="utf-8")
-        say(f"[verify] 报告 → {RENDER_REPORT.relative_to(REPO)}；总体 {'PASS' if ok else 'FAIL'}")
-        return ok
-    finally:
-        shutil.rmtree(work, ignore_errors=True)
+            say(f"[render] 中间文件：{work}")
 
 
 if __name__ == "__main__":

@@ -1,0 +1,433 @@
+{
+ "generated_at_local": "2026-11-20T13:39:01+08:00",
+ "source": {
+  "evidence": "manual/review/exec-trace-v2",
+  "trace_records": 2514,
+  "frames": 229,
+  "t0_epoch": 1795150191.669,
+  "model": "deepseek-flash",
+  "trigger": {
+   "triggered": true,
+   "validate_errors": 1,
+   "correct_runs": 1,
+   "correct_success": 1,
+   "events": 27,
+   "rows": 5,
+   "note": ""
+  },
+  "timeline_s": {
+   "click_s": 0.0,
+   "request_s": 0.044,
+   "generate_running_s": 0.153,
+   "generate_success_s": 11.117,
+   "validate1_running_s": 11.119,
+   "validate1_error_s": 11.153,
+   "correct_running_s": 11.17,
+   "correct_success_s": 18.468,
+   "validate2_success_s": 18.541,
+   "run_sql_success_s": 18.604,
+   "result_s": 18.606,
+   "generate_wait_s": 10.983,
+   "validate1_ms_s": 0.033,
+   "correct_wait_s": 7.309,
+   "validate2_wait_s": 0.067,
+   "run_wait_s": 0.06,
+   "real_total_s": 18.562
+  }
+ },
+ "frame_plan": {
+  "fps": 12.5,
+  "frame_ms": 80,
+  "total_frames": 229,
+  "loop_s": 18.32,
+  "keyframe_stage": "c",
+  "keyframe_index": 136,
+  "holds": [
+   {
+    "stage": "s0",
+    "no": 0,
+    "name": "输入真问题",
+    "frames": 31,
+    "seconds": 2.48,
+    "left_frames": [
+     -1
+    ]
+   },
+   {
+    "stage": "t0",
+    "no": 1,
+    "name": "提交 → 构图",
+    "frames": 15,
+    "seconds": 1.2,
+    "left_frames": [
+     0
+    ]
+   },
+   {
+    "stage": "a",
+    "no": 2,
+    "name": "生成SQL 执行中",
+    "frames": 38,
+    "seconds": 3.04,
+    "left_frames": [
+     1,
+     6,
+     10,
+     15
+    ]
+   },
+   {
+    "stage": "b",
+    "no": 3,
+    "name": "校验SQL 红叉（有误）",
+    "frames": 33,
+    "seconds": 2.64,
+    "left_frames": [
+     17
+    ]
+   },
+   {
+    "stage": "c",
+    "no": 4,
+    "name": "校正SQL 转圈（执行中）",
+    "frames": 39,
+    "seconds": 3.12,
+    "left_frames": [
+     19,
+     21,
+     24,
+     26
+    ]
+   },
+   {
+    "stage": "d",
+    "no": 5,
+    "name": "校正成功 + 二次校验通过",
+    "frames": 33,
+    "seconds": 2.64,
+    "left_frames": [
+     28
+    ]
+   },
+   {
+    "stage": "e",
+    "no": 6,
+    "name": "结果表 5 行",
+    "frames": 40,
+    "seconds": 3.2,
+    "left_frames": [
+     28
+    ]
+   }
+  ]
+ },
+ "gif": {
+  "width": 1600,
+  "height": 1337,
+  "frames": 229,
+  "bytes": 1279647,
+  "loop_s": 18.32
+ },
+ "keyframe_png": {
+  "path": "manual/images/page-17-exec-trace.png",
+  "size": [
+   1600,
+   1337
+  ],
+  "bytes": 373410
+ },
+ "trace_check": {
+  "checks": [
+   {
+    "name": "validate_sql:error 出现",
+    "ok": true,
+    "detail": "1 次"
+   },
+   {
+    "name": "validate:error 在 correct_sql:running 之前",
+    "ok": true,
+    "detail": "error@19 / correct@20"
+   },
+   {
+    "name": "correct_sql 只 1 轮 running",
+    "ok": true,
+    "detail": "1 轮"
+   },
+   {
+    "name": "correct_sql 只 1 轮 success",
+    "ok": true,
+    "detail": "1 轮"
+   },
+   {
+    "name": "二次 validate_sql:success（校正后重新校验）",
+    "ok": true,
+    "detail": "@23"
+   },
+   {
+    "name": "run_sql:success 出现",
+    "ok": true,
+    "detail": "@25"
+   },
+   {
+    "name": "result 在 run_sql:success 之后",
+    "ok": true,
+    "detail": ""
+   },
+   {
+    "name": "同一跑只发过 1 次 /api/query 请求",
+    "ok": true,
+    "detail": "27 条 SSE 事件"
+   },
+   {
+    "name": "行级轨迹覆盖 4 个目标文件",
+    "ok": true,
+    "detail": "backend/app/agent/correct.py, backend/app/agent/graph.py, backend/app/generate/guard.py, backend/app/security/policy.py"
+   },
+   {
+    "name": "trace 时间戳单调不减",
+    "ok": true,
+    "detail": "2514 条"
+   },
+   {
+    "name": "trace 里没有 API key",
+    "ok": true,
+    "detail": ""
+   },
+   {
+    "name": "trace 里没有绝对路径 / 用户名 / 隔离端口",
+    "ok": true,
+    "detail": ""
+   },
+   {
+    "name": "trace ≤ 500KB",
+    "ok": true,
+    "detail": "294704 B"
+   },
+   {
+    "name": "correct.py L203（corrector.correct 调用）被追到",
+    "ok": true,
+    "detail": ""
+   },
+   {
+    "name": "guard.py L306（violations 非空 → 拒绝）被追到",
+    "ok": true,
+    "detail": ""
+   }
+  ],
+  "passed": 15,
+  "total": 15,
+  "failed": []
+ },
+ "output_check": {
+  "checks": [
+   {
+    "name": "GIF 宽度在 1200–1600px",
+    "ok": true,
+    "detail": "1600×1337"
+   },
+   {
+    "name": "GIF ≤ 5MB",
+    "ok": true,
+    "detail": "1250 KB"
+   },
+   {
+    "name": "GIF 循环 18–25s",
+    "ok": true,
+    "detail": "18.32s"
+   },
+   {
+    "name": "GIF 帧率 12.5fps（80ms/帧）",
+    "ok": true,
+    "detail": "delays=[8]"
+   },
+   {
+    "name": "关键帧落在阶段 c（校正SQL 转圈）",
+    "ok": true,
+    "detail": "帧 136"
+   },
+   {
+    "name": "帧数与计划一致",
+    "ok": true,
+    "detail": "229 / 229"
+   },
+   {
+    "name": "首帧≠中帧（有动画）",
+    "ok": true,
+    "detail": "AE=868583"
+   },
+   {
+    "name": "中帧≠末帧（有动画）",
+    "ok": true,
+    "detail": "AE=490602"
+   },
+   {
+    "name": "OCR 带中文（chi_sim 可用）",
+    "ok": true,
+    "detail": "没装 chi_sim 时中文断言退化为 DOM 证据"
+   },
+   {
+    "name": "第一帧 OCR 含真输入框里的问题",
+    "ok": true,
+    "detail": "智能数据分析Agent |  | 你 Shopkeeper Agent |  | 电商问数 | 混合检索                                     SQL 闭环                                   "
+   },
+   {
+    "name": "第一帧 OCR 含成熟版页面标识（电商问数 / 智能数据分析）",
+    "ok": true,
+    "detail": ""
+   },
+   {
+    "name": "末帧 OCR 含查询结果表与 5 行数值",
+    "ok": true,
+    "detail": "命中 ['查询结果', '71992', '55992', '56994', '22400', '32994']；OCR=智能数据分析Agent |  | 查询销售额大于平均销售额的商品 |  |      查询完成，共 5 行结果。 | 执行流程 | Y SRNR eID |  | v               v               v | ¥ 召回字段信息         ¥ ”召回指标信息 召回字段取值 |  | ' |  |  合并召回信息 |  | v                                                    "
+   },
+   {
+    "name": "末帧 OCR 含流程图节点名（成熟版的 12 节点流程）",
+    "ok": true,
+    "detail": "命中 ['召回字段信息', '生成SQL', '校正SQL']"
+   },
+   {
+    "name": "画面 OCR 里没有用户名 / 绝对路径 / 隔离端口",
+    "ok": true,
+    "detail": "[]"
+   }
+  ],
+  "passed": 14,
+  "total": 14,
+  "failed": [],
+  "holds": [
+   {
+    "stage": "s0",
+    "no": 0,
+    "name": "输入真问题",
+    "frames": 31,
+    "seconds": 2.48,
+    "left_frames": [
+     -1
+    ]
+   },
+   {
+    "stage": "t0",
+    "no": 1,
+    "name": "提交 → 构图",
+    "frames": 15,
+    "seconds": 1.2,
+    "left_frames": [
+     0
+    ]
+   },
+   {
+    "stage": "a",
+    "no": 2,
+    "name": "生成SQL 执行中",
+    "frames": 38,
+    "seconds": 3.04,
+    "left_frames": [
+     1,
+     6,
+     10,
+     15
+    ]
+   },
+   {
+    "stage": "b",
+    "no": 3,
+    "name": "校验SQL 红叉（有误）",
+    "frames": 33,
+    "seconds": 2.64,
+    "left_frames": [
+     17
+    ]
+   },
+   {
+    "stage": "c",
+    "no": 4,
+    "name": "校正SQL 转圈（执行中）",
+    "frames": 39,
+    "seconds": 3.12,
+    "left_frames": [
+     19,
+     21,
+     24,
+     26
+    ]
+   },
+   {
+    "stage": "d",
+    "no": 5,
+    "name": "校正成功 + 二次校验通过",
+    "frames": 33,
+    "seconds": 2.64,
+    "left_frames": [
+     28
+    ]
+   },
+   {
+    "stage": "e",
+    "no": 6,
+    "name": "结果表 5 行",
+    "frames": 40,
+    "seconds": 3.2,
+    "left_frames": [
+     28
+    ]
+   }
+  ],
+  "gif": {
+   "width": 1600,
+   "height": 1337,
+   "frames": 229,
+   "bytes": 1279647,
+   "loop_s": 18.32
+  },
+  "ocr": {
+   "chinese": true,
+   "first": "智能数据分析Agent\n\n你 Shopkeeper Agent\n\n电商问数\n混合检索                                     SQL 闭环                                     电商数仓\n统计 2025 年第一季度各大区的GMV，并按 GMV 从高到低排序                统计2025年3月各商品品类的销量和销售额\n查询华东地区 2025 年第一季度销售额最高的前 5 个商品                       按会员等级统计 2025 年第一季度的订单数和销售额\n\nRSME: 问题已填好 (还没发送)                                  2\nF     查询销售额大于平均销售额的商品                                             ",
+   "last": "智能数据分析Agent\n\n查询销售额大于平均销售额的商品\n\n     查询完成，共 5 行结果。\n执行流程\nY SRNR eID\n\nv               v               v\n¥ 召回字段信息         ¥ ”召回指标信息 召回字段取值\n\n'\n\n 合并召回信息\n\nv                                                                     v\n¥ wathHntese                            了过滤表信息\n\n|\n”添加额外上下文\n\nv\n 生成SQL\n\nFiz\n~ SesQe        入 校正SQL\n\nim ff\nv\n\n¥ $RATSQL\n\n查询结果 。5行 (ARB)\n\n商品ID                   商品名称                    "
+  },
+  "ok": true
+ },
+ "alignment": {
+  "method": "左帧截图时刻（浏览器 Date.now） → 取 trace 中 ≤ 该时刻的决定性事件（t 为后端 time.time）；两者同宿主 wall clock",
+  "samples": [
+   {
+    "stage": "b",
+    "left_frame_rel_s": 11.424,
+    "right_anchor_rel_s": 11.151,
+    "delta_s": 0.273,
+    "under_1s": true
+   },
+   {
+    "stage": "d",
+    "left_frame_rel_s": 18.93,
+    "right_anchor_rel_s": 18.537,
+    "delta_s": 0.393,
+    "under_1s": true
+   },
+   {
+    "stage": "e",
+    "left_frame_rel_s": 18.93,
+    "right_anchor_rel_s": 18.602,
+    "delta_s": 0.328,
+    "under_1s": true
+   }
+  ],
+  "wait_states": [
+   {
+    "stage": "a",
+    "left_frame_rel_s": 3.969,
+    "right_anchor_rel_s": 0.131,
+    "waited_at_anchor_s": 3.838,
+    "state": "仍停在该调用行等待模型返回（长等待态，不是错位）"
+   },
+   {
+    "stage": "c",
+    "left_frame_rel_s": 14.035,
+    "right_anchor_rel_s": 11.175,
+    "waited_at_anchor_s": 2.86,
+    "state": "仍停在该调用行等待模型返回（长等待态，不是错位）"
+   }
+  ],
+  "all_under_1s": true
+ },
+ "ok": true
+}

@@ -1,6 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""trace_query.py —— 在 backend 容器内**进程内**真跑一次问数，同时录下两侧数据。
+"""trace_query.py —— 【v1 · 已退役，保留作参考】进程内跑 runner 录 SSE + settrace。
+
+> 第 17 页现行方案（左栏=真前端截图 / 右栏=同一跑的行级轨迹）见
+> manual/shots/trace_server.py + render_exec_trace.py，runbook 见
+> manual/review/exec-trace-runbook.md。本文件只作历史参考，产物已不再被页面引用。
+
+在 backend 容器内**进程内**真跑一次问数，同时录下两侧数据。
 
 左边（SSE）：`AgentRunner.events()` 的原始事件（progress / result / error），
              每一条都自带 wall-clock 时间戳与相对开始时间。
