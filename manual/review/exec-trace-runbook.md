@@ -9,8 +9,8 @@
 
 | 文件 | 内容 |
 |:--|:--|
-| `manual/images/page-17-exec-trace.gif` | 左真前端截图 / 右行级代码，1600×1337 / 229 帧 / 18.32s / ~1.2MB |
-| `manual/images/page-17-exec-trace.png` | 关键帧：阶段 c「校正SQL 转圈」——左红叉+转圈，右 `correct.py` L202/203 + `sql_before/error/attempts` |
+| `manual/images/page-23-exec-trace.gif` | 左真前端截图 / 右行级代码，1600×1337 / 229 帧 / 18.32s / ~1.2MB |
+| `manual/images/page-23-exec-trace.png` | 关键帧：阶段 c「校正SQL 转圈」——左红叉+转圈，右 `correct.py` L202/203 + `sql_before/error/attempts` |
 | `manual/review/exec-trace-v2/meta.json` | 真跑时间轴、触发帧序、4 次尝试、对齐方法 |
 | `manual/review/exec-trace-v2/trace.jsonl` | 同一请求的行级轨迹（2514 行 / 294,704 B ≤ 500KB） |
 | `manual/review/exec-trace-v2/capture-frames.json` | 选中的 13 张真截图 + 每帧 DOM 探针（节点状态 / rect / 时间戳） |

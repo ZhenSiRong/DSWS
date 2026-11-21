@@ -11,8 +11,8 @@
 
 输出：
 
-    manual/images/page-17-exec-trace.gif   18–25s 循环，12.5fps（80ms/帧），1600 宽，≤5MB
-    manual/images/page-17-exec-trace.png   关键帧：阶段 c（校正SQL 转圈）—— 左：前端红叉+转圈，
+    manual/images/page-23-exec-trace.gif   18–25s 循环，12.5fps（80ms/帧），1600 宽，≤5MB
+    manual/images/page-23-exec-trace.png   关键帧：阶段 c（校正SQL 转圈）—— 左：前端红叉+转圈，
                                            右：correct.py propose_correction() L202/203 + sql_before/error/attempts
     manual/review/exec-trace-v2/render.json  渲染/断言报告（帧计划、每阶段停留表、OCR、对齐抽样）
 
@@ -57,8 +57,8 @@ META_PATH = EVIDENCE / "meta.json"
 FRAMES_PATH = EVIDENCE / "capture-frames.json"
 TRACE_PATH = EVIDENCE / "trace.jsonl"
 RENDER_REPORT = EVIDENCE / "render.json"
-GIF_PATH = IMAGES / "page-17-exec-trace.gif"
-PNG_PATH = IMAGES / "page-17-exec-trace.png"
+GIF_PATH = IMAGES / "page-23-exec-trace.gif"
+PNG_PATH = IMAGES / "page-23-exec-trace.png"
 
 # ---- 画布（1600 宽；左 800 = 真截图原尺寸，右 756 = 代码面板） ----
 CANVAS_W = 1600
