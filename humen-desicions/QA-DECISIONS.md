@@ -95,6 +95,32 @@
 
 落地：附录 [`manual/appendix/gui-debugging.md`](../manual/appendix/gui-debugging.md)、图 `manual/images/gui-viztracer.png` / `gui-langgraph-studio-full.png` / `gui-langgraph-studio-graph.png`；证据 `manual/review/{viztracer,langgraph-studio,zed-debug}/`；p17 指针 + README 附录入口。
 
+## R8 · 工具原子化 + 版本发布（2026-11-21）
+
+### 工具定义与 p17 改造
+
+| 问题 | 决定 |
+|---|---|
+| 原子工具标准 | ①一条稳定 CLI/GUI 入口 ②不需要为它写代码/脚本 ③输出是文件或浏览器页面可点开 |
+| 仓库脚本处置 | 降级为"教师/CI 夹具"，学生步骤不出现；文件头/README 标注，不删除 |
+| p17 第 5 步 | 撤 `pdb_step_demo.py`；改 `viztracer --open -- <项目自带 pytest>` + `python -m pdb -m pytest -q -k ...`（断点 correct.py:183） |
+| 自己采多次 | 浏览器成熟版同一问题点 3 次（或 curl 手动 3 次），记录四类；分母=触发校正次数 |
+| 附录 | 重构为"工具卡"（install / 一条命令 / 浏览器看什么 / 换项目改参数）；"选工具三问"只写附录 |
+| 预装 | 第 0 页加 `pipx install viztracer py-spy scalene` |
+| 执行 | p17 改造由用户执行，lead 只维护决策文档 |
+
+### 版本与发布
+
+| 问题 | 决定 |
+|---|---|
+| tag | `v1.0.0` = 当前 HEAD；p17 改造后 `v1.1.0` |
+| 未提交草稿 | tag 前 revert `manual/page-17.md`（+9/−1） |
+| 分支 | 新分支 `continue-iterate`（用户口述 continue iterate；可改 `continue/iterate`）；`main` 不动 |
+| push | `continue-iterate` + `v1.0.0` tag；不推 main |
+| 发布包 | manual-24p.zip + design-doc-30.pdf + design-doc.pdf + dev-book.pdf + SHA256SUMS + RELEASE-NOTES.md |
+| Release 渠道 | GitHub 网页手动创建（本机无 gh/token） |
+| 执行分工 | 全部命令由用户执行；lead 维护文档、答疑、审查 |
+
 ## 待定
 
 - **p17「学习者自录证据」方案**（R6-Q2）：初步方向 = 三层脚手架

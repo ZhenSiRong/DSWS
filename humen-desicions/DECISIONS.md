@@ -1,6 +1,6 @@
 # 决策记录
 
-> 本目录保存本项目的计划、决策与评审证据。最后更新：2026-11-21。
+> 本目录保存本项目的计划、决策与评审证据。最后更新：2026-11-21（D55）。
 
 ## 1. 已批准的决定
 
@@ -54,6 +54,8 @@
 | D46 | 内容生产计划 | 视觉冻结；级间串行+级内 1 写手 1 验证者；每页 DoD 五项+重放；主线不碰真 LLM；lab CLI 最先做；每级一批验收 | `09-ablation-course.md` §D46 |
 | D47 | L2–L4 页面模板 | 六段骨架不变，末段「自己改一下」→「拆一刀」；每级末页为级考核；编号从 page-10 起 | `09-ablation-course.md` §D47 |
 | D48 | 写作规范 | 所有 `cd` 用子 shell；每页交稿前整段连续执行；重放必测连续粘贴 | `09-ablation-course.md` §D48 |
+| D54 | 工具定义三层 | 原子工具（装一次/一条命令/浏览器输出，换项目可用）· 项目一层命令（make/pytest/curl，可进学生步骤）· 项目夹具脚本（教师/CI 用，不进学生步骤）；p17 撤 `pdb_step_demo.py` 入口改 viztracer/pdb + 项目自带 pytest；附录改工具卡；第 0 页预装 `pipx install viztracer py-spy scalene` | `09-ablation-course.md` §D54；`QA-DECISIONS.md` R8 |
+| D55 | 版本与发行 | v1.0.0 = 当前 HEAD `2542d71`；p17 改造后 v1.1.0；新分支 `continue-iterate`；发布包 = manual-24p.zip + 三份 PDF + SHA256 + notes；tag/push/release 由用户执行，lead 只维护决策文档 | `09-ablation-course.md` §D55 |
 | D53 | GUI 调试教学 | 三 GIU 路径进附录（VizTracer 时间线 / LangGraph Studio 12 节点 / Chrome DevTools；Zed 配置未实拍）+ CLI 兜底；p17 只加 1 行指针，正文不加图 | `09-ablation-course.md` §D53；`QA-DECISIONS.md` R7 |
 | D51 | 装修对象=成熟版原版前端 | L5 装修终点是 `deliverable/v2/original-frontend/`（原版 shopkeeper-agent，React 19 + Tailwind 3.4.17）；教学版重建前端降为脚手架（8080 对照）；拆一刀=成熟版换回 17 行 HTML 仍出 41099.5 | `09-ablation-course.md` §D51 |
 | D52 | 执行轨迹可视化 | 左=真前端界面 / 右=同一次真跑的 settrace 行级轨迹；18–25s 慢节奏；资产归 p23（`page-23-exec-trace.*`）；p17 不放此图，改"学习者自录工具"方向；C（pdb 离线）留附录/答辩 | `09-ablation-course.md` §D52；`QA-DECISIONS.md` R6 |

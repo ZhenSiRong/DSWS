@@ -553,3 +553,46 @@
 **理由**：GUI 负责"记得住"（点开哪个工具、看哪一栏），CLI 负责"可复现"（CI/无 GUI 环境）；两者在附录里并存，正文不增负担。
 
 **后果**：附录 + 3 张实拍图（VizTracer/Studio 全图/Studio 画布）+ 证据 `manual/review/{viztracer,langgraph-studio,zed-debug}/`；p17 122 行（+2）；24 页正文口径不变。
+
+---
+
+## D54 · 工具定义：原子工具 / 项目一层命令 / 项目夹具（学生只碰前两类）（2026-11-21）
+
+**背景**：用户指出学生"很少会自己写代码"；换项目后既不会写也找不到我们为某个项目写的脚本。教材里把 `manual/shots/pdb_step_demo.py`、`trace_viztracer.py`、`record_sse` 这类仓库脚本当学生入口，是错误的。
+
+**定义（教材口径）**
+1. **原子工具**：装一次，有一条稳定 CLI 或 GUI 入口；输入是标准对象（脚本 / 进程 / URL / 请求）；输出是文件或浏览器页面。**不需要为它写代码/脚本**。例：`viztracer`、`py-spy`、`scalene`、`pdb`、`curl`、`pytest`、Chrome DevTools、LangGraph Studio、Zed。
+2. **项目一层命令**：项目自带入口，一条命令（如 `make docker-up`、`pytest backend/tests/...`、`curl .../api/query`）。换项目要改参数，但不需要新写脚本；可进学生步骤。
+3. **项目夹具/脚本（script）**：为某项目/某次演示写的一次性脚本（`manual/shots/*.py`、`record_sse`、`render_*.py`）。**只用于教师/CI/证据生成，不进学生步骤**。
+
+**决定**
+1. **学生步骤只允许"原子工具 + 项目一层命令"**；仓库脚本在文件头或 README 标注"教师/CI 夹具，不是学生入口"。
+2. **p17 原子化改造**（方案已确认，由用户执行）：撤掉 `pdb_step_demo.py` 入口；第 5 步改为
+   - 时间线：`viztracer --open -- backend/.venv/bin/python -m pytest backend/tests/agent/test_correct.py -q`（浏览器点 `propose_correction` 条带）；
+   - 调试：`backend/.venv/bin/python -m pdb -m pytest backend/tests/agent/test_correct.py -q -k "proposes_a_new_sql"`（`b app/agent/correct.py:183`、`c`、`p policy.max_attempts`、`p attempts`）。
+   新增"自己采多次"：浏览器成熟版 8088 同一问题点 3 次（或 `curl -sN …/api/query` 手动 3 次），记录"无需校正/触发成功/触发失败/传输失败"，**分母=触发校正次数**；不写"成功率 100%"。
+3. **附录重构为"工具卡"**：每卡 = 安装命令 / 一条命令 / 浏览器里看什么 / 换项目改哪个参数；卡：viztracer、py-spy、scalene、pdb、curl、pytest、Chrome DevTools、LangGraph Studio、Zed。
+4. **"选工具三问"只写附录**（①能一条命令吗 ②要写代码吗 ③输出能浏览器点开吗），p17 不重复。
+5. **第 0 页预装一句**：`pipx install viztracer py-spy scalene`（隔离安装，不污染项目 venv）。
+6. 本轮只讨论+文档；改造由用户执行，lead 负责审查与决策文档。
+
+**理由**：原子工具是"可迁移的能力"（换项目改参数即可用），项目脚本是"一次性证据链"；混在一起教，学生会把"找脚本"当方法。
+
+**后果**：p17 预计 130 → 128–134 行；附录工具卡替换教程式长文；`audit 24/24` 与文本级重放照旧；24 页口径不变。
+
+---
+
+## D55 · 版本与发行：v1.0.0（当前 HEAD）→ p17 改造后 v1.1.0（2026-11-21）
+
+**决定**
+1. **v1.0.0 = 当前 HEAD `2542d71`**（24 页五级 + GUI 调试附录 + 设计文档 30 图精选 + 全部证据与决策记录）。
+2. **p17 原子化改造完成后打 v1.1.0**（Release notes 写"工具原子化：学生只碰原子工具，撤仓库脚本入口"）。
+3. **新分支 `continue-iterate`**（用户口述"continue iterate"；git 分支不允许空格，若想层级名可改 `continue/iterate`）承载后续迭代；`main` 保持旧状态不动（本地 = origin/main = `4711132`）。
+4. **push 范围**：`continue-iterate` 分支 + `v1.0.0` tag；不推 `main`。
+5. **发布包内容**：`manual-24p.zip`（manual 的 md + images + appendix + README/ACCEPTANCE/OVERVIEW/SPEC）、`design-doc-30.pdf`、`design-doc.pdf`、`dev-book.pdf`、`SHA256SUMS`、`RELEASE-NOTES.md`；证据留在仓库，不进发布包。
+6. **Release 渠道**：GitHub 网页手动创建（本机无 gh、无 token）；上传上述文件。
+7. **执行分工**：tag / push / 发布 / p17 改造**全部由用户执行**；lead 只维护决策文档、回答疑问、审查产出。tag 前先 revert `manual/page-17.md` 的未提交草稿（+9/−1）。
+
+**后果**：v1.0.0 是"当前稳定快照"；v1.1.0 是原子工具化后的版本；仓库仍以 `design/manual-v1` 指向已发布代码，`continue-iterate` 承接下一轮。
+
+> 逐轮 Q&A 见 [`QA-DECISIONS.md`](QA-DECISIONS.md) R8。
