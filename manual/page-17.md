@@ -60,8 +60,6 @@ S6 PASS
 
 ![第 17 页 · 14 passed + S6 PASS（corrected 期望 result 实际 result）+ 9、11 重试标记统计](images/page-17-correct.png)
 ![第 17 页 · 拆一刀关掉纠错后：pytest 5 failed, 9 passed + 失败矩阵只红 corrected + 语料 mismatch 0（哪条判据抓到了、哪条没抓到）](images/page-17-ablation.png)
-![第 17 页 · 真模型现场：校验SQL 红叉（有误）+ 校正SQL 转圈（执行中），约 10.9s](images/page-17-live-correct-mid.png)
-![第 17 页 · 真模型校正成功后：校验SQL/校正SQL/执行SQL 三节点全绿 + 5 行结果（真跑录制 GIF）](images/page-17-live-correct.gif)
 
 真模型现场（单次采样，2026-11-20）：问「查询销售额大于平均销售额的商品」→ `validate_sql:error` → `correct_sql:success`（仅 1 次重试，10.95s）→ 二次 `validate_sql:success`（5.9ms）→ `run_sql:success` → 5 行结果；原始帧序在 [`review/correction-live-trigger.sse`](review/correction-live-trigger.sse)，复现步骤见 [`review/correction-demo-runbook.md`](review/correction-demo-runbook.md)。**单次成功不等于成功率**，判据仍按 `trials>=3` 写。
 
