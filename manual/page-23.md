@@ -52,9 +52,7 @@ docker run -d --name lab-mature --network shopkeeper-rebuild_default -p 127.0.0.
 npm test：Tests  40 passed (40)（末行是 Duration）
 ```
 
-![第 23 页 · 成熟版原版：聊天式提问 → 12 节点流程图 → 结果表 41099.5](images/page-23-mature.png)
 ![第 23 页 · 成熟版真跑录屏：输入「华北销售额」到结果出现（约 8 秒 GIF）](images/page-23-mature.gif)
-![第 23 页 · 教学版脚手架对照：左侧 12 步步骤轨 + 右侧对话与结果表](images/page-23-frontend.png)
 
 ## 对账
 
