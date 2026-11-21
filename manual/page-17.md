@@ -118,3 +118,5 @@ S6 PASS
 ```
 
 结论：**纠错只负责一件事——把“可重试的失败”捞回来一次；捞回来就是 `corrected` 的 `result`，捞不回来就是最初那个错码。** 所以 L3 四页的判据要合起来看：P14 的检索黄金集、P15 的 10 题基线、P16 的 20 条错单码、P17 的 `corrected` 场景，各量一层，才是“机器靠不靠谱”的答案；而真实模型的成功态只能靠多次采样，单次演示会骗人。
+
+> 想用 GUI 工具自己看/录执行与调试（VizTracer 时间线、LangGraph Studio 12 节点图、Chrome DevTools SSE）：见 [`appendix/gui-debugging.md`](appendix/gui-debugging.md)；CLI 等价操作也在那里。

@@ -1,0 +1,11 @@
+# Zed 版本
+Zed preview 1.30.2 4f8888d4ff57b46de5278f4931ded4a901863c1c  – ~/.local/zed-preview.app/libexec/zed-editor
+
+# debugpy 版本（backend/.venv）
+1.8.22
+
+# 内置 adapter 目录（空 = 无额外扩展 adapter 下载）
+0
+
+# DISPLAY
+:0

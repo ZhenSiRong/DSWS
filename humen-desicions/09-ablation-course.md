@@ -537,3 +537,19 @@
 **后果**：`manual/review/exec-trace-v2/` 保存原始 trace/帧/对齐；`manual/shots/trace_server.py` + `render_exec_trace.py` 一条命令重录；p17/p21 不引用该图；p23 的引用方式由用户决定。
 
 > 逐轮 Q&A 记录见 [`QA-DECISIONS.md`](QA-DECISIONS.md)。
+
+---
+
+## D53 · GUI 调试教学：三条路径进附录，p17 只加指针（2026-11-21）
+
+**背景**：只看前端节点图看不到"解释器在算什么"；用户指出"学生换开发场景时更容易记住的是一个有特色的 GUI 工具"，要求能看、能自己录。CLI（pdb/curl/record_sse）仍要保留作可复现兜底。
+
+**决定**
+1. 新增附录 [`manual/appendix/gui-debugging.md`](../manual/appendix/gui-debugging.md)（不算 24 页）：**VizTracer**（函数级时间线，已实测截图）、**LangGraph Studio**（12 节点图 + run/state，已实测截图）、**Chrome DevTools**（前端 SSE 帧）、**Zed 断点**（配置样例；本机无窗口自动化，未实拍）；每条给装法/打开方式/看哪一栏 + CLI 兜底命令。
+2. **p17 不加图**、只加 1 行指针到附录（p17 正文保持"审纠错"的判据密度）；`manual/README.md` 附录行加入口。
+3. 保留"学习者自己录证据"方向：附录第 5 节的 CLI 三条（pdb / `curl | tee` / `record_sse --check`）即无 GUI 等价操作；后续若要进正文，另立 D 号。
+4. 诚实边界写进附录：VizTracer 会放大耗时（43→61ms）；离线夹具≠真模型；Zed 无实拍不能当教程照抄。
+
+**理由**：GUI 负责"记得住"（点开哪个工具、看哪一栏），CLI 负责"可复现"（CI/无 GUI 环境）；两者在附录里并存，正文不增负担。
+
+**后果**：附录 + 3 张实拍图（VizTracer/Studio 全图/Studio 画布）+ 证据 `manual/review/{viztracer,langgraph-studio,zed-debug}/`；p17 122 行（+2）；24 页正文口径不变。

@@ -84,6 +84,17 @@
 
 落地：commit `3742da2`；资产 [`page-23-exec-trace.gif`](../manual/images/page-23-exec-trace.gif)、[`page-23-exec-trace.png`](../manual/images/page-23-exec-trace.png)；证据 [`exec-trace-v2/`](../manual/review/exec-trace-v2/)、[`exec-trace-runbook.md`](../manual/review/exec-trace-runbook.md)。
 
+## R7 · GUI 调试工具（2026-11-21）→ D53
+
+| 问题 | 决定 |
+|---|---|
+| 学生记得住的是哪种工具 | 有特色的 GUI：VizTracer 时间线 / LangGraph Studio 12 节点图 / Chrome DevTools SSE；Zed 断点作为配置样例 |
+| CLI 还要吗 | 要：pdb / `curl | tee` / `record_sse --check` 三条作可复现兜底 |
+| 放哪 | 新附录 `appendix/gui-debugging.md`（不算 24 页）；p17 只加 1 行指针，正文不加图 |
+| 实测状态 | VizTracer ✅、LangGraph Studio ✅（远程前端 + 代理变量坑）、Zed ⚠️ 配置交付/未实拍（无窗口自动化） |
+
+落地：附录 [`manual/appendix/gui-debugging.md`](../manual/appendix/gui-debugging.md)、图 `manual/images/gui-viztracer.png` / `gui-langgraph-studio-full.png` / `gui-langgraph-studio-graph.png`；证据 `manual/review/{viztracer,langgraph-studio,zed-debug}/`；p17 指针 + README 附录入口。
+
 ## 待定
 
 - **p17「学习者自录证据」方案**（R6-Q2）：初步方向 = 三层脚手架

@@ -15,7 +15,7 @@
 - **L3 审（page-14 – page-17，4 页）**：机器输出不确定，先预注册判据，再让错误发生，看判据抓没抓住。
 - **L4 守（page-18 – page-22，5 页）**：制造故障与越权，证明防线有效；兜不住时知道红在哪一层。
 - **L5 装（page-23，1 页）**：把浏览器入口换成**成熟版原版前端**（`deliverable/v2/original-frontend/`，`shopkeeper-agent`，交付时的样子）；`frontend/` 教学版重建前端降为脚手架对照（compose 默认 8080，自带 40 条协议测试）。接口、契约与判据都不动——体验是第五个横切系统，装修不改变承重墙。
-- **附录（不进 24 页）**：[LLM 端点配置](appendix/llm-endpoint.md)——真模型是可选支线；主线不配 key 也能全绿。
+- **附录（不进 24 页）**：[LLM 端点配置](appendix/llm-endpoint.md)——真模型是可选支线；主线不配 key 也能全绿。 **GUI 调试**：[看执行与调试（VizTracer / LangGraph Studio / DevTools / CLI 兜底）](appendix/gui-debugging.md)。
 
 每页的「你应该看到」就是该页的**完成判据**——看到它才算做完；L2–L5 每级最后一页的「拆一刀」升级为**级考核**（L1 无拆一刀，另用建成证明海报对账）。验证不单独成页。
 
