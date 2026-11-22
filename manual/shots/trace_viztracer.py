@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+# 教师/CI 夹具：不是学生入口；学生工具见 manual/appendix/gui-debugging.md
 """附录 · VizTracer 实测：把一次离线问数录成浏览器可看的时间线。
 
 只跑**真代码路径**（与第 21 页 pdb 演示同一批函数）：

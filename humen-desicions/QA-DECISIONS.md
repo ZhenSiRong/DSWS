@@ -121,6 +121,22 @@
 | Release 渠道 | GitHub 网页手动创建（本机无 gh/token） |
 | 执行分工 | 全部命令由用户执行；lead 维护文档、答疑、审查 |
 
+## R9 · 五轮迭代落地 D54「工具原子化」（2026-11-22）
+
+| 轮 | 角色 | 产出/结果 |
+|---|---|---|
+| 1 | 写手 | p17 134 行（撤 `pdb_step_demo.py`，第 5 步改 viztracer/pdb + 项目自带 pytest；第 6 步"自己采多次"）；附录重构为 9 张工具卡 + 选工具三问；page-00 预装；6 个夹具加"教师/CI"标注 |
+| 2 | 独立重放者 | 12 条问题（0 高/4 中/8 低），报告 `review/replay-page-17-v2.md` |
+| 3 | 修复者 | 12 条全修，报告 `review/fix-page-17-v2.md` |
+| 4 | 对抗审查者 | 自己复跑全部命令，11 条新问题（0 高/3 中/8 低），报告 `review/adversarial-page-17-v2.md`；结论"v1.1.0 可发布（需修 3 中）" |
+| 5 | 收口 | 11 条全修 + 附录 Studio 卡依赖注入修复，报告 `review/fix-page-17-v3.md` |
+
+**终验**：`audit_book` 24/24、`make audit` 4/4、p17 离线三判据全绿（14 passed / S6 PASS / probe mismatch 0）、p17 134 行六段、`backend/uv.lock` 干净。
+
+**残留（如实）**：p17 第 6 步真模型采样未跑（需栈+key）；py-spy `-p` attach 受 `ptrace_scope=1` 限制未实跑；Studio/Zed GUI 未实拍；curl/DevTools 完整链路未跑。
+
+**后续（用户执行）**：打 `v1.1.0` tag → push → 构建发布包 → GitHub Release（D55 流程）。
+
 ## 待定
 
 - **p17「学习者自录证据」方案**（R6-Q2）：初步方向 = 三层脚手架

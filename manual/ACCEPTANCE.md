@@ -41,7 +41,7 @@ DOCKER SMOKE FAIL: 120 秒内服务状态没齐
 ## 4. L3 验收（page-14 – page-17，「审」不确定输出）
 逐页对账：
 - [p14](page-14.md) `backend/.venv/bin/python -m pytest backend/tests/recall -q` → `18 passed, 23 skipped`；`make stage3` → `S3 PASS`；`docker compose stop elasticsearch` 后 `POST /api/query` 仍回 `41099.5`，真检索黄金集 `18 passed, 23 errors`。
-- [p15](page-15.md) `backend/.venv/bin/python -m pytest backend/tests/generate -q` → `122 passed, 5 skipped`；`make stage4` → `基线：10/10 通过（拒答 2）` + `S4 PASS`（本机实测 38 秒）；[p16](page-16.md) `backend/.venv/bin/python -m pytest backend/tests/generate/test_guard.py -q` → `26 passed`，`(cd backend && .venv/bin/python -m app.scripts.failures --check)` → `S6 PASS`，`PYTHONPATH=backend backend/.venv/bin/python eval/probe_correction.py | tail -1` → `{"total": 20, "mismatch": 0}`；[p17](page-17.md) `backend/.venv/bin/python -m pytest backend/tests/agent/test_correct.py -q` → `14 passed`，`(cd backend && .venv/bin/python -m app.scripts.failures --check)` → `S6 PASS`，`PYTHONPATH=backend backend/.venv/bin/python eval/probe_correction.py | tail -1` → `{"total": 20, "mismatch": 0}`，语料 `11` 条 `"retryable": true` / `9` 条 `"retryable": false`。
+- [p15](page-15.md) `backend/.venv/bin/python -m pytest backend/tests/generate -q` → `122 passed, 5 skipped`；`make stage4` → `基线：10/10 通过（拒答 2）` + `S4 PASS`（本机实测 38 秒）；[p16](page-16.md) `backend/.venv/bin/python -m pytest backend/tests/generate/test_guard.py -q` → `26 passed`，`(cd backend && .venv/bin/python -m app.scripts.failures --check)` → `S6 PASS`，`PYTHONPATH=backend backend/.venv/bin/python eval/probe_correction.py | tail -1` → `{"total": 20, "mismatch": 0}`；[p17](page-17.md) `backend/.venv/bin/python -m pytest backend/tests/agent/test_correct.py -q` → `14 passed`，`(cd backend && .venv/bin/python -m app.scripts.failures --check)` → `S6 PASS`，语料 `11` 条 `"retryable": true` / `9` 条 `"retryable": false`；拆一刀另有 `PYTHONPATH=backend backend/.venv/bin/python eval/probe_correction.py | tail -1` → `{"total": 20, "mismatch": 0}`。
 
 **级考核（第 17 页「拆一刀」：关纠错）**——答案不是「红变绿」，而是「哪条判据抓到了、哪条没抓到」：
 1. 打开 `backend/app/agent/correct.py`，找到 `def propose_correction`，在 `policy = contract.correction` 后插 4 行（缩进 4 格）：立即 `return CorrectionProposal(`，参数 `attempted=False, ok=False, error=error, note="拆一刀：校正已关闭"`，再多一行 `)`（多行写法照 page-17 抄）。
@@ -109,7 +109,7 @@ DOCKER SMOKE FAIL: 只读账号验证未通过
 > 口径：界面只是入口（第 9 页「拆一刀」就是模板：删掉 nginx，主干仍活着）；L5 把这一刀升级到整栈——换掉成熟版这块装修，接口层与判据纹丝不动，才叫「装修不改变承重墙」。两次结果相同（成熟版 `41099.5`、17 行页面同一个数）、契约相同（23 条 `progress` + 1 条 `result`），差的只是「谁负责渲染」。
 
 ## 7. 已知限制（诚实）
-- **真 LLM 成功态不可复现**：p17 对账写明，成功率只能写成「多次采样（`trials>=3`）+ 成功率 + 失败分类」，不许写「已修复」；本清单不验真模型。
+- **真 LLM 成功态不能稳定复现、不能当判据**：p17 页首与对账写明——v2 单次复现过（`deliverable/v2/evidence/v2-natural-correct-success.sse`），但触发取决于模型、不能保证每次复现；成功率只能写成「多次采样（`trials>=3`）+ 成功率 + 失败分类」，不许写「已修复」；本清单不验真模型。
 - **可观测只有应用层**：p21 对账——没有 metrics、追踪、结构化请求日志、告警，`duration_ms` 只发给浏览器；不能回答 QPS / 错误率 / P99。
 - **重栈耗时**：`make docker-up` 首次约 8 分钟（p13），p22 要整栈；验收中途别重建镜像。
 - **端口占用**：默认端口被占就改 `.env` 的 `*_HOST_PORT`，别改 `compose.yaml`（p13）。
@@ -119,7 +119,7 @@ DOCKER SMOKE FAIL: 只读账号验证未通过
 |---|---|
 | L1（p00–p09） | `review/walkthrough.md`、`review/replay-03-05.md`、`review/replay-06-09.md` |
 | L2（p10–p13） | `review/replay-page-10.md` … `review/replay-page-13.md` |
-| L3（p14–p17） | `review/replay-page-14.md` … `review/replay-page-17.md` |
+| L3（p14–p17） | `review/replay-page-14.md` … `review/replay-page-17-v2.md`（p17 最新；v1 已过时） |
 | L4（p18–p22） | `review/replay-page-18.md` … `review/replay-page-22.md`（p18–p22 全有） |
 | L5（page-23） | page-23「对账」；`review/replay-page-23.md`（待重放） |
 | 环境 / 工具 / 奇怪报错 | `../error-proofread/README.md`（真机实测台账）、`../docs/DOCKER-DEPLOY.md` §1 |

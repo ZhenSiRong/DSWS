@@ -5,7 +5,7 @@
 ## 1. 这页解决什么 / 不解决什么
 
 - **解决**：把 `.env` 里四个 `REBUILD_LLM_*` 填对 → 用 `scripts/llm_check.py` 自检 → 重启 backend 确认切换生效；失败时按状态码定位。
-- **不解决判据**：主线判定用确定性生成器 + 录制夹具（p15 基线、p17 纠错、ACCEPTANCE 全清单）。配 key 不改变任何一条判据；真模型成功态不可复现（见 §7）。
+- **不解决判据**：主线判定用确定性生成器 + 录制夹具（p15 基线、p17 纠错、ACCEPTANCE 全清单）。配 key 不改变任何一条判据；真模型成功态不能稳定复现（见 §7）。
 - **不配 key 时一切照旧**：`backend/app/main.py` 的 `_build_generator()` 拿不到三个非空变量就返回 `DeterministicGenerator`，页面、基线、验收都不变。
 - 一个例外要知道：**配了坏 key 不会自动退回确定性生成器**——每个请求会以有名字的失败结束（见 §6），所以先自检再重启。
 
@@ -94,7 +94,7 @@ docker compose exec backend python -c "from app.generate.provider import HttpLlm
 
 ## 7. 诚实边界
 
-- 真模型成功态**不可复现**：本机这一次出了能过 `check_sql` 的 SQL，不代表每次、每台机器都行。结论只能写「多次采样（`trials>=3`）+ 成功率 + 失败分类」，不许写「已修复」（p17 对账；`eval/live_probe.py` 是采样探针，要跑着的服务 + 真 key）。
+- 真模型成功态**不能稳定复现**：本机这一次出了能过 `check_sql` 的 SQL，不代表每次、每台机器都行。结论只能写「多次采样（`trials>=3`）+ 成功率 + 失败分类」，不许写「已修复」（p17 对账；`eval/live_probe.py` 是采样探针，要跑着的服务 + 真 key）。
 - **本附录不改变 ACCEPTANCE 任何判据**：真模型仍不在验收清单里；主线回归仍用确定性一侧 + 录制夹具。
 - 本机只实测了 DeepSeek + `deepseek-flash`；Ark / Ollama / vLLM 是形状示例，未在本机验证。
 - 真模型纠错实测证据（2026-11-20，隔离栈，8 题 × 3 次 = 24 次真实请求）：[`llm-live-probe.md`](llm-live-probe.md)。

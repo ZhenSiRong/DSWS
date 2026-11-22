@@ -15,7 +15,7 @@
 - **L3 审（page-14 – page-17，4 页）**：机器输出不确定，先预注册判据，再让错误发生，看判据抓没抓住。
 - **L4 守（page-18 – page-22，5 页）**：制造故障与越权，证明防线有效；兜不住时知道红在哪一层。
 - **L5 装（page-23，1 页）**：把浏览器入口换成**成熟版原版前端**（`deliverable/v2/original-frontend/`，`shopkeeper-agent`，交付时的样子）；`frontend/` 教学版重建前端降为脚手架对照（compose 默认 8080，自带 40 条协议测试）。接口、契约与判据都不动——体验是第五个横切系统，装修不改变承重墙。
-- **附录（不进 24 页）**：[LLM 端点配置](appendix/llm-endpoint.md)——真模型是可选支线；主线不配 key 也能全绿。 **GUI 调试**：[看执行与调试（VizTracer / LangGraph Studio / DevTools / CLI 兜底）](appendix/gui-debugging.md)。
+- **附录（不进 24 页）**：[LLM 端点配置](appendix/llm-endpoint.md)——真模型是可选支线；主线不配 key 也能全绿。 **工具卡**：[装一次、一条命令、浏览器点开（viztracer / py-spy / scalene / pdb / curl / pytest / DevTools / Studio / Zed）](appendix/gui-debugging.md)。
 
 每页的「你应该看到」就是该页的**完成判据**——看到它才算做完；L2–L5 每级最后一页的「拆一刀」升级为**级考核**（L1 无拆一刀，另用建成证明海报对账）。验证不单独成页。
 
@@ -98,7 +98,7 @@ L2–L5 十四页不在这张网络里（L2 换 → L3 审 → L4 守 → L5 装
 | [第 14 页 · 审检索：召回空了的答案，你凭什么信](page-14.md) | 检索 | `make stage3` → `S3 PASS`；离线 `backend/.venv/bin/python -m pytest backend/tests/recall -q` → `18 passed, 23 skipped`；停 `elasticsearch` 后 `POST /api/query` 仍回 `41099.5`，而真检索黄金集 `18 passed, 23 errors` |
 | [第 15 页 · 审生成：同一把尺子，量模板也量模型](page-15.md) | 生成 | `make stage4` → 基线 `10/10 通过（拒答 2）` + `S4 PASS`；离线 `pytest backend/tests/generate -q` → `122 passed, 5 skipped` |
 | [第 16 页 · 审校验：错单要在执行前被拦下](page-16.md) | 校验 | `pytest backend/tests/generate/test_guard.py -q` → `26 passed`；`(cd backend && .venv/bin/python -m app.scripts.failures --check)` → `S6 PASS`；`eval/probe_correction.py` 末行 → `{"total": 20, "mismatch": 0}` |
-| [第 17 页 · 审纠错：一次重试能修好什么、修不好什么](page-17.md) | 纠错 | `pytest backend/tests/agent/test_correct.py -q` → `14 passed`；`failures --check` → `S6 PASS`；`probe_correction.py` → `{"total": 20, "mismatch": 0}`；语料统计 `11 "retryable": true` / `9 "retryable": false` |
+| [第 17 页 · 审纠错：一次重试能修好什么、修不好什么](page-17.md) | 纠错 | `pytest backend/tests/agent/test_correct.py -q` → `14 passed`；`failures --check` → `S6 PASS`；语料统计 `11 "retryable": true` / `9 "retryable": false`；拆一刀另有 `probe_correction.py` → `{"total": 20, "mismatch": 0}` |
 
 > 级考核在第 17 页：关掉 `correct.py` 的校正入口后，`test_correct.py` 5 条红、失败矩阵只红 `corrected` 一格、20 条语料 `mismatch: 0` 照绿——哪条判据抓到了、哪条没抓到，本页要能说清。
 
@@ -139,7 +139,7 @@ L2–L5 十四页不在这张网络里（L2 换 → L3 审 → L4 守 → L5 装
 |---|---|---|---|
 | **NL2SQL**：自然语言问数——中文提问，系统自动生成 SQL 并执行 | [p5](page-05.md) → [p6](page-06.md) → [p7](page-07.md)（手工版）；[p10](page-10.md)–[p12](page-12.md) 换真（真数据 / 真契约 / 真执行器） | p7 `rows[0].sales = 41099.5`；p12 真执行器回 `Decimal('1144735.50')`（上限 1000 行、非 SELECT 抛 `PermissionError`） | ★★ 够用但分散 |
 | **LangGraph 12 节点 / 10 步**：多节点工作流分阶段执行 | [p8](page-08.md)（12 条 progress）；[p21](page-21.md)（12 节点目录 / 10 步分组 + 「深入探讨」：12 节点 = StateGraph、`correct_sql` = 条件边） | `/api/steps = 12`（条件步骤 `correct_sql`）；`make stage7` → `S7 PASS`；p8 12 条 progress + 1 条 result | ★★ **p21「深入探讨」是入口** |
-| **自校验 + 自纠错**：`validate_sql` + `correct_sql` 双保险，校验失败自动重试 | [p16](page-16.md)（守卫：16 个错误码 / 9 个场景失败矩阵）；[p17](page-17.md)（`correct_sql` 一次重试 / 14 条测试 / `trials≥3` 采样） | p16 `pytest backend/tests/generate/test_guard.py -q` → `26 passed`、`failures --check` → `S6 PASS`；p17 `pytest backend/tests/agent/test_correct.py -q` → `14 passed`、契约 `max_attempts: 1`；真模型现场（问「查询销售额大于平均销售额的商品」）`validate:error → correct:success → 二次 validate:success → 5 行`，帧序 `review/correction-live-trigger.sse` | ★★★ **全书最深** |
+| **自校验 + 自纠错**：`validate_sql` + `correct_sql` 双保险，校验失败自动重试 | [p16](page-16.md)（守卫：16 个错误码 / 9 个场景失败矩阵）；[p17](page-17.md)（`correct_sql` 一次重试 / 14 条测试 / `trials≥3` 采样） | p16 `pytest backend/tests/generate/test_guard.py -q` → `26 passed`、`failures --check` → `S6 PASS`；p17 `pytest backend/tests/agent/test_correct.py -q` → `14 passed`、契约 `max_attempts: 1`；真模型现场（问「查询销售额大于平均销售额的商品」）`validate:error → correct:success → 二次 validate:success → 5 行`，帧序 `review/correction-live-trigger.sse`——**单次现场样例，不是成功率证据**，成功率按 `trials≥3` 多次采样写 | ★★★ **全书最深** |
 | **React 19 + Tailwind**：聊天式提问、可视化结果表格 | [p23](page-23.md)（成熟版原版 `shopkeeper-agent`：17 行 HTML → 教学版脚手架 → 交付时的前端） | 浏览器开 `http://127.0.0.1:8088` 成熟版问一句 → `41099.5`；对照 `http://127.0.0.1:8080` 教学版同一个数；`(cd frontend && npm test)` → `40 passed (40)`（教学版脚手架测试）；技术栈事实：成熟版 `deliverable/v2/original-frontend/package.json` `react ^19.0.0` + `tailwindcss ^3.4.17`，教学版 `frontend/package.json` `tailwindcss ^4.3.4` | ★★ 装修不换承重墙 |
 
 - **为什么书按造 / 换 / 审 / 守组织、而 PRD 按功能验收**：书是**教学结构**（每页一个工程动作、一条判据，按依赖顺序排），PRD 是**交付清单**（验收时按功能打勾）；同一套系统的两种切法，上表就是两者的映射——读的顺序按书，验收的口径按 PRD。

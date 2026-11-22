@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+# 教师/CI 夹具：不是学生入口；学生工具见 manual/appendix/gui-debugging.md
 """render_pdb_step.py —— 第 21 页补图：pdb 终端单步 + 前端 12 节点左右对照 GIF。
 
 一条命令重跑（在仓库根目录）：

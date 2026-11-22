@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+# 教师/CI 夹具：不是学生入口；学生工具见 manual/appendix/gui-debugging.md
 """trace_server.py —— 第 17 页 v2：**后端注入**行级 tracer + **真前端**截图循环。
 
 为什么换成注入而不是“进程内跑 runner”：

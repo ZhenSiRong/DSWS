@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+# 教师/CI 夹具：不是学生入口；学生工具见 manual/appendix/gui-debugging.md
 """离线 pdb 单步演示（第 21 页补图用）。
 
 只跑**真代码路径**：

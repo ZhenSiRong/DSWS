@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+# 教师/CI 夹具：不是学生入口；学生工具见 manual/appendix/gui-debugging.md
 """trace_query.py —— 【v1 · 已退役，保留作参考】进程内跑 runner 录 SSE + settrace。
 
 > 第 17 页现行方案（左栏=真前端截图 / 右栏=同一跑的行级轨迹）见

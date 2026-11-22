@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+# 教师/CI 夹具：不是学生入口；学生工具见 manual/appendix/gui-debugging.md
 """render_exec_trace.py —— 第 17 页 v2：左「真前端截图」/ 右「同一次真跑的代码行」对照 GIF。
 
 输入（由 manual/shots/trace_server.py 产出，已提交在仓库里）：

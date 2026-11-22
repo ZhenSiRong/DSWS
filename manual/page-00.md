@@ -12,6 +12,8 @@
 
 **安装**好五样（安装方法见官方安装页）：**Docker**（https://docs.docker.com/get-docker/ ；装完要让它**运行**起来，口语常说“跑起来”）、**uv**（https://docs.astral.sh/uv/ ）、**Node.js LTS + npm**（https://nodejs.org/ ）、**GNU Make**（装好就是 `make` 命令）、**curl**（第 3–9 页全靠它，多数系统自带）。`make doctor` 把 daemon 单列成一项，所以工具行是 6 项（docker / daemon / uv / node / make / curl）。
 
+**可选工具**（不装也能完成 L1；附录工具卡会用到；pipx 是「换项目/可选工具」的通用装法）：先装 pipx——本课程已装 uv，推荐 `uv tool install pipx`（装完 `pipx --version` 有输出即可）；也可以用系统 pip：`python3 -m pip install --user pipx && python3 -m pipx ensurepath`（有的系统 Python 不带 pip，那就用 `uv` 那条）。再 `pipx install viztracer py-spy scalene`——隔离安装到 pipx 自己的环境，不污染项目 venv。**不装 pipx 也行**：用 `uv tool install viztracer`（uv 直接装进工具环境），或建临时 venv（`uv venv /tmp/tools` 后 `uv pip install --python /tmp/tools/bin/python <包名>`）；p17 要追项目自己的 pytest 时另按该页第 5 步装进 `backend/.venv`。
+
 > **注意**：`make doctor` 不查宿主机 Python——只装了 `uv` 时，它管理的解释器不在系统 PATH 上；`make docker-env` 会回退到 `uv python find`，若仍报错，装 Python 3.8+ 或先 `uv python install`。
 
 `.env`、`backend/.venv`、`frontend/node_modules` 都被 `.gitignore` 忽略，克隆下来没有：`.env` 不用你建（第 1 页会从 `.env.example` 读），后两个由 `make install` 生成，**别手动 pip 装**。

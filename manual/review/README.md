@@ -2,6 +2,7 @@
 
 > 每份报告 = 一页的学生视角独立重放；新报告一律复制 [REPLAY-TEMPLATE](REPLAY-TEMPLATE.md)（六段：结论 / 范围声明 / 环节表 / 问题清单 / 真输出摘录 / 清理确认，外加 8 类必查清单），命名为 `replay-page-XX.md`。
 > 阅读顺序：先看「结论」判断本页能不能跟做，再看「问题清单」里严重度「高」的条目，最后照「真输出摘录」复跑。
+> `review/` 下的生成脚本是教师/CI 夹具，学生入口看 [附录工具卡](../appendix/gui-debugging.md)。
 
 | 报告 | 一句话结论 |
 |:--|:--|
@@ -14,7 +15,10 @@
 | [page-14](replay-page-14.md) | 主线命令全部可执行、核心判据复现；检索候选数写死且与实测不符（10/6、8/6），恢复 ES 缺等待判据。 |
 | [page-15](replay-page-15.md) | 主线可完整重放、四组判据逐字命中；先修 uv.lock 静默重写、拆一刀防全局替换、契约自检缺命令。 |
 | [page-16](replay-page-16.md) | 可完整离线重放、判据全复现；6 处小瑕疵，PYTHONPATH 旧注释与 policy.py 同名行最该先补。 |
-| [page-17](replay-page-17.md) | 可整段照做、核心判据全复现；1 条高优先：成功态「至今未复现」与 v2 证据冲突。 |
+| [page-17](replay-page-17-v2.md) | v2（D54 原子工具版，2026-11-22）：第 1–5 步 + 拆一刀/还原全复现（14 passed、S6 PASS、5 failed/9 passed、probe mismatch 0），viztracer trace 3505 条 + pdb 断点 183 真跑；0 高 / 4 中 / 8 低——先修 pdb `q` 后 BdbQuit 未预告、ACCEPTANCE「成功态不可复现」与页内 v2 成功证据冲突、附录 scalene `--html` 非自包含。v1 见 [replay-page-17](replay-page-17.md)（已过时，保留）。 |
+| [page-17 v2 修复](fix-page-17-v2.md)（R3） | 修 R2 重放的 12 条：pdb `q` 后 BdbQuit 预告、成功态「单次复现过/不当判据」口径、scalene `--standalone`、page-00 pipx 前置；行数 134 不变。 |
+| [page-17 v2 对抗审查](adversarial-page-17-v2.md)（R4） | 不采信 R2/R3 结论、自己重跑：0 高 / 3 中 / 8 低——第 6 步缺真模型前置且端口指路混、py-spy 卡 `-- your_script.py` 照抄失败、`eval/live_probe.py` 实为五类口径；另找 8 条低优先。 |
+| [page-17 v3 收口](fix-page-17-v3.md)（R5） | 修完 R4 全部 11 条 + 发布前终验：结构 24/24、`make audit` 4/4、p17 离线三判据复跑、附录 9 张工具卡逐卡自检；未改实现代码、未起容器/栈、未提交。 |
 | [page-18](replay-page-18.md) | 核心判据全部复现；问题集中在前置依赖没写全、拆一刀新开终端的误导报错。 |
 | [page-19](replay-page-19.md) | 判据与拆一刀逐字复现；最大问题是 uv run 改 uv.lock 而 reset 救不回，其次管道退出码矛盾。 |
 | [page-20](replay-page-20.md) | 核心判据全逐字复现；缺「先还原第 19 页拆一刀」前置检查，重录假绿缺后果说明。 |
