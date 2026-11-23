@@ -6,7 +6,7 @@
 ## 提交
 
 - 批次提交 message：`docs(reading-layer): batch B 内容结构化（p20/p19/p23/p15/p10）`，含 5 页 md + 5 页阅读版 HTML + 本报告。
-- commit hash：`PENDING-HASH-REFILL`（本报告与页面同一提交；精确 hash 由随后的「报告回填」提交写入本行）。
+- commit hash：`032f0126e0b6ce25a4d92903de8c9f03fa197567`（`docs(reading-layer): batch B 内容结构化（p20/p19/p23/p15/p10）`，含 5 页 md + 5 页阅读版 HTML + 本报告；本行由随后的「报告回填」提交写明，因为提交不能内含自身 hash）。
 - 本批页面：`manual/page-20.md`、`manual/page-19.md`、`manual/page-23.md`、`manual/page-15.md`、`manual/page-10.md`。
 - 生成物：`manual/read/page-20.html`、`page-19.html`、`page-23.html`、`page-15.html`、`page-10.html`。
 - 未 push、未 merge；本批之外的页面（含 p17、p02/p04/p16）零改动。
