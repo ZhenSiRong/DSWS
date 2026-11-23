@@ -1,4 +1,4 @@
-.PHONY: install doctor doctor-v dev-backend dev-frontend stage0 stage0-ui stage1 stage2 stage3 stage4 stage5 stage5-live stage6 stage6-ui stage7 stage7-ui baseline audit install-hooks docker-env docker-env-require docker-up docker-down docker-logs docker-smoke docker-reset
+.PHONY: install doctor doctor-v dev-backend dev-frontend stage0 stage0-ui stage1 stage2 stage3 stage4 stage5 stage5-live stage6 stage6-ui stage7 stage7-ui baseline audit verify verify-fast accept-l1 accept-l2 accept-l3 accept-l4 accept-l5 install-hooks docker-env docker-env-require docker-up docker-down docker-logs docker-smoke docker-reset
 
 install:
 	cd backend && uv sync --frozen
@@ -250,6 +250,26 @@ audit:
 		done; \
 		echo "  OK：manual/ 无敏感串"
 	@echo "AUDIT PASS：4/4 全绿（结构 / 空白 / uv.lock / 敏感串）"
+
+# 教材可跟随性验收线（ADR 0002 / docs/verify-line.md）
+# T0：静态，不执行页面命令（pre-commit 调）；T1：加跑 kind: offline 命令。
+verify:
+	@python3 scripts/verify.py
+
+verify-fast:
+	@python3 scripts/verify.py --fast
+
+# T2：级考核（复用 ACCEPTANCE.md；需整栈已起，破坏性步骤打印 MANUAL，不自动执行）
+accept-l1:
+	@bash scripts/acceptance/level-l1.sh
+accept-l2:
+	@bash scripts/acceptance/level-l2.sh
+accept-l3:
+	@bash scripts/acceptance/level-l3.sh
+accept-l4:
+	@bash scripts/acceptance/level-l4.sh
+accept-l5:
+	@bash scripts/acceptance/level-l5.sh
 
 # 启用仓库级 pre-commit 护栏：只写本仓库 git 局部配置，不动全局配置。
 install-hooks:

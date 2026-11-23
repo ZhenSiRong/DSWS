@@ -4,10 +4,11 @@
 # 启用：make install-hooks     # git config core.hooksPath .githooks（仅本仓库）
 # 绕过：git commit --no-verify # 不推荐；只在确认误报时用
 #
-# 检查三件事（离线、目标 < 2s）：
-#   1) python3 manual/shots/audit_book.py：23 页结构 / 图引用 / README 坏链
+# 检查四件事（离线、目标 < 2s）：
+#   1) python3 manual/shots/audit_book.py：24 页结构 / 图引用 / README 坏链
 #   2) backend/uv.lock 不允许提交（uv 会按本机镜像源重写 registry URL）
 #   3) staged 的 manual/**/*.md 不得出现用户名 / 家目录绝对路径
+#   4) 页面契约 T0（scripts/verify.py --fast）：页面 ↔ 契约双向同步 / 静态路径符号 / 证据存在
 # 脚本缺失时对应检查跳过（防误伤历史/浅克隆 checkout）。
 set -u
 
@@ -58,6 +59,22 @@ while IFS= read -r f; do
 done <<EOF
 $staged_md
 EOF
+
+# ---- 4) 页面契约 T0（ADR 0002；<2s，不执行页面命令）------------------------
+if [ -f scripts/verify.py ] && [ -d manual/verify/contracts ]; then
+  if command -v python3 >/dev/null 2>&1; then
+    verify_out="$(python3 scripts/verify.py --fast 2>&1)"
+    if [ $? -ne 0 ]; then
+      note "$verify_out"
+      note "✗ pre-commit 拒绝：页面契约 T0 未通过（页面块与契约不同步、静态路径/符号不存在、证据缺失）。"
+      note "  修复：同步 manual/page-*.md 与 manual/verify/contracts/page-*.yaml（见 docs/verify-line.md）"
+      note "  确认误报可临时绕过：git commit --no-verify"
+      fail=$((fail + 1))
+    fi
+  else
+    note "⚠ pre-commit 跳过页面契约 T0：未找到 python3"
+  fi
+fi
 
 if [ "$fail" -ne 0 ]; then
   note ""

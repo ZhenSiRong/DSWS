@@ -15,24 +15,28 @@
 
 **第 1 步：拍快照。** 拆一刀要改纠错代码，先留退路（同名快照会被拒，重做本页就换个名字；**重做换名后，拆一刀里 `reset` 的名字也要一起换**——照抄旧名会回滚掉中间改动，只有 `pre-reset-*` 快照能救）；回显 `已保存快照 "p17-before"：169 个文件。`（数字因工作区而异）：
 
+<!-- verify: p17-lab-save -->
 ```bash
 scripts/lab save p17-before
 ```
 
 **第 2 步：先验校正器这一层。** 14 条测试 = 提示词 8 个槽位 + 可重试才进闭环 + 校正成功产出候选、拒答/崩溃/产物不合契约时保留原错误 + 上下文有等价字段时改完能重过校验，秒级：
 
+<!-- verify: p17-pytest-correct -->
 ```bash
 backend/.venv/bin/python -m pytest backend/tests/agent/test_correct.py -q
 ```
 
 **第 3 步：跑失败矩阵。** 9 个场景各演一遍结局；只替换了模型与数据库，上下文、提示词、静态校验、安全策略、纠错闭环都是真代码，所以离线就能跑。`corrected` 是唯一“先红后绿”的场景（第一次校验红 → 校正成功 → 重新校验绿）：
 
+<!-- verify: p17-failures-check -->
 ```bash
 (cd backend && .venv/bin/python -m app.scripts.failures --check)
 ```
 
 **第 4 步：看 `corrected` 的期望结局，再数一遍 20 条语料的“可重试/标记”。** 本步 `--scenarios` 的表除了场景 id，还列出名称、期望、类别、失败步骤四列（`corrected` 那行的“期望”是 `result`，不是错误码），但表里没有“重试了几次”这一列——那就是下面要审的空档：
 
+<!-- verify: p17-failures-scenarios -->
 ```bash
 (cd backend && .venv/bin/python -m app.scripts.failures --scenarios | grep corrected)
 grep -o '"retryable": [a-z]*' eval/correction.jsonl | sort | uniq -c
@@ -41,6 +45,7 @@ grep -o '"expect": "[a-z]*"' eval/correction.jsonl | sort | uniq -c
 
 **第 5 步：用原子工具看一层时间线、再停一次断点。** 本页这一步只把 VizTracer 装进项目 `backend/.venv`（trace 要和项目依赖同一个解释器；它不改 `uv.lock`），`--open` 跑完自动开浏览器；pdb 是 Python 自带，不用装：
 
+<!-- verify: p17-viztracer -->
 ```bash
 uv pip install --python backend/.venv/bin/python viztracer
 backend/.venv/bin/python -m viztracer --open --min_duration 1ms -m pytest backend/tests/agent/test_correct.py -q
@@ -51,6 +56,7 @@ backend/.venv/bin/python -m pdb -m pytest backend/tests/agent/test_correct.py -q
 
 **第 6 步：自己采多次（本步要真模型）。** 判据是“触发几次、成功几次”，一次跑不出来。默认栈不配 key 时后端走确定性生成器、根本没有校正器（`_build_corrector()` 返回 `None`）：对页内这个问题一次就过校验，只会采到“无需校正 3/3”，采不到“触发/成功”——**这是预期，不是 bug**。要采先按 [`appendix/llm-endpoint.md`](appendix/llm-endpoint.md) 配 `REBUILD_LLM_*`，再 `docker compose up -d --force-recreate backend` 重启（变量缺一个或 key 配错都不算，先跑附录里的 `scripts/llm_check.py` 自检）；没配 key 或没起栈就跳过这步。界面入口别混：只按第 13 页起整栈，默认是教学版 `http://127.0.0.1:8080`（改过 `.env` 就用你的 `FRONTEND_HOST_PORT`）；成熟版 `http://127.0.0.1:8088` 来自第 23 页第 2 步的 `docker run -p 127.0.0.1:8088:80`，不是 compose 起的。同一问题「查询销售额大于平均销售额的商品」点 3 次；或手动发 3 次：
 
+<!-- verify: p17-curl-live -->
 ```bash
 curl -sN -X POST http://127.0.0.1:8080/api/query -H 'content-type: application/json' -d '{"query":"查询销售额大于平均销售额的商品"}'
 ```
@@ -64,6 +70,7 @@ curl -sN -X POST http://127.0.0.1:8080/api/query -H 'content-type: application/j
 
 第 2–4 步（秒数因机器而异；第 3 步只留 `corrected` 行 + `S6 PASS`；最后四行没有“成功”这一栏——`corrected` 是“可校正”的标记，不是“校正成功”的统计）：
 
+<!-- verify-out: p17-pytest-correct p17-failures-check p17-failures-scenarios p17-ablation-commands -->
 ```text
 14 passed in 0.11s
   corrected            期望 result               实际 result
@@ -108,12 +115,14 @@ True
 
 Ctrl+S 保存，重跑三条判据（输出为节选：pytest 只留汇总行；`PYTHONUNBUFFERED=1` 让管道里的输出顺序和终端一致；秒数会变）：
 
+<!-- verify: p17-ablation-commands -->
 ```bash
 backend/.venv/bin/python -m pytest backend/tests/agent/test_correct.py -q
 (cd backend && PYTHONUNBUFFERED=1 .venv/bin/python -m app.scripts.failures --check) 2>&1 | tail -5
 PYTHONPATH=backend backend/.venv/bin/python eval/probe_correction.py | tail -1
 ```
 
+<!-- verify-out: p17-ablation-commands -->
 ```text
 5 failed, 9 passed in 0.14s
   corrected            期望 result               实际 SQL_SYNTAX
@@ -125,6 +134,7 @@ FAIL: 1 项不符合预期
 
 还原并回绿（`reset` 会先拍一张 `pre-reset-…` 安全快照，只贴末行；第 1 步若换过快照名，这里的名字也要同步换；跑完回到 `14 passed in 0.11s` + `S6 PASS`——同第 2、3 步）：
 
+<!-- verify: p17-lab-reset-restore -->
 ```bash
 scripts/lab reset p17-before --yes
 backend/.venv/bin/python -m pytest backend/tests/agent/test_correct.py -q | tail -1
