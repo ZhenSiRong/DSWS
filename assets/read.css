@@ -1,0 +1,26 @@
+/* ============================================================
+   read.css — 练本阅读层覆盖样式（第 4 轮 Q2 修订后转正）
+   挂在 lesson.css 之后：窄栏书排版 + 中文首行缩进 + 行内代码降噪。
+   只覆盖排版，不改 lesson.css 本体；课时页不受影响。
+   ============================================================ */
+
+.page { max-width: 40em; }                 /* ≈34–40 个汉字行宽 */
+
+p { text-indent: 2em; margin-bottom: 1.15em; }   /* 首行缩进 2 字符 */
+blockquote { font-style: normal; }         /* 中文不用假斜体 */
+blockquote p, li p, li, .caption { text-indent: 0; }
+
+/* 行内代码降噪：去边框，只留淡底 */
+code { border: none; background: rgba(28,26,23,.05); padding: .05em .25em; font-size: .82em; }
+
+/* 命令块：深色终端底，与正文一眼分开 */
+pre { background: #04070b; color: #d8dee9; padding: 1rem 1.2rem; border-radius: 6px;
+      overflow-x: auto; font-size: .78rem; line-height: 1.55; margin: 1.2rem 0 1.6rem; }
+pre code { background: none; border: none; padding: 0; font-size: inherit; color: inherit; }
+
+/* 漫画 caption（▲ 开头）降为小灰字 */
+.caption { font-size: .82rem; color: var(--muted); margin-top: -.5rem; }
+
+img { max-width: 100%; border-radius: 6px; border: 1px solid var(--rule); }
+
+h2 { margin-top: 2.6rem; }
