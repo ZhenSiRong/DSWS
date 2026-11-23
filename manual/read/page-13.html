@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>第 13 页 · 换真部署：一条命令起整座城，一条命令验收 · 阅读版</title>
+<link rel="stylesheet" href="../../assets/lesson.css">
+<link rel="stylesheet" href="../../assets/read.css">
+</head>
+<body>
+<main class="page">
+<p class="kicker">练本 · 阅读版（md 正典派生，改内容请改 manual/page-13.md）</p>
+<h1>第 13 页 · 换真部署：一条命令起整座城，一条命令验收</h1>
+<blockquote>
+<p>前置：第 0 页备好环境（Docker 可用）；本页接第 1 页的 <code>lab-mysql</code>、第 3/9 页的 uvicorn、第 9 页的 <code>lab-nginx</code>——动手前先把这三个手动起的东西停掉。L2 到此收尾。</p>
+</blockquote>
+<h2>这一页构建什么</h2>
+<p>把前九页手动起的三个东西换成 <code>compose.yaml</code> 编排的六个服务：<code>mysql</code> / <code>elasticsearch</code> / <code>qdrant</code> / <code>init</code> / <code>backend</code> / <code>frontend</code>。</p>
+<p><strong>新设施</strong>：<code>elasticsearch</code> / <code>qdrant</code> 是前九页没起过的新设施，随编排一起带起来。</p>
+<p><strong>两条命令</strong>：一条 <code>make docker-up</code> 起整座城，一条 <code>make docker-smoke</code> 用 8 步自动验收。部署不是“起得来”，是“起得来 + 能被自动验收”。</p>
+<h2>猜一猜</h2>
+<p>动手前写下答案：</p>
+<ol>
+<li>六个服务里哪个只跑一次就退出？<code>docker compose ps</code> 里看得到它吗？</li>
+<li><code>make docker-smoke</code> 会检查哪些事？只检查“进程都在跑”够不够？</li>
+</ol>
+<h2>动手</h2>
+<p>以下命令都在仓库根目录执行（有 <code>compose.yaml</code>、<code>fixtures/</code> 的那一层），可整段复制。</p>
+<p><strong>第 1 步：拍快照。</strong> 本页要改 <code>compose.yaml</code>，先拍一张（<code>.env</code> 不在快照里；同名快照会被拒，重做本页就换个名字）：</p>
+<pre><code class="language-bash">scripts/lab save p13-before
+</code></pre>
+<p><strong>第 2 步：停掉手动起的三个东西。</strong> 终端 1 里第 3/9 页的 uvicorn 按 <code>Ctrl+C</code>；两个容器删掉：<code>docker rm -f lab-mysql lab-nginx</code>（回显被删的容器名；报 <code>No such container</code> 说明早删了）。</p>
+<p><strong>为什么要停</strong>：它们占的 3307 / 8000 / 8081 和 compose 不冲突，但手动进程不会自己退，留着就是新旧两套系统同时在跑、容易对着旧入口验收（<code>make docker-down</code> 也管不到它们）。</p>
+<p><strong>两份库互不相干</strong>：<code>lab-mysql</code> 没有数据卷，删容器 = 第 1–12 页的库没了；部署库的数据来自 <code>fixtures/dw.sql</code> 首次灌进 <code>mysql_data</code> 卷，所以删它不影响这边（想重做前 12 页就回第 1、2 页重建并导入）。</p>
+<p><strong>第 3 步：生成 <code>.env</code>。</strong> 密码和宿主机端口都从这里读；<code>.env</code> 被忽略、不进快照：</p>
+<pre><code class="language-bash">make docker-env
+</code></pre>
+<p>只在没有 <code>.env</code> 时生成（已有就什么都不做），末行 <code>已生成 …</code>（<code>…</code> 是你仓库的位置）。</p>
+<p><strong>默认宿主机端口</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>服务</th>
+<th>端口</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>MySQL</td>
+<td><code>3306</code></td>
+<td>第 1 页绕开 3306 就是因为它常被本机 MySQL 占着</td>
+</tr>
+<tr>
+<td>ES</td>
+<td><code>9200</code></td>
+<td></td>
+</tr>
+<tr>
+<td>Qdrant</td>
+<td><code>6333</code></td>
+<td></td>
+</tr>
+<tr>
+<td>backend</td>
+<td><code>8100</code></td>
+<td></td>
+</tr>
+<tr>
+<td>frontend</td>
+<td><code>8080</code></td>
+<td>和第 9 页手动的 <code>8081</code> 不是一个（编排重新分了门牌号）</td>
+</tr>
+</tbody>
+</table>
+<p><strong>被占就改 <code>.env</code></strong>：改对应那行（<code>MYSQL_HOST_PORT</code> / <code>ES_HOST_PORT</code> / <code>QDRANT_HOST_PORT</code> / <code>BACKEND_HOST_PORT</code> / <code>FRONTEND_HOST_PORT</code>），<strong>别改 <code>compose.yaml</code></strong>，改完重跑 <code>make docker-up</code>；smoke 会自己问 compose 前端实际端口。</p>
+<p><strong><code>FRONTEND_BIND</code></strong>：默认 <code>0.0.0.0</code>——前端是唯一对外入口，这会让局域网里的机器也能访问；只在本机调试就改成 <code>127.0.0.1</code>（其余四个端口本来就只绑本机）。</p>
+<p><strong>起之前先自查</strong>：<code>ss -tlnp | grep -E ':(3306|9200|6333|8100|8080) '</code>——有输出就是被占，改 <code>.env</code> 里对应的 <code>*_HOST_PORT</code>。</p>
+<p><strong>第 4 步：起整座城。</strong></p>
+<pre><code class="language-bash">make docker-up
+</code></pre>
+<p>它等于 <code>docker compose up -d --build</code>：先构建 backend / frontend 镜像，再按依赖顺序起六个服务。</p>
+<p><strong>第一次构建约 8 分钟</strong>（实测；网络慢会更久）：屏幕一直在打 <code>#1 …</code> 和 <code>Container ... Started</code>，别以为卡死；它要等 init 成功、backend / frontend 起来才把提示符还给你，中断了重跑一次就行。</p>
+<p><strong>报错退出</strong>：先看 <code>docker compose logs &lt;service&gt;</code>（<code>&lt;service&gt;</code> 换成报错那个服务名，比如 <code>frontend</code>），最常见的是宿主机端口被占（回第 3 步改 <code>.env</code>）或镜像拉取失败（换镜像源后重跑）。</p>
+<p><strong>第 5 步：看状态。</strong> 先 <code>docker compose ps</code>，再 <code>docker compose ps -a</code>。</p>
+<p><strong>第 6 步：一键验收。</strong></p>
+<pre><code class="language-bash">make docker-smoke
+</code></pre>
+<p>它自己会再 <code>up</code> 一次（幂等），然后 8 步逐条验，最后一行 <code>DOCKER SMOKE PASS</code>。</p>
+<p><strong>停与删</strong>：停整座城用 <code>make docker-down</code>（容器和网络删掉、<strong>数据卷保留</strong>）；<code>make docker-reset</code> 连数据卷一起删（破坏性，会让你输入 yes 再动手）。</p>
+<p><strong>先别 <code>docker-reset</code>、也别手动删卷</strong>——“拆一刀”只 <code>make docker-down</code>，数据卷要留着。</p>
+<p><strong>手动件别再起</strong>：第 2 步停掉的三个手动件之后不要再手动起——它们的位置由 compose 里的 <code>mysql</code> / <code>backend</code> / <code>frontend</code> 接管，起停统一交给 compose。</p>
+<h2>你应该看到</h2>
+<p>第 4 步末尾你会看到 init 先 <code>Started</code> 再 <code>Exited</code>，backend <code>Healthy</code>，frontend 最后 <code>Started</code>；第 5 步 <code>docker compose ps</code> 只有 <strong>5 行</strong>（节选 NAME / STATUS 两列，终端里还有 IMAGE / COMMAND / SERVICE / PORTS）：</p>
+<pre><code class="language-text">shopkeeper-rebuild-backend-1        Up 2 minutes (healthy)
+shopkeeper-rebuild-elasticsearch-1  Up 4 minutes (healthy)
+shopkeeper-rebuild-frontend-1       Up About a minute (healthy)
+shopkeeper-rebuild-mysql-1          Up 4 minutes (healthy)
+shopkeeper-rebuild-qdrant-1         Up 4 minutes (healthy)
+</code></pre>
+<p><code>docker compose ps -a</code> 多出第六行——只跑一次的那个：<code>shopkeeper-rebuild-init-1   Exited (0) 2 minutes ago</code>。frontend 的健康检查比 backend 晚几秒，刚起好时可能短暂显示 <code>health: starting</code>，等一下再刷就对了。</p>
+<p>第 6 步 <code>make docker-smoke</code>（节选；第 1 步的构建日志、第 8 步的检查明细从略）：</p>
+<pre><code class="language-text">== 1/8 启动 stack（含一次性 init） ==
+== 2/8 等待 http://127.0.0.1:8080/api/health ==
+health: {&quot;status&quot;:&quot;ok&quot;,&quot;stage&quot;:&quot;S7&quot;}
+== 3/8 五个长驻服务 healthy + init 正常退出 ==
+services: backend=running, elasticsearch=running, frontend=running, init=exited, mysql=running, qdrant=running
+== 4/8 /api/steps = 12 ==
+steps=12
+== 5/8 经 http://127.0.0.1:8080 发起真实查询（结果非空；是否流式由 nginx 生效配置把关） ==
+sse_verdict=streamed
+result rows=1 columns=1 sse_chunks=24
+nginx: /api/query 的代理缓冲已关闭
+== 6/8 nginx 的 /api/ 代理确实关着缓冲 ==
+nginx: /api/query 的代理缓冲已关闭
+== 7/8 只读账号验证 ==
+PASS: 该账号在 dw 上只有 SELECT
+== 8/8 S2 元知识对账（init 配置一次性执行） ==
+S2 VERIFY PASS
+== init 幂等（必须跳过重建） ==
+DOCKER INIT PASS
+DOCKER SMOKE PASS
+</code></pre>
+<p>第 5 步那行 <code>sse_verdict</code> 可能是 <code>streamed</code>，也可能是 <code>too-fast</code>：后者表示整个响应 200 毫秒内就结束、时间上分辨不出是否流式，脚本于是拿 <code>nginx -T</code> 的生效配置定性——只要跟着打出 <code>nginx: /api/query 的代理缓冲已关闭</code>，这一档照样算<strong>通过</strong>，不是失败。</p>
+<p><img alt="第 13 页 · docker compose ps：五个长驻服务全 healthy；ps -a 里 init Exited (0)" src="../images/page-13-ps.png" />
+<img alt="第 13 页 · make docker-smoke：8 步逐条验，末行 DOCKER SMOKE PASS" src="../images/page-13-smoke.png" /></p>
+<h2>对账</h2>
+<ul>
+<li>
+<p>猜 1：只跑一次的是 <strong>init</strong>。<code>docker compose ps</code> 默认只列 running，所以第一张表里没有它；<code>ps -a</code> 才看到 <code>Exited (0)</code>。它退出码 0，backend 才被允许启动。</p>
+</li>
+<li>
+<p><strong>init 为什么必须一次性</strong>：它干三件事再退出——等 mysql / ES / qdrant 健康、开通并验证只读账号、校验元知识（不对就重建）。常驻只会白占资源，还让“初始化到底成功没有”没有信号；<code>restart: "no"</code> + 非零退出即失败。</p>
+</li>
+<li>
+<p><strong><code>depends_on</code> 的健康检查</strong>：init 用 <code>service_healthy</code> 等三座存储；backend 用 <code>service_completed_successfully</code> 等 init 退出码 0；frontend 用 <code>service_healthy</code> 等 backend。少了这些条件，compose 只按启动顺序拉，init 可能比库快、backend 可能没初始化就接客——起得来，但没初始化。</p>
+</li>
+<li>
+<p><strong>8 步各防什么</strong>：</p>
+</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>步</th>
+<th>防什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>1/8</code></td>
+<td>起整栈</td>
+</tr>
+<tr>
+<td><code>2/8</code></td>
+<td>打通 nginx→backend 入口链</td>
+</tr>
+<tr>
+<td><code>3/8</code></td>
+<td>五个常驻 healthy 且 init 退出 0——防“只看 running，不看 health 和 init”</td>
+</tr>
+<tr>
+<td><code>4/8</code></td>
+<td><code>/api/steps</code> 正好 12——防契约没进镜像</td>
+</tr>
+<tr>
+<td><code>5/8</code></td>
+<td>真查询出结果——防接口通但查不出数</td>
+</tr>
+<tr>
+<td><code>6/8</code></td>
+<td>nginx 的 <code>/api/</code> 真的 <code>proxy_buffering off</code>——防流被攒成整包</td>
+</tr>
+<tr>
+<td><code>7/8</code></td>
+<td>只读账号真写不了——防“只读只在文档里”</td>
+</tr>
+<tr>
+<td><code>8/8</code></td>
+<td>元知识对账 + 再跑一次 init 必须跳过重建——防初始化结果不对、一次性脚本不可重跑</td>
+</tr>
+</tbody>
+</table>
+<p><strong>5/8 的判据</strong>：<code>rows=1</code> 且 <code>sse_verdict</code> 为 <code>streamed</code>，或为 <code>too-fast</code> 且 nginx 生效配置确认缓冲已关——<code>too-fast</code> 只因响应太快、时间上分不出流式，是合法的通过档，别当失败；<code>sse_chunks</code> 是客户端收到的 SSE 分片数（不是 12 条 progress 事件），有一两个出入不用对。</p>
+<ul>
+<li><strong>起得来 ≠ 部署好</strong>：<code>docker compose up</code> 成功只说明容器建起来了——健康可能还在 starting、init 可能已失败退出（默认 <code>ps</code> 还看不到）、查询可能 502、流可能被 nginx 攒住。</li>
+</ul>
+<p><strong>smoke 的意义</strong>：每一步都是一条判据，红一步就 <code>DOCKER SMOKE FAIL</code>，并把 <code>ps -a</code> 和相关日志全打出来。</p>
+<blockquote>
+<p><strong>你现在拥有</strong>：一套“一条命令重建、一条命令验收”的部署——<code>compose.yaml</code> 写清怎么起和依赖顺序，<code>scripts/docker-smoke.sh</code> 写清“起对了没有”；换台机器 clone 下来，两条命令复跑同一套判据。</p>
+</blockquote>
+<h2>拆一刀</h2>
+<p>L2 的级考核：拆编排。</p>
+<ol>
+<li>
+<p>先一键停：<code>make docker-down</code>（容器和网络删掉，数据卷保留）。</p>
+</li>
+<li>
+<p>打开 <code>compose.yaml</code>，把 <code>init:</code> 整段删掉：从 <code>init:</code> 那行删到 init 的最后一行——<code>qdrant:</code> 下面那条 <code>condition: service_healthy</code>，再下一个空行就是 <code>backend:</code>。</p>
+</li>
+</ol>
+<p><strong>别按字符串瞎删</strong>：全文件 <code>condition: service_healthy</code> 有 <strong>4 处</strong>（init 里等三座存储的 3 处 + frontend 等 backend 的 1 处）。</p>
+<p><strong>还要删三行</strong>：<code>backend</code> 的 <code>depends_on:</code> 块里指向 init 的三行（<code>depends_on:</code> / <code>init:</code> / <code>condition: service_completed_successfully</code>）。</p>
+<p><strong>只删 init 不删这三行</strong>：<code>docker compose</code> 会直接报 <code>service "backend" depends on undefined service "init": invalid compose project</code>。</p>
+<p><strong>删完自查</strong>：Ctrl+S 保存，<code>docker compose config -q</code> 应通过、只剩 5 个服务，<code>make docker-up</code> 能起——只是少了一个 init。</p>
+<ol start="3">
+<li>跑 <code>make docker-smoke</code>。它会在第 <strong>3/8</strong> 步红（它会先轮询约 120 秒等服务状态齐，别以为卡死）：</li>
+</ol>
+<pre><code class="language-text">== 3/8 五个长驻服务 healthy + init 正常退出 ==
+init 没有成功退出（state=缺失, exit=?）
+DOCKER SMOKE FAIL: 120 秒内服务状态没齐
+</code></pre>
+<p>后面跟着 5 行 <code>ps -a</code>、三座存储的日志，以及一条 <code>no such service: init</code>——<code>fail()</code> 想打 init 的日志，可 init 已被你从编排里删掉，报这句是<strong>预期内</strong>的，不是新故障（backend / frontend 的日志也因此不会打印）。</p>
+<p><strong>假象</strong>：五座设施全 healthy、<code>/api/health</code> 也回 200——只看这些，部署像好的；但没有 init，下一次从零初始化就没人做了。<strong>起得来</strong>，不等于部署好。</p>
+<ol start="4">
+<li>还原：<code>scripts/lab reset p13-before --yes</code>，末行 <code>现在工作区与快照 "p13-before" 完全一致。</code>；再 <code>make docker-up</code>（init 回来会重跑一次，backend / frontend 重建，等它健康），最后 <code>make docker-smoke</code> 回到 <code>DOCKER SMOKE PASS</code>。</li>
+</ol>
+<p><strong>等不到别慌</strong>：smoke 第 2 步会重新等 <code>/api/health</code>（最多 360 秒），先看它打出来的日志。整座城先留着跑——L3 的“审”要在它上面做。</p>
+</main>
+</body>
+</html>
