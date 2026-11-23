@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>第 7 页 · 把 SQL 真交给 MySQL · 阅读版</title>
+<link rel="stylesheet" href="../../assets/lesson.css">
+<link rel="stylesheet" href="../../assets/read.css">
+</head>
+<body>
+<main class="page">
+<p class="kicker">练本 · 阅读版（md 正典派生，改内容请改 manual/page-07.md）</p>
+<h1>第 7 页 · 把 SQL 真交给 MySQL</h1>
+<blockquote>
+<p>前置：第 0 页备好环境；本页接第 6 页留下的 lab/app.py 与 8000 端口的服务。</p>
+</blockquote>
+<h2>这一页构建什么</h2>
+<p><strong>这一页做</strong>：把第 6 页 <code>print</code> 出来的那条 5 行 SELECT 交给 <code>pymysql</code> 真执行，结果填进 <code>/api/query</code> 响应里一直空着的 <code>"sql"</code> 和 <code>"rows"</code>。</p>
+<p><strong>页末应见</strong>：你 <code>curl</code> 一次，输出里出现 <code>41099.5</code>。</p>
+<p><strong>意义</strong>：华北销售额第一次是从数据库里算出来的，不是你写死的。</p>
+<h2>猜一猜</h2>
+<p>动手前写下答案：</p>
+<p><code>/api/query</code> 回来的 JSON 里，<code>rows</code> 里的 <code>sales</code> 是数字 <code>41099.5</code>，还是带引号的字符串 <code>"41099.5"</code>？</p>
+<p>再想一步：如果 <code>lab-mysql</code> 容器没起，<code>curl</code> 会照样回 <code>41099.5</code>，还是回一句报错？</p>
+<h2>动手</h2>
+<p><strong>要改的文件</strong>还是 <code>lab/app.py</code>，三处。<code>pymysql</code> 已经在 <code>backend/.venv</code> 里（第 0 页 <code>make install</code> 装好的），不用再 <code>pip install</code>。</p>
+<p><strong>改完先按 Ctrl+S 保存</strong>，再回终端 1 重启；不保存就重启，服务跑的还是第 6 页的旧代码（症状见「对账」）。</p>
+<ol>
+<li>在文件开头的 import 区加一行，放在 <code>from fastapi import FastAPI</code> 上面：</li>
+</ol>
+<pre><code class="language-python">import pymysql
+</code></pre>
+<ol start="2">
+<li>在 <code>build_sql</code> 和 <code>@app.get("/health")</code> 之间，插入执行函数 <code>run_sql</code>：</li>
+</ol>
+<pre><code class="language-python">def run_sql(sql: str) -&gt; list[dict]:
+    conn = pymysql.connect(host=&quot;127.0.0.1&quot;, port=3307, user=&quot;root&quot;,
+                           password=&quot;labpass&quot;, database=&quot;dw&quot;,
+                           cursorclass=pymysql.cursors.DictCursor)
+    try:
+        with conn.cursor() as cur:
+            cur.execute(sql)
+            return list(cur.fetchall())
+    finally:
+        conn.close()
+</code></pre>
+<p><strong>端口是占位</strong>：<code>127.0.0.1:3307</code> 里的 3307 和第 2 条代码里的 <code>port=3307</code> 都是<strong>占位</strong>：填你第 1 页 <code>-p 127.0.0.1:3307:3306</code> 里冒号左边那个宿主机端口（默认 3307）。</p>
+<p><strong>换过就一起改</strong>：若第 1 页换过，比如换成 3308，这两处一起跟着改，照抄会连到别人的库。</p>
+<p><strong>账号密码</strong>：<code>root</code> 和 <code>labpass</code> 就是第 1 页 <code>MYSQL_ROOT_PASSWORD=labpass</code> 那个账号和它的密码。</p>
+<p><strong><code>DictCursor</code> 的作用</strong>：让每一行变成 <code>{"列名": 值}</code> 的字典，正好塞进第 4 页定下的 <code>rows</code> 列表。</p>
+<ol start="3">
+<li>把整个 <code>query()</code> 函数（<strong>连 <code>@app.post("/api/query")</code> 和 <code>def query(q: Query):</code> 两行一起</strong>）替换成下面这段（第 6 页它只回 <code>"sql": None</code>、<code>"rows": []</code>）：</li>
+</ol>
+<pre><code class="language-python">@app.post(&quot;/api/query&quot;)
+def query(q: Query):
+    keywords = extract_keywords(q.question)
+    sql = build_sql(keywords)
+    return {&quot;question&quot;: q.question, &quot;keywords&quot;: keywords,
+            &quot;sql&quot;: sql, &quot;rows&quot;: run_sql(sql)}
+</code></pre>
+<p>回终端 1，按 Ctrl+C 停掉，再用<strong>你第 3 页实际用的那条启动命令</strong>重启（端口按你实际改过的；默认 <code>--port 8000</code>，下面 <code>curl</code> 里的 8000 也换成你的端口）：</p>
+<pre><code class="language-bash">backend/.venv/bin/python -m uvicorn lab.app:app --port 8000
+</code></pre>
+<p>然后在终端 2 发一次请求：</p>
+<pre><code class="language-bash">curl -s -X POST http://127.0.0.1:8000/api/query -H 'Content-Type: application/json' -d '{&quot;question&quot;:&quot;华北销售额&quot;}'
+</code></pre>
+<h2>你应该看到</h2>
+<pre><code>{&quot;question&quot;:&quot;华北销售额&quot;,&quot;keywords&quot;:[&quot;华北&quot;,&quot;销售额&quot;],&quot;sql&quot;:&quot;SELECT dim_region.region_name, SUM(fact_order.order_amount) AS sales\nFROM fact_order\nJOIN dim_region ON fact_order.region_id = dim_region.region_id\nWHERE dim_region.region_name = '华北'\nGROUP BY dim_region.region_name&quot;,&quot;rows&quot;:[{&quot;region_name&quot;:&quot;华北&quot;,&quot;sales&quot;:41099.5}]}
+</code></pre>
+<p><strong>这一行很长</strong>：<code>sql</code> 里那 5 行真换行被 JSON 表示成了 <code>\n</code>。你只核对最后一段 <code>rows</code>：<code>region_name</code> 是 <code>华北</code>，<code>sales</code> 是 <code>41099.5</code>。</p>
+<p><strong>没有结尾换行</strong>：<code>curl -s</code> 不补换行，终端提示符可能紧贴在最后的 <code>}</code> 后面，内容对就行。</p>
+<p><img alt="第 7 页 · 真执行后 rows 里 41099.5 的真实输出" src="../images/page-07-rows.png" /></p>
+<h2>对账</h2>
+<ul>
+<li><strong>你猜数字还是字符串？</strong> <code>41099.5</code> 两边没有引号，是 JSON 数字；<code>rows</code> 是列表，里面一条字典 <code>{"region_name": "华北", "sales": 41099.5}</code>。</li>
+<li><strong>填上了坑</strong>：第 4 页空着的 <code>"rows": []</code> 现在被真实数据填上了。</li>
+<li><strong>这个数不是写死的</strong>：41099.5 是库里 19 条华北订单的 <code>order_amount</code> 相加。</li>
+<li><strong>19 条怎么来</strong>：第 2 页你用 <code>LIMIT 3</code> 看到的那 3 条（899、599、75）只是其中前 3 条，剩下 16 条也在这个和里。</li>
+<li><strong>你猜 MySQL 没起会怎样？</strong> <code>curl</code> 只回一句 <code>Internal Server Error</code>。</li>
+<li><strong>日志长这样</strong>：终端 1 的日志里是 <code>"POST /api/query HTTP/1.1" 500 Internal Server Error</code>，<strong>下面</strong>才是 pymysql 的 traceback，而且比那行晚一两秒才落盘。</li>
+<li><strong>500 怎么读</strong>：HTTP 只把错误翻成状态码 500，具体原因在服务端日志里——以后看到 500，先看终端 1。</li>
+<li><strong>500 不止这一种原因</strong>：关键词一个都没抽到时（第 5 页「自己改一下」里的“昨天天气”就是），<code>build_sql</code> 里的 <code>next()</code> 会抛 <code>StopIteration</code>，同样是 500。</li>
+<li><strong>两种 500 怎么分</strong>：响应体一模一样（都是 <code>Internal Server Error</code>），要去终端 1 的 traceback 最后一行区分。</li>
+<li><strong>看最后一行</strong>：<code>pymysql.err.OperationalError</code> 是连不上库，<code>RuntimeError: coroutine raised StopIteration</code> 是一个词都没抽到。</li>
+<li><strong>为什么改完要 <code>Ctrl+S</code> 再 <code>Ctrl+C</code> 重启</strong>：uvicorn 启动时把 <code>lab/app.py</code> 读进内存，不重启跑的还是旧代码。</li>
+<li><strong>没保存就重启的症状</strong>：读进内存的仍是旧文件——<code>curl</code> 回的是第 6 页的 <code>"sql":null,"rows":[]</code>，不是 <code>41099.5</code>。</li>
+<li><strong>为什么第 3 步要连装饰器和 <code>def</code> 一起换</strong>：只换函数体内那 4 行的话，<code>@app.post("/api/query")</code> 和 <code>def query</code> 还留在原处，粘进去的 <code>def</code> 就成了函数里再套一个函数。</li>
+<li><strong>症状二选一</strong>：要么 <code>POST /api/query</code> 静默回 <code>null</code>，要么直接 <code>IndentationError: expected an indented block</code>、uvicorn 起不来。</li>
+<li><strong>完整替换才对</strong>：整个函数一起替换，才是一份完整的路径 + 函数定义 + 函数体。</li>
+<li><strong>为什么拼和执行分成两个函数</strong>：<code>build_sql</code> 只拼字符串、不碰数据库，<code>run_sql</code> 只执行、不拼；错了能分开查。</li>
+<li><strong>分工的用处</strong>：第 6 页敢只 <code>print</code>，就是因为执行是这一页的事。</li>
+</ul>
+<blockquote>
+<p><strong>你现在拥有</strong>：一条把 SQL 真交给 MySQL、再把结果填进 <code>rows</code> 的执行链路；它是整条问答链路里唯一碰数据库的地方，<code>41099.5</code> 从这里开始是真的。</p>
+</blockquote>
+<h2>自己改一下</h2>
+<p>把 <code>-d</code> 里的问题换成 <code>{"question":"华东销售额"}</code> 再发一次：<code>rows</code> 里的 <code>sales</code> 变成多少？SQL 里 <code>WHERE</code> 那一行跟着变了吗？</p>
+<p>（参考：<code>sales</code> 是 <code>107373.0</code>，<code>WHERE</code> 那行变成 <code>dim_region.region_name = '华东'</code>。）</p>
+<p>再换成 <code>{"question":"华南订单量"}</code>：<code>SELECT</code> 那行里的 <code>SUM(...)</code> 变成了什么？<code>sales</code> 这个字段名没变，可它的值变成什么了？</p>
+<p>（参考：<code>SELECT</code> 行变成 <code>COUNT(DISTINCT fact_order.order_id) AS sales</code>；字段名还是 <code>sales</code>，值变成 <code>26</code>。）</p>
+</main>
+</body>
+</html>
