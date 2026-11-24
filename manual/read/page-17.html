@@ -35,6 +35,8 @@
 </ol>
 <h2>动手</h2>
 <p><strong>第 1 步：拍快照。</strong> 拆一刀要改纠错代码，先留退路。回显 <code>已保存快照 "p17-before"：169 个文件。</code>（数字因工作区而异）：</p>
+<!-- verify: p17-lab-save -->
+
 <pre><code class="language-bash">scripts/lab save p17-before
 </code></pre>
 <p><strong>命名陷阱</strong>：同名快照会被拒，重做本页就换个名字；<strong>重做换名后，拆一刀里 <code>reset</code> 的名字也要一起换</strong>——照抄旧名会回滚掉中间改动，只有 <code>pre-reset-*</code> 快照能救。</p>
@@ -45,20 +47,28 @@
 <li>校正成功产出候选；拒答 / 崩溃 / 产物不合契约时保留原错误；</li>
 <li>上下文有等价字段时，改完能重过校验。</li>
 </ul>
+<!-- verify: p17-pytest-correct -->
+
 <pre><code class="language-bash">backend/.venv/bin/python -m pytest backend/tests/agent/test_correct.py -q
 </code></pre>
 <p><strong>第 3 步：跑失败矩阵。</strong> 9 个场景各演一遍结局。只替换了模型与数据库；上下文、提示词、静态校验、安全策略、纠错闭环都是真代码，所以离线就能跑。</p>
 <p><strong>盯 <code>corrected</code></strong>：它是唯一“先红后绿”的场景——第一次校验红 → 校正成功 → 重新校验绿：</p>
+<!-- verify: p17-failures-check -->
+
 <pre><code class="language-bash">(cd backend &amp;&amp; .venv/bin/python -m app.scripts.failures --check)
 </code></pre>
 <p><strong>第 4 步：看 <code>corrected</code> 的期望结局，再数一遍 20 条语料的“可重试/标记”。</strong></p>
 <p><strong>读表</strong>：<code>--scenarios</code> 的表除了场景 id，还列出名称、期望、类别、失败步骤四列；<code>corrected</code> 那行的“期望”是 <code>result</code>，不是错误码。</p>
 <p><strong>找空档</strong>：表里没有“重试了几次”这一列——那就是下面要审的：</p>
+<!-- verify: p17-failures-scenarios -->
+
 <pre><code class="language-bash">(cd backend &amp;&amp; .venv/bin/python -m app.scripts.failures --scenarios | grep corrected)
 grep -o '&quot;retryable&quot;: [a-z]*' eval/correction.jsonl | sort | uniq -c
 grep -o '&quot;expect&quot;: &quot;[a-z]*&quot;' eval/correction.jsonl | sort | uniq -c
 </code></pre>
 <p><strong>第 5 步：用原子工具看一层时间线、再停一次断点。</strong> 本页这一步只把 VizTracer 装进项目 <code>backend/.venv</code>（trace 要和项目依赖同一个解释器；它不改 <code>uv.lock</code>），<code>--open</code> 跑完自动开浏览器；pdb 是 Python 自带，不用装：</p>
+<!-- verify: p17-viztracer -->
+
 <pre><code class="language-bash">uv pip install --python backend/.venv/bin/python viztracer
 backend/.venv/bin/python -m viztracer --open --min_duration 1ms -m pytest backend/tests/agent/test_correct.py -q
 backend/.venv/bin/python -m pdb -m pytest backend/tests/agent/test_correct.py -q -s -k &quot;proposes_a_new_sql&quot;
@@ -84,6 +94,8 @@ backend/.venv/bin/python -m pdb -m pytest backend/tests/agent/test_correct.py -q
 <p><strong>要采先配</strong>：按 <a href="appendix/llm-endpoint.md"><code>appendix/llm-endpoint.md</code></a> 配 <code>REBUILD_LLM_*</code>，再 <code>docker compose up -d --force-recreate backend</code> 重启。变量缺一个或 key 配错都不算，先跑附录里的 <code>scripts/llm_check.py</code> 自检。</p>
 <p><strong>界面入口别混</strong>：只按第 13 页起整栈，默认是教学版 <code>http://127.0.0.1:8080</code>（改过 <code>.env</code> 就用你的 <code>FRONTEND_HOST_PORT</code>）；成熟版 <code>http://127.0.0.1:8088</code> 来自第 23 页第 2 步的 <code>docker run -p 127.0.0.1:8088:80</code>，不是 compose 起的。</p>
 <p>同一问题「查询销售额大于平均销售额的商品」点 3 次；或手动发 3 次：</p>
+<!-- verify: p17-curl-live -->
+
 <pre><code class="language-bash">curl -sN -X POST http://127.0.0.1:8080/api/query -H 'content-type: application/json' -d '{&quot;query&quot;:&quot;查询销售额大于平均销售额的商品&quot;}'
 </code></pre>
 <p><strong>端口别混</strong>：<code>curl</code> 走教学版界面入口 <code>FRONTEND_HOST_PORT</code>（默认 8080）；nginx 在容器内把 <code>/api/</code> 反代到 <code>backend:8100</code>。</p>
@@ -138,6 +150,8 @@ backend/.venv/bin/python -m pdb -m pytest backend/tests/agent/test_correct.py -q
 <p class="caption">▲ 成功率是抽出来的数：同一问采 3 次，数触发几次、成功几次；分母是触发次数，不是提问次数。单次演示会骗人。</p>
 <h2>你应该看到</h2>
 <p>第 2–4 步（秒数因机器而异；第 3 步只留 <code>corrected</code> 行 + <code>S6 PASS</code>；最后四行没有“成功”这一栏——<code>corrected</code> 是“可校正”的标记，不是“校正成功”的统计）：</p>
+<!-- verify-out: p17-pytest-correct p17-failures-check p17-failures-scenarios p17-ablation-commands -->
+
 <pre><code class="language-text">14 passed in 0.11s
   corrected            期望 result               实际 result
 S6 PASS
@@ -192,10 +206,14 @@ True
     )
 </code></pre>
 <p>Ctrl+S 保存，重跑三条判据（输出为节选：pytest 只留汇总行；<code>PYTHONUNBUFFERED=1</code> 让管道里的输出顺序和终端一致；秒数会变）：</p>
+<!-- verify: p17-ablation-commands -->
+
 <pre><code class="language-bash">backend/.venv/bin/python -m pytest backend/tests/agent/test_correct.py -q
 (cd backend &amp;&amp; PYTHONUNBUFFERED=1 .venv/bin/python -m app.scripts.failures --check) 2&gt;&amp;1 | tail -5
 PYTHONPATH=backend backend/.venv/bin/python eval/probe_correction.py | tail -1
 </code></pre>
+<!-- verify-out: p17-ablation-commands -->
+
 <pre><code class="language-text">5 failed, 9 passed in 0.14s
   corrected            期望 result               实际 SQL_SYNTAX
 FAIL: 1 项不符合预期
@@ -209,6 +227,8 @@ FAIL: 1 项不符合预期
 </ul>
 <p>级考核要的答案就在这里：<strong>单元判据和失败矩阵抓到了，语料判据没抓到</strong>。</p>
 <p><strong>还原并回绿</strong>：<code>reset</code> 会先拍一张 <code>pre-reset-…</code> 安全快照；第 1 步若换过快照名，这里的名字也要同步换。只贴末行，跑完回到 <code>14 passed in 0.11s</code> + <code>S6 PASS</code>（同第 2、3 步）：</p>
+<!-- verify: p17-lab-reset-restore -->
+
 <pre><code class="language-bash">scripts/lab reset p17-before --yes
 backend/.venv/bin/python -m pytest backend/tests/agent/test_correct.py -q | tail -1
 (cd backend &amp;&amp; .venv/bin/python -m app.scripts.failures --check | tail -1)

@@ -269,3 +269,17 @@ Answer:除了Q2选B(多插漫画解释图少插文字,我们用ark-cli中的模�
 - 手法：构建什么 → 领词起句＋进度/目录端点/回放夹具三 bullet＋判据段＋心智模型句；边界 → 端点枚举改嵌套列表＋「没有 X」保留粗体整句＋能回答/不能回答粗体领词对比。
 - 验证：audit 24/24、README 坏链 0；9 代码块与 HEAD 逐块一致；保护区 21 项全在（心智模型句、猜 1 判据原句、结论句、全部端点/数字/路径）；>200 单元 10→8；阅读版 `manual/read/page-21.html` 重生成（13KB，3 链接 0 失效、9 pre、1 表）。
 - 待用户认可样例 → 铺 p21 余 8 处（深入探讨/拆一刀/猜 1/猜 2/稳定量/uv.lock/第 3 步/为什么值得看），再 A13/A18（各 5 分钟浮动可并行）。
+
+## 第 5 轮 · A/B/C 三批全量铺开完成（2026-11-24，branch `reading-layer-v2`）
+
+> 2026-11-23 夜间由 4 个 kimi worker 在 `reading-layer-night` 基线的独立 worktree 完成；2026-11-24 集成到 `reading-layer-v2`（`73db8b5` + 5 个批次 commit），阅读版 HTML 已全书生成 24 页。
+
+| 批次 | 页 | 报告 |
+| - | - | - |
+| A | p21 / p13 / p18 | `manual/review/reading-layer-batch-A-report.md` |
+| B | p20 / p19 / p23 / p15 / p10 | `manual/review/reading-layer-batch-B-report.md` |
+| C1 | p09 / p00 / p07 / p22 / p06 / p08 | `manual/review/reading-layer-batch-C1-report.md` |
+| C2 | p14 / p01 / p05 / p11 / p12 / p03 | `manual/review/reading-layer-batch-C2-report.md` |
+
+**闸门**：`audit_book` 24/24；`verify.py --fast` T0 PASS；保护区脚本核对 20 页（代码围栏 / 六段标题 / 图片引用 / 粗体判据 / 数字）**0 异常**；`render_read.py --all` 生成 24 页阅读版 HTML。
+**诚实口径**：各批指标以报告为准（散文净字数持平或小幅升降，收益在段长/结构）；独立复测仍发现少量 >200 字符的**引用块/长 bullet**（非"散文段"口径），留给第二轮清理或人工复核。
