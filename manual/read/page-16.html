@@ -56,9 +56,25 @@ S6 PASS
 <p><img alt="第 16 页 · 三条离线判据：26 passed + 失败矩阵 S6 PASS + 语料对账 {&quot;total&quot;: 20, &quot;mismatch&quot;: 0}" src="../images/page-16-guard.png" /></p>
 <h2>对账</h2>
 <ul>
-<li><strong>猜 1：10 种，不是 16。</strong> 16 是 <code>contracts/errors.yaml</code> 里错误码的总数；20 条语料只覆盖<strong>校验这一步能发出的</strong> 10 个码——9 个静态校验码 + 1 个策略通道码 <code>SQL_REJECTED</code>。剩下 6 个（<code>EMPTY_RESULT</code> / <code>LLM_REFUSAL</code> / <code>TIMEOUT</code> / <code>CANCELLED</code> / <code>SQL_EXECUTION_ERROR</code> / <code>INTERNAL_ERROR</code>）来自执行后、模型、取消和兜底，不在“校验拦下来”的名单里，所以本页不拿它们当判据。</li>
-<li><strong>猜 2：3 条（c01/c02/c07），且错 SQL 不会被执行。</strong> 拆掉列存在校验后，<code>probe</code> 从 <code>mismatch: 0</code> 变 <code>3</code>：这三条的 guard 报告都变成 ok=True（<code>actual []</code>）。但失败矩阵里 <code>sql_unknown_column</code> 的结局码不是“执行报错”，而是 <code>SQL_REJECTED</code>——第二道关（安全策略的列白名单）接住了它，仍停在执行前。<strong>这一刀红的是“精确码”，不是“执行”</strong>：<code>SQL_UNKNOWN_COLUMN</code>（可重试）退化成 <code>SQL_REJECTED</code>（不可重试），第 17 页的自动校正闭环连启动的机会都没有。第二道关也兜不住的规则（如常量投影，策略不查）拆了就会被放行到执行——那是 L4 第 19 页“审策略”的话题，本页不混。</li>
-<li><strong>为什么“执行前拦”比“执行报错”好：</strong> 执行前，错 SQL 没碰过数据库——没有慢查询、没有副作用风险，错误信息是契约里的中文码（不是 MySQL 方言），红叉落在 <code>validate_sql</code> 步骤，<code>class</code> 决定界面画红框/空态/取消，<code>retryable</code> 决定要不要自动修一次。执行报错则要真连库跑一遍，到那时 SQL 已经被“认为合格”，能给的只剩 <code>SQL_EXECUTION_ERROR</code>——名字丢了，位置也丢了。</li>
+<li><strong>猜 1：10 种，不是 16。</strong><ul>
+<li>16 是 <code>contracts/errors.yaml</code> 里错误码的总数；20 条语料只覆盖<strong>校验这一步能发出的</strong> 10 个码——9 个静态校验码 + 1 个策略通道码 <code>SQL_REJECTED</code>。</li>
+<li>剩下 6 个（<code>EMPTY_RESULT</code> / <code>LLM_REFUSAL</code> / <code>TIMEOUT</code> / <code>CANCELLED</code> / <code>SQL_EXECUTION_ERROR</code> / <code>INTERNAL_ERROR</code>）来自执行后、模型、取消和兜底，</li>
+<li>不在“校验拦下来”的名单里，所以本页不拿它们当判据。</li>
+</ul>
+</li>
+<li><strong>猜 2：3 条（c01/c02/c07），且错 SQL 不会被执行。</strong><ul>
+<li>拆掉列存在校验后，<code>probe</code> 从 <code>mismatch: 0</code> 变 <code>3</code>：这三条的 guard 报告都变成 ok=True（<code>actual []</code>）。</li>
+<li>但失败矩阵里 <code>sql_unknown_column</code> 的结局码不是“执行报错”，而是 <code>SQL_REJECTED</code>——第二道关（安全策略的列白名单）接住了它，仍停在执行前。</li>
+<li><strong>这一刀红的是“精确码”，不是“执行”</strong>：<code>SQL_UNKNOWN_COLUMN</code>（可重试）退化成 <code>SQL_REJECTED</code>（不可重试），第 17 页的自动校正闭环连启动的机会都没有。</li>
+<li>第二道关也兜不住的规则（如常量投影，策略不查）拆了就会被放行到执行——那是 L4 第 19 页“审策略”的话题，本页不混。</li>
+</ul>
+</li>
+<li><strong>为什么“执行前拦”比“执行报错”好：</strong><ul>
+<li>执行前，错 SQL 没碰过数据库——</li>
+<li>没有慢查询、没有副作用风险，错误信息是契约里的中文码（不是 MySQL 方言），红叉落在 <code>validate_sql</code> 步骤，<code>class</code> 决定界面画红框/空态/取消，<code>retryable</code> 决定要不要自动修一次。</li>
+<li>执行报错则要真连库跑一遍，到那时 SQL 已经被“认为合格”，能给的只剩 <code>SQL_EXECUTION_ERROR</code>——名字丢了，位置也丢了。</li>
+</ul>
+</li>
 <li><strong>错误码是契约，不是文档装饰：</strong> <code>contracts/errors.yaml</code> 是唯一事实源；<code>backend/tests/agent/test_error_alignment.py</code> 查五张表（错误码表 / <code>guard.py</code> 发出的码 / 提示词 / 策略契约 / 执行器）是不是同一批字面量，连“最多校正 1 次”这类参数也不许在代码里再写一遍。加一个码不入表、改名不同步，测试立刻红。</li>
 <li><strong>20 条语料 + 16 码 = 可复核判据：</strong> 每条语料自带 <code>expect_code</code>，<code>probe</code> 用真校验栈重跑并给出 <code>{"total": 20, "mismatch": 0}</code>——先验尺子，再量东西；9 个场景再验整条流水线的结局（码/类别/失败步骤），<code>S6 PASS</code>。换个人重跑，红绿一样。</li>
 </ul>
@@ -68,7 +84,11 @@ S6 PASS
 <h2>拆一刀</h2>
 <ol>
 <li>
-<p>打开 <code>backend/app/generate/guard.py</code>，找到第 3 条「表与列存在」里的循环（搜 <code>for column in tree.find_all</code>），把 <code>for column in tree.find_all(exp.Column):</code> 改写成 <code>for column in []:  # 拆一刀：关掉列存在校验</code>——<strong>只改 <code>guard.py</code> 这一处</strong>，缩进别动；<code>backend/app/security/policy.py:460</code> 有一模一样的 <code>for column in tree.find_all(exp.Column):</code>，别用 IDE 全局替换把它也拆了（两处一起拆会把第二道关也关掉，错 SQL 被放行到执行，实验结论就失真了）。</p>
+<p>打开 <code>backend/app/generate/guard.py</code>，找到第 3 条「表与列存在」里的循环（搜 <code>for column in tree.find_all</code>），把 <code>for column in tree.find_all(exp.Column):</code> 改写成 <code>for column in []:  # 拆一刀：关掉列存在校验</code>——<strong>只改 <code>guard.py</code> 这一处</strong>，缩进别动；</p>
+<ul>
+<li><code>backend/app/security/policy.py:460</code> 有一模一样的 <code>for column in tree.find_all(exp.Column):</code>，</li>
+<li>别用 IDE 全局替换把它也拆了（两处一起拆会把第二道关也关掉，错 SQL 被放行到执行，实验结论就失真了）。</li>
+</ul>
 </li>
 <li>
 <p>重跑第 2–4 步里的三条判据（<code>1 failed</code> 的是 <code>test_unknown_column_is_rejected</code>；秒数随机器变，看 passed/failed 就行；下面只留判红的那几行）：</p>

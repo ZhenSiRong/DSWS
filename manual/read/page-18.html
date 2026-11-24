@@ -111,7 +111,9 @@ S5 LIVE PASS
 <pre><code class="language-bash">docker compose exec -T mysql mysql -uroot -p&quot;$REBUILD_MYSQL_ROOT_PASSWORD&quot; -e &quot;GRANT ALL ON dw.* TO 'dw_reader'@'%'&quot;
 (cd backend &amp;&amp; .venv/bin/python -m app.scripts.security --verify-ro-account)
 </code></pre>
-<p><code>mysql: [Warning] Using a password on the command line interface can be insecure.</code> 是客户端的例行提醒，不是失败。门禁变红，退出码 1。<strong>若用 <code>tee</code>/重定向把输出存成日志，<code>FAIL:</code> 摘要会先于上面的明细出现（明细走 stdout、<code>FAIL:</code> 走 stderr，缓冲顺序不同）——那是保存方式造成的顺序，不是输出不对，别怀疑判据</strong>：</p>
+<p><code>mysql: [Warning] Using a password on the command line interface can be insecure.</code> 是客户端的例行提醒，不是失败。</p>
+<p>门禁变红，退出码 1。</p>
+<p><strong>若用 <code>tee</code>/重定向把输出存成日志，<code>FAIL:</code> 摘要会先于上面的明细出现（明细走 stdout、<code>FAIL:</code> 走 stderr，缓冲顺序不同）——那是保存方式造成的顺序，不是输出不对，别怀疑判据</strong>：</p>
 <pre><code class="language-text">账号：'dw_reader'@'%' on dw (SELECT)
   GRANT GRANT USAGE ON *.* TO `dw_reader`@`%`
   GRANT GRANT ALL PRIVILEGES ON `dw`.* TO `dw_reader`@`%`

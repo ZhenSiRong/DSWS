@@ -1,6 +1,8 @@
 # 第 23 页 · 装体验：从 17 行 HTML 到成熟版前端
 
-> 前置：L5 只一页，接第 13–22 页那套整栈——Docker 可用、`.env` 已由 `make docker-env` 生成、`make docker-up` 起过栈（第 22 页的拆一刀已还原：`make docker-smoke` 回 `DOCKER SMOKE PASS`；镜像已缓存在本地——第 1 步先判断镜像在不在，在就只 `up` 不重建）。本页不动后端、契约、数据，只换浏览器入口：同一个后端并排挂三种装修做对照。命令都在仓库根目录、同一终端里整段连续执行，括号是子 shell，跑完你还在仓库根目录。
+> 前置：L5 只一页，接第 13–22 页那套整栈——Docker 可用、`.env` 已由 `make docker-env` 生成、`make docker-up` 起过栈（第 22 页的拆一刀已还原：`make docker-smoke` 回 `DOCKER SMOKE PASS`；镜像已缓存在本地——第 1 步先判断镜像在不在，在就只 `up` 不重建）。
+>
+> 本页不动后端、契约、数据，只换浏览器入口：同一个后端并排挂三种装修做对照。命令都在仓库根目录、同一终端里整段连续执行，括号是子 shell，跑完你还在仓库根目录。
 
 ## 这一页构建什么
 
@@ -68,10 +70,13 @@ npm test：Tests  40 passed (40)（末行是 Duration）
 
 ## 对账
 
-- **猜 1：不是两套接口，后端一份都不用改。** 成熟版前端只认 `POST /api/query`（`deliverable/v2/original-frontend/src/lib/agentApi.ts`）：同一条 SSE 流、同一套事件（happy 路径 23 条 `progress` + 1 条 `result`）、同一份 `contracts/`。
-  它的 `dist/` 里有一层薄适配：把契约的 `{columns, rows}` 渲染成自己的结果表、把 S7 的 step id 映成 12 个中文节点名——换算在浏览器里做，网络上一个字节没变。
-- **猜 2：契约不改，但成熟版不请求 `/api/steps`。** 教学版 12 条步骤轨来自 `/api/steps`；成熟版把 12 节点拓扑写死在自己的组件里（`src/components/StepRail.tsx`），后端增删节点时成熟版要改这层映射。
-  教学版「看得见结构」（40 条协议测试 + 步骤轨），成熟版是「交付时的样子」。诚实边界：成熟版 `dist/` 是构建产物，本页不要求你从源码改它；它也不带 `npm test` 那 40 条测试。
+- **猜 1：不是两套接口，后端一份都不用改。**
+    - 成熟版前端只认 `POST /api/query`（`deliverable/v2/original-frontend/src/lib/agentApi.ts`）：
+    - 同一条 SSE 流、同一套事件（happy 路径 23 条 `progress` + 1 条 `result`）、同一份 `contracts/`。
+    - 它的 `dist/` 里有一层薄适配：把契约的 `{columns, rows}` 渲染成自己的结果表、把 S7 的 step id 映成 12 个中文节点名——换算在浏览器里做，网络上一个字节没变。
+- **猜 2：契约不改，但成熟版不请求 `/api/steps`。**
+    - 教学版 12 条步骤轨来自 `/api/steps`；成熟版把 12 节点拓扑写死在自己的组件里（`src/components/StepRail.tsx`），后端增删节点时成熟版要改这层映射。
+    - 教学版「看得见结构」（40 条协议测试 + 步骤轨），成熟版是「交付时的样子」。诚实边界：成熟版 `dist/` 是构建产物，本页不要求你从源码改它；它也不带 `npm test` 那 40 条测试。
 - **卡住了看这里。**
   - 8088 打不开 / `Conflict`：先看是不是同名容器残留——`docker rm -f lab-mature` 后重跑第 2 步；若是别的进程占着 8088（`ss -tlnp | grep 8088` 有输出），`rm` 没用，把第 2 步 `-p` 里的 8088 换成空端口（如 8089）重跑，浏览器地址同步改。
   - 8088 回 `502`：容器没进 compose 网络（用了默认 bridge），或项目名改过、`shopkeeper-rebuild_default` 不存在——`docker network ls | grep default` 查实际网络名。

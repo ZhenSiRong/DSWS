@@ -1,8 +1,20 @@
 # 第 20 页 · 守取消：点了停止，系统真的停了吗
 
-> 前置：L4（守）第三页。本页的判据一条服务都不用：只跑 `backend/` 里的离线测试和一条夹具回放，不需要 MySQL、`.env`、模型 key，也不需要浏览器；要用第 0 页 `make install` 建好的 `backend/.venv`（缺了先回第 0 页）。命令都在仓库根目录、同一个终端里整段连续执行；括号是子 shell，跑完你还在仓库根目录。第 18 页守账号、第 19 页守策略，本页守取消：用户点「停止」之后，服务端到底是真停了，还是把它当成一次完成？
+> 前置：L4（守）第三页。本页的判据一条服务都不用：只跑 `backend/` 里的离线测试和一条夹具回放，不需要 MySQL、`.env`、模型 key，也不需要浏览器；
 >
-> 开始前先确认**第 19 页的拆一刀（`forbid_set_operations: false`）已还原**：先跑 `scripts/lab reset p19-before --yes`，再自查两处——`grep -n 'forbid_set_operations: true' contracts/sql.policy.yaml` 应回 `31:  forbid_set_operations: true`（无输出 = 还没还原）；`(cd backend && .venv/bin/python -m app.scripts.record_sse --check)` 应回 `S7 SSE RECORD PASS（14 个夹具与真实输出一致）`。不还原的话，第 2 步会变成 `3 failed, 111 passed`、第 3 步红在 `sql_rejected.json 与今天的真实输出不同步`；这时拍的 `p20-before` 会把坏契约一起存进快照，`reset` 也回不到绿。
+> 要用第 0 页 `make install` 建好的 `backend/.venv`（缺了先回第 0 页）。命令都在仓库根目录、同一个终端里整段连续执行；括号是子 shell，跑完你还在仓库根目录。
+>
+> 第 18 页守账号、第 19 页守策略，本页守取消：用户点「停止」之后，服务端到底是真停了，还是把它当成一次完成？
+>
+> 开始前先确认**第 19 页的拆一刀（`forbid_set_operations: false`）已还原**：
+>
+> 先跑 `scripts/lab reset p19-before --yes`，再自查两处——
+>
+> `grep -n 'forbid_set_operations: true' contracts/sql.policy.yaml` 应回 `31:  forbid_set_operations: true`（无输出 = 还没还原）；
+>
+> `(cd backend && .venv/bin/python -m app.scripts.record_sse --check)` 应回 `S7 SSE RECORD PASS（14 个夹具与真实输出一致）`。
+>
+> 不还原的话，第 2 步会变成 `3 failed, 111 passed`、第 3 步红在 `sql_rejected.json 与今天的真实输出不同步`；这时拍的 `p20-before` 会把坏契约一起存进快照，`reset` 也回不到绿。
 
 ## 这一页构建什么
 
@@ -73,7 +85,8 @@ S7 SSE RECORD PASS（14 个夹具与真实输出一致）
 - **猜 1：第三种，`cancelled`。** 取消既不是 `done` 也不是失败：终态是一条 `type: "error"` 的事件，但 `class: "cancelled"`，前端据此把整体状态设成「已取消」，不弹红框。
   旧系统在这里写的是 `status: isAbort ? "done" : "error"`——被掐断的查询和成功返回的查询在界面上长得一样，用户看不出区别，统计里取消还混进成功率。
 - **猜 2：2 条。** 第 1 条 `progress` 是条件步骤 `correct_sql` 显式标 `skipped`：流在中途结束，它没跑，但不该永远是一块灰的「还没到」；第 2 条才是 `CANCELLED`。
-  为什么用一个 `error` 帧装「不是失败」：SSE 契约只有 `progress` / `result` / `error` 三种 type，所以用 `class` 再分三态——`failure` 红框、`empty` 空态、`cancelled` 取消态。
+    - 为什么用一个 `error` 帧装「不是失败」：
+    - SSE 契约只有 `progress` / `result` / `error` 三种 type，所以用 `class` 再分三态——`failure` 红框、`empty` 空态、`cancelled` 取消态。
 - **三态各要各的处理。** `done` 带 `result.data`（出表格）；`failure` 是 `class=failure`，界面红框、按错误码决定是否重试；`cancelled` 是 `class=cancelled`，界面「已取消」、步骤条停住、不重试也不告警。
   合成两种就出事故：取消算 `done`，用户以为查完了；取消算 `failure`，告警和重试把用户主动停止当成故障。
 - **停下的同时要收资源。** `POST /api/cancel` 只在 `CancelRegistry` 里找到这次问数的开关并拉下；找不到返回 `{"cancelled": false}`（可能已经结束，不是错误）。SSE 流结束时 `finally` 里再 `cancel` 一次并 `release` 注销 `request_id`；工作线程在下一个步骤边界停下，不会把 SQL 白跑完。

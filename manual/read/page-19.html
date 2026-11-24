@@ -12,7 +12,9 @@
 <p class="kicker">练本 · 阅读版（md 正典派生，改内容请改 manual/page-19.md）</p>
 <h1>第 19 页 · 守策略：36 条注入全拒、11 条正常零误杀</h1>
 <blockquote>
-<p>前置：L4（守）第二页。本页一条服务都不用——判据只读 <code>contracts/</code>、<code>fixtures/</code>，第 2 步还读 S4 基线 <code>backend/tests/generate/baseline.yaml</code>；不访问网络，不需要 MySQL、<code>.env</code>、模型 key，但要用 <code>backend/.venv</code>（第 0 页 <code>make install</code> 建好，缺了先回第 0 页补）。命令都在仓库根目录、同一个终端里整段连续执行；括号是子 shell，跑完你还在仓库根目录。第 18 页守的是账号（数据库层写不了），本页守的是策略（危险 SQL 根本到不了执行）。</p>
+<p>前置：L4（守）第二页。本页一条服务都不用——判据只读 <code>contracts/</code>、<code>fixtures/</code>，第 2 步还读 S4 基线 <code>backend/tests/generate/baseline.yaml</code>；</p>
+<p>不访问网络，不需要 MySQL、<code>.env</code>、模型 key，但要用 <code>backend/.venv</code>（第 0 页 <code>make install</code> 建好，缺了先回第 0 页补）。命令都在仓库根目录、同一个终端里整段连续执行；括号是子 shell，跑完你还在仓库根目录。</p>
+<p>第 18 页守的是账号（数据库层写不了），本页守的是策略（危险 SQL 根本到不了执行）。</p>
 </blockquote>
 <h2>这一页构建什么</h2>
 <p>用 36 条注入语料 + 11 条“长得像正常查询”的反向语料，审 SQL 在执行前按<strong>类别</strong>拦下的那道关（单语句、只读、集合运算、可执行注释、危险函数、白名单）。</p>
@@ -70,14 +72,26 @@ S5 PASS
 <ul>
 <li><strong>猜 1：10 条。</strong> 按原因码数：<code>SQL_COMMENT_OBFUSCATION</code> 2 条 + <code>SQL_FORBIDDEN_CONSTRUCT</code> 8 条（集合运算 2 + 危险函数 6）。剩下 26 条不是靠类别规则：21 条是结构（18 条“不是只读查询” + 3 条多语句），5 条是白名单（表 4 + 列 1）。类别规则不到三分之一，却接住了最会变形的那些载荷。</li>
 <li><strong>猜 2：漏到执行 0 条，漏的是 2 条原因码。</strong> 关掉 <code>forbid_set_operations</code> 后，2 条 UNION 仍被拒——策略里“根节点必须是 SELECT”的规则兜住了——但原因码从 <code>SQL_FORBIDDEN_CONSTRUCT</code> 退化成 <code>SQL_NOT_READ_ONLY</code>，门禁照样 <code>FAIL: 2 项</code>。11/11 和 8/8 一位没动：删规则只会放宽，不可能造成误杀。</li>
-<li><strong>整类拒 vs 逐个补。</strong> 黑名单是“见过一个补一个”：只拒 <code>UNION SELECT</code>，语料里的 <code>UNION ALL</code> 就过去了；只拒 <code>DROP</code>，<code>/*! DROP ... */</code> 解析器看不见、服务端却会执行。
-  类别规则按 AST 节点类型（<code>Union</code> / <code>Except</code> / <code>Intersect</code>，在整棵树任意深度）或 <code>/*!</code> 的握手整类拒，变体一起死。
-  白名单同理：不列“危险表”，只允许契约里的表/列，<code>information_schema</code>、<code>mysql.user</code>、<code>secret_table</code> 自动被拒。</li>
-<li><strong>零误杀为什么是硬要求。</strong> 门禁有两种错：漏拦（放行注入）和误杀（正常查询被拒）。误杀让问数直接失败，还会训练用户去关规则——最后回到没有防线。
-  11 条 allow 语料专钉容易误杀的地方：字符串里的分号 <code>'a;b'</code>、块注释里的 <code>; DROP</code>（服务端不执行，策略也不能当第二条语句）、中文投影别名 <code>ORDER BY 销量</code>、<code>SELECT *</code>、子查询。
-  策略“先 AST 后词法”，就是为了不看见分号就拒。</li>
-<li><strong>原因码是契约。</strong> <code>--check</code> 不只要求“拒”，还要求原因码精确匹配（<code>backend/app/scripts/security.py</code> 逐条比对）；码表在 <code>contracts/sql.policy.yaml</code> 的 <code>errors.reason_codes</code>，执行器对外只暴露通道码 <code>SQL_REJECTED</code>，细码放在 <code>reason_code</code>。拆一刀实测“拒仍是拒、码变了”也会红——下游按码决定重试与展示（第 16、17 页），码漂移就是事故。</li>
-<li><strong>和第 16 页的分工。</strong> 第 16 页的静态校验问“对不对”（列、指标、值域、行数、排序），本页策略问“危不危险”（单语句、只读、集合运算、注释、危险函数、表白名单）；两者都在连库前，是两层网。第 16 页拆掉列存在校验时，正是本页的列白名单接住了它（<code>SQL_UNKNOWN_COLUMN</code> 退化成 <code>SQL_REJECTED</code>）；第 18 页的只读账号是第三层——策略管“能不能构造”，账号管“能不能写”。</li>
+<li><strong>整类拒 vs 逐个补。</strong> 黑名单是“见过一个补一个”：只拒 <code>UNION SELECT</code>，语料里的 <code>UNION ALL</code> 就过去了；只拒 <code>DROP</code>，<code>/*! DROP ... */</code> 解析器看不见、服务端却会执行。<ul>
+<li>类别规则按 AST 节点类型（<code>Union</code> / <code>Except</code> / <code>Intersect</code>，在整棵树任意深度）或 <code>/*!</code> 的握手整类拒，变体一起死。</li>
+<li>白名单同理：不列“危险表”，只允许契约里的表/列，<code>information_schema</code>、<code>mysql.user</code>、<code>secret_table</code> 自动被拒。</li>
+</ul>
+</li>
+<li><strong>零误杀为什么是硬要求。</strong> 门禁有两种错：漏拦（放行注入）和误杀（正常查询被拒）。误杀让问数直接失败，还会训练用户去关规则——最后回到没有防线。<ul>
+<li>11 条 allow 语料专钉容易误杀的地方：字符串里的分号 <code>'a;b'</code>、块注释里的 <code>; DROP</code>（服务端不执行，策略也不能当第二条语句）、中文投影别名 <code>ORDER BY 销量</code>、<code>SELECT *</code>、子查询。</li>
+<li>策略“先 AST 后词法”，就是为了不看见分号就拒。</li>
+</ul>
+</li>
+<li><strong>原因码是契约。</strong> <code>--check</code> 不只要求“拒”，还要求原因码精确匹配（<code>backend/app/scripts/security.py</code> 逐条比对）；<ul>
+<li>码表在 <code>contracts/sql.policy.yaml</code> 的 <code>errors.reason_codes</code>，执行器对外只暴露通道码 <code>SQL_REJECTED</code>，细码放在 <code>reason_code</code>。</li>
+<li>拆一刀实测“拒仍是拒、码变了”也会红——下游按码决定重试与展示（第 16、17 页），码漂移就是事故。</li>
+</ul>
+</li>
+<li><strong>和第 16 页的分工。</strong> 第 16 页的静态校验问“对不对”（列、指标、值域、行数、排序），本页策略问“危不危险”（单语句、只读、集合运算、注释、危险函数、表白名单）；<ul>
+<li>两者都在连库前，是两层网。</li>
+<li>第 16 页拆掉列存在校验时，正是本页的列白名单接住了它（<code>SQL_UNKNOWN_COLUMN</code> 退化成 <code>SQL_REJECTED</code>）；第 18 页的只读账号是第三层——策略管“能不能构造”，账号管“能不能写”。</li>
+</ul>
+</li>
 </ul>
 <blockquote>
 <p><strong>你现在拥有</strong>：一条能被别人重放的安全判据（36/36 + 11/11 + 8/8），和一句可复用的判断：<strong>追着已知载荷打补丁永远慢一步；按类别拒 + 白名单放，才能让变体一起死、又不误杀正常查询。</strong></p>

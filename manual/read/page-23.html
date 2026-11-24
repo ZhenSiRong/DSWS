@@ -12,7 +12,8 @@
 <p class="kicker">练本 · 阅读版（md 正典派生，改内容请改 manual/page-23.md）</p>
 <h1>第 23 页 · 装体验：从 17 行 HTML 到成熟版前端</h1>
 <blockquote>
-<p>前置：L5 只一页，接第 13–22 页那套整栈——Docker 可用、<code>.env</code> 已由 <code>make docker-env</code> 生成、<code>make docker-up</code> 起过栈（第 22 页的拆一刀已还原：<code>make docker-smoke</code> 回 <code>DOCKER SMOKE PASS</code>；镜像已缓存在本地——第 1 步先判断镜像在不在，在就只 <code>up</code> 不重建）。本页不动后端、契约、数据，只换浏览器入口：同一个后端并排挂三种装修做对照。命令都在仓库根目录、同一终端里整段连续执行，括号是子 shell，跑完你还在仓库根目录。</p>
+<p>前置：L5 只一页，接第 13–22 页那套整栈——Docker 可用、<code>.env</code> 已由 <code>make docker-env</code> 生成、<code>make docker-up</code> 起过栈（第 22 页的拆一刀已还原：<code>make docker-smoke</code> 回 <code>DOCKER SMOKE PASS</code>；镜像已缓存在本地——第 1 步先判断镜像在不在，在就只 <code>up</code> 不重建）。</p>
+<p>本页不动后端、契约、数据，只换浏览器入口：同一个后端并排挂三种装修做对照。命令都在仓库根目录、同一终端里整段连续执行，括号是子 shell，跑完你还在仓库根目录。</p>
 </blockquote>
 <h2>这一页构建什么</h2>
 <p>同一套后端、同一份契约、同一条 SSE 流，前面出现过三种「装修」，从简到成熟（本页把第 3 种真跑起来、和第 2 种并排对照：装修只换承载页面的壳，不换承重墙）：</p>
@@ -75,10 +76,17 @@ npm test：Tests  40 passed (40)（末行是 Duration）
 <p><img alt="第 23 页 · 成熟版真跑录屏：输入「华北销售额」到结果出现（约 8 秒 GIF）" src="../images/page-23-mature.gif" /></p>
 <h2>对账</h2>
 <ul>
-<li><strong>猜 1：不是两套接口，后端一份都不用改。</strong> 成熟版前端只认 <code>POST /api/query</code>（<code>deliverable/v2/original-frontend/src/lib/agentApi.ts</code>）：同一条 SSE 流、同一套事件（happy 路径 23 条 <code>progress</code> + 1 条 <code>result</code>）、同一份 <code>contracts/</code>。
-  它的 <code>dist/</code> 里有一层薄适配：把契约的 <code>{columns, rows}</code> 渲染成自己的结果表、把 S7 的 step id 映成 12 个中文节点名——换算在浏览器里做，网络上一个字节没变。</li>
-<li><strong>猜 2：契约不改，但成熟版不请求 <code>/api/steps</code>。</strong> 教学版 12 条步骤轨来自 <code>/api/steps</code>；成熟版把 12 节点拓扑写死在自己的组件里（<code>src/components/StepRail.tsx</code>），后端增删节点时成熟版要改这层映射。
-  教学版「看得见结构」（40 条协议测试 + 步骤轨），成熟版是「交付时的样子」。诚实边界：成熟版 <code>dist/</code> 是构建产物，本页不要求你从源码改它；它也不带 <code>npm test</code> 那 40 条测试。</li>
+<li><strong>猜 1：不是两套接口，后端一份都不用改。</strong><ul>
+<li>成熟版前端只认 <code>POST /api/query</code>（<code>deliverable/v2/original-frontend/src/lib/agentApi.ts</code>）：</li>
+<li>同一条 SSE 流、同一套事件（happy 路径 23 条 <code>progress</code> + 1 条 <code>result</code>）、同一份 <code>contracts/</code>。</li>
+<li>它的 <code>dist/</code> 里有一层薄适配：把契约的 <code>{columns, rows}</code> 渲染成自己的结果表、把 S7 的 step id 映成 12 个中文节点名——换算在浏览器里做，网络上一个字节没变。</li>
+</ul>
+</li>
+<li><strong>猜 2：契约不改，但成熟版不请求 <code>/api/steps</code>。</strong><ul>
+<li>教学版 12 条步骤轨来自 <code>/api/steps</code>；成熟版把 12 节点拓扑写死在自己的组件里（<code>src/components/StepRail.tsx</code>），后端增删节点时成熟版要改这层映射。</li>
+<li>教学版「看得见结构」（40 条协议测试 + 步骤轨），成熟版是「交付时的样子」。诚实边界：成熟版 <code>dist/</code> 是构建产物，本页不要求你从源码改它；它也不带 <code>npm test</code> 那 40 条测试。</li>
+</ul>
+</li>
 <li><strong>卡住了看这里。</strong></li>
 <li>8088 打不开 / <code>Conflict</code>：先看是不是同名容器残留——<code>docker rm -f lab-mature</code> 后重跑第 2 步；若是别的进程占着 8088（<code>ss -tlnp | grep 8088</code> 有输出），<code>rm</code> 没用，把第 2 步 <code>-p</code> 里的 8088 换成空端口（如 8089）重跑，浏览器地址同步改。</li>
 <li>8088 回 <code>502</code>：容器没进 compose 网络（用了默认 bridge），或项目名改过、<code>shopkeeper-rebuild_default</code> 不存在——<code>docker network ls | grep default</code> 查实际网络名。</li>

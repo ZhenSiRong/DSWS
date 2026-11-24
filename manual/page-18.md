@@ -134,7 +134,11 @@ docker compose exec -T mysql mysql -uroot -p"$REBUILD_MYSQL_ROOT_PASSWORD" -e "G
 (cd backend && .venv/bin/python -m app.scripts.security --verify-ro-account)
 ```
 
-`mysql: [Warning] Using a password on the command line interface can be insecure.` 是客户端的例行提醒，不是失败。门禁变红，退出码 1。**若用 `tee`/重定向把输出存成日志，`FAIL:` 摘要会先于上面的明细出现（明细走 stdout、`FAIL:` 走 stderr，缓冲顺序不同）——那是保存方式造成的顺序，不是输出不对，别怀疑判据**：
+`mysql: [Warning] Using a password on the command line interface can be insecure.` 是客户端的例行提醒，不是失败。
+
+门禁变红，退出码 1。
+
+**若用 `tee`/重定向把输出存成日志，`FAIL:` 摘要会先于上面的明细出现（明细走 stdout、`FAIL:` 走 stderr，缓冲顺序不同）——那是保存方式造成的顺序，不是输出不对，别怀疑判据**：
 
 ```text
 账号：'dw_reader'@'%' on dw (SELECT)

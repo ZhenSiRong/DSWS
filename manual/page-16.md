@@ -65,9 +65,19 @@ S6 PASS
 
 ## 对账
 
-- **猜 1：10 种，不是 16。** 16 是 `contracts/errors.yaml` 里错误码的总数；20 条语料只覆盖**校验这一步能发出的** 10 个码——9 个静态校验码 + 1 个策略通道码 `SQL_REJECTED`。剩下 6 个（`EMPTY_RESULT` / `LLM_REFUSAL` / `TIMEOUT` / `CANCELLED` / `SQL_EXECUTION_ERROR` / `INTERNAL_ERROR`）来自执行后、模型、取消和兜底，不在“校验拦下来”的名单里，所以本页不拿它们当判据。
-- **猜 2：3 条（c01/c02/c07），且错 SQL 不会被执行。** 拆掉列存在校验后，`probe` 从 `mismatch: 0` 变 `3`：这三条的 guard 报告都变成 ok=True（`actual []`）。但失败矩阵里 `sql_unknown_column` 的结局码不是“执行报错”，而是 `SQL_REJECTED`——第二道关（安全策略的列白名单）接住了它，仍停在执行前。**这一刀红的是“精确码”，不是“执行”**：`SQL_UNKNOWN_COLUMN`（可重试）退化成 `SQL_REJECTED`（不可重试），第 17 页的自动校正闭环连启动的机会都没有。第二道关也兜不住的规则（如常量投影，策略不查）拆了就会被放行到执行——那是 L4 第 19 页“审策略”的话题，本页不混。
-- **为什么“执行前拦”比“执行报错”好：** 执行前，错 SQL 没碰过数据库——没有慢查询、没有副作用风险，错误信息是契约里的中文码（不是 MySQL 方言），红叉落在 `validate_sql` 步骤，`class` 决定界面画红框/空态/取消，`retryable` 决定要不要自动修一次。执行报错则要真连库跑一遍，到那时 SQL 已经被“认为合格”，能给的只剩 `SQL_EXECUTION_ERROR`——名字丢了，位置也丢了。
+- **猜 1：10 种，不是 16。**
+    - 16 是 `contracts/errors.yaml` 里错误码的总数；20 条语料只覆盖**校验这一步能发出的** 10 个码——9 个静态校验码 + 1 个策略通道码 `SQL_REJECTED`。
+    - 剩下 6 个（`EMPTY_RESULT` / `LLM_REFUSAL` / `TIMEOUT` / `CANCELLED` / `SQL_EXECUTION_ERROR` / `INTERNAL_ERROR`）来自执行后、模型、取消和兜底，
+    - 不在“校验拦下来”的名单里，所以本页不拿它们当判据。
+- **猜 2：3 条（c01/c02/c07），且错 SQL 不会被执行。**
+    - 拆掉列存在校验后，`probe` 从 `mismatch: 0` 变 `3`：这三条的 guard 报告都变成 ok=True（`actual []`）。
+    - 但失败矩阵里 `sql_unknown_column` 的结局码不是“执行报错”，而是 `SQL_REJECTED`——第二道关（安全策略的列白名单）接住了它，仍停在执行前。
+    - **这一刀红的是“精确码”，不是“执行”**：`SQL_UNKNOWN_COLUMN`（可重试）退化成 `SQL_REJECTED`（不可重试），第 17 页的自动校正闭环连启动的机会都没有。
+    - 第二道关也兜不住的规则（如常量投影，策略不查）拆了就会被放行到执行——那是 L4 第 19 页“审策略”的话题，本页不混。
+- **为什么“执行前拦”比“执行报错”好：**
+    - 执行前，错 SQL 没碰过数据库——
+    - 没有慢查询、没有副作用风险，错误信息是契约里的中文码（不是 MySQL 方言），红叉落在 `validate_sql` 步骤，`class` 决定界面画红框/空态/取消，`retryable` 决定要不要自动修一次。
+    - 执行报错则要真连库跑一遍，到那时 SQL 已经被“认为合格”，能给的只剩 `SQL_EXECUTION_ERROR`——名字丢了，位置也丢了。
 - **错误码是契约，不是文档装饰：** `contracts/errors.yaml` 是唯一事实源；`backend/tests/agent/test_error_alignment.py` 查五张表（错误码表 / `guard.py` 发出的码 / 提示词 / 策略契约 / 执行器）是不是同一批字面量，连“最多校正 1 次”这类参数也不许在代码里再写一遍。加一个码不入表、改名不同步，测试立刻红。
 - **20 条语料 + 16 码 = 可复核判据：** 每条语料自带 `expect_code`，`probe` 用真校验栈重跑并给出 `{"total": 20, "mismatch": 0}`——先验尺子，再量东西；9 个场景再验整条流水线的结局（码/类别/失败步骤），`S6 PASS`。换个人重跑，红绿一样。
 
@@ -75,7 +85,9 @@ S6 PASS
 
 ## 拆一刀
 
-1. 打开 `backend/app/generate/guard.py`，找到第 3 条「表与列存在」里的循环（搜 `for column in tree.find_all`），把 `for column in tree.find_all(exp.Column):` 改写成 `for column in []:  # 拆一刀：关掉列存在校验`——**只改 `guard.py` 这一处**，缩进别动；`backend/app/security/policy.py:460` 有一模一样的 `for column in tree.find_all(exp.Column):`，别用 IDE 全局替换把它也拆了（两处一起拆会把第二道关也关掉，错 SQL 被放行到执行，实验结论就失真了）。
+1. 打开 `backend/app/generate/guard.py`，找到第 3 条「表与列存在」里的循环（搜 `for column in tree.find_all`），把 `for column in tree.find_all(exp.Column):` 改写成 `for column in []:  # 拆一刀：关掉列存在校验`——**只改 `guard.py` 这一处**，缩进别动；
+    - `backend/app/security/policy.py:460` 有一模一样的 `for column in tree.find_all(exp.Column):`，
+    - 别用 IDE 全局替换把它也拆了（两处一起拆会把第二道关也关掉，错 SQL 被放行到执行，实验结论就失真了）。
 
 2. 重跑第 2–4 步里的三条判据（`1 failed` 的是 `test_unknown_column_is_rejected`；秒数随机器变，看 passed/failed 就行；下面只留判红的那几行）：
 
