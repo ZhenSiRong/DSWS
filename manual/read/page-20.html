@@ -25,6 +25,7 @@
 <p>让取消成为<strong>独立状态</strong>——不是 <code>done</code>、也不是失败：服务端真的停下、发一条名字叫 <code>CANCELLED</code> 的事件、界面标「已取消」。</p>
 <p><strong>判据可重放</strong>：做完你得到 6 条取消测试全绿 + <code>fixtures/sse/cancelled.json</code> 的 2 帧（<code>skipped</code> + <code>CANCELLED</code>）+ 夹具与今天的真实输出逐字节一致。</p>
 <p>心智模型：<strong>「停止」是一个状态，不是「不返回」。</strong></p>
+<p><img alt="第 20 页 · 停止是一个状态" src="../images/page-20-comic.webp" /></p>
 <h2>猜一猜</h2>
 <ol>
 <li>用户点了停止，这次问数的终态是：<code>done</code>、失败，还是<strong>第三种</strong>？</li>

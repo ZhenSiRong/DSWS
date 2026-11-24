@@ -8,6 +8,8 @@
 
 这一页**只 print，不执行**。
 
+![第 6 页 · 照契约把两张表拼起来](images/page-06-comic.webp)
+
 ## 猜一猜
 
 动手前写下答案：拼出来的 SQL 会 `JOIN` 哪两张表？`WHERE` 用的是 `dim_region` 的哪一列？`WHERE` 那行等号的右边会是什么？

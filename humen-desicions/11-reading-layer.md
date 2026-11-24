@@ -283,3 +283,14 @@ Answer:除了Q2选B(多插漫画解释图少插文字,我们用ark-cli中的模�
 
 **闸门**：`audit_book` 24/24；`verify.py --fast` T0 PASS；保护区脚本核对 20 页（代码围栏 / 六段标题 / 图片引用 / 粗体判据 / 数字）**0 异常**；`render_read.py --all` 生成 24 页阅读版 HTML。
 **诚实口径**：各批指标以报告为准（散文净字数持平或小幅升降，收益在段长/结构）；独立复测仍发现少量 >200 字符的**引用块/长 bullet**（非"散文段"口径），留给第二轮清理或人工复核。
+
+## 第 6 轮 · 漫画推广到全部页面（2026-11-24）
+
+> 基线：`v1.1.0` 前；风格沿用 p17 定稿（白底扁平、黑线 + 单橙点缀、中文标题/气泡），Seedream 5.0 Flash（`ep-20261109172906-d7fr4`）。
+
+- 每页 1 张概念漫画（p17 已有 2 张），共 **23 张新图**：`manual/images/page-{00..23}-comic.webp`（WebP q82，总计约 2.5 MB）。
+- 插入位置：`## 这一页构建什么` 段末（p17 保持原两张位置）。
+- 生成方式：`arkcli +gen --model ep-20261109172906-d7fr4 --modality image --size 1536x1024`；提示词按页内核心隐喻（见 `manual/review/reading-layer-preview/comics-sheet.png` 联系表）。
+- 闸门：`audit_book` 24/24、`verify.py --fast` T0 PASS、`make verify` T1 PASS、`make audit` 5/5；阅读版 HTML 全书重生成。
+
+**说明**：漫画只替换/补充解释性呈现，六段结构、代码块、判据原句、数字/路径/证据链接一字未动。

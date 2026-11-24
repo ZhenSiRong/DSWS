@@ -9,6 +9,8 @@
 
 **两条命令**：一条 `make docker-up` 起整座城，一条 `make docker-smoke` 用 8 步自动验收。部署不是“起得来”，是“起得来 + 能被自动验收”。
 
+![第 13 页 · 起得来 ≠ 部署好](images/page-13-comic.webp)
+
 ## 猜一猜
 
 动手前写下答案：

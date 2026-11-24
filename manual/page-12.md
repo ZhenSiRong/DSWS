@@ -10,6 +10,8 @@
 
 **口径提醒**：这仍是第 10 页的 naive 口径，本页只证明 FLOAT→DECIMAL 的类型问题，不代表数据已洗。
 
+![第 12 页 · 只读执行器：只放行 SELECT](images/page-12-comic.webp)
+
 ## 猜一猜
 
 1. 裸 `SELECT SUM(order_amount) FROM fact_order`（第 10 页的 naive 口径）和十进制值 `1144735.50` 差多少——0、0.0005、还是 5 元？
