@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>第 23 页 · 装体验：从 17 行 HTML 到成熟版前端 · 阅读版</title>
+<link rel="stylesheet" href="../../assets/lesson.css">
+<link rel="stylesheet" href="../../assets/read.css">
+</head>
+<body>
+<main class="page">
+<p class="kicker">练本 · 阅读版（md 正典派生，改内容请改 manual/page-23.md）</p>
+<h1>第 23 页 · 装体验：从 17 行 HTML 到成熟版前端</h1>
+<blockquote>
+<p>前置：L5 只一页，接第 13–22 页那套整栈——Docker 可用、<code>.env</code> 已由 <code>make docker-env</code> 生成、<code>make docker-up</code> 起过栈（第 22 页的拆一刀已还原：<code>make docker-smoke</code> 回 <code>DOCKER SMOKE PASS</code>；镜像已缓存在本地——第 1 步先判断镜像在不在，在就只 <code>up</code> 不重建）。本页不动后端、契约、数据，只换浏览器入口：同一个后端并排挂三种装修做对照。命令都在仓库根目录、同一终端里整段连续执行，括号是子 shell，跑完你还在仓库根目录。</p>
+</blockquote>
+<h2>这一页构建什么</h2>
+<p>同一套后端、同一份契约、同一条 SSE 流，前面出现过三种「装修」，从简到成熟（本页把第 3 种真跑起来、和第 2 种并排对照：装修只换承载页面的壳，不换承重墙）：</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>装修</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><strong>第 9 页那 17 行 HTML</strong></td>
+<td><code>&lt;form&gt;</code> + <code>&lt;pre&gt;</code>，一行一个数——入口原型。</td>
+</tr>
+<tr>
+<td>2</td>
+<td><strong><code>frontend/</code> 教学版重建前端</strong></td>
+<td>compose 默认的 <code>frontend</code> 服务（默认端口 8080），「从零重建 · 教学版」界面、<code>12 步</code> 步骤轨，自带 40 条协议测试——它是<strong>脚手架</strong>，把系统结构摆在明面上。</td>
+</tr>
+<tr>
+<td>3</td>
+<td><strong>成熟版原版 <code>shopkeeper-agent</code></strong></td>
+<td>交付时的样子（<code>deliverable/v2/original-frontend/</code>，React 19 + Tailwind 3.4.17 的构建产物 <code>dist/</code>）。</td>
+</tr>
+</tbody>
+</table>
+<h2>猜一猜</h2>
+<p>动手前写下答案（都允许猜错）：① 成熟版和教学版是不是两套接口？把成熟版挂到同一个后端上，后端要不要配一份新的？② 换成成熟版之后，契约（<code>contracts/</code>）要不要改？</p>
+<h2>动手</h2>
+<p><strong>第 1 步：起整栈。</strong> 栈在跑就跳过（判据见第 13 页：五个长驻服务 <code>healthy</code>、<code>init</code> 退出 0）。</p>
+<p><strong>先判断镜像在不在</strong>：<code>docker images | grep shopkeeper</code> 有 <code>backend</code>、<code>frontend</code> 两行 → 栈停过只是没起，用 <code>docker compose up -d</code>（不重建，秒级）；第一次或代码真改过 → <code>make docker-up</code>（= <code>up -d --build</code>，约 8 分钟，第 13 页）：</p>
+<pre><code class="language-bash">docker images | grep shopkeeper   # 判断：有 backend、frontend 两行 = 镜像已在本地
+docker compose up -d              # 镜像在：只起容器，不重建（秒级）
+# 没有这两行 / 改过代码：改用 make docker-up（= up -d --build，约 8 分钟，第 13 页）
+</code></pre>
+<p><strong>第 2 步：起成熟版，占 8088。</strong> 不碰 compose 默认的 8080 教学版，两个界面并排对照。成熟版容器要进 compose 网络，它 <code>nginx.conf</code> 里的 <code>backend:8100</code> 才解析得到。</p>
+<p><strong>网络名</strong>：<code>compose.yaml</code> 第 1 行 <code>name: shopkeeper-rebuild</code> + <code>_default</code>。若用 <code>-p</code> 或 <code>COMPOSE_PROJECT_NAME</code> 改过项目名，先 <code>docker network ls | grep default</code> 看实际那个再替换。</p>
+<p><strong>镜像</strong>：取你实际生效的 <code>.env</code>（<code>make docker-env</code> 一定生成 <code>NGINX_IMAGE</code> 那行）；只有 <code>.env</code> 缺这一行时才回退 <code>.env.example</code>（把命令里的 <code>.env</code> 换成 <code>.env.example</code>）。</p>
+<p><strong>陷阱</strong>：8088 被占或已有同名容器：先 <code>docker rm -f lab-mature</code> 再重跑：</p>
+<pre><code class="language-bash">docker run -d --name lab-mature --network shopkeeper-rebuild_default -p 127.0.0.1:8088:80 \
+  -v &quot;$PWD/deliverable/v2/original-frontend/dist:/usr/share/nginx/html:ro&quot; \
+  -v &quot;$PWD/deliverable/v2/original-frontend/nginx.conf:/etc/nginx/conf.d/default.conf:ro&quot; \
+  &quot;$(grep '^NGINX_IMAGE=' .env | cut -d= -f2)&quot;
+</code></pre>
+<p><strong>第 3 步：跑教学版脚手架的测试。</strong> 这条判据测的是 <code>frontend/</code> 教学版；成熟版是构建产物 <code>dist/</code>，不带这套测试，也别在 <code>deliverable/v2/original-frontend/</code> 里跑。在仓库根目录跑（括号是子 shell，跑完还在根目录）：</p>
+<pre><code class="language-bash">(cd frontend &amp;&amp; npm test)
+</code></pre>
+<p><strong>第 4 步：对照着问。</strong> 浏览器开 <code>http://127.0.0.1:8088</code>（成熟版）和 <code>http://127.0.0.1:8080</code>（教学版，默认端口；改过 <code>.env</code> 的 <code>FRONTEND_HOST_PORT</code> 用你的端口），两边都问「华北销售额」。</p>
+<h2>你应该看到</h2>
+<p>成熟版（8088）是「电商问数 / shopkeeper-agent」的样子：左侧「样例」4 条、底部聊天输入框；问完出 12 节点流程图（11 个 ✓ + <code>校正SQL · 未触发</code>）和「查询结果」表。</p>
+<p><strong>逐条对</strong>：成熟版结果表原样显示 <code>41099.5</code>（无千分位）；教学版（8080）同样的问法、同一个数，显示成 <code>41,099.5</code>（千分位写法，数值 = 第 7 页那个 <code>41099.5</code>）；第 3 步的测试汇总行 <code>Tests  40 passed (40)</code>（末行是 <code>Duration</code>）：</p>
+<pre><code class="language-text">8088：标题「电商问数」+ 侧栏「样例」+ 底部聊天输入（不是「从零重建」）
+8088：结果表 41099.5（无千分位）；12 节点 11 完成 + 1 未触发（校正SQL）
+8080（默认端口；改过 .env 的 FRONTEND_HOST_PORT 用你的）：教学版「从零重建 · 教学版」，同一问题同一个数（显示 41,099.5）
+npm test：Tests  40 passed (40)（末行是 Duration）
+</code></pre>
+<p><img alt="第 23 页 · 成熟版真跑录屏：输入「华北销售额」到结果出现（约 8 秒 GIF）" src="../images/page-23-mature.gif" /></p>
+<h2>对账</h2>
+<ul>
+<li><strong>猜 1：不是两套接口，后端一份都不用改。</strong> 成熟版前端只认 <code>POST /api/query</code>（<code>deliverable/v2/original-frontend/src/lib/agentApi.ts</code>）：同一条 SSE 流、同一套事件（happy 路径 23 条 <code>progress</code> + 1 条 <code>result</code>）、同一份 <code>contracts/</code>。
+  它的 <code>dist/</code> 里有一层薄适配：把契约的 <code>{columns, rows}</code> 渲染成自己的结果表、把 S7 的 step id 映成 12 个中文节点名——换算在浏览器里做，网络上一个字节没变。</li>
+<li><strong>猜 2：契约不改，但成熟版不请求 <code>/api/steps</code>。</strong> 教学版 12 条步骤轨来自 <code>/api/steps</code>；成熟版把 12 节点拓扑写死在自己的组件里（<code>src/components/StepRail.tsx</code>），后端增删节点时成熟版要改这层映射。
+  教学版「看得见结构」（40 条协议测试 + 步骤轨），成熟版是「交付时的样子」。诚实边界：成熟版 <code>dist/</code> 是构建产物，本页不要求你从源码改它；它也不带 <code>npm test</code> 那 40 条测试。</li>
+<li><strong>卡住了看这里。</strong></li>
+<li>8088 打不开 / <code>Conflict</code>：先看是不是同名容器残留——<code>docker rm -f lab-mature</code> 后重跑第 2 步；若是别的进程占着 8088（<code>ss -tlnp | grep 8088</code> 有输出），<code>rm</code> 没用，把第 2 步 <code>-p</code> 里的 8088 换成空端口（如 8089）重跑，浏览器地址同步改。</li>
+<li>8088 回 <code>502</code>：容器没进 compose 网络（用了默认 bridge），或项目名改过、<code>shopkeeper-rebuild_default</code> 不存在——<code>docker network ls | grep default</code> 查实际网络名。</li>
+<li>8080 连不上：教学版栈没起，或端口改过——按第 13 页查 <code>FRONTEND_HOST_PORT</code>；<strong>别改 <code>compose.yaml</code></strong>。</li>
+<li>结果不是 <code>41099.5</code>：数据库不是 <code>fixtures/dw.sql</code> 的演示集——<code>make docker-reset</code>（删数据卷、破坏性）→ <code>make docker-up</code> 重新 init（第 13 页），再问一句。</li>
+</ul>
+<h2>拆一刀</h2>
+<p>L5 的级考核：把 8088 的成熟版换成第 9 页的 17 行 HTML，看承重墙倒不倒。<strong>第 1 步：停成熟版。</strong> 容器删掉，整栈与 8080 教学版都不动：</p>
+<pre><code class="language-bash">docker rm -f lab-mature
+</code></pre>
+<p><strong>第 2 步：写回第 9 页的页面，只补接线。</strong> 先 <code>mkdir -p lab-mature</code>（终端重定向不会自己建目录），再在仓库根目录建 <code>lab-mature/index.html</code>，内容如下。</p>
+<p><strong>改哪 3 处</strong>：<code>form + pre + 事件处理</code>骨架没变，只改 3 处接线（注释标出）：入口换成 <code>POST /api/query</code>、<code>EventSource</code> 换成 <code>fetch</code> 读流、结果行取 <code>rows[0][0]</code>；渲染那一行还是「收到 progress 显示 step，收到 result 显示数」。</p>
+<p><strong>为什么 29 行</strong>：接线 2 的读流样板让这页从 17 行长到 29 行——L5 不在 SPEC 的 L1 行数预算（≤25 行片段）内，29 行是为了可读。</p>
+<pre><code class="language-html">&lt;!doctype html&gt;
+&lt;meta charset=&quot;utf-8&quot;&gt;
+&lt;form onsubmit=&quot;ask(q.value); return false&quot;&gt;
+  &lt;input id=&quot;q&quot; name=&quot;q&quot; value=&quot;华北销售额&quot; size=&quot;30&quot;&gt; &lt;button&gt;问一句&lt;/button&gt;
+&lt;/form&gt;
+&lt;pre id=&quot;out&quot;&gt;&lt;/pre&gt;
+&lt;script&gt;
+function ask(question) {
+  out.textContent = '';
+  // 接线1：真后端入口是 POST /api/query（第 9 页是 GET /api/stream）
+  fetch('/api/query', {method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({query: question})}).then(async (resp) =&gt; {
+    // 接线2：EventSource 换成 fetch 读流；帧还是 data: &lt;json&gt; 加空行
+    const reader = resp.body.getReader(), decoder = new TextDecoder();
+    let buf = '';
+    for (;;) {
+      const {value, done} = await reader.read(); if (done) break;
+      const frames = (buf += decoder.decode(value, {stream: true})).split('\n\n');
+      buf = frames.pop();
+      for (const frame of frames) {
+        const line = frame.split('\n').find((s) =&gt; s.startsWith('data: ')); if (!line) continue;
+        const msg = JSON.parse(line.slice(6));
+        // 接线3：真契约的结果行是二维数组，不是对象 rows[0].sales
+        out.textContent = msg.type === 'result' ? msg.data.rows[0][0] : msg.step;
+      }
+    }
+  });
+}
+&lt;/script&gt;
+</code></pre>
+<p><strong>第 3 步：用教学版镜像的 nginx 占 8088，挂这个页面。</strong> 反代配置（教学版镜像里的 <code>docker/nginx.conf</code>）沿用那一套，只把静态页换成刚写的 <code>index.html</code>；网络名同「动手」第 2 步（项目名改过先 <code>docker network ls | grep default</code>）：</p>
+<pre><code class="language-bash">docker run -d --name lab-mature --network shopkeeper-rebuild_default -p 127.0.0.1:8088:80 \
+  -v &quot;$PWD/lab-mature/index.html:/usr/share/nginx/html/index.html:ro&quot; \
+  shopkeeper-rebuild/frontend:local
+</code></pre>
+<p><strong>第 4 步：再问一次。</strong> 浏览器开 <code>http://127.0.0.1:8088</code>（强刷），点「问一句」：<code>&lt;pre&gt;</code> 里先闪过 <code>extract_keywords</code>、<code>generate_sql</code> 这些步骤 id，约 6 秒后停在 <code>41099.5</code>。没有流程图、没有结果表——那两样就是成熟版 <code>dist/</code> 在干的事。</p>
+<p><img alt="第 23 页 · 拆一刀：换回 17 行 HTML 入口，同一问题仍出 41099.5" src="../images/page-23-html.png" /></p>
+<p><strong>第 5 步：还原。</strong> 删掉简陋入口（容器和 <code>lab-mature/</code> 都删），8080 教学版不受影响；想再看成熟版，按「动手」第 2 步的命令重起 8088：</p>
+<pre><code class="language-bash">docker rm -f lab-mature &amp;&amp; rm -rf lab-mature
+</code></pre>
+<p>结论：三次装修（17 行 <code>41099.5</code> / 教学版 <code>41,099.5</code> / 成熟版 <code>41099.5</code>）走同一条 <code>POST /api/query</code>、同一份契约，差的只是「谁负责渲染」。<strong>拆掉体验层，系统照跑。</strong> L5 只一页：装修不改变承重墙，所以它不是新造一座城。</p>
+</main>
+</body>
+</html>

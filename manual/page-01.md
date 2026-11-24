@@ -35,11 +35,16 @@ docker run -d --name lab-mysql \
 - `-p 127.0.0.1:3307:3306`：冒号左边是宿主机端口，右边是容器内端口。3306 常被本机已装的 MySQL 占着，所以这一课统一用 3307；3307 若也被占，换一个没被占的端口（比如 3308），后面写 3307 的页跟着改。
 - 这一页**故意不加 `-v`**：没有脚本挂载（mount）进容器的 `/docker-entrypoint-initdb.d/`，容器第一次启动时没有脚本自动执行，`dw` 库不会被建出来——空库就是这一页的产物。
 - `MYSQL_ROOT_PASSWORD=labpass`：设 root 账号的密码，后面所有 `mysql -uroot -plabpass` 都用它。
-- `MYSQL_USER` / `MYSQL_PASSWORD`：官方 mysql 镜像启动时会用这两个变量建 `didilili` 这个用户（并设好密码）；第 2 页导入的 `dw.sql` 里那句 `GRANT ALL PRIVILEGES ON dw.* TO 'didilili'@'%'` 只是**补 `dw` 库的权限**（镜像建出来的用户默认没有库权限），用户不存在时 GRANT 会报错中断——所以这两个变量不能省。
+- `MYSQL_USER` / `MYSQL_PASSWORD`：官方 mysql 镜像启动时会用这两个变量建 `didilili` 这个用户（并设好密码）。
+    - **补权限**：第 2 页导入的 `dw.sql` 里那句 `GRANT ALL PRIVILEGES ON dw.* TO 'didilili'@'%'` 只是**补 `dw` 库的权限**（镜像建出来的用户默认没有库权限），用户不存在时 GRANT 会报错中断——所以这两个变量不能省。
 - `LANG=C.UTF-8`：让容器里的 `mysql` 认 UTF-8，少了它，第 2 页按中文筛数据会一条也筛不到。
 - 最后一行不手抄镜像名，从仓库自带的 `.env.example` 里读 `MYSQL_IMAGE`（`.env` 是你本地的密钥配置，被 `.gitignore` 忽略，克隆下来没有）。这行一旦被改名或删除，命令会**静默传空**、拉不到镜像——所以别删它。
 
-**顺带把第 2 页要用的输入重定向认下来。** 第 2 页导入 `dw.sql` 的命令是 `docker exec -i lab-mysql mysql -uroot -plabpass < fixtures/dw.sql`。`<` 是**宿主机** shell 的重定向：在你的终端里打开 `fixtures/dw.sql`，把内容接到 `docker exec` 的标准输入；`-i` 让容器的标准输入保持打开，这些内容才能递进容器里的 `mysql`。**少了 `-i`，`mysql` 读到的是空输入：命令不建表、不报错，退出码还是 0**——“没报错”不等于“执行了”。
+**顺带把第 2 页要用的输入重定向认下来。** 第 2 页导入 `dw.sql` 的命令是 `docker exec -i lab-mysql mysql -uroot -plabpass < fixtures/dw.sql`。
+
+**输入重定向**：`<` 是**宿主机** shell 的重定向：在你的终端里打开 `fixtures/dw.sql`，把内容接到 `docker exec` 的标准输入；`-i` 让容器的标准输入保持打开，这些内容才能递进容器里的 `mysql`。
+
+**少了 `-i`，`mysql` 读到的是空输入：命令不建表、不报错，退出码还是 0**——“没报错”不等于“执行了”。
 
 **第 2 条：等它启动就绪。它一行输出都没有，是在等。**
 
@@ -55,7 +60,9 @@ until docker logs lab-mysql 2>&1 | grep -q 'port: 3306'; do sleep 2; done
 docker exec lab-mysql mysql -uroot -plabpass -N -B -e "SELECT VERSION(); SHOW DATABASES;"
 ```
 
-`-N -B` 让输出只留值、一条一行，方便逐行对；`-e` 后面是一段 SQL，写几条都行，用分号隔开。终端里还会多一行 `mysql: [Warning] Using a password on the command line interface can be insecure.`——那是提醒你密码写在命令行上了，不是错误。
+**参数**：`-N -B` 让输出只留值、一条一行，方便逐行对；`-e` 后面是一段 SQL，写几条都行，用分号隔开。
+
+**不是错误**：终端里还会多一行 `mysql: [Warning] Using a password on the command line interface can be insecure.`——那是提醒你密码写在命令行上了，不是错误。
 
 ## 你应该看到
 
@@ -78,7 +85,8 @@ sys
 - 猜 A（有 `dw`）：错。第 1 条没有挂载 `dw.sql`，`/docker-entrypoint-initdb.d/` 是空的，容器第一次启动时没有脚本可自动执行；`dw` 要等第 2 页导入。
 - 猜 C（一个库都没有）：也不对。那 4 个系统库是 MySQL 自己建的，删不掉也不该删；你看到的库 = 系统库 + 你自己建的库。
 - 猜 B（只有系统库）：对。这一页的完成判据不是“有表”，而是“能连上、能读出 `SELECT VERSION()`”。
-- 这也是第 2 页为什么用 `docker exec -i` 手动导入：导入一次就是一次，看得见、查得到、能重跑；自动执行只在容器第一次启动时发生一次，脚本出没出错你没有现场。
+- 这也是第 2 页为什么用 `docker exec -i` 手动导入：导入一次就是一次，看得见、查得到、能重跑。
+    - **自动执行的盲区**：自动执行只在容器第一次启动时发生一次，脚本出没出错你没有现场。
 
 > **你现在拥有**：一个连得上、能跑 SQL 的 MySQL 容器；它是后面所有数字的唯一来源。
 

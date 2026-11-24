@@ -6,7 +6,11 @@
 
 ## 这一页构建什么
 
-让取消成为**独立状态**——不是 `done`、也不是失败：服务端真的停下、发一条名字叫 `CANCELLED` 的事件、界面标「已取消」。做完你得到一条可重放的判据：6 条取消测试全绿 + `fixtures/sse/cancelled.json` 的 2 帧（`skipped` + `CANCELLED`）+ 夹具与今天的真实输出逐字节一致。心智模型：**「停止」是一个状态，不是「不返回」。**
+让取消成为**独立状态**——不是 `done`、也不是失败：服务端真的停下、发一条名字叫 `CANCELLED` 的事件、界面标「已取消」。
+
+**判据可重放**：做完你得到 6 条取消测试全绿 + `fixtures/sse/cancelled.json` 的 2 帧（`skipped` + `CANCELLED`）+ 夹具与今天的真实输出逐字节一致。
+
+心智模型：**「停止」是一个状态，不是「不返回」。**
 
 ## 猜一猜
 
@@ -28,14 +32,20 @@ scripts/lab save p20-before
 (cd backend && .venv/bin/python -m pytest tests/agent -q)
 ```
 
-**第 3 步：回放取消夹具。** 夹具是「真字节流的录像」：`frames` 里每一行就是回放服务器要写给浏览器的一个 `data:` 帧。先逐帧打印看事件序列，再让 `record_sse --check` 用今天的代码重录 9 个场景 + 取消路径（4 条手写夹具只与源码常量比），14 条一起逐字节对账——本页输出就是这 14 条（录制在进程内跑真 HTTP/SSE 管道，不起服务、不用端口、不用浏览器）：
+**第 3 步：回放取消夹具。** 夹具是「真字节流的录像」：`frames` 里每一行就是回放服务器要写给浏览器的一个 `data:` 帧。
+
+**怎么跑**：先逐帧打印看事件序列，再让 `record_sse --check` 用今天的代码重录 9 个场景 + 取消路径（4 条手写夹具只与源码常量比），14 条一起逐字节对账——本页输出就是这 14 条（录制在进程内跑真 HTTP/SSE 管道，不起服务、不用端口、不用浏览器）：
 
 ```bash
 (cd backend && .venv/bin/python -c "import json;[print(f) for f in json.load(open('../fixtures/sse/cancelled.json'))['frames']]")
 (cd backend && .venv/bin/python -m app.scripts.record_sse --check)
 ```
 
-**第 4 步（可选，浏览器）：** 想在真实界面上看「已取消」和步骤条停住，跑 `make stage6-ui`（自起临时后端/前端，需 `uv`、Node、Chrome/Edge 和装好的 `frontend/node_modules`——没有先 `npm install`，要联网；不跑不影响本页判据）。脚本里的 `uv run` 会改写 `backend/uv.lock`（不在 `lab` 白名单、`reset` 救不回），跑完用 `git checkout -- backend/uv.lock` 还原。
+**第 4 步（可选，浏览器）：** 想在真实界面上看「已取消」和步骤条停住，跑 `make stage6-ui`（自起临时后端/前端，不跑不影响本页判据）。
+
+**前提**：`uv`、Node、Chrome/Edge 和装好的 `frontend/node_modules`——没有先 `npm install`，要联网。
+
+**陷阱**：脚本里的 `uv run` 会改写 `backend/uv.lock`（不在 `lab` 白名单、`reset` 救不回），跑完用 `git checkout -- backend/uv.lock` 还原。
 
 ## 你应该看到
 
@@ -60,9 +70,12 @@ S7 SSE RECORD PASS（14 个夹具与真实输出一致）
 
 ## 对账
 
-- **猜 1：第三种，`cancelled`。** 取消既不是 `done` 也不是失败：终态是一条 `type: "error"` 的事件，但 `class: "cancelled"`，前端据此把整体状态设成「已取消」，不弹红框。旧系统在这里写的是 `status: isAbort ? "done" : "error"`——被掐断的查询和成功返回的查询在界面上长得一样，用户看不出区别，统计里取消还混进成功率。
-- **猜 2：2 条。** 第 1 条 `progress` 是条件步骤 `correct_sql` 显式标 `skipped`：流在中途结束，它没跑，但不该永远是一块灰的「还没到」；第 2 条才是 `CANCELLED`。为什么用一个 `error` 帧装「不是失败」：SSE 契约只有 `progress` / `result` / `error` 三种 type，所以用 `class` 再分三态——`failure` 红框、`empty` 空态、`cancelled` 取消态。
-- **三态各要各的处理。** `done` 带 `result.data`（出表格）；`failure` 是 `class=failure`，界面红框、按错误码决定是否重试；`cancelled` 是 `class=cancelled`，界面「已取消」、步骤条停住、不重试也不告警。合成两种就出事故：取消算 `done`，用户以为查完了；取消算 `failure`，告警和重试把用户主动停止当成故障。
+- **猜 1：第三种，`cancelled`。** 取消既不是 `done` 也不是失败：终态是一条 `type: "error"` 的事件，但 `class: "cancelled"`，前端据此把整体状态设成「已取消」，不弹红框。
+  旧系统在这里写的是 `status: isAbort ? "done" : "error"`——被掐断的查询和成功返回的查询在界面上长得一样，用户看不出区别，统计里取消还混进成功率。
+- **猜 2：2 条。** 第 1 条 `progress` 是条件步骤 `correct_sql` 显式标 `skipped`：流在中途结束，它没跑，但不该永远是一块灰的「还没到」；第 2 条才是 `CANCELLED`。
+  为什么用一个 `error` 帧装「不是失败」：SSE 契约只有 `progress` / `result` / `error` 三种 type，所以用 `class` 再分三态——`failure` 红框、`empty` 空态、`cancelled` 取消态。
+- **三态各要各的处理。** `done` 带 `result.data`（出表格）；`failure` 是 `class=failure`，界面红框、按错误码决定是否重试；`cancelled` 是 `class=cancelled`，界面「已取消」、步骤条停住、不重试也不告警。
+  合成两种就出事故：取消算 `done`，用户以为查完了；取消算 `failure`，告警和重试把用户主动停止当成故障。
 - **停下的同时要收资源。** `POST /api/cancel` 只在 `CancelRegistry` 里找到这次问数的开关并拉下；找不到返回 `{"cancelled": false}`（可能已经结束，不是错误）。SSE 流结束时 `finally` 里再 `cancel` 一次并 `release` 注销 `request_id`；工作线程在下一个步骤边界停下，不会把 SQL 白跑完。
 - **夹具就是判据。** `cancelled.json` 是录像不是手写样例：`record_sse --check` 用今天的代码重录取消路径、逐字节比对，代码一改就红。它实际覆盖 9 个场景 + 取消路径、4 条手写只比源码常量，本页输出就是这 14 条一起对账；第 21 页逐条拆解这 14 条的覆盖与盲区，本页只盯取消这一条。
 
@@ -70,7 +83,11 @@ S7 SSE RECORD PASS（14 个夹具与真实输出一致）
 
 ## 拆一刀
 
-打开 `backend/app/agent/cancel.py`，找到 `CancelToken.cancel`（`cancel.py:37`，方法体内唯一一行 `self._event.set()`；同文件 L64 还有一个 `CancelRegistry.cancel`，别改错），把 `self._event.set()` 改成 `pass`（别只删这一行：缩进块空了会 `IndentationError`）——停止开关永远不会被拉下，正是旧系统「点了停止、查询照跑完」的复现。重跑第 2、3 步的判据：
+打开 `backend/app/agent/cancel.py`，找到 `CancelToken.cancel`（`cancel.py:37`，方法体内唯一一行 `self._event.set()`；同文件 L64 还有一个 `CancelRegistry.cancel`，别改错）。
+
+**改法**：把 `self._event.set()` 改成 `pass`（别只删这一行：缩进块空了会 `IndentationError`）——停止开关永远不会被拉下，正是旧系统「点了停止、查询照跑完」的复现。
+
+**验证**：重跑第 2、3 步的判据：
 
 ```bash
 (cd backend && .venv/bin/python -m pytest tests/agent -q -k cancel)
@@ -93,7 +110,13 @@ FAIL: SSE 夹具与真实输出不同步：
   - cancelled.json 与今天的真实输出不同步
 ```
 
-只红 2 条是对的：另外 4 条只测接口表面与码表（`X-Request-Id` 要暴露、`POST /api/cancel` 对不存在的 `request_id` 返回 `false`、`CANCELLED` 是独立 class），它们不检查「真的停下」——判据分两层，缺一层就漏。**不要照着 `record_sse` 的提示去重录夹具**，那是修好代码后重新生成用的：在拆一刀的坏代码上重录 = 用坏代码覆盖夹具——`cancelled.json` 会被录成 24 帧「正常完成」流（和 `happy.json` 的 24 帧逐帧相同），`--check` 反而立刻变绿、判据失效；还原夹具用 `scripts/lab reset p20-before --yes`，但提示里的 `uv run` 还会改写 `backend/uv.lock`（不在 `lab` 白名单、`reset` 救不回），要 `git checkout -- backend/uv.lock`。本页用快照还原并回绿：
+**只红 2 条是对的。** 另外 4 条只测接口表面与码表（`X-Request-Id` 要暴露、`POST /api/cancel` 对不存在的 `request_id` 返回 `false`、`CANCELLED` 是独立 class），它们不检查「真的停下」——判据分两层，缺一层就漏。
+
+**不要照着 `record_sse` 的提示去重录夹具**，那是修好代码后重新生成用的：在拆一刀的坏代码上重录 = 用坏代码覆盖夹具。
+
+**后果**：`cancelled.json` 会被录成 24 帧「正常完成」流（和 `happy.json` 的 24 帧逐帧相同），`--check` 反而立刻变绿、判据失效。
+
+**还原**：用 `scripts/lab reset p20-before --yes`，但提示里的 `uv run` 还会改写 `backend/uv.lock`（不在 `lab` 白名单、`reset` 救不回），要 `git checkout -- backend/uv.lock`。本页用快照还原并回绿：
 
 ```bash
 scripts/lab reset p20-before --yes

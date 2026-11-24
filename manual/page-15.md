@@ -4,7 +4,11 @@
 
 ## 这一页构建什么
 
-给生成层立一把可重复的尺子：10 题基线 `baseline`（问题 → SQL/拒答 → 判定；`backend/tests/generate/baseline.yaml`——和第 14 页 `backend/tests/recall/golden.yaml` 的 20 题召回黄金集不是同一个东西：这 10 题是 8 题复用那 20 题的题面 + 2 题越界拒答）+ 一套语义断言。生成器是确定性的、不走模型；你审的不是“像不像人写的”，而是**同一个判据能不能同时量模板和模型**——改契约、改生成逻辑，同一把尺立刻红，改回来立刻绿。
+给生成层立一把可重复的尺子：10 题基线 `baseline`（问题 → SQL/拒答 → 判定；`backend/tests/generate/baseline.yaml`）+ 一套语义断言。
+
+**别搞混**：它和第 14 页 `backend/tests/recall/golden.yaml` 的 20 题召回黄金集不是同一个东西：这 10 题是 8 题复用那 20 题的题面 + 2 题越界拒答。
+
+**审什么**：生成器是确定性的、不走模型；你审的不是“像不像人写的”，而是**同一个判据能不能同时量模板和模型**——改契约、改生成逻辑，同一把尺立刻红，改回来立刻绿。
 
 ## 猜一猜
 
@@ -59,13 +63,18 @@ make stage4
 S4 PASS
 ```
 
-第 3 步最后那个 `30 skipped` 也不是失败：其中 23 条是 `REBUILD_INTEGRATION` 集成测试（没设 `REBUILD_INTEGRATION=1` 时按设计跳过，和第 14 页那 23 条同源）、5 条是第 2 步同款的提示词形状、2 条是安全语料的拒答题；要看逐条原因，单独跑 `(cd backend && .venv/bin/python -m pytest -q -rs)` 的 `short test summary info`。
+**不是失败**：第 3 步最后那个 `30 skipped` 里，23 条是 `REBUILD_INTEGRATION` 集成测试（没设 `REBUILD_INTEGRATION=1` 时按设计跳过，和第 14 页那 23 条同源）、5 条是第 2 步同款的提示词形状、2 条是安全语料的拒答题。
+
+**看逐条原因**：单独跑 `(cd backend && .venv/bin/python -m pytest -q -rs)` 的 `short test summary info`。
 
 ![第 15 页 · `make baseline` 两段对照：绿 基线：10/10 通过（拒答 2）→ 拆一刀后红 基线：8/10 通过（拒答 2）](images/page-15-baseline.png)
 
 ## 对账
 
-- **猜 2：模板，不是模型。** 默认生成器是 `backend/app/generate/deterministic.py` 里的确定性实现：指标公式直接抄契约的 `formula`，表/列/取值/时间边界也都来自契约。`sql_or_refusal` 输出契约、`app.generate.guard` 静态校验、`baseline.yaml` 的语义断言，三道都不认“谁写的 SQL”。换真模型只替换 `HttpLlmGenerator` 这个实现（配三个 `REBUILD_LLM_*` 变量），模型写出的 SQL 过的是同一个输出形状、同一套 `check_sql`；`baseline.yaml` 断言的是 SQL 里的事实，也不认识生成器——所以尺子量得动两边。本页不配 key，只跑可复现的确定性一侧（想换真模型：见 [`appendix/llm-endpoint.md`](appendix/llm-endpoint.md)）。
+- **猜 2：模板，不是模型。** 默认生成器是 `backend/app/generate/deterministic.py` 里的确定性实现：指标公式直接抄契约的 `formula`，表/列/取值/时间边界也都来自契约。
+  `sql_or_refusal` 输出契约、`app.generate.guard` 静态校验、`baseline.yaml` 的语义断言，三道都不认“谁写的 SQL”。
+  换真模型只替换 `HttpLlmGenerator` 这个实现（配三个 `REBUILD_LLM_*` 变量），模型写出的 SQL 过的是同一个输出形状、同一套 `check_sql`；`baseline.yaml` 断言的是 SQL 里的事实，也不认识生成器——所以尺子量得动两边。
+  本页不配 key，只跑可复现的确定性一侧（想换真模型：见 [`appendix/llm-endpoint.md`](appendix/llm-endpoint.md)）。
 - **猜 1：只红用到 GMV 的两题**（b01 华北销售额、b04 品牌销售额 Top 3），其余 8 题照绿——下面拆一刀真验。注意 b02 平均客单价生成的 SQL 里也有同样的除法，但它用的是 AOV 指标、公式没被改，照样 PASS：判据按每题依赖的指标精确命中，不是拿一个字符串全库搜。
 - **baseline 量的是什么：表、列、指标、取值。** b01 的 `sql_contains` 断言：`SUM(fact_order.order_amount)`（指标公式）、`dim_region.region_name` 与 `'华北'`（表/列/真实枚举值）、`BETWEEN 20250101 AND 20250331`（数据边界）；`sql_not_contains` 防串味（不许出现 `dim_region.province`、不许混进 `COUNT(DISTINCT`）。它不是字符串快照：换行、别名可以变，这四类事实不能变。
 - **为什么生成错要先查契约：** 生成器是契约的翻译器，不是发明家。契约错（公式、枚举值、粒度、时间边界），它只会“忠实地错”；这次允许用哪些表/列/值，上下文也是按契约裁的。所以 SQL 错先回契约找那一行；契约对了还错，才轮到生成逻辑。
@@ -75,7 +84,9 @@ S4 PASS
 
 ## 拆一刀
 
-1. 把契约里 GMV 的公式改坏（看尺子红在哪几题）：打开 `contracts/schema.contract.yaml`，找到 `metrics:` 下 `name: GMV` 那段，**只改 `formula` 这一行**（`relevant_columns` 等别动）——**别用全局替换**：`SUM(fact_order.order_amount)` 在 AOV、平均件单价公式里也出现，Ctrl+H 会一次改坏 3 个指标（契约自检红 8 处而不是 3 处），红的不止 b01/b04；只动 `name: GMV` 下面那一行。改前是 `SUM(fact_order.order_amount)`，改成：
+1. 把契约里 GMV 的公式改坏（看尺子红在哪几题）：打开 `contracts/schema.contract.yaml`，找到 `metrics:` 下 `name: GMV` 那段，**只改 `formula` 这一行**（`relevant_columns` 等别动）。
+   **别用全局替换**：`SUM(fact_order.order_amount)` 在 AOV、平均件单价公式里也出现，Ctrl+H 会一次改坏 3 个指标（契约自检红 8 处而不是 3 处），红的不止 b01/b04；只动 `name: GMV` 下面那一行。
+   改前是 `SUM(fact_order.order_amount)`，改成：
 
 ```yaml
     formula: "SUM(fact_order.order_amount) / COUNT(DISTINCT fact_order.order_id)"
@@ -97,9 +108,19 @@ make baseline
   - b04: 期望 SQL，实际拒答 SQL_UNKNOWN_COLUMN
 ```
 
-末尾 `make: *** [Makefile:88: baseline] Error 1` 是判据在报红，不是命令敲错。红的原因是一条链：公式多了 `COUNT(DISTINCT fact_order.order_id)` → 生成器把它原样拼进 SQL → 但 GMV 的 `relevant_columns` 只有 `fact_order.order_amount`，上下文里没有 `order_id` → 静态校验按“列存在”拒绝 → 生成降级成拒答 → 期望 SQL 的两题 FAIL。同一处改动还让 `pytest backend/tests/generate -q` 变成 `12 failed, 110 passed, 5 skipped`（12 条里只有 2 条是基线题，其余是“生成的 SQL 只能用上下文里的列”这类断言被连带打红），第 11 页的契约自检也会报 3 处矛盾——在仓库根目录补跑这一条就能当场验证：
+末尾 `make: *** [Makefile:88: baseline] Error 1` 是判据在报红，不是命令敲错。
 
-`(cd backend && .venv/bin/python -m app.schema_contract --check)` 末行 `FAIL: 3 个契约问题`，三个码 `METRIC_RELEVANT_COLUMNS`（公式引用的列 ≠ `relevant_columns`）、`METRIC_VALUE_MISMATCH`（公式实际值 ≠ 契约期望）、`METRIC_FORMULA_SEMANTICS`（公式语义不对）。**一处契约、三处闸门同时响。**
+**红的原因是一条链**：公式多了 `COUNT(DISTINCT fact_order.order_id)` → 生成器把它原样拼进 SQL → 但 GMV 的 `relevant_columns` 只有 `fact_order.order_amount`，上下文里没有 `order_id` → 静态校验按“列存在”拒绝 → 生成降级成拒答 → 期望 SQL 的两题 FAIL。
+
+**连带红**：同一处改动还让 `pytest backend/tests/generate -q` 变成 `12 failed, 110 passed, 5 skipped`（12 条里只有 2 条是基线题，其余是“生成的 SQL 只能用上下文里的列”这类断言被连带打红），第 11 页的契约自检也会报 3 处矛盾——在仓库根目录补跑这一条就能当场验证：
+
+**补跑**：`(cd backend && .venv/bin/python -m app.schema_contract --check)` 末行 `FAIL: 3 个契约问题`，三个码：
+
+- `METRIC_RELEVANT_COLUMNS`（公式引用的列 ≠ `relevant_columns`）
+- `METRIC_VALUE_MISMATCH`（公式实际值 ≠ 契约期望）
+- `METRIC_FORMULA_SEMANTICS`（公式语义不对）
+
+**一处契约、三处闸门同时响。**
 
 3. 还原并回绿（`reset` 会先拍一张 `pre-reset-…` 安全快照，末行确认恢复成功）：
 
