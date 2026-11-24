@@ -12,11 +12,12 @@
 <p class="kicker">练本 · 阅读版（md 正典派生，改内容请改 manual/page-16.md）</p>
 <h1>第 16 页 · 审校验：错单要在执行前被拦下</h1>
 <blockquote>
+<p><strong>城市坐标 · L3 智慧城市 · 质检口</strong>｜错单在进仓库之前就被拦下：校验挡在执行前面。</p>
 <p>前置：本页一条服务都不用——<code>pytest</code>、失败矩阵、20 条语料全在离线跑，不需要 MySQL/ES/Qdrant、不需要 <code>.env</code>、也不需要模型 key。命令都在仓库根目录、同一个终端里整段连续执行。</p>
 </blockquote>
 <h2>这一页构建什么</h2>
 <p>校验是<strong>执行前的门</strong>，不是出错后的日志：用 20 条带 <code>expect_code</code> 的错单语料 + 16 个错误码 + 9 个场景（6 类失败 + 3 条对照：happy / slow / corrected），审“每条错单到底被哪个码、在哪一步拦下”；再拆掉一条校验规则，看语料从“拦”变“放”。</p>
-<p><img alt="第 16 页 · 静态校验：20 条语料过安检" src="../images/page-16-comic.webp" /></p>
+<p><img alt="第 16 页 · 错单要在执行前被拦下：20 条错单 + 16 个错误码 + 9 个场景：每条被哪个码、在哪一步拦" src="../images/page-16-visual.webp" /></p>
 <h2>猜一猜</h2>
 <ol>
 <li>20 条错单语料一共用了几种错误码——16 种（错误码表的总数）、10 种、还是 5 种？</li>
@@ -24,21 +25,31 @@
 </ol>
 <h2>动手</h2>
 <p><strong>第 1 步：拍快照。</strong> 拆一刀要改校验代码，先留退路（同名快照会被拒，重做本页就换个名字）；回显 <code>已保存快照 "p16-before"：169 个文件。</code>（数字因工作区而异）：</p>
+<!-- verify: p16-lab-save -->
+
 <pre><code class="language-bash">scripts/lab save p16-before
 </code></pre>
 <p><strong>第 2 步：先验规则本身。</strong> 26 条测试 = 静态校验正例 + 每个违规码至少一条负例，秒级：</p>
+<!-- verify: p16-pytest-guard -->
+
 <pre><code class="language-bash">backend/.venv/bin/python -m pytest backend/tests/generate/test_guard.py -q
 </code></pre>
 <p><strong>第 3 步：跑失败矩阵 + 16 码表。</strong> 9 个场景各演一遍结局（码/类别/失败步骤要与 <code>fixtures/failures/scenarios.yaml</code> 一致）；<strong>不需要 MySQL / LLM</strong>——只替换了模型与数据库，校验是真的；括号是子 shell，跑完你还在仓库根目录：</p>
+<!-- verify: p16-failures-check -->
+
 <pre><code class="language-bash">(cd backend &amp;&amp; .venv/bin/python -m app.scripts.failures --check)
 </code></pre>
 <p><strong>第 4 步：验 20 条语料的期望码，并数一遍码的分布。</strong> <code>eval/probe_correction.py</code> 把每条错 SQL 真过一遍校验栈，检查“期望码 = 实际码”；<code>PYTHONPATH=backend</code> 只给这条命令临时加找包路径，不改任何文件。第二条管道从 20 行 JSON 里抠出 <code>expect_code</code> 再计数：</p>
+<!-- verify: p16-probe-corpus -->
+
 <pre><code class="language-bash">PYTHONPATH=backend backend/.venv/bin/python eval/probe_correction.py | tail -1
 grep -o '&quot;expect_code&quot;: &quot;[A-Z_]*&quot;' eval/correction.jsonl | awk -F'&quot;' '{print $4}' | sort | uniq -c | sort -rn
 </code></pre>
 <p><strong>注意：</strong> <code>eval/probe_correction.py</code> 里写的旧用法（<code>cd backend &amp;&amp; .venv/bin/python ../eval/probe_correction.py</code>）会报 <code>No module named 'app'</code>——按上面 <code>PYTHONPATH=backend ...</code> 这条跑就是对的，报错不是环境坏了。</p>
 <h2>你应该看到</h2>
 <p>三条判据的输出（依次是第 2 / 3 / 4 步；块里 <code>#</code> 开头的行是标注，不是程序输出）：</p>
+<!-- verify-out: p16-pytest-guard p16-failures-check p16-probe-corpus -->
+
 <pre><code class="language-text"># 第 2 步（秒数随机器变，看 passed/failed 就行）
 26 passed in 0.41s
 # 第 3 步（节选）
@@ -95,6 +106,8 @@ S6 PASS
 <p>重跑第 2–4 步里的三条判据（<code>1 failed</code> 的是 <code>test_unknown_column_is_rejected</code>；秒数随机器变，看 passed/failed 就行；下面只留判红的那几行）：</p>
 </li>
 </ol>
+<!-- verify: p16-ablation-commands -->
+
 <pre><code class="language-bash">backend/.venv/bin/python -m pytest backend/tests/generate/test_guard.py -q
 (cd backend &amp;&amp; .venv/bin/python -m app.scripts.failures --check)
 PYTHONPATH=backend backend/.venv/bin/python eval/probe_correction.py | grep -E &quot;FAIL|total&quot;
@@ -111,6 +124,8 @@ FAIL c07 expected SQL_UNKNOWN_COLUMN actual []
 <ol start="3">
 <li>还原并回绿：</li>
 </ol>
+<!-- verify: p16-lab-reset-restore -->
+
 <pre><code class="language-bash">scripts/lab reset p16-before --yes
 (cd backend &amp;&amp; .venv/bin/python -m app.scripts.failures --check | tail -1)
 PYTHONPATH=backend backend/.venv/bin/python eval/probe_correction.py | tail -1

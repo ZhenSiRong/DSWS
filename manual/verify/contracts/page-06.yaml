@@ -1,0 +1,18 @@
+# 第 6 页 · 照契约生成那条带 JOIN 的 SQL —— 教材可跟随性契约（coverage: static）
+#
+# 本页唯一命令是 `python -m lab.app`，跑的是学生在第 5 页自己写的 lab/app.py。
+# lab/ 在 .gitignore 里（学生产物，不入库），CI 干净检出没有这个文件，
+# 因此 coverage: static：不执行任何块、页面不挂注解，只锚定「契约文件还在、字段没漂」。
+page: page-06
+title: 第 6 页 · 照契约生成那条带 JOIN 的 SQL
+coverage: static
+
+static:
+  paths:
+    - contracts/schema.contract.yaml   # 页面「契约里写着」的出处
+    - fixtures/dw.sql                  # 表结构与 115 行演示数据
+    - Makefile
+  symbols:
+    - {file: contracts/schema.contract.yaml, pattern: 'name: fact_order'}
+    - {file: contracts/schema.contract.yaml, pattern: 'expected_fact_rows: 115'}
+    - {file: fixtures/dw.sql, pattern: 'CREATE TABLE fact_order'}

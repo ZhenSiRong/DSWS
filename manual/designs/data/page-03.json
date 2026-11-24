@@ -1,0 +1,27 @@
+{
+  "eyebrow": "第 3 页 · L1 造 · 服务",
+  "title": "把服务开到 8000",
+  "subtitle": "一个 HTTP 服务，一个接口，一次真正的“对外说话”",
+  "layout": "steps",
+  "steps": [
+    {
+      "n": "1",
+      "title": "写服务",
+      "detail": "FastAPI 应用，只留一个 GET /health",
+      "judge": "app = FastAPI()"
+    },
+    {
+      "n": "2",
+      "title": "跑起来",
+      "detail": "uvicorn 监听本机 8000",
+      "judge": "Uvicorn running on http://127.0.0.1:8000"
+    },
+    {
+      "n": "3",
+      "title": "一问一答",
+      "detail": "curl 探活，服务回 JSON",
+      "judge": "{\"ok\":true}"
+    }
+  ],
+  "footer": "curl http://127.0.0.1:8000/health → {\"ok\":true}"
+}

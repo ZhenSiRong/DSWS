@@ -12,12 +12,13 @@
 <p class="kicker">练本 · 阅读版（md 正典派生，改内容请改 manual/page-11.md）</p>
 <h1>第 11 页 · 换真契约：让 SQL 从契约文件长出来</h1>
 <blockquote>
+<p><strong>城市坐标 · L2 通水电网 · 换计量标准</strong>｜取货单不再手写，改照对方的办事指南（契约文件）长出来。</p>
 <p>前置：第 0 页备好环境；本页接 L1 留下的 <code>lab/app.py</code>（第 8 页那份；L1 = 第 0–9 页盖出来的骨架版）。不用启动服务，也不用连 MySQL。</p>
 </blockquote>
 <h2>这一页构建什么</h2>
 <p>把第 6 页手抄进 <code>lab/app.py</code> 的 <code>CONTRACT = {...}</code> 字典删掉，改成从 <code>contracts/schema.contract.yaml</code> 加载：手抄字典是<strong>副本</strong>，契约文件是<strong>唯一事实源</strong>。</p>
 <p><strong>行为不变</strong>：<code>build_sql</code> 改成按契约的指标别名/公式和地区全集生成 SQL，拼出的 5 行必须和第 6 页逐字一样——换了来源，行为不变。</p>
-<p><img alt="第 11 页 · 让 SQL 从契约里长出来" src="../images/page-11-comic.webp" /></p>
+<p><img alt="第 11 页 · 让 SQL 从契约里长出来：删掉手抄 CONTRACT，改成加载唯一的契约文件" src="../images/page-11-visual.webp" /></p>
 <h2>猜一猜</h2>
 <p>动手前写下答案：删掉手抄字典、改成读契约后，打出来的 5 行 SQL 会变吗？产品说“销售额的口径改了”，你改代码，还是只改契约文件？</p>
 <h2>动手</h2>

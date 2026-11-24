@@ -1,0 +1,20 @@
+# 第 11 页 · 换真契约：让 SQL 从契约文件长出来 —— 教材可跟随性契约（coverage: static）
+#
+# 本页命令块第一行跑学生自建的 lab/app.py（.gitignore 内，CI 干净检出没有），
+# 所以整块无法在 CI 离线执行 → coverage: static，不执行、页面不挂注解。
+# 同一条 `app.schema_contract --check` 断言已在第 10 页契约里真跑（那里是纯仓库内命令）。
+page: page-11
+title: 第 11 页 · 换真契约：让 SQL 从契约文件长出来
+coverage: static
+
+static:
+  paths:
+    - backend/app/schema_contract.py   # 第 3 步 --check 的实现
+    - contracts/schema.contract.yaml   # SQL 生成器的输入契约
+    - fixtures/dw.sql
+    - docs/SCHEMA-CONTRACT.md
+  symbols:
+    - {file: backend/app/schema_contract.py, pattern: 'def main\('}
+    - {file: backend/app/schema_contract.py, pattern: 'S1 PASS'}
+    - {file: contracts/schema.contract.yaml, pattern: 'value_domain:'}
+    - {file: docs/SCHEMA-CONTRACT.md, pattern: 'contracts/schema\.contract\.yaml'}

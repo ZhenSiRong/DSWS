@@ -1,0 +1,30 @@
+# 第 22 页 · 守回归 —— 教材可跟随性契约（coverage: static）
+#
+# schema 与规则见 manual/verify/README.md。
+# 本页四条门禁都要真栈 / 真 MySQL / docker compose / 第 0 页装好的 node_modules，
+# 无法在 CI 离线无人值守执行，因此 coverage: static：不执行任何块，页面也不写
+# <!-- verify: --> 注解；只查页面引用的路径还在、关键锚点没漂移。
+page: page-22
+title: 第 22 页 · 守回归：一套门禁能不能替你值班
+coverage: static
+
+static:
+  # 页面命令实际依赖的仓库内路径（.env / backend/.venv / frontend/node_modules
+  # 是第 0 页生成的本地产物、不入库，故不列；clean clone 里本来就没有）
+  paths:
+    - scripts/lab                     # 第 1 步 scripts/lab save p22-before
+    - Makefile                        # 第 4 步 make docker-smoke；级考核第 3/5 步整跑
+    - scripts/docker-smoke.sh         # make docker-smoke 背后的 8 步门禁本体
+    - compose.yaml                    # docker compose ps -a / exec -T mysql / run init
+    - scripts/export-docker-env.sh    # 级考核终端 B source 拿 REBUILD_* 密码
+    - backend/app/scripts/security.py # 还原：-m app.scripts.security --provision-ro-account
+
+  # 一改就会让页面命令失效 / 判据错位的锚点：make 目标、8 步编号、服务名、
+  # 环境变量、CLI 旗标、模块入口
+  symbols:
+    - {file: Makefile, pattern: '^docker-smoke:'}
+    - {file: scripts/docker-smoke.sh, pattern: '^echo "== 7/8 只读账号验证 =="'}
+    - {file: compose.yaml, pattern: '^  init:'}
+    - {file: scripts/export-docker-env.sh, pattern: '^export REBUILD_MYSQL_ROOT_PASSWORD='}
+    - {file: backend/app/scripts/security.py, pattern: '--provision-ro-account'}
+    - {file: backend/app/build_meta_knowledge.py, pattern: '--verify'}

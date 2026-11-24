@@ -1,0 +1,24 @@
+{
+  "eyebrow": "第 21 页 · L4 守 · 可观测",
+  "title": "12 条进度 + 14 条夹具能证明什么",
+  "subtitle": "给一次问数装上可对账的观测面：步骤、错误码、SSE 回放",
+  "layout": "cards",
+  "cards": [
+    {
+      "name": "/api/steps",
+      "role": "12 条进度：11 常驻 + 1 条件",
+      "judge": "12，条件步骤 correct_sql"
+    },
+    {
+      "name": "/api/errors",
+      "role": "错误码表：16 个码 / 3 类",
+      "judge": "16"
+    },
+    {
+      "name": "SSE 回放",
+      "role": "14 条夹具逐字节对账",
+      "judge": "S7 SSE RECORD PASS"
+    }
+  ],
+  "footer": "可观测：12 进度 + 16 错误码 + 14 夹具"
+}

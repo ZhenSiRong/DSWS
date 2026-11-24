@@ -1,5 +1,7 @@
 # 第 14 页 · 审检索：召回空了的答案，你凭什么信
 
+> **城市坐标 · L3 智慧城市 · 城市大脑的图书馆**｜大脑答题前先查资料；资料库停了呢——答案还值不值得信。
+
 > **前置**
 >
 > **整栈在跑**：第 13 页的五个长驻服务 `docker compose ps` 里 `healthy`；`backend/.venv` 已由第 0 页 `make install` 建好。
@@ -14,7 +16,7 @@
 
 **审的顺序**：先写下判据，再让机器去撞。
 
-![第 14 页 · 从契约里检索上下文](images/page-14-comic.webp)
+![第 14 页 · 召回空了的答案，你凭什么信：20 题黄金集 + 三条判据；停掉检索存储，看谁在兜底](images/page-14-visual.webp)
 
 ## 猜一猜
 
@@ -26,6 +28,7 @@
 ## 动手
 
 **第 1 步：拍快照。** 本页不改被跟踪的代码/契约，拍一张是兜底（`lab save` 只往 `.lab/` 写快照，该目录已被 gitignore）；同名快照会被拒，重做本页就换个名字：
+<!-- verify: page14-lab-save -->
 ```bash
 scripts/lab save p14-before
 ```
@@ -34,6 +37,7 @@ scripts/lab save p14-before
 
 **第 2 步：先跑离线判据（不需要任何服务；解释器来自第 0 页 `make install` 建好的 `backend/.venv`）。**
 
+<!-- verify: page14-pytest-recall -->
 ```bash
 backend/.venv/bin/python -m pytest backend/tests/recall -q
 ```
@@ -54,6 +58,7 @@ backend/.venv/bin/python -m pytest backend/tests/recall -q
 - 要整体重起：`docker compose up -d`。
 - 只有镜像/代码要重做才用 `make docker-up`（它 `--build` 重建，约 8 分钟）。
 
+<!-- verify: page14-export-env-stage3 -->
 ```bash
 source scripts/export-docker-env.sh
 make stage3
@@ -63,6 +68,7 @@ make stage3
 
 第 2 步（节选；秒数因机器而异）：
 
+<!-- verify-out: page14-pytest-recall -->
 ```text
 18 passed, 23 skipped in 0.44s
 ```
@@ -116,10 +122,12 @@ S3 PASS
 **没 source 的红法**：直接跑 pytest 会先红 `Failed: REBUILD_INTEGRATION=1 但服务不可用：{'mysql': False, …}`，那不是黄金集变红。
 
 1. **只停检索，别停整栈。** `make docker-down` 会把库和入口一起停掉，下一页还要用；这里只停一座检索存储（停 Qdrant 效果一样——检索的验收依赖三样，少一样就整条不工作）：
+<!-- verify: page14-stop-elasticsearch -->
 ```bash
 docker compose stop elasticsearch
 ```
 2. **再查一次数。** 走第 13 页的前端入口（命令里的 `8080` 是 `.env` 默认值；第 13 页改过 `FRONTEND_HOST_PORT` 就换成你的端口——端口不对会回 404 `Router not found`，像接口坏了）：
+<!-- verify: page14-curl-query -->
 ```bash
 curl -s -N -X POST http://127.0.0.1:8080/api/query -H 'Content-Type: application/json' -d '{"query":"华北销售额"}' | grep '"type": "result"'
 ```
@@ -130,6 +138,7 @@ data: {"type": "result", "data": {"columns": [{"name": "销售额", "type": "num
 ```
 
 3. **再看召回这条路。** 把黄金集的真检索单跑一遍（就是 `make stage3` 的第 2 步），20 题整片变红：
+<!-- verify: page14-pytest-recall-integration -->
 ```bash
 (cd backend && REBUILD_INTEGRATION=1 .venv/bin/python -m pytest -q tests/recall)
 ```
@@ -145,6 +154,7 @@ Failed: REBUILD_INTEGRATION=1 但服务不可用：{'mysql': True, 'es': False, 
 **不重建**：`start` 只重启容器、不重建；要整体重起用 `docker compose up -d`，只有镜像/代码要重做才用 `make docker-up`——它会 `--build` 重建、约 8 分钟。
 
 **等 healthy**：`start` 立刻返回，`ps` 头 20 秒左右只显示 `(health: starting)`；**轮询等到 `(healthy)` 再跑 `make stage3`**，否则会红一段再重来（本页实测约 20–30 秒）：
+<!-- verify: page14-start-elasticsearch -->
 ```bash
 docker compose start elasticsearch
 until docker compose ps elasticsearch | grep -q '(healthy)'; do sleep 2; done   # 无输出地退出 = 已 healthy
@@ -152,6 +162,7 @@ until docker compose ps elasticsearch | grep -q '(healthy)'; do sleep 2; done   
 **回绿**：再跑一次 `make stage3` 回到 `S3 PASS`（本页实测过）。
 
 **快照留着**：本页没改被跟踪的代码/契约，`scripts/lab reset` 用不上，快照留给重做本页兜底：
+<!-- verify: page14-stage3-regreen -->
 ```bash
 make stage3
 ```

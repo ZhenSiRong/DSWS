@@ -12,12 +12,13 @@
 <p class="kicker">练本 · 阅读版（md 正典派生，改内容请改 manual/page-05.md）</p>
 <h1>第 5 页 · 从一句话里抽出关键词</h1>
 <blockquote>
+<p><strong>城市坐标 · P5 前台接待台（交付物 ⑦）</strong>｜窗口后的接待员：把一句话拆成「地区 + 指标」两把钥匙。</p>
 <p>前置：第 0 页备好环境；本页接第 4 页留下的 lab/app.py 与 8000 端口的服务。</p>
 </blockquote>
 <h2>这一页构建什么</h2>
 <p>一个纯函数 <code>extract_keywords(question)</code>：把问题当普通字符串，在你写好的词表里查“问题里出现了哪个词”，抽成一个列表。
 不调 AI、不分析语法，只做字符串匹配；抽出来的列表就是第 6 页拼 SQL 的原料。</p>
-<p><img alt="第 5 页 · 从一句话里抽出关键词" src="../images/page-05-comic.webp" /></p>
+<p><img alt="第 5 页 · 从一句话里抽出关键词：纯函数 + 词表匹配，不调 AI、不分析语法" src="../images/page-05-visual.webp" /></p>
 <h2>猜一猜</h2>
 <p>动手前写下答案：把问题换成 <code>{"question": "华东的销售额是多少"}</code>，<code>keywords</code> 里会有几个词？分别是哪几个？</p>
 <p><code>"的"</code>、<code>"多少"</code> 会出现在列表里吗？</p>

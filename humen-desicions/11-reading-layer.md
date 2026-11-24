@@ -294,3 +294,18 @@ Answer:除了Q2选B(多插漫画解释图少插文字,我们用ark-cli中的模�
 - 闸门：`audit_book` 24/24、`verify.py --fast` T0 PASS、`make verify` T1 PASS、`make audit` 5/5；阅读版 HTML 全书重生成。
 
 **说明**：漫画只替换/补充解释性呈现，六段结构、代码块、判据原句、数字/路径/证据链接一字未动。
+## 第 7 轮 · 24 页页首图全部可编辑化（2026-11-24，v1.2 前）
+
+> 用户拍板：全部图改为「可编辑代码原生页首图」，AI 栅格版归档；术语「页首图（page visual）」。
+> 设计口径：真实对象 + 一句职责 + 一句判据；白底/黑字/单橙；1600×1000；本地品牌 SVG；无运行时外链。
+
+| 批次 | 页 | 实现 |
+| - | - | - |
+| 试点（kimi + lead 收尾） | p00–p02 | `manual/designs/page-00…02/`（pilot 定制版式） |
+| 批量（共享模板） | p03–p23 | `manual/designs/page-NN/`（`build_visuals.py` 从 `data/page-NN.json` 生成） |
+
+- 页面只引用 `manual/images/page-NN-visual.webp`；旧 25 张 AI 漫画移到 `manual/images/archive/comics-v1/`。
+- 构建：`python3 manual/designs/build_visuals.py`（全部）或 `build_visuals.py 03 04`；每页同时生成 `index.html` + `editor.html` + `out/poster.png`。
+- 改版：改 `data/page-NN.json` → 重跑构建 → `render_read.py` → audit；不需要生图 token。
+- 闸门：`audit_book 24/24`、`verify T0/T1`（24 个契约，含页面图的静态路径）。
+- 说明：p00–p02 目前仍是 pilot 定制版式，后续可统一迁到共享模板（若用户要求视觉完全一致）。

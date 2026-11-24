@@ -1,12 +1,14 @@
 # 第 16 页 · 审校验：错单要在执行前被拦下
 
+> **城市坐标 · L3 智慧城市 · 质检口**｜错单在进仓库之前就被拦下：校验挡在执行前面。
+
 > 前置：本页一条服务都不用——`pytest`、失败矩阵、20 条语料全在离线跑，不需要 MySQL/ES/Qdrant、不需要 `.env`、也不需要模型 key。命令都在仓库根目录、同一个终端里整段连续执行。
 
 ## 这一页构建什么
 
 校验是**执行前的门**，不是出错后的日志：用 20 条带 `expect_code` 的错单语料 + 16 个错误码 + 9 个场景（6 类失败 + 3 条对照：happy / slow / corrected），审“每条错单到底被哪个码、在哪一步拦下”；再拆掉一条校验规则，看语料从“拦”变“放”。
 
-![第 16 页 · 静态校验：20 条语料过安检](images/page-16-comic.webp)
+![第 16 页 · 错单要在执行前被拦下：20 条错单 + 16 个错误码 + 9 个场景：每条被哪个码、在哪一步拦](images/page-16-visual.webp)
 
 ## 猜一猜
 
@@ -17,24 +19,28 @@
 
 **第 1 步：拍快照。** 拆一刀要改校验代码，先留退路（同名快照会被拒，重做本页就换个名字）；回显 `已保存快照 "p16-before"：169 个文件。`（数字因工作区而异）：
 
+<!-- verify: p16-lab-save -->
 ```bash
 scripts/lab save p16-before
 ```
 
 **第 2 步：先验规则本身。** 26 条测试 = 静态校验正例 + 每个违规码至少一条负例，秒级：
 
+<!-- verify: p16-pytest-guard -->
 ```bash
 backend/.venv/bin/python -m pytest backend/tests/generate/test_guard.py -q
 ```
 
 **第 3 步：跑失败矩阵 + 16 码表。** 9 个场景各演一遍结局（码/类别/失败步骤要与 `fixtures/failures/scenarios.yaml` 一致）；**不需要 MySQL / LLM**——只替换了模型与数据库，校验是真的；括号是子 shell，跑完你还在仓库根目录：
 
+<!-- verify: p16-failures-check -->
 ```bash
 (cd backend && .venv/bin/python -m app.scripts.failures --check)
 ```
 
 **第 4 步：验 20 条语料的期望码，并数一遍码的分布。** `eval/probe_correction.py` 把每条错 SQL 真过一遍校验栈，检查“期望码 = 实际码”；`PYTHONPATH=backend` 只给这条命令临时加找包路径，不改任何文件。第二条管道从 20 行 JSON 里抠出 `expect_code` 再计数：
 
+<!-- verify: p16-probe-corpus -->
 ```bash
 PYTHONPATH=backend backend/.venv/bin/python eval/probe_correction.py | tail -1
 grep -o '"expect_code": "[A-Z_]*"' eval/correction.jsonl | awk -F'"' '{print $4}' | sort | uniq -c | sort -rn
@@ -46,6 +52,7 @@ grep -o '"expect_code": "[A-Z_]*"' eval/correction.jsonl | awk -F'"' '{print $4}
 
 三条判据的输出（依次是第 2 / 3 / 4 步；块里 `#` 开头的行是标注，不是程序输出）：
 
+<!-- verify-out: p16-pytest-guard p16-failures-check p16-probe-corpus -->
 ```text
 # 第 2 步（秒数随机器变，看 passed/failed 就行）
 26 passed in 0.41s
@@ -93,6 +100,7 @@ S6 PASS
 
 2. 重跑第 2–4 步里的三条判据（`1 failed` 的是 `test_unknown_column_is_rejected`；秒数随机器变，看 passed/failed 就行；下面只留判红的那几行）：
 
+<!-- verify: p16-ablation-commands -->
 ```bash
 backend/.venv/bin/python -m pytest backend/tests/generate/test_guard.py -q
 (cd backend && .venv/bin/python -m app.scripts.failures --check)
@@ -113,6 +121,7 @@ FAIL c07 expected SQL_UNKNOWN_COLUMN actual []
 
 3. 还原并回绿：
 
+<!-- verify: p16-lab-reset-restore -->
 ```bash
 scripts/lab reset p16-before --yes
 (cd backend && .venv/bin/python -m app.scripts.failures --check | tail -1)

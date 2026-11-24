@@ -1,0 +1,27 @@
+{
+  "eyebrow": "第 9 页 · L1 造 · 入口",
+  "title": "给浏览器一个入口",
+  "subtitle": "nginx 反代 + 17 行页面 + docker run",
+  "layout": "steps",
+  "steps": [
+    {
+      "n": "1",
+      "title": "nginx.conf 8 行",
+      "detail": "/api/ 反代到 backend:8000",
+      "judge": "proxy_pass http://backend:8000"
+    },
+    {
+      "n": "2",
+      "title": "17 行页面",
+      "detail": "输入框 + EventSource 接收",
+      "judge": "浏览器自带 EventSource"
+    },
+    {
+      "n": "3",
+      "title": "docker run 8081",
+      "detail": "浏览器打开入口、问一句",
+      "judge": "41099.5"
+    }
+  ],
+  "footer": "浏览器 → 8081 → nginx → /api/stream → 41099.5"
+}

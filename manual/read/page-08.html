@@ -12,13 +12,14 @@
 <p class="kicker">练本 · 阅读版（md 正典派生，改内容请改 manual/page-08.md）</p>
 <h1>第 8 页 · 让答案一条条推送出来（SSE）</h1>
 <blockquote>
+<p><strong>城市坐标 · P8 传送带（交付物 ⑩）</strong>｜把取到的货一条条传回窗口：不再是砸一坨，而是 12 条 <code>progress</code> 边走边报。</p>
 <p>前置：第 0 页备好环境；本页接第 7 页留下的 lab/app.py 与 8000 端口的服务。</p>
 </blockquote>
 <h2>这一页构建什么</h2>
 <p><strong>同一个服务再加一条流式通道</strong> <code>GET /api/stream?q=...</code>：把一次查询拆成 12 条 <code>progress</code> 事件（每个步骤一条），最后再发 1 条 <code>result</code>，内容类型是 <code>text/event-stream</code>。</p>
 <p><strong>旧入口不动</strong>：第 7 页的 <code>POST /api/query</code> 保留不动——一个“憋到最后一次给”，一个“干一步报一步”，你正好对照。</p>
 <p><strong>步骤名有出处</strong>：这 12 个步骤名不是现编的，<code>contracts/steps.yaml</code> 里就声明了这 12 个节点。</p>
-<p><img alt="第 8 页 · 一条一条把结果送回去" src="../images/page-08-comic.webp" /></p>
+<p><img alt="第 8 页 · 让答案一条条推送出来（SSE）：12 条 progress + 1 条 result，text/event-stream" src="../images/page-08-visual.webp" /></p>
 <h2>猜一猜</h2>
 <p>动手前写下答案：</p>
 <p>用 <code>curl</code> 打这条流，12 条 <code>progress</code> 会<strong>一起</strong>冒出来，还是<strong>隔一小段</strong>冒一条（这里“冒”就是服务端<strong>逐条推送</strong>，SSE）？</p>

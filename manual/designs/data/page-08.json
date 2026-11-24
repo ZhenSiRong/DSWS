@@ -1,0 +1,33 @@
+{
+  "eyebrow": "第 8 页 · L1 造 · 流式",
+  "title": "让答案一条条推送出来（SSE）",
+  "subtitle": "12 条 progress + 1 条 result，text/event-stream",
+  "layout": "steps",
+  "steps": [
+    {
+      "n": "1",
+      "title": "12 条 progress",
+      "detail": "每个步骤一条事件",
+      "judge": "recall_column / generate_sql …"
+    },
+    {
+      "n": "2",
+      "title": "最后 1 条 result",
+      "detail": "结果只在最后出现",
+      "judge": "rows: [{region_name: 华北, sales: 41099.5}]"
+    },
+    {
+      "n": "3",
+      "title": "text/event-stream",
+      "detail": "事件之间一个空行",
+      "judge": "EventSource 接流"
+    },
+    {
+      "n": "4",
+      "title": "前端逐步渲染",
+      "detail": "用户能看到走到第几步",
+      "judge": "12 progress + 1 result"
+    }
+  ],
+  "footer": "GET /api/stream?q=… → 12 条 progress + 1 条 result"
+}

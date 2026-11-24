@@ -1,5 +1,7 @@
 # 第 8 页 · 让答案一条条推送出来（SSE）
 
+> **城市坐标 · P8 传送带（交付物 ⑩）**｜把取到的货一条条传回窗口：不再是砸一坨，而是 12 条 `progress` 边走边报。
+
 > 前置：第 0 页备好环境；本页接第 7 页留下的 lab/app.py 与 8000 端口的服务。
 
 ## 这一页构建什么
@@ -10,7 +12,7 @@
 
 **步骤名有出处**：这 12 个步骤名不是现编的，`contracts/steps.yaml` 里就声明了这 12 个节点。
 
-![第 8 页 · 一条一条把结果送回去](images/page-08-comic.webp)
+![第 8 页 · 让答案一条条推送出来（SSE）：12 条 progress + 1 条 result，text/event-stream](images/page-08-visual.webp)
 
 ## 猜一猜
 

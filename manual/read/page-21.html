@@ -12,6 +12,7 @@
 <p class="kicker">练本 · 阅读版（md 正典派生，改内容请改 manual/page-21.md）</p>
 <h1>第 21 页 · 守可观测：12 条进度 + 14 条夹具能证明什么</h1>
 <blockquote>
+<p><strong>城市坐标 · L4 城市安防 · 调度大屏</strong>｜12 条进度 + 14 条夹具上大屏：哪一步慢、哪一条错，看得见。</p>
 <p><strong>前置</strong>：L4（守）第四页。第 18–20 页分别守账号、策略、取消；本页守可观测。</p>
 <p><strong>判据全离线</strong>：不启服务、不用 MySQL、<code>.env</code>、模型 key、浏览器。</p>
 <p><strong>在哪跑</strong>：命令都在仓库根目录、同一个终端里整段连续执行；括号是子 shell，跑完你还在仓库根目录。</p>
@@ -27,7 +28,7 @@
 </ul>
 <p><strong>做完你拿到三条可重放的判据</strong>：夹具逐字节对账 PASS、夹具每帧合契约 30 passed、前端协议 40 passed。</p>
 <p>心智模型：<strong>应用层可观测回答「现在在干什么、错在哪一步」，不回答「慢了吗、谁该报警」。</strong></p>
-<p><img alt="第 21 页 · 可观测：判据能断言什么" src="../images/page-21-comic.webp" /></p>
+<p><img alt="第 21 页 · 12 条进度 + 14 条夹具能证明什么：给一次问数装上可对账的观测面：步骤、错误码、SSE 回放" src="../images/page-21-visual.webp" /></p>
 <h2>猜一猜</h2>
 <ol>
 <li>happy 夹具共 24 帧，其中 23 条 <code>progress</code> 只覆盖 12 个步骤名。12 个名字里，哪几个<strong>只出现 1 次</strong>、最容易漏？</li>
@@ -35,6 +36,8 @@
 </ol>
 <h2>动手</h2>
 <p><strong>第 1 步：拍快照 + 数观测面的两半。</strong> 拆一刀要改 <code>record_sse.py</code>，先留退路（同名快照会被拒；文件数因工作区而异）。下面一个脚本把两半都数一遍：目录端点给名字与码，流给实例；不启服务、不联网：</p>
+<!-- verify: page21-lab-save -->
+
 <pre><code class="language-bash">scripts/lab save p21-before
 (cd backend &amp;&amp; .venv/bin/python -c &quot;
 import json
@@ -50,21 +53,29 @@ for sid in ('happy', 'llm_refusal'):
 &quot;)
 </code></pre>
 <p><strong>第 2 步：对账 14 条夹具。</strong> <code>record_sse --check</code> 用今天的代码把 9 个场景 + 取消路径重录，和 <code>fixtures/sse/</code> 里的文件逐字节比；4 条手写夹具只与源码常量比。退出码 0 才算过：</p>
+<!-- verify: page21-record-sse -->
+
 <pre><code class="language-bash">(cd backend &amp;&amp; .venv/bin/python -m app.scripts.record_sse --check)
 </code></pre>
 <p><strong>第 3 步：两组协议测试。</strong> 第一条命令验夹具每一帧都合契约（14 条 × 形状 + 帧契约）；第二条验前端解析器与结果渲染。</p>
 <p><strong>前提</strong>：<code>backend/.venv</code> 由第 0 页 <code>make install</code> 生成；<code>frontend/node_modules</code> 缺了就先 <code>npm ci</code>（要联网）。</p>
 <p><strong>lock 陷阱</strong>：<code>frontend/package-lock.json</code> 不在 <code>lab</code> 白名单，若被改就 <code>git checkout -- frontend/package-lock.json</code> 还原：</p>
+<!-- verify: page21-protocol-tests -->
+
 <pre><code class="language-bash">(cd backend &amp;&amp; .venv/bin/python -m pytest tests/frontend/test_sse_fixtures.py -q)
 (cd frontend &amp;&amp; npm test)
 </code></pre>
 <p><strong>第 4 步（可选）：<code>make stage7</code>。</strong> 前提：本机装了 <code>uv</code> 且 <code>backend/.venv</code> 依赖已同步；不需要 MySQL / 浏览器。6 段门禁（契约新鲜度、夹具对账、<code>tests/frontend</code> 45 条、前端 40 条、前端构建、全后端 843 条 = 813 passed + 30 skipped），本机实测约 54 秒，末行 <code>S7 PASS</code>；不跑不影响前面判据：</p>
+<!-- verify: page21-stage7 -->
+
 <pre><code class="language-bash">make stage7
 </code></pre>
 <p><strong><code>make stage7</code> 已 <code>uv run --frozen</code>，不会改 <code>backend/uv.lock</code>；只有脚本里的裸 <code>uv run</code>（<code>make stage3</code>、<code>make stage0-ui</code>、<code>make stage6-ui</code>）或手敲 <code>uv run</code> 才会按本机镜像源重写它。</strong></p>
 <p><strong>它不在白名单</strong>：<code>lab reset</code> 回显的“完全一致”只算白名单文件——仅当 <code>git status</code> 显示 lock 变脏时再 <code>git checkout -- backend/uv.lock</code> 单独还原（口径同第 15 / 19 页）。</p>
 <h2>你应该看到</h2>
 <p>第 1–3 步（<code>#</code> 开头是标注；耗时随机器变；下面是节选）：</p>
+<!-- verify-out: page21-record-sse -->
+
 <pre><code class="language-text"># 第 1 步
 已保存快照 &quot;p21-before&quot;：169 个文件。
 /api/steps = 12 条件步骤 = ['correct_sql']
@@ -164,6 +175,8 @@ S7 SSE RECORD PASS（14 个夹具与真实输出一致）
 </ul>
 <p><strong>怎么删</strong>：把这两个分支连同外层的 <code>if</code>/<code>elif</code> 头一起删掉，函数只剩解析与 <code>json.dumps</code>。</p>
 <p><strong>别删错</strong>：只删 L201 / L205 这两行赋值会缩进报错（“录制失败”），不是 10 条红；也别删整个函数。重跑第 2 步（退出码 1）：</p>
+<!-- verify: page21-ablation -->
+
 <pre><code class="language-bash">(cd backend &amp;&amp; .venv/bin/python -m app.scripts.record_sse --check)
 </code></pre>
 <pre><code class="language-text">FAIL: SSE 夹具与真实输出不同步：
@@ -175,6 +188,8 @@ S7 SSE RECORD PASS（14 个夹具与真实输出一致）
 <p><strong>为什么红</strong>：<code>happy.json</code> 里那几帧是 <code>"duration_ms": 12.5</code>，今天录出来首个 duration 帧约 3.3、11 个带 duration 的 progress 帧全与 12.5 不同（0 到几十毫秒不等，每次不同）。</p>
 <p><strong>另一处噪音</strong>：<code>cancelled.json</code> 的 <code>detail</code> 里还多了一个随机 32-hex 的 <code>request_id</code>（每次不同，形如 <code>9d5221…</code>）。</p>
 <p><strong>别照着提示去重录</strong>：把今天的噪音写死进夹具，明天还会红，判据就废了。用快照还原，再重跑第 2 步：</p>
+<!-- verify: page21-lab-reset-restore -->
+
 <pre><code class="language-bash">scripts/lab reset p21-before --yes
 (cd backend &amp;&amp; .venv/bin/python -m app.scripts.record_sse --check | tail -1)
 </code></pre>

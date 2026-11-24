@@ -1,5 +1,7 @@
 # 第 21 页 · 守可观测：12 条进度 + 14 条夹具能证明什么
 
+> **城市坐标 · L4 城市安防 · 调度大屏**｜12 条进度 + 14 条夹具上大屏：哪一步慢、哪一条错，看得见。
+
 > **前置**：L4（守）第四页。第 18–20 页分别守账号、策略、取消；本页守可观测。
 >
 > **判据全离线**：不启服务、不用 MySQL、`.env`、模型 key、浏览器。
@@ -22,7 +24,7 @@
 
 心智模型：**应用层可观测回答「现在在干什么、错在哪一步」，不回答「慢了吗、谁该报警」。**
 
-![第 21 页 · 可观测：判据能断言什么](images/page-21-comic.webp)
+![第 21 页 · 12 条进度 + 14 条夹具能证明什么：给一次问数装上可对账的观测面：步骤、错误码、SSE 回放](images/page-21-visual.webp)
 
 ## 猜一猜
 
@@ -33,6 +35,7 @@
 
 **第 1 步：拍快照 + 数观测面的两半。** 拆一刀要改 `record_sse.py`，先留退路（同名快照会被拒；文件数因工作区而异）。下面一个脚本把两半都数一遍：目录端点给名字与码，流给实例；不启服务、不联网：
 
+<!-- verify: page21-lab-save -->
 ```bash
 scripts/lab save p21-before
 (cd backend && .venv/bin/python -c "
@@ -51,6 +54,7 @@ for sid in ('happy', 'llm_refusal'):
 
 **第 2 步：对账 14 条夹具。** `record_sse --check` 用今天的代码把 9 个场景 + 取消路径重录，和 `fixtures/sse/` 里的文件逐字节比；4 条手写夹具只与源码常量比。退出码 0 才算过：
 
+<!-- verify: page21-record-sse -->
 ```bash
 (cd backend && .venv/bin/python -m app.scripts.record_sse --check)
 ```
@@ -61,6 +65,7 @@ for sid in ('happy', 'llm_refusal'):
 
 **lock 陷阱**：`frontend/package-lock.json` 不在 `lab` 白名单，若被改就 `git checkout -- frontend/package-lock.json` 还原：
 
+<!-- verify: page21-protocol-tests -->
 ```bash
 (cd backend && .venv/bin/python -m pytest tests/frontend/test_sse_fixtures.py -q)
 (cd frontend && npm test)
@@ -68,6 +73,7 @@ for sid in ('happy', 'llm_refusal'):
 
 **第 4 步（可选）：`make stage7`。** 前提：本机装了 `uv` 且 `backend/.venv` 依赖已同步；不需要 MySQL / 浏览器。6 段门禁（契约新鲜度、夹具对账、`tests/frontend` 45 条、前端 40 条、前端构建、全后端 843 条 = 813 passed + 30 skipped），本机实测约 54 秒，末行 `S7 PASS`；不跑不影响前面判据：
 
+<!-- verify: page21-stage7 -->
 ```bash
 make stage7
 ```
@@ -80,6 +86,7 @@ make stage7
 
 第 1–3 步（`#` 开头是标注；耗时随机器变；下面是节选）：
 
+<!-- verify-out: page21-record-sse -->
 ```text
 # 第 1 步
 已保存快照 "p21-before"：169 个文件。
@@ -172,6 +179,7 @@ S7 SSE RECORD PASS（14 个夹具与真实输出一致）
 
 **别删错**：只删 L201 / L205 这两行赋值会缩进报错（“录制失败”），不是 10 条红；也别删整个函数。重跑第 2 步（退出码 1）：
 
+<!-- verify: page21-ablation -->
 ```bash
 (cd backend && .venv/bin/python -m app.scripts.record_sse --check)
 ```
@@ -190,6 +198,7 @@ FAIL: SSE 夹具与真实输出不同步：
 
 **别照着提示去重录**：把今天的噪音写死进夹具，明天还会红，判据就废了。用快照还原，再重跑第 2 步：
 
+<!-- verify: page21-lab-reset-restore -->
 ```bash
 scripts/lab reset p21-before --yes
 (cd backend && .venv/bin/python -m app.scripts.record_sse --check | tail -1)

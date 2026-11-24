@@ -1,0 +1,24 @@
+{
+  "eyebrow": "第 15 页 · L3 审 · 生成",
+  "title": "同一把尺子，量模板也量模型",
+  "subtitle": "10 题基线 + 语义断言，模板与模型都跑同一套尺子",
+  "layout": "cards",
+  "cards": [
+    {
+      "name": "10 题基线",
+      "role": "问题 → SQL/拒答 → 判定",
+      "judge": "baseline.yaml"
+    },
+    {
+      "name": "语义断言",
+      "role": "不看字面，看语义是否等价",
+      "judge": "122 passed, 5 skipped"
+    },
+    {
+      "name": "拒答也要对",
+      "role": "该拒答的必须拒",
+      "judge": "S4 PASS"
+    }
+  ],
+  "footer": "同一把尺子：模板和模型都量，不靠单次演示"
+}

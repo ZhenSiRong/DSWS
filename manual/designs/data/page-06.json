@@ -1,0 +1,27 @@
+{
+  "eyebrow": "第 6 页 · L1 造 · 生成",
+  "title": "照契约生成那条带 JOIN 的 SQL",
+  "subtitle": "契约字典 + build_sql(keywords)：把关键词拼成 5 行 SELECT",
+  "layout": "steps",
+  "steps": [
+    {
+      "n": "1",
+      "title": "CONTRACT 字典",
+      "detail": "表、列、指标口径写进 Python",
+      "judge": "表 / 列 / 口径"
+    },
+    {
+      "n": "2",
+      "title": "build_sql(keywords)",
+      "detail": "照契约拼 JOIN，不靠猜",
+      "judge": "fact_order JOIN dim_region"
+    },
+    {
+      "n": "3",
+      "title": "5 行 SELECT",
+      "detail": "可直接交给 MySQL 执行",
+      "judge": "WHERE region_name = '华北'"
+    }
+  ],
+  "footer": "SELECT … FROM fact_order JOIN dim_region ON … WHERE region_name='华北' GROUP BY …"
+}

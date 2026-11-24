@@ -1,0 +1,33 @@
+{
+  "eyebrow": "第 20 页 · L4 守 · 取消",
+  "title": "点了停止，系统真的停了吗",
+  "subtitle": "取消是独立状态：不是 done，也不是失败",
+  "layout": "steps",
+  "steps": [
+    {
+      "n": "1",
+      "title": "点“停止”",
+      "detail": "客户端发取消请求",
+      "judge": "cancel"
+    },
+    {
+      "n": "2",
+      "title": "服务端真的停",
+      "detail": "不再继续跑、不再写结果",
+      "judge": "状态回到 idle"
+    },
+    {
+      "n": "3",
+      "title": "发 CANCELLED 事件",
+      "detail": "SSE 里显式告诉前端",
+      "judge": "type=error, code=CANCELLED"
+    },
+    {
+      "n": "4",
+      "title": "界面标“已取消”",
+      "detail": "不是“失败”，也不是“完成”",
+      "judge": "已取消"
+    }
+  ],
+  "footer": "停止是一个状态，不是「不返回」"
+}

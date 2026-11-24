@@ -1,5 +1,7 @@
 # 第 12 页 · 换真执行器：给临时通道装上四道闸
 
+> **城市坐标 · L2 通水电网 · 换泵站**｜临时通道换成带四道闸的真执行器：只读、限行数、限时长、只准 SELECT。
+
 > 前置：第 0 页备好环境；本页接第 11 页的 `lab/app.py` 和第 10 页的 `fixtures/dw-real.sql`。不用启动服务。
 
 ## 这一页构建什么
@@ -10,7 +12,7 @@
 
 **口径提醒**：这仍是第 10 页的 naive 口径，本页只证明 FLOAT→DECIMAL 的类型问题，不代表数据已洗。
 
-![第 12 页 · 只读执行器：只放行 SELECT](images/page-12-comic.webp)
+![第 12 页 · 给临时通道装上四道闸：lab/db.py：dict 行、Decimal 精度、自动 LIMIT、只读](images/page-12-visual.webp)
 
 ## 猜一猜
 

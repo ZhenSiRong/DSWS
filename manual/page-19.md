@@ -1,5 +1,7 @@
 # 第 19 页 · 守策略：36 条注入全拒、11 条正常零误杀
 
+> **城市坐标 · L4 城市安防 · 安检**｜36 条夹带全拦、11 条正常零误杀：安检口按规矩放行。
+
 > 前置：L4（守）第二页。本页一条服务都不用——判据只读 `contracts/`、`fixtures/`，第 2 步还读 S4 基线 `backend/tests/generate/baseline.yaml`；
 >
 > 不访问网络，不需要 MySQL、`.env`、模型 key，但要用 `backend/.venv`（第 0 页 `make install` 建好，缺了先回第 0 页补）。命令都在仓库根目录、同一个终端里整段连续执行；括号是子 shell，跑完你还在仓库根目录。
@@ -14,7 +16,7 @@
 
 心智模型：**整类拒 + 白名单，比黑名单逐个补更可靠；误杀也是事故。**
 
-![第 19 页 · 整类拒 + 白名单](images/page-19-comic.webp)
+![第 19 页 · 36 条注入全拒、11 条正常零误杀：执行前按类别拦：单语句 / 只读 / 集合运算 / 注释 / 危险函数 / 白名单](images/page-19-visual.webp)
 
 ## 猜一猜
 
@@ -25,12 +27,14 @@
 
 **第 1 步：拍快照。** 拆一刀要改契约，先留退路（同名快照会被拒，重做本页换个名字——换了名字，下文出现的 `p19-before` 也一起替换；回显 `已保存快照 "p19-before"：169 个文件。`，数字因工作区而异）：
 
+<!-- verify: p19-lab-save -->
 ```bash
 scripts/lab save p19-before
 ```
 
 **第 2 步：跑离线门禁。** 三段各是一个判据：36 条注入必须按**精确原因码**全拒、11 条正常 SQL 必须全放、S4 基线里真产出 SQL 的 8 题必须全部通过策略（另 2 题在生成阶段就拒答，没有 SQL 可过）。退出码 0 才算过：
 
+<!-- verify: p19-security-check -->
 ```bash
 (cd backend && .venv/bin/python -m app.scripts.security --check)
 ```
@@ -41,6 +45,7 @@ scripts/lab save p19-before
 
 **退出码**：这一步全 PASS 时退出码 0，有 FAIL 时会非 0：
 
+<!-- verify: p19-security-corpus -->
 ```bash
 (cd backend && PYTHONUNBUFFERED=1 .venv/bin/python -m app.scripts.security --corpus) 2>&1 | grep -E "multi_statement|executable_comment|union|语料："
 ```
@@ -51,6 +56,7 @@ scripts/lab save p19-before
 
 **跑多久**：本机实测约 44 秒（先跑安全测试 179 passed + 2 skipped，再跑全后端 843 条 = 813 passed + 30 skipped、约 40 秒），末行 `S5 PASS`：
 
+<!-- verify: p19-make-stage5 -->
 ```bash
 make stage5
 ```
@@ -63,6 +69,7 @@ make stage5
 
 第 2–4 步（`#` 开头是标注，不是程序输出；秒数随机器变）：
 
+<!-- verify-out: p19-security-check p19-security-corpus -->
 ```text
 # 第 2 步
 == 1/3 注入语料（必须 100% 拒绝） ==
@@ -113,6 +120,7 @@ S5 PASS
 
 **怎么验**：重跑第 2 步的判据（`tail -8` 只看结尾；管道末尾是 `tail`，门禁本体的退出码靠命令里的 `gate=` 打出来）：
 
+<!-- verify: p19-ablation-check -->
 ```bash
 (cd backend && PYTHONUNBUFFERED=1 .venv/bin/python -m app.scripts.security --check) 2>&1 | tail -8; echo "gate=${PIPESTATUS[0]}"
 ```
@@ -137,6 +145,7 @@ gate=1
 
 还原并回绿（`reset` 会先拍一张 `pre-reset-<时间戳>` 安全快照，只贴末两行；这里的“完全一致”只算 `lab` 白名单文件——第 4 步跑过的话 `backend/uv.lock` 仍要按上面单独还原）：
 
+<!-- verify: p19-lab-reset -->
 ```bash
 scripts/lab reset p19-before --yes
 (cd backend && .venv/bin/python -m app.scripts.security --check | tail -1)

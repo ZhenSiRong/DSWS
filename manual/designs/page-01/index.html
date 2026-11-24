@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>第 1 页 · 一台容器，一个世界</title>
+<style>
+  :root {
+    --ink: #1a1a1a;
+    --muted: #585858;
+    --paper: #ffffff;
+    --accent: #E65100;
+    --hair: #c9c9c9;
+    --font-body: "Noto Sans CJK SC", sans-serif;
+    --font-mono: "Noto Sans Mono CJK SC", monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: #e8e8e8; }
+  .poster {
+    position: relative;
+    width: 1600px;
+    height: 1000px;
+    overflow: hidden;
+    background: var(--paper);
+    font-family: var(--font-body);
+    color: var(--ink);
+  }
+  .head { position: absolute; left: 72px; top: 52px; width: 1456px; }
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 2px;
+    margin: 0;
+  }
+  .head h1 {
+    margin: 10px 0 0;
+    font-size: 62px;
+    font-weight: 900;
+    line-height: 1.12;
+    letter-spacing: 2px;
+  }
+  .sub {
+    margin: 12px 0 0;
+    font-size: 26px;
+    line-height: 1.35;
+    color: var(--muted);
+  }
+  .rule { height: 3px; background: var(--ink); margin-top: 22px; }
+  code { font-family: var(--font-mono); }
+
+  .box-container {
+    position: absolute;
+    left: 96px;
+    top: 280px;
+    width: 560px;
+    height: 320px;
+    border: 3px dashed var(--ink);
+    background: var(--paper);
+  }
+  .box-tag {
+    position: absolute;
+    left: 24px;
+    top: 20px;
+    height: 42px;
+    padding: 0 16px;
+    background: var(--accent);
+    color: var(--paper);
+    font-family: var(--font-mono);
+    font-size: 22px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+  }
+  .box-kind {
+    position: absolute;
+    right: 24px;
+    top: 26px;
+    font-family: var(--font-mono);
+    font-size: 17px;
+    color: var(--muted);
+  }
+  .db-figure { position: absolute; left: 205px; top: 92px; width: 150px; height: 150px; }
+  .db-label {
+    position: absolute;
+    left: 0;
+    top: 252px;
+    width: 554px;
+    text-align: center;
+    font-size: 24px;
+    font-weight: 700;
+  }
+  .db-note {
+    position: absolute;
+    left: 0;
+    top: 288px;
+    width: 554px;
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: 17px;
+    color: var(--muted);
+  }
+
+  .port-link { position: absolute; left: 672px; top: 280px; width: 376px; height: 320px; }
+  .port-main {
+    position: absolute;
+    left: 0;
+    top: 108px;
+    width: 376px;
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: 24px;
+    font-weight: 700;
+    margin: 0;
+  }
+  .port-map {
+    position: absolute;
+    left: 0;
+    top: 148px;
+    width: 376px;
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: 18px;
+    color: var(--muted);
+    margin: 0;
+  }
+  .port-lock {
+    position: absolute;
+    left: 0;
+    top: 182px;
+    width: 376px;
+    text-align: center;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--accent);
+    margin: 0;
+  }
+  .port-wire { position: absolute; left: 0; top: 60px; width: 376px; height: 40px; }
+  .port-wire-b { position: absolute; left: 0; top: 232px; width: 376px; height: 40px; }
+
+  .host-pc { position: absolute; left: 1064px; top: 280px; width: 440px; height: 320px; }
+  .host-figure { position: absolute; left: 120px; top: 40px; width: 200px; height: 170px; }
+  .host-label {
+    position: absolute;
+    left: 0;
+    top: 232px;
+    width: 440px;
+    text-align: center;
+    font-size: 24px;
+    font-weight: 700;
+    margin: 0;
+  }
+  .host-note {
+    position: absolute;
+    left: 0;
+    top: 270px;
+    width: 440px;
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: 17px;
+    color: var(--muted);
+    margin: 0;
+  }
+
+  .point {
+    position: absolute;
+    width: 464px;
+    height: 180px;
+    border: 2px solid var(--ink);
+    background: var(--paper);
+    padding: 20px 24px;
+  }
+  .point-title { display: flex; align-items: center; gap: 12px; }
+  .num {
+    width: 34px;
+    height: 34px;
+    background: var(--accent);
+    color: var(--paper);
+    font-family: var(--font-mono);
+    font-size: 20px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+  }
+  .point-title .t { font-size: 21px; font-weight: 700; line-height: 1.3; }
+  .point .b {
+    margin: 14px 0 0;
+    font-size: 17px;
+    line-height: 1.55;
+    color: var(--muted);
+  }
+
+  .criteria {
+    position: absolute;
+    left: 72px;
+    top: 876px;
+    width: 1456px;
+    height: 96px;
+    border: 2px solid var(--ink);
+    display: flex;
+    align-items: center;
+    padding: 0 28px;
+    font-family: var(--font-mono);
+    font-size: 23px;
+  }
+  .criteria .tag {
+    background: var(--accent);
+    color: var(--paper);
+    font-family: var(--font-body);
+    font-size: 20px;
+    font-weight: 700;
+    padding: 6px 14px;
+    margin-right: 22px;
+    flex: none;
+  }
+  .criteria .plus { color: var(--accent); font-weight: 700; margin: 0 10px; }
+</style>
+</head>
+<body>
+  <div class="poster" data-canvas-width="1600" data-canvas-height="1000">
+    <div class="head" data-layer-id="head">
+      <p class="eyebrow">第 1 页 · 创建 MySQL 容器（空库）</p>
+      <h1>一台容器，一个世界</h1>
+      <p class="sub">端口只开给本机；这一页只有空库，没有 dw</p>
+      <div class="rule"></div>
+    </div>
+
+    <div class="box-container" data-layer-id="box-lab-mysql">
+      <div class="box-tag">lab-mysql</div>
+      <div class="box-kind">Docker 容器</div>
+      <svg class="db-figure" viewBox="0 0 150 150" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="75" cy="30" rx="52" ry="18" fill="none" stroke="#1a1a1a" stroke-width="4"/>
+        <path d="M23 30 v72 c0 10 23 18 52 18 s52 -8 52 -18 v-72" fill="none" stroke="#1a1a1a" stroke-width="4"/>
+        <path d="M23 66 c0 10 23 18 52 18 s52 -8 52 -18" fill="none" stroke="#1a1a1a" stroke-width="4"/>
+      </svg>
+      <div class="db-label">MySQL · 空库</div>
+      <div class="db-note">SHOW DATABASES：只有系统库</div>
+    </div>
+
+    <div class="port-link" data-layer-id="port-link">
+      <svg class="port-wire" viewBox="0 0 376 40" xmlns="http://www.w3.org/2000/svg">
+        <line x1="8" y1="20" x2="352" y2="20" stroke="#1a1a1a" stroke-width="3"/>
+        <path d="M352 20 l-16 -10 v20 z" fill="#1a1a1a"/>
+      </svg>
+      <p class="port-main">127.0.0.1:3307</p>
+      <p class="port-map">-p 127.0.0.1:3307:3306</p>
+      <p class="port-lock">只对本机开放</p>
+      <svg class="port-wire-b" viewBox="0 0 376 40" xmlns="http://www.w3.org/2000/svg">
+        <line x1="368" y1="20" x2="24" y2="20" stroke="#1a1a1a" stroke-width="3"/>
+        <path d="M24 20 l16 -10 v20 z" fill="#1a1a1a"/>
+      </svg>
+    </div>
+
+    <div class="host-pc" data-layer-id="host-pc">
+      <svg class="host-figure" viewBox="0 0 200 170" xmlns="http://www.w3.org/2000/svg">
+        <rect x="12" y="10" width="176" height="112" fill="none" stroke="#1a1a1a" stroke-width="4"/>
+        <rect x="28" y="26" width="144" height="80" fill="none" stroke="#1a1a1a" stroke-width="3"/>
+        <line x1="100" y1="122" x2="100" y2="146" stroke="#1a1a1a" stroke-width="4"/>
+        <line x1="64" y1="152" x2="136" y2="152" stroke="#1a1a1a" stroke-width="4"/>
+      </svg>
+      <p class="host-label">你的电脑（宿主机）</p>
+      <p class="host-note">从这里连 127.0.0.1:3307</p>
+    </div>
+
+    <div class="point" data-layer-id="point-1" style="left:72px;top:656px;">
+      <div class="point-title"><div class="num">1</div><div class="t">容器里的 127.0.0.1 是容器自己</div></div>
+      <p class="b">不是你的电脑；你连的是宿主机的 <code>127.0.0.1:3307</code>，再由 Docker 转进容器的 3306。</p>
+    </div>
+
+    <div class="point" data-layer-id="point-2" style="left:568px;top:656px;">
+      <div class="point-title"><div class="num">2</div><div class="t">docker exec 连进去问两句</div></div>
+      <p class="b"><code>SELECT VERSION(); SHOW DATABASES;</code>——版本和库列表一次问清。</p>
+    </div>
+
+    <div class="point" data-layer-id="point-3" style="left:1064px;top:656px;">
+      <div class="point-title"><div class="num">3</div><div class="t">这一页只有空库</div></div>
+      <p class="b">故意不加 <code>-v</code>、不导入数据；<code>SHOW DATABASES</code> 里没有 <code>dw</code>。</p>
+    </div>
+
+    <div class="criteria" data-layer-id="criteria">
+      <div class="tag">判据</div>
+      容器 running<span class="plus">＋</span>能连上（<code>SELECT VERSION()</code> 有输出）<span class="plus">＋</span>没有 <code>dw</code>
+    </div>
+  </div>
+</body>
+</html>

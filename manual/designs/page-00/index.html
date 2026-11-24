@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>第 0 页 · 先体检，再开工</title>
+<style>
+  :root {
+    --ink: #1a1a1a;
+    --muted: #585858;
+    --paper: #ffffff;
+    --accent: #E65100;
+    --hair: #c9c9c9;
+    --font-body: "Noto Sans CJK SC", sans-serif;
+    --font-mono: "Noto Sans Mono CJK SC", monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: #e8e8e8; }
+  .poster {
+    position: relative;
+    width: 1600px;
+    height: 1000px;
+    overflow: hidden;
+    background: var(--paper);
+    font-family: var(--font-body);
+    color: var(--ink);
+  }
+  .head { position: absolute; left: 72px; top: 52px; width: 1456px; }
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 2px;
+    margin: 0;
+  }
+  .head h1 {
+    margin: 10px 0 0;
+    font-size: 62px;
+    font-weight: 900;
+    line-height: 1.12;
+    letter-spacing: 2px;
+  }
+  .sub {
+    margin: 12px 0 0;
+    font-size: 26px;
+    line-height: 1.35;
+    color: var(--muted);
+  }
+  .rule { height: 3px; background: var(--ink); margin-top: 22px; }
+
+  .card {
+    position: absolute;
+    width: 464px;
+    height: 250px;
+    border: 2px solid var(--ink);
+    background: var(--paper);
+  }
+  .card-head {
+    position: absolute;
+    left: 24px;
+    top: 20px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .logo { width: 44px; height: 44px; display: block; }
+  .logo-pair { display: flex; align-items: center; gap: 8px; }
+  .logo-pair img { width: 38px; height: 38px; display: block; }
+  .badge {
+    height: 44px;
+    min-width: 72px;
+    padding: 0 12px;
+    border: 2px solid var(--ink);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-mono);
+    font-size: 21px;
+    font-weight: 700;
+  }
+  .tool-name { font-size: 30px; font-weight: 700; line-height: 1; white-space: nowrap; }
+  .duty {
+    position: absolute;
+    left: 24px;
+    top: 92px;
+    width: 416px;
+    font-size: 18px;
+    line-height: 1.5;
+    margin: 0;
+  }
+  .check {
+    position: absolute;
+    left: 24px;
+    bottom: 18px;
+    width: 416px;
+    border-top: 1px solid var(--hair);
+    padding-top: 12px;
+    font-family: var(--font-mono);
+    font-size: 17px;
+    line-height: 1.4;
+  }
+  .tick { color: var(--accent); font-weight: 700; margin-right: 6px; }
+  code { font-family: var(--font-mono); }
+
+  .status {
+    position: absolute;
+    left: 72px;
+    top: 850px;
+    width: 1456px;
+    height: 96px;
+    border: 2px solid var(--ink);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 28px;
+  }
+  .status .left { display: flex; align-items: center; font-family: var(--font-mono); font-size: 24px; }
+  .status .right { display: flex; align-items: center; font-family: var(--font-mono); font-size: 24px; color: var(--muted); }
+  .status .pass { color: var(--accent); font-weight: 700; margin-left: 12px; }
+  .status .arw { margin: 0 14px; }
+  .status .mark {
+    width: 40px; height: 40px; margin-right: 16px;
+    border: 3px solid var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--accent); font-size: 26px; font-weight: 700;
+    font-family: var(--font-body);
+  }
+  .status .ports { color: var(--ink); font-weight: 700; margin-left: 10px; }
+</style>
+</head>
+<body>
+  <div class="poster" data-canvas-width="1600" data-canvas-height="1000">
+    <div class="head" data-layer-id="head">
+      <p class="eyebrow">第 0 页 · 开课前准备</p>
+      <h1>先体检，再开工</h1>
+      <p class="sub">开发环境是一套真实工具，不是比喻</p>
+      <div class="rule"></div>
+    </div>
+
+    <div class="card" data-layer-id="tool-docker" style="left:72px;top:268px;">
+      <div class="card-head">
+        <img class="logo" src="assets/docker.svg" alt="">
+        <div class="tool-name">Docker</div>
+      </div>
+      <p class="duty">把 MySQL、ES、Qdrant 装进容器跑起来</p>
+      <div class="check"><span class="tick">✓</span><code>docker compose ps</code> 看容器</div>
+    </div>
+
+    <div class="card" data-layer-id="tool-uv" style="left:568px;top:268px;">
+      <div class="card-head">
+        <img class="logo" src="assets/uv.svg" alt="">
+        <div class="tool-name">uv</div>
+      </div>
+      <p class="duty">按 uv.lock 装 Python 依赖、建 backend/.venv</p>
+      <div class="check"><span class="tick">✓</span><code>uv sync --frozen</code></div>
+    </div>
+
+    <div class="card" data-layer-id="tool-node" style="left:1064px;top:268px;">
+      <div class="card-head">
+        <div class="logo-pair">
+          <img src="assets/nodedotjs.svg" alt="">
+          <img src="assets/npm.svg" alt="">
+        </div>
+        <div class="tool-name">Node.js + npm</div>
+      </div>
+      <p class="duty">前端脚手架与协议测试</p>
+      <div class="check"><span class="tick">✓</span><code>cd frontend &amp;&amp; npm test</code></div>
+    </div>
+
+    <div class="card" data-layer-id="tool-make" style="left:72px;top:546px;">
+      <div class="card-head">
+        <div class="badge">make</div>
+        <div class="tool-name">GNU Make</div>
+      </div>
+      <p class="duty">一键任务入口，常用流程收成一条命令</p>
+      <div class="check"><span class="tick">✓</span><code>make doctor</code> / <code>make docker-up</code></div>
+    </div>
+
+    <div class="card" data-layer-id="tool-curl" style="left:568px;top:546px;">
+      <div class="card-head">
+        <div class="badge">curl</div>
+        <div class="tool-name">curl</div>
+      </div>
+      <p class="duty">探活接口、看 SSE 返回</p>
+      <div class="check"><span class="tick">✓</span><code>curl /api/health</code></div>
+    </div>
+
+    <div class="card" data-layer-id="tool-git" style="left:1064px;top:546px;">
+      <div class="card-head">
+        <img class="logo" src="assets/git.svg" alt="">
+        <div class="tool-name">Git</div>
+      </div>
+      <p class="duty">拿到仓库与全部历史</p>
+      <div class="check"><span class="tick">✓</span><code>git status</code> / <code>git log</code></div>
+    </div>
+
+    <div class="status" data-layer-id="status">
+      <div class="left">
+        <div class="mark">✓</div>
+        <code>make doctor</code><span class="arw">→</span><span class="pass">12/12 通过</span>
+      </div>
+      <div class="right">
+        三个端口空着<span class="ports">3307 · 8000 · 8081</span>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

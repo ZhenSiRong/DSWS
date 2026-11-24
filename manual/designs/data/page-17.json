@@ -1,0 +1,39 @@
+{
+  "eyebrow": "第 17 页 · L3 审 · 纠错",
+  "title": "一次重试能修好什么、修不好什么",
+  "subtitle": "把纠错当成一次有上限的赌博来审：只重试 1 次，改完必须重新过校验",
+  "layout": "steps",
+  "steps": [
+    {
+      "n": "1",
+      "title": "validate_sql → error",
+      "detail": "静态校验先拦下",
+      "judge": "SQL_UNKNOWN_COLUMN"
+    },
+    {
+      "n": "2",
+      "title": "三个触发条件",
+      "detail": "有校正器 / 可重试 / 契约允许",
+      "judge": "max_attempts: 1"
+    },
+    {
+      "n": "3",
+      "title": "只校正一次",
+      "detail": "一次重试，改出的 SQL 重过两道关",
+      "judge": "attempted=True"
+    },
+    {
+      "n": "4",
+      "title": "二次校验",
+      "detail": "改完的 SQL 还要过 guard + policy",
+      "judge": "error=None"
+    },
+    {
+      "n": "5",
+      "title": "真执行",
+      "detail": "过校验才交给 MySQL",
+      "judge": "rows=5 行"
+    }
+  ],
+  "footer": "14 passed / S6 PASS；成功率按多次采样写，不写“已修复”"
+}

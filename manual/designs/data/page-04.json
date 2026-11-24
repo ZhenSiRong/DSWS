@@ -1,0 +1,27 @@
+{
+  "eyebrow": "第 4 页 · L1 造 · 接口",
+  "title": "加一个能收问题的接口",
+  "subtitle": "先修通“收发 JSON”这条路，不查库、不生成 SQL",
+  "layout": "steps",
+  "steps": [
+    {
+      "n": "1",
+      "title": "POST /api/query",
+      "detail": "收一个 JSON：question",
+      "judge": "{\"question\":\"华北销售额\"}"
+    },
+    {
+      "n": "2",
+      "title": "只回显",
+      "detail": "keywords / sql / rows 先留空",
+      "judge": "不查库、不拼 SQL"
+    },
+    {
+      "n": "3",
+      "title": "一字不差",
+      "detail": "同一请求两次，响应完全相同",
+      "judge": "硬编码 JSON"
+    }
+  ],
+  "footer": "{\"question\":\"华北销售额\",\"keywords\":[],\"sql\":null,\"rows\":[]}"
+}

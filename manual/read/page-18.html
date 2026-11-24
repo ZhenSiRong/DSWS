@@ -12,6 +12,7 @@
 <p class="kicker">练本 · 阅读版（md 正典派生，改内容请改 manual/page-18.md）</p>
 <h1>第 18 页 · 守账号：只读账号真的写不了吗</h1>
 <blockquote>
+<p><strong>城市坐标 · L4 城市安防 · 门禁</strong>｜只读账号是真的只读：给它一把只能看、不能写的钥匙。</p>
 <p><strong>前置</strong>：至少 <code>mysql</code> 在跑且 healthy（<code>docker compose ps</code>）——本页全部判据只需要数据库，整栈都在时可顺带做第 13 页 <code>docker-smoke</code> 第 7 步。</p>
 <p><strong>环境</strong>：<code>.env</code> 已由 <code>make docker-env</code> 生成；本页不重建镜像、不改代码。L4（守）从这一页开始。</p>
 <p><strong>在哪跑</strong>：命令都在仓库根目录、同一个终端里整段连续执行；括号是子 shell，跑完你还在仓库根目录。</p>
@@ -19,7 +20,7 @@
 </blockquote>
 <h2>这一页构建什么</h2>
 <p>把“只读”从一条<strong>约定</strong>搬进<strong>数据库权限</strong>：开通一个在 <code>dw</code> 上只有 <code>SELECT</code> 的账号 <code>dw_reader</code>，再让门禁亲手证明它写不了。做完你得到一个能力边界——应用层的提示词、校验、策略全部失效，数据库也只会让它读。心智模型：<strong>只读要从“约定”变成“能力边界”。</strong></p>
-<p><img alt="第 18 页 · 只读要从约定变成能力边界" src="../images/page-18-comic.webp" /></p>
+<p><img alt="第 18 页 · 只读账号真的写不了吗：把“只读”从约定搬进数据库权限：dw_reader 只有 SELECT" src="../images/page-18-visual.webp" /></p>
 <h2>猜一猜</h2>
 <ol>
 <li>要“证明”只读账号写不了：是读 <code>SHOW GRANTS</code> 看它只有 SELECT，还是真执行一次写操作、等数据库拒绝？</li>

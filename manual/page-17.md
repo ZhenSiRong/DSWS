@@ -1,5 +1,7 @@
 # 第 17 页 · 审纠错：一次重试能修好什么、修不好什么
 
+> **城市坐标 · L3 智慧城市 · 返工窗口**｜一次返工能修好什么、修不好什么——只许改一次，判据说了算。
+
 > **前置**
 >
 > **还原上一页**：确认第 16 页的拆一刀已用 `scripts/lab reset p16-before --yes` 还原——否则第 2 步会变成 `1 failed, 13 passed`、没有 `S6 PASS`、probe `mismatch: 3`。
@@ -21,7 +23,7 @@
 - v1 演示没复现：`deliverable/PRD-对照表.md` 第 13 行，触发=true、纠正成功=false。
 - v2 **单次复现过**纠正成功态：`deliverable/v2/README-v2.md:172`；证据 `deliverable/v2/evidence/v2-natural-correct-success.sse`，故障注入样本 `v2-correct-success.sse` 另存作回归。
 
-![纠错 = 一次有上限的赌博：机器人写错 SQL 冒汗，老师只给一枚「1」令牌](images/page-17-comic-one-retry.webp)
+![第 17 页 · 一次重试能修好什么、修不好什么：把纠错当成一次有上限的赌博来审：只重试 1 次，改完必须重新过校验](images/page-17-visual.webp)
 
 ▲ 纠错 = 一次有上限的赌博：只重试 1 次、只对可重试错误生效；令牌用完就交回原错码，改出来的 SQL 还要重新过校验与安全策略。
 
@@ -131,7 +133,6 @@ curl -sN -X POST http://127.0.0.1:8080/api/query -H 'content-type: application/j
 |---|---|---|---|---|
 |  |  |  |  |  |
 
-![成功率是多次采样数出来的：机器人连掷三次骰子，三张纸条打勾，计数板 3/3](images/page-17-comic-sampling.webp)
 
 ▲ 成功率是抽出来的数：同一问采 3 次，数触发几次、成功几次；分母是触发次数，不是提问次数。单次演示会骗人。
 
@@ -139,7 +140,7 @@ curl -sN -X POST http://127.0.0.1:8080/api/query -H 'content-type: application/j
 
 第 2–4 步（秒数因机器而异；第 3 步只留 `corrected` 行 + `S6 PASS`；最后四行没有“成功”这一栏——`corrected` 是“可校正”的标记，不是“校正成功”的统计）：
 
-<!-- verify-out: p17-pytest-correct p17-failures-check p17-failures-scenarios p17-ablation-commands -->
+<!-- verify-out: p17-pytest-correct p17-failures-check p17-failures-scenarios -->
 ```text
 14 passed in 0.11s
   corrected            期望 result               实际 result

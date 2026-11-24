@@ -12,6 +12,7 @@
 <p class="kicker">练本 · 阅读版（md 正典派生，改内容请改 manual/page-14.md）</p>
 <h1>第 14 页 · 审检索：召回空了的答案，你凭什么信</h1>
 <blockquote>
+<p><strong>城市坐标 · L3 智慧城市 · 城市大脑的图书馆</strong>｜大脑答题前先查资料；资料库停了呢——答案还值不值得信。</p>
 <p><strong>前置</strong></p>
 <p><strong>整栈在跑</strong>：第 13 页的五个长驻服务 <code>docker compose ps</code> 里 <code>healthy</code>；<code>backend/.venv</code> 已由第 0 页 <code>make install</code> 建好。</p>
 <p><strong>不改代码</strong>：本页<strong>不改被跟踪的代码/契约</strong>——<code>lab save</code> 只在 <code>.lab/</code> 下写快照（已被 gitignore）。</p>
@@ -20,7 +21,7 @@
 <h2>这一页构建什么</h2>
 <p>从“能查数”到“能审检索”：用 20 题黄金集给检索层立三条判据（该命中 / 不该出现 / 输出规模上限），再亲手停掉检索存储——查数照常成功（契约离线裁剪兜底），而黄金集整片变红。</p>
 <p><strong>审的顺序</strong>：先写下判据，再让机器去撞。</p>
-<p><img alt="第 14 页 · 从契约里检索上下文" src="../images/page-14-comic.webp" /></p>
+<p><img alt="第 14 页 · 召回空了的答案，你凭什么信：20 题黄金集 + 三条判据；停掉检索存储，看谁在兜底" src="../images/page-14-visual.webp" /></p>
 <h2>猜一猜</h2>
 <p>动手前写下答案：</p>
 <ol>
@@ -29,10 +30,14 @@
 </ol>
 <h2>动手</h2>
 <p><strong>第 1 步：拍快照。</strong> 本页不改被跟踪的代码/契约，拍一张是兜底（<code>lab save</code> 只往 <code>.lab/</code> 写快照，该目录已被 gitignore）；同名快照会被拒，重做本页就换个名字：</p>
+<!-- verify: page14-lab-save -->
+
 <pre><code class="language-bash">scripts/lab save p14-before
 </code></pre>
 <p>回显 <code>已保存快照 "p14-before"：169 个文件。</code>（169 数的是你工作区里的文件，因环境而异）。</p>
 <p><strong>第 2 步：先跑离线判据（不需要任何服务；解释器来自第 0 页 <code>make install</code> 建好的 <code>backend/.venv</code>）。</strong></p>
+<!-- verify: page14-pytest-recall -->
+
 <pre><code class="language-bash">backend/.venv/bin/python -m pytest backend/tests/recall -q
 </code></pre>
 <p><strong>三组字段</strong>：黄金集是 <code>backend/tests/recall/golden.yaml</code> 里的 20 题，每题三组字段：<code>expected_*</code>（必须被召回）、<code>must_not</code>（不许出现）。</p>
@@ -46,11 +51,15 @@
 <li>要整体重起：<code>docker compose up -d</code>。</li>
 <li>只有镜像/代码要重做才用 <code>make docker-up</code>（它 <code>--build</code> 重建，约 8 分钟）。</li>
 </ul>
+<!-- verify: page14-export-env-stage3 -->
+
 <pre><code class="language-bash">source scripts/export-docker-env.sh
 make stage3
 </code></pre>
 <h2>你应该看到</h2>
 <p>第 2 步（节选；秒数因机器而异）：</p>
+<!-- verify-out: page14-pytest-recall -->
+
 <pre><code class="language-text">18 passed, 23 skipped in 0.44s
 </code></pre>
 <p>23 条 skipped 不是失败：只有设了 <code>REBUILD_INTEGRATION=1</code> 才跑真实 ES/Qdrant 检索的那批测试。</p>
@@ -110,11 +119,15 @@ S3 PASS
 <ol>
 <li><strong>只停检索，别停整栈。</strong> <code>make docker-down</code> 会把库和入口一起停掉，下一页还要用；这里只停一座检索存储（停 Qdrant 效果一样——检索的验收依赖三样，少一样就整条不工作）：</li>
 </ol>
+<!-- verify: page14-stop-elasticsearch -->
+
 <pre><code class="language-bash">docker compose stop elasticsearch
 </code></pre>
 <ol start="2">
 <li><strong>再查一次数。</strong> 走第 13 页的前端入口（命令里的 <code>8080</code> 是 <code>.env</code> 默认值；第 13 页改过 <code>FRONTEND_HOST_PORT</code> 就换成你的端口——端口不对会回 404 <code>Router not found</code>，像接口坏了）：</li>
 </ol>
+<!-- verify: page14-curl-query -->
+
 <pre><code class="language-bash">curl -s -N -X POST http://127.0.0.1:8080/api/query -H 'Content-Type: application/json' -d '{&quot;query&quot;:&quot;华北销售额&quot;}' | grep '&quot;type&quot;: &quot;result&quot;'
 </code></pre>
 <p>查数<strong>成功，结果不降级</strong>：</p>
@@ -123,6 +136,8 @@ S3 PASS
 <ol start="3">
 <li><strong>再看召回这条路。</strong> 把黄金集的真检索单跑一遍（就是 <code>make stage3</code> 的第 2 步），20 题整片变红：</li>
 </ol>
+<!-- verify: page14-pytest-recall-integration -->
+
 <pre><code class="language-bash">(cd backend &amp;&amp; REBUILD_INTEGRATION=1 .venv/bin/python -m pytest -q tests/recall)
 </code></pre>
 <pre><code class="language-text">18 passed, 23 errors in 0.58s
@@ -134,11 +149,15 @@ Failed: REBUILD_INTEGRATION=1 但服务不可用：{'mysql': True, 'es': False, 
 </ol>
 <p><strong>不重建</strong>：<code>start</code> 只重启容器、不重建；要整体重起用 <code>docker compose up -d</code>，只有镜像/代码要重做才用 <code>make docker-up</code>——它会 <code>--build</code> 重建、约 8 分钟。</p>
 <p><strong>等 healthy</strong>：<code>start</code> 立刻返回，<code>ps</code> 头 20 秒左右只显示 <code>(health: starting)</code>；<strong>轮询等到 <code>(healthy)</code> 再跑 <code>make stage3</code></strong>，否则会红一段再重来（本页实测约 20–30 秒）：</p>
+<!-- verify: page14-start-elasticsearch -->
+
 <pre><code class="language-bash">docker compose start elasticsearch
 until docker compose ps elasticsearch | grep -q '(healthy)'; do sleep 2; done   # 无输出地退出 = 已 healthy
 </code></pre>
 <p><strong>回绿</strong>：再跑一次 <code>make stage3</code> 回到 <code>S3 PASS</code>（本页实测过）。</p>
 <p><strong>快照留着</strong>：本页没改被跟踪的代码/契约，<code>scripts/lab reset</code> 用不上，快照留给重做本页兜底：</p>
+<!-- verify: page14-stage3-regreen -->
+
 <pre><code class="language-bash">make stage3
 </code></pre>
 <p>结论：<strong>检索是增强，契约才是底线。</strong></p>

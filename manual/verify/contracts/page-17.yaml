@@ -25,7 +25,7 @@ blocks:
     expect:
       exit: 0
       contains: ["14 passed"]
-      regex: []
+      regex: ["^14 passed"]
     page_contains: ["14 passed"]     # 页面「你应该看到」里的 14 passed 必须可见，且 T1 真实输出也要有
     timeout_sec: 60
 
@@ -87,18 +87,12 @@ blocks:
   # ---- 拆一刀：关掉校正后重跑三条判据（离线，但页内期望是消融态）----
   - id: p17-ablation-commands
     marker: p17-ablation-commands
-    kind: offline
-    note: '页内紧随的期望输出（5 failed / FAIL: 1 项 / mismatch 0）只在插入拆一刀代码后才成立；T1 在干净仓库执行，断言干净态关键行，防止代码漂移'
+    kind: manual
+    reason: '这段命令在「拆一刀」之后执行，页面紧随的期望是消融态（5 failed, 9 passed / FAIL: 1 项）；CI 干净仓库复现不出该态（跑出来是 14 passed），故只做命令同步、不自动执行'
     cmd: |
       backend/.venv/bin/python -m pytest backend/tests/agent/test_correct.py -q
       (cd backend && PYTHONUNBUFFERED=1 .venv/bin/python -m app.scripts.failures --check) 2>&1 | tail -5
       PYTHONPATH=backend backend/.venv/bin/python eval/probe_correction.py | tail -1
-    expect:
-      exit: 0
-      contains: ["14 passed", "S6 PASS", '"total": 20', '"mismatch": 0']
-      regex: []
-    page_contains: ["14 passed", "S6 PASS", '"mismatch": 0']
-    timeout_sec: 60
 
   # ---- 拆一刀后还原：lab reset 是破坏性回滚（依赖第 1 步快照）----
   - id: p17-lab-reset-restore

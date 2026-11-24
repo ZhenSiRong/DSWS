@@ -1,12 +1,14 @@
 # 第 10 页 · 换真数据：把演示数据换成甲方数据
 
+> **城市坐标 · L2 通水电网 · 换水源**｜把临时水箱换成市政自来水：115 行演示数据整份换成甲方真数据。
+
 > 前置：第 0 页备好环境；本页接第 1、2 页的 `lab-mysql`（115 行演示数据），要改的 `contracts/schema.contract.yaml` 在仓库里现成就有。不用启动服务。
 
 ## 这一页构建什么
 
 把 `lab-mysql` 里的 115 行演示数据整份换成甲方真数据（410 行），用 `fixtures/dw-real.checks.sql` 数出“不洗直接汇总”比正确口径多算 8,394.40，并撞见一件事：契约门禁（自动校验，过不了就不许发布）`--check` 根本不看库里这份数据。
 
-![第 10 页 · 真数据要洗过才敢报数](images/page-10-comic.webp)
+![第 10 页 · 换真数据：把演示数据换成甲方数据：115 行演示数据 → 410 行真数据；先洗，再报数](images/page-10-visual.webp)
 
 ## 猜一猜
 
@@ -20,6 +22,7 @@
 以下命令都在仓库根目录执行（有 `fixtures/`、`backend/` 的那一层）：命令逐段复制粘贴即可，但**第 5 步要手动打开 `contracts/schema.contract.yaml` 改一行并保存**，不能只靠粘贴走完。
 
 **第 1 步：拍快照（口语常说“备份”；这里只备份文件）。**
+<!-- verify: p10-lab-save -->
 ```bash
 scripts/lab save p10-before
 ```
@@ -30,6 +33,7 @@ scripts/lab save p10-before
 **命名规则**：名字只能用字母、数字、点、下划线、短横线，且**必须以字母或数字开头**、最多 64 字符；快照只读，同名 save 会被拒绝——复跑本页要换个名字（如 `p10-before-2`）。
 
 **第 2 步：换数据。** 命令和第 2 页灌 `dw.sql` 同款，只换文件（唯一多出的是那句可省略的 `--default-character-set=utf8mb4`）：
+<!-- verify: p10-load-real -->
 ```bash
 docker exec -i lab-mysql mysql -uroot -plabpass --default-character-set=utf8mb4 < fixtures/dw-real.sql
 ```
@@ -40,11 +44,13 @@ docker exec -i lab-mysql mysql -uroot -plabpass --default-character-set=utf8mb4 
 **静默导入**：和灌 `dw.sql` 一样，除了密码 `Warning` 一行都不打印，数要从下一步查。
 
 **第 3 步：对账真数据。** 这个文件把 7 类脏数据计数、清洗后对账表、原始装数一次跑完：
+<!-- verify: p10-checks -->
 ```bash
 docker exec -i lab-mysql mysql -uroot -plabpass --default-character-set=utf8mb4 < fixtures/dw-real.checks.sql
 ```
 
 **第 4 步：跑门禁。**
+<!-- verify: p10-schema-contract -->
 ```bash
 (cd backend && .venv/bin/python -m app.schema_contract --check)
 ```
@@ -60,6 +66,7 @@ docker exec -i lab-mysql mysql -uroot -plabpass --default-character-set=utf8mb4 
 
 第 4 步——换完真数据，门禁**还是绿的**，报的数还是演示集那套（节选）：
 
+<!-- verify-out: p10-schema-contract -->
 ```text
 == 1/3 契约 ↔ DDL/数据 ==
 PASS: 5 张表 / 24 列 / 115 行 / GMV=279159.5 / 销量=622
@@ -135,6 +142,7 @@ FAIL: 2 个契约问题
     - **本页的收尾动作**：① 拆一刀 2 的 `reset` 把契约和文件还原（不做的话下一关第 11 页验收的 `--check` 会红）——必做；
     - ② **要回 L1 演示态才需重灌 `fixtures/dw.sql` 回到 115 行**——第 12 页第 1 步会自己重灌 `dw-real`，不重灌也能直接进下一页。
     - 只是真数据下 `WHERE region_name='华北'` 是 35 行 / 61890.00，不是演示集的 19 行 / 41099.5，留着演示态才对得上。重灌命令：
+<!-- verify: p10-restore-demo -->
 ```bash
 docker exec -i lab-mysql mysql -uroot -plabpass < fixtures/dw.sql
 ```

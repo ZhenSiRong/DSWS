@@ -11,10 +11,13 @@
 <main class="page">
 <p class="kicker">练本 · 阅读版（md 正典派生，改内容请改 manual/page-03.md）</p>
 <h1>第 3 页 · 让服务在 8000 端口回答问题</h1>
+<blockquote>
+<p><strong>城市坐标 · P3 查询服务中心（交付物 ⑤）</strong>｜服务中心开门值班：窗口 <code>GET /health</code> 先通，楼里第一次有人应声。</p>
+</blockquote>
 <h2>这一页构建什么</h2>
 <p>一个你自己的 HTTP 服务：跑在 <code>8000</code> 端口，只有一个接口 <code>GET /health</code>。用 <code>curl</code> 一问，它回 <code>{"ok":true}</code>。
 这是整套系统第一次对外说话。</p>
-<p><img alt="第 3 页 · 把柜台开起来" src="../images/page-03-comic.webp" /></p>
+<p><img alt="第 3 页 · 把服务开到 8000：一个 HTTP 服务，一个接口，一次真正的“对外说话”" src="../images/page-03-visual.webp" /></p>
 <h2>猜一猜</h2>
 <p>动手前把答案写在纸上（猜错很正常，后面要对着真实输出对账）：</p>
 <ol>

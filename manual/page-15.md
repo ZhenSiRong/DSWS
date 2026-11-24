@@ -1,5 +1,7 @@
 # 第 15 页 · 审生成：同一把尺子，量模板也量模型
 
+> **城市坐标 · L3 智慧城市 · 同一把尺子**｜给「生成」立一把尺子：模板和模型都拿它量，谁也不特殊。
+
 > 前置：第 13 页起的整栈到上一页（第 14 页）结束时仍在跑，可以继续开着，本页一条服务都不用——`make stage4` 完全离线，不需要 MySQL/ES/Qdrant、不需要 `.env`、也不需要模型 key。命令都在仓库根目录、同一个终端里整段连续执行。
 
 ## 这一页构建什么
@@ -10,7 +12,7 @@
 
 **审什么**：生成器是确定性的、不走模型；你审的不是“像不像人写的”，而是**同一个判据能不能同时量模板和模型**——改契约、改生成逻辑，同一把尺立刻红，改回来立刻绿。
 
-![第 15 页 · 模板，不是模型](images/page-15-comic.webp)
+![第 15 页 · 同一把尺子，量模板也量模型：10 题基线 + 语义断言，模板与模型都跑同一套尺子](images/page-15-visual.webp)
 
 ## 猜一猜
 
@@ -29,6 +31,7 @@
 
 **第 1 步：拍快照。** 拆一刀要改契约，先留退路（同名快照会被拒绝；重做本页就换个名字，如 `p15-before-2`，本页后面第 3 步 `reset` 的名字也一起换）：
 
+<!-- verify: page15-lab-save -->
 ```bash
 scripts/lab save p15-before
 ```
@@ -37,12 +40,14 @@ scripts/lab save p15-before
 
 **第 2 步：先跑离线判据（秒级，不连任何服务）：**
 
+<!-- verify: page15-pytest-generate -->
 ```bash
 backend/.venv/bin/python -m pytest backend/tests/generate -q
 ```
 
 **第 3 步：跑 10 题基线 + 整层验收。** `make stage4` 依次跑“10 题基线 → 生成层测试 → 全部后端测试”，最后一行 `S4 PASS`，要跑几十秒（本机实测 38 秒），别以为卡死：
 
+<!-- verify: page15-stage4 -->
 ```bash
 make stage4
 ```
@@ -51,6 +56,7 @@ make stage4
 
 第 2 步（秒数因机器而异；5 条 skipped 不是失败——那是 5 份召回扩展/上下文过滤提示词，输出形状不是 `sql_or_refusal`，按设计跳过）：
 
+<!-- verify-out: page15-pytest-generate -->
 ```text
 122 passed, 5 skipped in 0.96s
 ```
@@ -106,6 +112,7 @@ S4 PASS
 
 2. Ctrl+S 保存，再跑一次基线（不用重跑整层验收，这一条就够看见红；下面节选两行 FAIL 和末尾汇总）：
 
+<!-- verify: page15-baseline-ablation -->
 ```bash
 make baseline
 ```
@@ -136,6 +143,7 @@ make baseline
 
 3. 还原并回绿（`reset` 会先拍一张 `pre-reset-…` 安全快照，末行确认恢复成功）：
 
+<!-- verify: page15-lab-reset-restore -->
 ```bash
 scripts/lab reset p15-before --yes
 make baseline

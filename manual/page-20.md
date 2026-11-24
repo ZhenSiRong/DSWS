@@ -1,5 +1,7 @@
 # 第 20 页 · 守取消：点了停止，系统真的停了吗
 
+> **城市坐标 · L4 城市安防 · 停止按钮**｜市民按了停止，城里的活要真的停下来，而不是把按钮藏起来。
+
 > 前置：L4（守）第三页。本页的判据一条服务都不用：只跑 `backend/` 里的离线测试和一条夹具回放，不需要 MySQL、`.env`、模型 key，也不需要浏览器；
 >
 > 要用第 0 页 `make install` 建好的 `backend/.venv`（缺了先回第 0 页）。命令都在仓库根目录、同一个终端里整段连续执行；括号是子 shell，跑完你还在仓库根目录。
@@ -24,7 +26,7 @@
 
 心智模型：**「停止」是一个状态，不是「不返回」。**
 
-![第 20 页 · 停止是一个状态](images/page-20-comic.webp)
+![第 20 页 · 点了停止，系统真的停了吗：取消是独立状态：不是 done，也不是失败](images/page-20-visual.webp)
 
 ## 猜一猜
 
@@ -35,12 +37,14 @@
 
 **第 1 步：拍快照。** 待会儿拆一刀要改代码，先留退路（同名快照会被拒，重做本页换个名字；回显的文件数因工作区而异）：
 
+<!-- verify: p20-lab-save -->
 ```bash
 scripts/lab save p20-before
 ```
 
 **第 2 步：跑离线判据。** 第一行只跑名字带 `cancel` 的 6 条；第二行跑 `tests/agent` 全量，确认你没碰坏别的。两条都退出码 0 才算过：
 
+<!-- verify: p20-pytest-cancel -->
 ```bash
 (cd backend && .venv/bin/python -m pytest tests/agent -q -k cancel)
 (cd backend && .venv/bin/python -m pytest tests/agent -q)
@@ -50,6 +54,7 @@ scripts/lab save p20-before
 
 **怎么跑**：先逐帧打印看事件序列，再让 `record_sse --check` 用今天的代码重录 9 个场景 + 取消路径（4 条手写夹具只与源码常量比），14 条一起逐字节对账——本页输出就是这 14 条（录制在进程内跑真 HTTP/SSE 管道，不起服务、不用端口、不用浏览器）：
 
+<!-- verify: p20-record-sse -->
 ```bash
 (cd backend && .venv/bin/python -c "import json;[print(f) for f in json.load(open('../fixtures/sse/cancelled.json'))['frames']]")
 (cd backend && .venv/bin/python -m app.scripts.record_sse --check)
@@ -65,6 +70,7 @@ scripts/lab save p20-before
 
 第 1–4 步（节选：只留判据行——第 1 步略去 2 行回显，第 2 步略去 pytest 进度行如 `...... [100%]`；`#` 开头是标注，不是程序输出；秒数随机器变）：
 
+<!-- verify-out: p20-pytest-cancel p20-record-sse -->
 ```text
 # 第 1 步
 已保存快照 "p20-before"：169 个文件。
@@ -104,6 +110,7 @@ S7 SSE RECORD PASS（14 个夹具与真实输出一致）
 
 **验证**：重跑第 2、3 步的判据：
 
+<!-- verify: p20-ablation-commands -->
 ```bash
 (cd backend && .venv/bin/python -m pytest tests/agent -q -k cancel)
 (cd backend && .venv/bin/python -m app.scripts.record_sse --check)
@@ -133,6 +140,7 @@ FAIL: SSE 夹具与真实输出不同步：
 
 **还原**：用 `scripts/lab reset p20-before --yes`，但提示里的 `uv run` 还会改写 `backend/uv.lock`（不在 `lab` 白名单、`reset` 救不回），要 `git checkout -- backend/uv.lock`。本页用快照还原并回绿：
 
+<!-- verify: p20-lab-reset-restore -->
 ```bash
 scripts/lab reset p20-before --yes
 (cd backend && .venv/bin/python -m pytest tests/agent -q -k cancel | tail -1)

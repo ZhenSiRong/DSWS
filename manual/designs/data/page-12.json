@@ -1,0 +1,31 @@
+{
+  "eyebrow": "第 12 页 · L2 换 · 真执行器",
+  "title": "给临时通道装上四道闸",
+  "subtitle": "lab/db.py：dict 行、Decimal 精度、自动 LIMIT、只读",
+  "layout": "cards",
+  "cards": [
+    {
+      "icon": "mysql",
+      "name": "行是 dict",
+      "role": "按列名取值，不再靠下标",
+      "judge": "{'sales': Decimal('1144735.50')}"
+    },
+    {
+      "icon": "python",
+      "name": "Decimal 原样",
+      "role": "金额不丢精度",
+      "judge": "-0.0005455017"
+    },
+    {
+      "name": "自动 LIMIT 1000",
+      "role": "没写 LIMIT 就补上限",
+      "judge": "dim_date 1461 行 → 1000"
+    },
+    {
+      "name": "非 SELECT 拒绝",
+      "role": "只读闸门，执行前拦下",
+      "judge": "PermissionError"
+    }
+  ],
+  "footer": "四道闸：dict / Decimal / LIMIT / 只读"
+}

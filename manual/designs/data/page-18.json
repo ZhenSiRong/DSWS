@@ -1,0 +1,21 @@
+{
+  "eyebrow": "第 18 页 · L4 守 · 账号",
+  "title": "只读账号真的写不了吗",
+  "subtitle": "把“只读”从约定搬进数据库权限：dw_reader 只有 SELECT",
+  "layout": "compare",
+  "left": {
+    "title": "约定：应用层",
+    "lines": [
+      "提示词 / 校验 / 策略",
+      "全部失效也还有最后一道"
+    ]
+  },
+  "right": {
+    "title": "能力边界：数据库权限",
+    "lines": [
+      "GRANT SELECT ON dw.*",
+      "UPDATE → 1142 command denied"
+    ]
+  },
+  "footer": "只读要从“约定”变成“能力边界”"
+}

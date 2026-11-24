@@ -12,13 +12,14 @@
 <p class="kicker">练本 · 阅读版（md 正典派生，改内容请改 manual/page-15.md）</p>
 <h1>第 15 页 · 审生成：同一把尺子，量模板也量模型</h1>
 <blockquote>
+<p><strong>城市坐标 · L3 智慧城市 · 同一把尺子</strong>｜给「生成」立一把尺子：模板和模型都拿它量，谁也不特殊。</p>
 <p>前置：第 13 页起的整栈到上一页（第 14 页）结束时仍在跑，可以继续开着，本页一条服务都不用——<code>make stage4</code> 完全离线，不需要 MySQL/ES/Qdrant、不需要 <code>.env</code>、也不需要模型 key。命令都在仓库根目录、同一个终端里整段连续执行。</p>
 </blockquote>
 <h2>这一页构建什么</h2>
 <p>给生成层立一把可重复的尺子：10 题基线 <code>baseline</code>（问题 → SQL/拒答 → 判定；<code>backend/tests/generate/baseline.yaml</code>）+ 一套语义断言。</p>
 <p><strong>别搞混</strong>：它和第 14 页 <code>backend/tests/recall/golden.yaml</code> 的 20 题召回黄金集不是同一个东西：这 10 题是 8 题复用那 20 题的题面 + 2 题越界拒答。</p>
 <p><strong>审什么</strong>：生成器是确定性的、不走模型；你审的不是“像不像人写的”，而是<strong>同一个判据能不能同时量模板和模型</strong>——改契约、改生成逻辑，同一把尺立刻红，改回来立刻绿。</p>
-<p><img alt="第 15 页 · 模板，不是模型" src="../images/page-15-comic.webp" /></p>
+<p><img alt="第 15 页 · 同一把尺子，量模板也量模型：10 题基线 + 语义断言，模板与模型都跑同一套尺子" src="../images/page-15-visual.webp" /></p>
 <h2>猜一猜</h2>
 <p>动手前写下答案：</p>
 <ol>
@@ -32,17 +33,25 @@
 <p><strong>仅当 <code>git status</code> 显示 lock 变脏时</strong>再敲 <code>git checkout -- backend/uv.lock</code> 还原。</p>
 </blockquote>
 <p><strong>第 1 步：拍快照。</strong> 拆一刀要改契约，先留退路（同名快照会被拒绝；重做本页就换个名字，如 <code>p15-before-2</code>，本页后面第 3 步 <code>reset</code> 的名字也一起换）：</p>
+<!-- verify: page15-lab-save -->
+
 <pre><code class="language-bash">scripts/lab save p15-before
 </code></pre>
 <p>回显 <code>已保存快照 "p15-before"：169 个文件。</code>（169 数的是白名单文件数，因工作区而异）。</p>
 <p><strong>第 2 步：先跑离线判据（秒级，不连任何服务）：</strong></p>
+<!-- verify: page15-pytest-generate -->
+
 <pre><code class="language-bash">backend/.venv/bin/python -m pytest backend/tests/generate -q
 </code></pre>
 <p><strong>第 3 步：跑 10 题基线 + 整层验收。</strong> <code>make stage4</code> 依次跑“10 题基线 → 生成层测试 → 全部后端测试”，最后一行 <code>S4 PASS</code>，要跑几十秒（本机实测 38 秒），别以为卡死：</p>
+<!-- verify: page15-stage4 -->
+
 <pre><code class="language-bash">make stage4
 </code></pre>
 <h2>你应该看到</h2>
 <p>第 2 步（秒数因机器而异；5 条 skipped 不是失败——那是 5 份召回扩展/上下文过滤提示词，输出形状不是 <code>sql_or_refusal</code>，按设计跳过）：</p>
+<!-- verify-out: page15-pytest-generate -->
+
 <pre><code class="language-text">122 passed, 5 skipped in 0.96s
 </code></pre>
 <p>第 3 步（节选；基线表格只留两行，长行按终端折行）：</p>
@@ -96,6 +105,8 @@ S4 PASS
 <ol start="2">
 <li>Ctrl+S 保存，再跑一次基线（不用重跑整层验收，这一条就够看见红；下面节选两行 FAIL 和末尾汇总）：</li>
 </ol>
+<!-- verify: page15-baseline-ablation -->
+
 <pre><code class="language-bash">make baseline
 </code></pre>
 <pre><code class="language-text">| 华北销售额 | [SQL_UNKNOWN_COLUMN] 列 fact_order.order_id 不在契约上下文里 | FAIL |
@@ -119,6 +130,8 @@ S4 PASS
 <ol start="3">
 <li>还原并回绿（<code>reset</code> 会先拍一张 <code>pre-reset-…</code> 安全快照，末行确认恢复成功）：</li>
 </ol>
+<!-- verify: page15-lab-reset-restore -->
+
 <pre><code class="language-bash">scripts/lab reset p15-before --yes
 make baseline
 </code></pre>

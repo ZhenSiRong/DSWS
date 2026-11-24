@@ -1,0 +1,33 @@
+{
+  "eyebrow": "第 13 页 · L2 换 · 真部署",
+  "title": "一条命令起整座城",
+  "subtitle": "compose.yaml 编排六个服务，一条 docker-smoke 验收",
+  "layout": "steps",
+  "steps": [
+    {
+      "n": "1",
+      "title": "compose.yaml",
+      "detail": "mysql / elasticsearch / qdrant / init / backend / frontend",
+      "judge": "6 个服务"
+    },
+    {
+      "n": "2",
+      "title": "init 跑一次",
+      "detail": "先 Started 再 Exited，不算长驻",
+      "judge": "Exited (0)"
+    },
+    {
+      "n": "3",
+      "title": "backend / frontend",
+      "detail": "最后都 Healthy",
+      "judge": "Up (healthy)"
+    },
+    {
+      "n": "4",
+      "title": "docker-smoke",
+      "detail": "一条命令验收整座城",
+      "judge": "DOCKER SMOKE PASS"
+    }
+  ],
+  "footer": "起得来 ≠ 部署好：六个服务 + init 一次性任务"
+}

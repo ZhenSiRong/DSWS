@@ -1,0 +1,91 @@
+# 第 20 页 · 守取消 —— 教材可跟随性契约（T0 / T1）
+#
+# schema 与规则见 manual/verify/README.md。
+# 要点：每个 ```bash 块在页面里用 <!-- verify: <marker> --> 注解绑定到下面的块；
+#       cmd 必须与页面块内容一致（归一化后），任何一边改了另一边没改 → T0 FAIL。
+#       offline 块由 T1 真执行并断言关键行；manual 块只做同步校验、不执行。
+page: page-20
+title: 第 20 页 · 守取消：点了停止，系统真的停了吗
+
+blocks:
+  # ---- 动手 第 1 步：拍快照（写 .lab 快照，有副作用）----
+  - id: p20-lab-save
+    marker: p20-lab-save
+    kind: manual
+    reason: 会往 .lab/snapshots/ 写白名单文件快照，且有同名快照被拒的限制；有副作用，不能无人值守重复执行
+    cmd: |
+      scripts/lab save p20-before
+
+  # ---- 动手 第 2 步：6 条取消测试 + tests/agent 全量（离线，秒级）----
+  - id: p20-pytest-cancel
+    marker: p20-pytest-cancel
+    kind: offline
+    cmd: |
+      (cd backend && .venv/bin/python -m pytest tests/agent -q -k cancel)
+      (cd backend && .venv/bin/python -m pytest tests/agent -q)
+    expect:
+      exit: 0
+      contains:
+        - "6 passed, 108 deselected"
+        - "114 passed"
+      regex: ["^6 passed, 108 deselected", "^114 passed"]
+    page_contains:
+      - "6 passed, 108 deselected"
+      - "114 passed"
+    timeout_sec: 60
+
+  # ---- 动手 第 3 步：逐帧打印取消夹具 + record_sse 对账（离线，进程内录制）----
+  - id: p20-record-sse
+    marker: p20-record-sse
+    kind: offline
+    cmd: |
+      (cd backend && .venv/bin/python -c "import json;[print(f) for f in json.load(open('../fixtures/sse/cancelled.json'))['frames']]")
+      (cd backend && .venv/bin/python -m app.scripts.record_sse --check)
+    expect:
+      exit: 0
+      contains:
+        - 'data: {"type": "progress", "step": "correct_sql", "status": "skipped", "duration_ms": null}'
+        - 'data: {"type": "error", "code": "CANCELLED", "class": "cancelled", "message": "本次问数已被用户取消。", "step": null, "detail": {}}'
+        - "S7 SSE RECORD PASS（14 个夹具与真实输出一致）"
+      regex: []
+    page_contains:
+      - 'data: {"type": "progress", "step": "correct_sql", "status": "skipped", "duration_ms": null}'
+      - 'data: {"type": "error", "code": "CANCELLED", "class": "cancelled", "message": "本次问数已被用户取消。", "step": null, "detail": {}}'
+      - "S7 SSE RECORD PASS（14 个夹具与真实输出一致）"
+    timeout_sec: 60
+
+  # ---- 拆一刀：改坏 cancel 后重跑第 2、3 步判据（期望值随本机改动而变，CI 无法复现）----
+  - id: p20-ablation-commands
+    marker: p20-ablation-commands
+    kind: manual
+    reason: 这段命令在「拆一刀」之后执行，页内期望是消融态（2 failed / SSE 夹具不同步），依赖学生本机对 cancel.py 的临时改动；CI 干净仓库跑出来是 6 passed，复现不出该判据，故只做命令同步、不自动执行
+    cmd: |
+      (cd backend && .venv/bin/python -m pytest tests/agent -q -k cancel)
+      (cd backend && .venv/bin/python -m app.scripts.record_sse --check)
+
+  # ---- 拆一刀后还原：lab reset 是破坏性回滚（依赖第 1 步快照）----
+  - id: p20-lab-reset-restore
+    marker: p20-lab-reset-restore
+    kind: manual
+    reason: scripts/lab reset 会按快照回滚工作区文件（破坏性，且依赖第 1 步的快照名），不能作为无人值守验收动作
+    cmd: |
+      scripts/lab reset p20-before --yes
+      (cd backend && .venv/bin/python -m pytest tests/agent -q -k cancel | tail -1)
+      (cd backend && .venv/bin/python -m app.scripts.record_sse --check | tail -1)
+
+static:
+  paths:
+    - backend/tests/agent/test_orchestrator.py
+    - backend/app/agent/cancel.py
+    - backend/app/scripts/record_sse.py
+    - fixtures/sse/cancelled.json
+    - contracts/sql.policy.yaml
+  symbols:
+    - {file: backend/app/agent/cancel.py, pattern: 'class CancelToken'}
+    - {file: backend/app/agent/cancel.py, pattern: 'self\._event\.set\(\)'}
+    - {file: backend/tests/agent/test_orchestrator.py, pattern: 'test_cancel_stops_the_run_and_reports_cancelled'}
+    - {file: backend/tests/agent/test_orchestrator.py, pattern: 'test_cancel_midway_stops_the_remaining_steps'}
+    - {file: backend/app/scripts/record_sse.py, pattern: 'def _check'}
+    - {file: fixtures/sse/cancelled.json, pattern: 'code.*CANCELLED'}
+    - {file: contracts/sql.policy.yaml, pattern: 'forbid_set_operations: true'}
+

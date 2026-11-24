@@ -1,0 +1,22 @@
+# 第 7 页 · 把 SQL 真交给 MySQL —— 教材可跟随性契约（静态 / T0）
+#
+# 本页要起 lab-mysql、改 lab/app.py、重启 uvicorn 再 curl，命令依赖 Docker、真 MySQL
+# 与常驻 8000 端口，无法离线无人值守重复执行，所以 coverage: static：
+# 只验页面引用的路径还在、关键锚点（端口 / 账号库名 / 函数名 / DictCursor / 路由 / rows 接线）
+# 没漂移，不执行任何块。schema 与规则见 manual/verify/README.md。
+page: page-07
+title: 第 7 页 · 把 SQL 真交给 MySQL
+coverage: static
+
+static:
+  paths:
+    - backend/pyproject.toml         # pymysql 依赖来源
+    - fixtures/dw.sql                # 41099.5 的数据源
+    - contracts/schema.contract.yaml # 页面说的「契约口径」
+    - manual/page-01.md              # 3307 端口的定义处
+    - manual/images/page-07-rows.png
+  symbols:
+    - {file: manual/page-01.md, pattern: '3307'}
+    - {file: fixtures/dw.sql, pattern: 'CREATE TABLE fact_order'}
+    - {file: contracts/schema.contract.yaml, pattern: 'expected_fact_rows: 115'}
+    - {file: backend/pyproject.toml, pattern: '"pymysql'}
