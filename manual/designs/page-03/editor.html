@@ -53,4 +53,5 @@ h1 { margin:10px 0 0; font-size:58px; font-weight:900; line-height:1.1; letter-s
 <h1>把服务开到 8000</h1><p class="sub">一个 HTTP 服务，一个接口，一次真正的“对外说话”</p><div class="rule"></div></div>
 <main class="body" data-layer-id="body"><div class="steps"><div class="step" data-layer-id="step-1"><span class="n">STEP 1</span><h2>写服务</h2><p class="detail">FastAPI 应用，只留一个 GET /health</p><p class="judge">app = FastAPI()</p></div><div class="step" data-layer-id="step-2"><span class="n">STEP 2</span><h2>跑起来</h2><p class="detail">uvicorn 监听本机 8000</p><p class="judge">Uvicorn running on http://127.0.0.1:8000</p></div><div class="step" data-layer-id="step-3"><span class="n">STEP 3</span><h2>一问一答</h2><p class="detail">curl 探活，服务回 JSON</p><p class="judge">{"ok":true}</p></div></div></main>
 <div class="foot" data-layer-id="footer"><span class="tag">判据</span><p>curl http://127.0.0.1:8000/health → {"ok":true}</p></div>
-</div></body></html>
+</div><script src="../_shared/editor-save-ui.js"></script>
+</body></html>

@@ -53,4 +53,5 @@ h1 { margin:10px 0 0; font-size:58px; font-weight:900; line-height:1.1; letter-s
 <h1>把 SQL 真交给 MySQL</h1><p class="sub">pymysql 真执行，把结果填回 sql 和 rows</p><div class="rule"></div></div>
 <main class="body" data-layer-id="body"><div class="steps"><div class="step" data-layer-id="step-1"><span class="n">STEP 1</span><h2>pymysql 执行</h2><p class="detail">第 6 页那 5 行 SELECT 真跑</p><p class="judge">cursor.execute(sql)</p></div><div class="step" data-layer-id="step-2"><span class="n">STEP 2</span><h2>填回响应</h2><p class="detail">sql / rows 不再为空</p><p class="judge">sql + rows</p></div><div class="step" data-layer-id="step-3"><span class="n">STEP 3</span><h2>41099.5</h2><p class="detail">华北销售额从库里取回来</p><p class="judge">rows[0] = 华北 41099.5</p></div></div></main>
 <div class="foot" data-layer-id="footer"><span class="tag">判据</span><p>rows → [{"region_name":"华北","sales":41099.5}]</p></div>
-</div></body></html>
+</div><script src="../_shared/editor-save-ui.js"></script>
+</body></html>

@@ -53,4 +53,5 @@ h1 { margin:10px 0 0; font-size:58px; font-weight:900; line-height:1.1; letter-s
 <h1>点了停止，系统真的停了吗</h1><p class="sub">取消是独立状态：不是 done，也不是失败</p><div class="rule"></div></div>
 <main class="body" data-layer-id="body"><div class="steps"><div class="step" data-layer-id="step-1"><span class="n">STEP 1</span><h2>点“停止”</h2><p class="detail">客户端发取消请求</p><p class="judge">cancel</p></div><div class="step" data-layer-id="step-2"><span class="n">STEP 2</span><h2>服务端真的停</h2><p class="detail">不再继续跑、不再写结果</p><p class="judge">状态回到 idle</p></div><div class="step" data-layer-id="step-3"><span class="n">STEP 3</span><h2>发 CANCELLED 事件</h2><p class="detail">SSE 里显式告诉前端</p><p class="judge">type=error, code=CANCELLED</p></div><div class="step" data-layer-id="step-4"><span class="n">STEP 4</span><h2>界面标“已取消”</h2><p class="detail">不是“失败”，也不是“完成”</p><p class="judge">已取消</p></div></div></main>
 <div class="foot" data-layer-id="footer"><span class="tag">判据</span><p>停止是一个状态，不是「不返回」</p></div>
-</div></body></html>
+</div><script src="../_shared/editor-save-ui.js"></script>
+</body></html>

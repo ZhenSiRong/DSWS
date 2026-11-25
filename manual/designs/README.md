@@ -100,3 +100,18 @@ scripts/design-save.sh 00
 - 会重渲染 `out/poster.png` → `manual/images/page-NN-visual.webp`，并重生成阅读版 HTML + 跑 audit
 
 **注意**：`python3 manual/designs/build_visuals.py NN` 会用 `data/page-NN.json` **完全重建 index.html**，会覆盖你在编辑器里的手工改动。只想改文案时用它；想保留手工拖拽/排版时用 `design-save.sh`。
+
+
+## 编辑器里的「另存为 / 覆盖保存」按钮（推荐）
+
+用 `scripts/design-serve.py` 启动服务后（不是普通 `http.server`），每个 `editor.html` 右下角会出现两个按钮：
+
+- **另存为 HTML**：把当前编辑版下载到浏览器下载目录（自己命名），即"另存"。
+- **覆盖保存到项目**：直接把当前编辑版写回 `page-NN/index.html`，并自动：
+  1. 备份旧版到 `page-NN/out/index.<时间戳>.bak.html`
+  2. 重建 `editor.html`（继续可编辑）
+  3. 重渲染 `out/poster.png` 与 `manual/images/page-NN-visual.webp`
+  4. 重生成阅读版 HTML + 跑 `audit_book`（右下角显示结果）
+
+启动：`python3 scripts/design-serve.py 8788`；入口 `http://127.0.0.1:8788/manual/designs/`。  
+若服务没起，也可用命令行：`scripts/design-save.sh 00 ~/Downloads/page-00-edited.html`。

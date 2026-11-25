@@ -53,4 +53,5 @@ h1 { margin:10px 0 0; font-size:58px; font-weight:900; line-height:1.1; letter-s
 <h1>一条命令起整座城</h1><p class="sub">compose.yaml 编排六个服务，一条 docker-smoke 验收</p><div class="rule"></div></div>
 <main class="body" data-layer-id="body"><div class="steps"><div class="step" data-layer-id="step-1"><span class="n">STEP 1</span><h2>compose.yaml</h2><p class="detail">mysql / elasticsearch / qdrant / init / backend / frontend</p><p class="judge">6 个服务</p></div><div class="step" data-layer-id="step-2"><span class="n">STEP 2</span><h2>init 跑一次</h2><p class="detail">先 Started 再 Exited，不算长驻</p><p class="judge">Exited (0)</p></div><div class="step" data-layer-id="step-3"><span class="n">STEP 3</span><h2>backend / frontend</h2><p class="detail">最后都 Healthy</p><p class="judge">Up (healthy)</p></div><div class="step" data-layer-id="step-4"><span class="n">STEP 4</span><h2>docker-smoke</h2><p class="detail">一条命令验收整座城</p><p class="judge">DOCKER SMOKE PASS</p></div></div></main>
 <div class="foot" data-layer-id="footer"><span class="tag">判据</span><p>起得来 ≠ 部署好：六个服务 + init 一次性任务</p></div>
-</div></body></html>
+</div><script src="../_shared/editor-save-ui.js"></script>
+</body></html>

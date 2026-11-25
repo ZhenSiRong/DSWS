@@ -312,6 +312,7 @@ def wire_editor(page: str) -> None:
     if r.returncode != 0:
         print(f"  editor skip page-{page}: {r.stderr[-300:]}")
     else:
+        subprocess.run([sys.executable, str(DESIGNS/"inject_save_ui.py"), page], capture_output=True)
         print(f"  editor page-{page} ok")
 
 def main() -> None:

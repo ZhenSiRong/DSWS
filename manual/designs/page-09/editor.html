@@ -53,4 +53,5 @@ h1 { margin:10px 0 0; font-size:58px; font-weight:900; line-height:1.1; letter-s
 <h1>给浏览器一个入口</h1><p class="sub">nginx 反代 + 17 行页面 + docker run</p><div class="rule"></div></div>
 <main class="body" data-layer-id="body"><div class="steps"><div class="step" data-layer-id="step-1"><span class="n">STEP 1</span><h2>nginx.conf 8 行</h2><p class="detail">/api/ 反代到 backend:8000</p><p class="judge">proxy_pass http://backend:8000</p></div><div class="step" data-layer-id="step-2"><span class="n">STEP 2</span><h2>17 行页面</h2><p class="detail">输入框 + EventSource 接收</p><p class="judge">浏览器自带 EventSource</p></div><div class="step" data-layer-id="step-3"><span class="n">STEP 3</span><h2>docker run 8081</h2><p class="detail">浏览器打开入口、问一句</p><p class="judge">41099.5</p></div></div></main>
 <div class="foot" data-layer-id="footer"><span class="tag">判据</span><p>浏览器 → 8081 → nginx → /api/stream → 41099.5</p></div>
-</div></body></html>
+</div><script src="../_shared/editor-save-ui.js"></script>
+</body></html>

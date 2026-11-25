@@ -53,4 +53,5 @@ h1 { margin:10px 0 0; font-size:58px; font-weight:900; line-height:1.1; letter-s
 <h1>让答案一条条推送出来（SSE）</h1><p class="sub">12 条 progress + 1 条 result，text/event-stream</p><div class="rule"></div></div>
 <main class="body" data-layer-id="body"><div class="steps"><div class="step" data-layer-id="step-1"><span class="n">STEP 1</span><h2>12 条 progress</h2><p class="detail">每个步骤一条事件</p><p class="judge">recall_column / generate_sql …</p></div><div class="step" data-layer-id="step-2"><span class="n">STEP 2</span><h2>最后 1 条 result</h2><p class="detail">结果只在最后出现</p><p class="judge">rows: [{region_name: 华北, sales: 41099.5}]</p></div><div class="step" data-layer-id="step-3"><span class="n">STEP 3</span><h2>text/event-stream</h2><p class="detail">事件之间一个空行</p><p class="judge">EventSource 接流</p></div><div class="step" data-layer-id="step-4"><span class="n">STEP 4</span><h2>前端逐步渲染</h2><p class="detail">用户能看到走到第几步</p><p class="judge">12 progress + 1 result</p></div></div></main>
 <div class="foot" data-layer-id="footer"><span class="tag">判据</span><p>GET /api/stream?q=… → 12 条 progress + 1 条 result</p></div>
-</div></body></html>
+</div><script src="../_shared/editor-save-ui.js"></script>
+</body></html>

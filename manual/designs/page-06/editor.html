@@ -53,4 +53,5 @@ h1 { margin:10px 0 0; font-size:58px; font-weight:900; line-height:1.1; letter-s
 <h1>照契约生成那条带 JOIN 的 SQL</h1><p class="sub">契约字典 + build_sql(keywords)：把关键词拼成 5 行 SELECT</p><div class="rule"></div></div>
 <main class="body" data-layer-id="body"><div class="steps"><div class="step" data-layer-id="step-1"><span class="n">STEP 1</span><h2>CONTRACT 字典</h2><p class="detail">表、列、指标口径写进 Python</p><p class="judge">表 / 列 / 口径</p></div><div class="step" data-layer-id="step-2"><span class="n">STEP 2</span><h2>build_sql(keywords)</h2><p class="detail">照契约拼 JOIN，不靠猜</p><p class="judge">fact_order JOIN dim_region</p></div><div class="step" data-layer-id="step-3"><span class="n">STEP 3</span><h2>5 行 SELECT</h2><p class="detail">可直接交给 MySQL 执行</p><p class="judge">WHERE region_name = '华北'</p></div></div></main>
 <div class="foot" data-layer-id="footer"><span class="tag">判据</span><p>SELECT … FROM fact_order JOIN dim_region ON … WHERE region_name='华北' GROUP BY …</p></div>
-</div></body></html>
+</div><script src="../_shared/editor-save-ui.js"></script>
+</body></html>

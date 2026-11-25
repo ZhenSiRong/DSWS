@@ -53,4 +53,5 @@ h1 { margin:10px 0 0; font-size:58px; font-weight:900; line-height:1.1; letter-s
 <h1>加一个能收问题的接口</h1><p class="sub">先修通“收发 JSON”这条路，不查库、不生成 SQL</p><div class="rule"></div></div>
 <main class="body" data-layer-id="body"><div class="steps"><div class="step" data-layer-id="step-1"><span class="n">STEP 1</span><h2>POST /api/query</h2><p class="detail">收一个 JSON：question</p><p class="judge">{"question":"华北销售额"}</p></div><div class="step" data-layer-id="step-2"><span class="n">STEP 2</span><h2>只回显</h2><p class="detail">keywords / sql / rows 先留空</p><p class="judge">不查库、不拼 SQL</p></div><div class="step" data-layer-id="step-3"><span class="n">STEP 3</span><h2>一字不差</h2><p class="detail">同一请求两次，响应完全相同</p><p class="judge">硬编码 JSON</p></div></div></main>
 <div class="foot" data-layer-id="footer"><span class="tag">判据</span><p>{"question":"华北销售额","keywords":[],"sql":null,"rows":[]}</p></div>
-</div></body></html>
+</div><script src="../_shared/editor-save-ui.js"></script>
+</body></html>

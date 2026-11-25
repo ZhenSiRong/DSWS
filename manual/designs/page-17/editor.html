@@ -53,4 +53,5 @@ h1 { margin:10px 0 0; font-size:58px; font-weight:900; line-height:1.1; letter-s
 <h1>一次重试能修好什么、修不好什么</h1><p class="sub">把纠错当成一次有上限的赌博来审：只重试 1 次，改完必须重新过校验</p><div class="rule"></div></div>
 <main class="body" data-layer-id="body"><div class="steps"><div class="step" data-layer-id="step-1"><span class="n">STEP 1</span><h2>validate_sql → error</h2><p class="detail">静态校验先拦下</p><p class="judge">SQL_UNKNOWN_COLUMN</p></div><div class="step" data-layer-id="step-2"><span class="n">STEP 2</span><h2>三个触发条件</h2><p class="detail">有校正器 / 可重试 / 契约允许</p><p class="judge">max_attempts: 1</p></div><div class="step" data-layer-id="step-3"><span class="n">STEP 3</span><h2>只校正一次</h2><p class="detail">一次重试，改出的 SQL 重过两道关</p><p class="judge">attempted=True</p></div><div class="step" data-layer-id="step-4"><span class="n">STEP 4</span><h2>二次校验</h2><p class="detail">改完的 SQL 还要过 guard + policy</p><p class="judge">error=None</p></div><div class="step" data-layer-id="step-5"><span class="n">STEP 5</span><h2>真执行</h2><p class="detail">过校验才交给 MySQL</p><p class="judge">rows=5 行</p></div></div></main>
 <div class="foot" data-layer-id="footer"><span class="tag">判据</span><p>14 passed / S6 PASS；成功率按多次采样写，不写“已修复”</p></div>
-</div></body></html>
+</div><script src="../_shared/editor-save-ui.js"></script>
+</body></html>

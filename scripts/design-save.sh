@@ -13,10 +13,12 @@ DIR="$ROOT/manual/designs/page-$PAGE"
 if [ -n "$SRC" ]; then
   [ -f "$SRC" ] || { echo "找不到下载的 HTML：$SRC" >&2; exit 1; }
   STAMP=$(date +%Y%m%d-%H%M%S)
-  cp "$DIR/index.html" "$DIR/index.$STAMP.bak.html"
+  mkdir -p "$DIR/out"
+  cp "$DIR/index.html" "$DIR/out/index.$STAMP.bak.html"
   cp "$SRC" "$DIR/index.html"
-  echo "已保存编辑版：$DIR/index.html（旧版备份 index.$STAMP.bak.html）"
+  echo "已保存编辑版：$DIR/index.html（旧版备份 out/index.$STAMP.bak.html）"
   node "$HOME/.agents/skills/editable-design/scripts/wire-editor.mjs" "$DIR/index.html"
+  python3 "$ROOT/manual/designs/inject_save_ui.py" "$PAGE"
 fi
 
 python3 "$ROOT/manual/designs/render_existing.py" "$PAGE"

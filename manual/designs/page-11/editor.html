@@ -53,4 +53,5 @@ h1 { margin:10px 0 0; font-size:58px; font-weight:900; line-height:1.1; letter-s
 <h1>让 SQL 从契约里长出来</h1><p class="sub">删掉手抄 CONTRACT，改成加载唯一的契约文件</p><div class="rule"></div></div>
 <main class="body" data-layer-id="body"><div class="steps"><div class="step" data-layer-id="step-1"><span class="n">STEP 1</span><h2>删手抄字典</h2><p class="detail">lab/app.py 里的 CONTRACT = {...}</p><p class="judge">副本不可信</p></div><div class="step" data-layer-id="step-2"><span class="n">STEP 2</span><h2>加载契约</h2><p class="detail">contracts/schema.contract.yaml</p><p class="judge">唯一事实源</p></div><div class="step" data-layer-id="step-3"><span class="n">STEP 3</span><h2>逐字一致</h2><p class="detail">build_sql 输出与第 6 页一模一样</p><p class="judge">5 行 SELECT</p></div></div></main>
 <div class="foot" data-layer-id="footer"><span class="tag">判据</span><p>契约文件是唯一事实源；手抄字典只是副本</p></div>
-</div></body></html>
+</div><script src="../_shared/editor-save-ui.js"></script>
+</body></html>

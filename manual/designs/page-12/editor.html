@@ -53,4 +53,5 @@ h1 { margin:10px 0 0; font-size:58px; font-weight:900; line-height:1.1; letter-s
 <h1>给临时通道装上四道闸</h1><p class="sub">lab/db.py：dict 行、Decimal 精度、自动 LIMIT、只读</p><div class="rule"></div></div>
 <main class="body" data-layer-id="body"><div class="cards c4"><div class="card" data-layer-id="card-1"><span class="num">01</span><img class="icon" src="../_shared/icons/mysql.svg" alt=""><h2>行是 dict</h2><p class="role">按列名取值，不再靠下标</p><p class="judge">{'sales': Decimal('1144735.50')}</p></div><div class="card" data-layer-id="card-2"><span class="num">02</span><img class="icon" src="../_shared/icons/python.svg" alt=""><h2>Decimal 原样</h2><p class="role">金额不丢精度</p><p class="judge">-0.0005455017</p></div><div class="card" data-layer-id="card-3"><span class="num">03</span><h2>自动 LIMIT 1000</h2><p class="role">没写 LIMIT 就补上限</p><p class="judge">dim_date 1461 行 → 1000</p></div><div class="card" data-layer-id="card-4"><span class="num">04</span><h2>非 SELECT 拒绝</h2><p class="role">只读闸门，执行前拦下</p><p class="judge">PermissionError</p></div></div></main>
 <div class="foot" data-layer-id="footer"><span class="tag">判据</span><p>四道闸：dict / Decimal / LIMIT / 只读</p></div>
-</div></body></html>
+</div><script src="../_shared/editor-save-ui.js"></script>
+</body></html>
