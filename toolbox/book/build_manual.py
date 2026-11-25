@@ -104,6 +104,8 @@ def preprocess_images(md_text: str, chapter_dir: Path, images: dict[str, Path], 
             return m.group(0)
         name = safe_name(p, images)
         rel = f"{image_dir}/{name}"
+        if not embed and p.suffix.lower() == ".gif":
+            alt += "（PDF 为静帧；动图见 HTML 版）"
         alt_h = html.escape(alt, quote=True)
         if embed:
             mime = "image/svg+xml" if p.suffix.lower() == ".svg" else \
@@ -126,6 +128,10 @@ def preprocess_links(md_text: str) -> str:
         mm = re.search(r"page-(\d{2})\.md", href)
         if mm:
             return f"[{label}](#page-{mm.group(1)})"
+        if "appendix/gui-debugging.md" in href:
+            return f"[{label}](#appendix-tools)"
+        if "appendix/llm-endpoint.md" in href:
+            return f"[{label}](#appendix-llm)"
         if "OVERVIEW.md" in href:
             return f"[{label}](#overview)"
         if href.endswith("README.md"):
@@ -170,10 +176,14 @@ def page_block(page: int, images: dict[str, Path], image_dir: str, embed: bool) 
 
 def chapterize(text: str) -> str:
     """只改书的渲染层：教程页 → 章；不写回 md 正典，也不动网页版。"""
+    text = re.sub(r"第\s*(\d+)\s*[–—~\-]\s*(\d+)\s*页", r"第 \1–\2 章", text)
+    text = re.sub(r"第\s*(\d+)\s*/\s*(\d+)\s*页", r"第 \1、\2 章", text)
     text = re.sub(r"第\s*(\d+)\s*页", r"第 \1 章", text)
     text = re.sub(r"第([一二三四五六七八九十]+)页", r"第\1章", text)
     text = text.replace("这一页", "这一章").replace("每一页", "每一章")
     text = text.replace("本页", "本章").replace("下一页", "下一章").replace("前一页", "前一章")
+    text = text.replace("上一页", "上一章").replace("前九页", "前九章")
+    text = re.sub(r"(?<![A-Za-z0-9_])p(\d{2})(?!\d)", r"第 \1 章", text)
     return text
 
 
@@ -182,11 +192,16 @@ def page_summary(page: int) -> str:
     m = re.search(r"## 这一[页章]构建什么\n\n(.+?)(?:\n\n|\n## )", text, re.S)
     raw = m.group(1) if m else ""
     raw = re.sub(r"!\[[^\]]*\]\([^)]+\)", "", raw)
-    raw = re.sub(r"[*_`>#]", "", raw)
+    raw = re.sub(r"`([^`]+)`", r"\1", raw)
+    raw = re.sub(r"[*#]", "", raw)
     raw = re.sub(r"\s+", " ", raw).strip()
     m2 = re.search(r"^(.+?[。；])", raw)
     s = m2.group(1) if m2 else raw
-    return s[:64] + ("…" if len(s) > 64 else "")
+    if len(s) > 72:
+        cut = s[:72]
+        pos = max(cut.rfind("。"), cut.rfind("；"), cut.rfind("，"), cut.rfind(" "))
+        s = (cut[:pos] if pos >= 28 else cut).rstrip("，、； ") + "…"
+    return s
 
 
 def page_index_table(pages: list[tuple[int, str]]) -> str:
@@ -195,8 +210,8 @@ def page_index_table(pages: list[tuple[int, str]]) -> str:
         rows.append(f'<tr class="level-row"><td colspan="3"><span class="pi-level">{level} · {short}</span> {html.escape(desc)}</td></tr>')
         for page, title in pages:
             if page in rng:
-                rows.append(f'<tr><td class="pi-no">第 {page} 章</td><td class="pi-title">{html.escape(title)}</td><td class="pi-sum">{html.escape(page_summary(page))}</td></tr>')
-    return ('<table class="page-index"><thead><tr><th>章</th><th>标题</th><th>这一章构建什么</th></tr></thead>'
+                rows.append(f'<tr><td class="pi-no">{page:02d}</td><td class="pi-title">{html.escape(title)}</td><td class="pi-sum">{html.escape(page_summary(page))}</td></tr>')
+    return ('<table class="page-index"><thead><tr><th>号</th><th>标题</th><th>这一章构建什么</th></tr></thead>'
             '<tbody>' + ''.join(rows) + '</tbody></table>')
 
 
@@ -226,7 +241,7 @@ def intro_block() -> str:
 <p class="lead">这不是一本“读完就会”的书，是一本“照着做、能对账”的练本。全书 24 章，分成五级：<b>造 → 换 → 审 → 守 → 装</b>。每一章只做一件事，每一章都留下一条你能亲手跑出来的判据。</p>
 <div class="intro-cols">
 <div><h2>先看地图</h2><p>先读 <b>全书地图</b>：一片空地上有十座设施，每一章盖一座、接一段管网。左边回答“为什么是这个顺序”，右边回答“这一章做完手里有什么”。</p></div>
-<div><h2>再翻一页</h2><p>每章固定六段：这一章构建什么 → 猜一猜 → 动手 → 你应该看到 → 对账 → 拆一刀。先猜，再动手；看到真实输出，再对账；最后拆掉一个组件，看系统怎么坏。</p></div>
+<div><h2>再翻一页</h2><p>L2–L5 每章固定六段：这一章构建什么 → 猜一猜 → 动手 → 你应该看到 → 对账 → 拆一刀；L1 各章末段是「自己改一下」，第 0 章是准备章（提前说明 / 卡住了看这里 / 重来一遍）。先猜，再动手；看到真实输出，再对账；能拆的章节最后拆掉一个组件，看系统怎么坏。</p></div>
 <div><h2>对账比读完重要</h2><p>把“你应该看到”里的真实输出和你的屏幕逐行对。对不上就停在这一章；能对账，才算学会。书的正文是 <code>tutorial/page-*.md</code>，这本 HTML/PDF 只是它的渲染版。PDF 版页眉的 <code>CHAPTER NN</code> 是手册章编号，页脚数字是 PDF 物理页；附录 A 有逐章对照表。</p></div>
 </div>
 </section>'''
@@ -240,7 +255,34 @@ def toc_block(front_title: str, pages: list[tuple[int, str]]) -> str:
         for page, title in pages:
             if page in rng:
                 items.append(f'<li class="toc-row"><a href="#page-{page:02d}"><span class="toc-no">{page:02d}</span><span class="toc-t">{html.escape(title)}</span></a></li>')
+    items.append('<li class="toc-level"><span class="toc-lv">附录</span><span class="toc-desc">对照表与工具卡</span></li>')
+    items.append('<li class="toc-row"><a href="#page-map"><span class="toc-no">A</span><span class="toc-t">手册章 ↔ PDF 物理页对照</span></a></li>')
+    items.append('<li class="toc-row"><a href="#appendix-tools"><span class="toc-no">B</span><span class="toc-t">工具卡：装一次、一条命令、浏览器里点开</span></a></li>')
+    items.append('<li class="toc-row"><a href="#appendix-llm"><span class="toc-no">C</span><span class="toc-t">真 LLM 端点配置（可选支线）</span></a></li>')
     return '<section class="toc front" id="toc"><div class="toc-head"><div class="toc-k">Contents</div><h1>目录</h1></div><ol class="toc-list">' + "\n".join(items) + '</ol></section>'
+
+
+APPENDICES = [
+    ("appendix-tools", "附录 B", "工具卡：装一次、一条命令、浏览器里点开", TUTORIAL / "appendix" / "gui-debugging.md"),
+    ("appendix-llm", "附录 C", "真 LLM 端点配置（可选支线）", TUTORIAL / "appendix" / "llm-endpoint.md"),
+]
+
+
+def appendix_block(spec: tuple[str, str, str, Path], images: dict[str, Path], image_dir: str, embed: bool) -> tuple[str, str, str]:
+    anchor_id, label, short, path = spec
+    md_text = chapterize(path.read_text(encoding="utf-8"))
+    title = first_h1(md_text)
+    body = convert(strip_first_h1(md_text), path.parent, image_dir, images, embed)
+    block = f'''<section class="chapter appendix" id="{anchor_id}">
+<header class="ch-head">
+  <div class="ch-meta"><span class="level">{label}</span><span class="ch-no">APPENDIX</span></div>
+  <h1>{html.escape(title)}</h1>
+</header>
+<div class="ch-body">
+{body}
+</div>
+</section>'''
+    return block, title, anchor_id
 
 
 def page_map_block(page_map: dict, pages: list[tuple[int, str]]) -> str:
@@ -294,6 +336,7 @@ def build_html(out: Path, embed: bool, page_map: dict | None = None) -> tuple[st
     date = _dt.date.today().isoformat()
     head = git_head()
     map_html = page_map_block(page_map, pages) if page_map else ""
+    appendix_html = "".join(appendix_block(spec, images, image_dir, embed)[0] for spec in APPENDICES)
     css = CSS_FILE.read_text(encoding="utf-8")
     doc = f'''<!doctype html>
 <html lang="zh-CN">
@@ -313,6 +356,7 @@ def build_html(out: Path, embed: bool, page_map: dict | None = None) -> tuple[st
 {front}
 {''.join(blocks)}
 {map_html}
+{appendix_html}
 <section class="back-cover"><p>全书 24 章 · 五级 · 一条可复现的工程学习线</p><p class="bc-small">正文正典：{TUTORIAL.name}/page-*.md · 构建 {date} · baseline {head}</p></section>
 </div>
 </body>

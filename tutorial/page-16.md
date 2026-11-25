@@ -72,6 +72,8 @@ S6 PASS
 
 ![第 16 页 · 三条离线判据：26 passed + 失败矩阵 S6 PASS + 语料对账 {"total": 20, "mismatch": 0}](images/page-16-guard.png)
 
+> **“路线图”指什么**：这里指课程/`contracts/errors.yaml` 注释里的 S6 要求，不是另有一份外部路线图。
+
 ## 对账
 
 - **猜 1：10 种，不是 16。**

@@ -16,6 +16,8 @@
 
 **审的顺序**：先写下判据，再让机器去撞。
 
+> **数字口径**：第 13 章 compose 首灌 `fixtures/dw.sql`（演示集 115 单），所以本章起 `41099.5`/115 是演示集口径；第 10–12 章的真数据在 lab 快照/另一套库里，互不影响。
+
 ![第 14 页 · 召回空了的答案，你凭什么信：左边是黄金集与检索存储，右边是图书馆：书架停了，索引卡还能兜底](images/page-14-visual.webp)
 
 ## 猜一猜
@@ -42,9 +44,9 @@ scripts/lab save p14-before
 backend/.venv/bin/python -m pytest backend/tests/recall -q
 ```
 
-**三组字段**：黄金集是 `backend/tests/recall/golden.yaml` 里的 20 题，每题三组字段：`expected_*`（必须被召回）、`must_not`（不许出现）。
+**两组字段**：黄金集是 `backend/tests/recall/golden.yaml` 里的 20 题，每题两组字段：`expected_*`（必须被召回；内部再分表/列/指标/取值四类）、`must_not`（不许出现）。
 
-**三条判据**：`backend/tests/recall/test_golden.py` 还查 precision 下限和输出规模上限——允许额外候选，但不许把所有表/列/指标整片塞进上下文。这三条就是“召回算不算合格”的判据。
+**三条主判据 + 两条汇总下限**：主判据是「该命中 / 不该出现 / 输出规模上限」；`test_golden.py` 还查 precision、recall 下限——允许额外候选，但不许把所有表/列/指标整片塞进上下文。
 
 **第 3 步：真跑 20 题。** `source` 把 `.env` 里的端口和密码导给宿主 CLI（成功时无输出）。
 
@@ -89,7 +91,7 @@ S3 PASS
 ```
 
 ![第 14 页 · `make stage3` 真输出：S2 VERIFY PASS → 41 passed → 813 passed, 30 skipped → S3 PASS](images/page-14-stage3.png)
-![第 14 页 · 停掉 Elasticsearch 后：POST /api/query 仍回 41099.5；20 题黄金集 18 passed, 23 errors](images/page-14-stop-es.png)
+![第 14 页 · 停掉 Elasticsearch 后：POST /api/query 仍回 41099.5；黄金集所在测试组 18 passed, 23 errors（共 41 条）](images/page-14-stop-es.png)
 
 ## 对账
 
@@ -127,6 +129,8 @@ S3 PASS
 docker compose stop elasticsearch
 ```
 2. **再查一次数。** 走第 13 页的前端入口（命令里的 `8080` 是 `.env` 默认值；第 13 页改过 `FRONTEND_HOST_PORT` 就换成你的端口——端口不对会回 404 `Router not found`，像接口坏了）：
+**字段名注意**：第 4–7 章的 lab 版收 `{"question":...}`；从第 13 章起的整栈收 `{"query":...}`。拿前半本的 curl 直接打 8080 会 422，不是服务坏了。
+
 <!-- verify: page14-curl-query -->
 ```bash
 curl -s -N -X POST http://127.0.0.1:8080/api/query -H 'Content-Type: application/json' -d '{"query":"华北销售额"}' | grep '"type": "result"'

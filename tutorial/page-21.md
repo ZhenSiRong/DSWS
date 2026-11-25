@@ -71,7 +71,7 @@ for sid in ('happy', 'llm_refusal'):
 (cd frontend && npm test)
 ```
 
-**第 4 步（可选）：`make stage7`。** 前提：本机装了 `uv` 且 `backend/.venv` 依赖已同步；不需要 MySQL / 浏览器。6 段门禁（契约新鲜度、夹具对账、`tests/frontend` 45 条、前端 40 条、前端构建、全后端 843 条 = 813 passed + 30 skipped），本机实测约 54 秒，末行 `S7 PASS`；不跑不影响前面判据：
+**第 4 步（可选）：`make stage7`。** 前提：本机装了 `uv` 且 `backend/.venv` 依赖已同步；不需要 MySQL / 浏览器。6 段门禁（契约新鲜度、夹具对账、`tests/frontend` 45 条、前端 40 条、前端构建、全后端 843 条 = 813 passed + 30 skipped；本页第 3 步只跑其中 30 条），本机实测约 54 秒，末行 `S7 PASS`；不跑不影响前面判据：
 
 <!-- verify: page21-stage7 -->
 ```bash

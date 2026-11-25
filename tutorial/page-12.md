@@ -23,7 +23,7 @@
 
 **第 1 步：把真数据灌回库**（命令都在仓库根目录执行：有 `fixtures/`、`backend/` 的那一层）。
 
-**为什么灌 `dw-real`**：第 10 页收尾时你重灌回了演示集（115 行），带分金额的 `dw-real` 才看得出漂移，用第 10 页同一条命令：
+**为什么灌 `dw-real`**：如果第 10 章收尾时重灌回了演示集（115 行），本步把它换回带金额的 `dw-real`（若库里还是 410 行，本步幂等无害），用第 10 页同一条命令：
 ```bash
 docker exec -i lab-mysql mysql -uroot -plabpass --default-character-set=utf8mb4 < fixtures/dw-real.sql
 ```

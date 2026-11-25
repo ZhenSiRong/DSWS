@@ -127,7 +127,7 @@ make baseline
   - b04: 期望 SQL，实际拒答 SQL_UNKNOWN_COLUMN
 ```
 
-末尾 `make: *** [Makefile:88: baseline] Error 1` 是判据在报红，不是命令敲错。
+末尾 `make: *** [Makefile:88: baseline] Error 1` 是判据在报红，不是命令敲错（行号随 Makefile 排版变，认 `baseline` 目标和 `Error 1` 即可）。
 
 **红的原因是一条链**：公式多了 `COUNT(DISTINCT fact_order.order_id)` → 生成器把它原样拼进 SQL → 但 GMV 的 `relevant_columns` 只有 `fact_order.order_amount`，上下文里没有 `order_id` → 静态校验按“列存在”拒绝 → 生成降级成拒答 → 期望 SQL 的两题 FAIL。
 

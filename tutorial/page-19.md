@@ -54,7 +54,7 @@ scripts/lab save p19-before
 
 **先自查**：`(cd backend && .venv/bin/python -c "import app, app.security") && command -v uv`（退出码 0 才继续；非 0 就跳过本步，**跳过不影响第 2 步的判据**：第 2、3 步只用 `.venv`，不经过 `uv`）。
 
-**跑多久**：本机实测约 44 秒（先跑安全测试 179 passed + 2 skipped，再跑全后端 843 条 = 813 passed + 30 skipped、约 40 秒），末行 `S5 PASS`：
+**跑多久**：本机实测约 44 秒（先跑安全测试 179 passed + 2 skipped，再跑全后端 843 条 = 813 passed + 30 skipped、约 40 秒），末行 `S5 PASS`。**两个 S5 PASS 不要混**：`security --check` 与 `make stage5` 都会印它，前者是策略检查，后者是整层门禁；看到前者不等于 stage5 全跑。
 
 <!-- verify: p19-make-stage5 -->
 ```bash

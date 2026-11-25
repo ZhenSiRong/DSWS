@@ -20,7 +20,7 @@
 
 **为什么“纠正成功”不能当判据**：触发取决于模型是否生成可重试错误，**不能稳定复现、不能当判据**。
 
-- v1 演示没复现：`deliverable/PRD-对照表.md` 第 13 行，触发=true、纠正成功=false。
+- v1/v2 指两次交付评测，不是本书前后版本：v1 演示没复现（`deliverable/PRD-对照表.md` 第 13 行，触发=true、纠正成功=false）。
 - v2 **单次复现过**纠正成功态：`deliverable/v2/README-v2.md:172`；证据 `deliverable/v2/evidence/v2-natural-correct-success.sse`，故障注入样本 `v2-correct-success.sse` 另存作回归。
 
 ![第 17 页 · 一次重试能修好什么、修不好什么：左边是校验与校正，右边是赌桌：只有一枚代币，只许改一次](images/page-17-visual.webp)
@@ -246,4 +246,4 @@ backend/.venv/bin/python -m pytest backend/tests/agent/test_correct.py -q | tail
 
 结论：**纠错只负责一件事——把“可重试的失败”捞回来一次；捞回来就是 `corrected` 的 `result`，捞不回来就是最初那个错码。**
 
-**L3 四页的判据合起来看**：P14 的检索黄金集、P15 的 10 题基线、P16 的 20 条错单码、P17 的 `corrected` 场景，各量一层，才是“机器靠不靠谱”的答案。真实模型的成功态只能靠多次采样，单次演示会骗人。
+**L3 四页的判据合起来看**：第 14 章的检索黄金集、第 15 章的 10 题基线、第 16 章的 20 条错单码、第 17 章的 `corrected` 场景，各量一层，才是“机器靠不靠谱”的答案。真实模型的成功态只能靠多次采样，单次演示会骗人。

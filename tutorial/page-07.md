@@ -86,7 +86,7 @@ curl -s -X POST http://127.0.0.1:8000/api/query -H 'Content-Type: application/js
 {"question":"华北销售额","keywords":["华北","销售额"],"sql":"SELECT dim_region.region_name, SUM(fact_order.order_amount) AS sales\nFROM fact_order\nJOIN dim_region ON fact_order.region_id = dim_region.region_id\nWHERE dim_region.region_name = '华北'\nGROUP BY dim_region.region_name","rows":[{"region_name":"华北","sales":41099.5}]}
 ```
 
-**这一行很长**：`sql` 里那 5 行真换行被 JSON 表示成了 `\n`。你只核对最后一段 `rows`：`region_name` 是 `华北`，`sales` 是 `41099.5`。
+**这一行很长**：`sql` 里那 5 行真换行被 JSON 表示成了 `\n`。整行只作形状参考；你只核对最后一段 `rows`：`region_name` 是 `华北`，`sales` 是 `41099.5`。
 
 **没有结尾换行**：`curl -s` 不补换行，终端提示符可能紧贴在最后的 `}` 后面，内容对就行。
 

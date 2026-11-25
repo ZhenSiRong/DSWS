@@ -6,7 +6,7 @@
 
 ## 这一页构建什么
 
-把前九页手动起的三个东西换成 `compose.yaml` 编排的六个服务：`mysql` / `elasticsearch` / `qdrant` / `init` / `backend` / `frontend`。
+把 L1 各章手动起的三个东西换成 `compose.yaml` 编排的六个服务：`mysql` / `elasticsearch` / `qdrant` / `init` / `backend` / `frontend`。
 
 **新设施**：`elasticsearch` / `qdrant` 是前九页没起过的新设施，随编排一起带起来。
 
@@ -51,6 +51,8 @@ make docker-env
 | Qdrant | `6333` | |
 | backend | `8100` | |
 | frontend | `8080` | 和第 9 页手动的 `8081` 不是一个（编排重新分了门牌号） |
+
+> **3306 默认有坑**：第 1 章让你绕开 3306，是因为本机常见 MySQL 占用它；第 13 章 `.env` 默认仍是 3306。若本机已装 MySQL，先把 `MYSQL_HOST_PORT` 改成 `3307`（或别的空闲端口）再 `make docker-up`，否则容器会起不来。
 
 **被占就改 `.env`**：改对应那行（`MYSQL_HOST_PORT` / `ES_HOST_PORT` / `QDRANT_HOST_PORT` / `BACKEND_HOST_PORT` / `FRONTEND_HOST_PORT`），**别改 `compose.yaml`**，改完重跑 `make docker-up`；smoke 会自己问 compose 前端实际端口。
 
@@ -147,7 +149,11 @@ DOCKER SMOKE PASS
   | `7/8` | 只读账号真写不了——防“只读只在文档里” |
   | `8/8` | 元知识对账 + 再跑一次 init 必须跳过重建——防初始化结果不对、一次性脚本不可重跑 |
 
-  **5/8 的判据**：`rows=1` 且 `sse_verdict` 为 `streamed`，或为 `too-fast` 且 nginx 生效配置确认缓冲已关——`too-fast` 只因响应太快、时间上分不出流式，是合法的通过档，别当失败；`sse_chunks` 是客户端收到的 SSE 分片数（不是 12 条 progress 事件），有一两个出入不用对。
+  **S0–S7 是什么**：`stage":"S7"` 里的 S7 不是健康等级，是分层门禁编号（S0–S7）；对照见第 22 章。
+
+  **结果形状**：这里 `rows=1 columns=1` 是按契约只输出「销售额」一列；L1 lab 的 `rows` 是 `{region_name, sales}` 两个字段，两边形状不同，别硬对。
+
+  **5/8 的判据**：`rows=1` 且 `sse_verdict` 为 `streamed`，或为 `too-fast` 且 nginx 生效配置确认缓冲已关——`too-fast` 只因响应太快、时间上分不出流式，是合法的通过档，别当失败；`sse_chunks` 是客户端收到的 SSE 分片数，不是 12 条 progress 事件：真栈每步发 running/success 两帧，正常约 24 帧；有一两个出入不用对。
 
 - **起得来 ≠ 部署好**：`docker compose up` 成功只说明容器建起来了——健康可能还在 starting、init 可能已失败退出（默认 `ps` 还看不到）、查询可能 502、流可能被 nginx 攒住。
 
