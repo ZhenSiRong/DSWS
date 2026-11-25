@@ -30,10 +30,11 @@ ROOT = Path(__file__).resolve().parents[2]
 TUTORIAL = ROOT / "tutorial"
 CSS_FILE = Path(__file__).resolve().parent / "book.css"
 BOOK_OVERVIEW = Path(__file__).resolve().parent / "overview.md"
+BOOK_VISUALS = Path(__file__).resolve().parent / ".visuals"
 DEFAULT_OUT = ROOT / "materials" / "deliverable" / "tutorial-book"
 
 TITLE = "电商问数 · 工程手册"
-SUBTITLE = "24 页，把一座城从空地造到能交付"
+SUBTITLE = "24 章，把一座城从空地造到能交付"
 KICKER = "DSWS · 消融式工程教程"
 VERSION = "v2.0"
 
@@ -86,9 +87,13 @@ def resolve_image(src: str, chapter_dir: Path) -> Path | None:
         return None
     p = (chapter_dir / src).resolve()
     if p.is_file():
-        return p
+        book = BOOK_VISUALS / p.name
+        return book if book.is_file() else p
     p2 = (TUTORIAL / src).resolve()
-    return p2 if p2.is_file() else None
+    if p2.is_file():
+        book = BOOK_VISUALS / p2.name
+        return book if book.is_file() else p2
+    return None
 
 
 def preprocess_images(md_text: str, chapter_dir: Path, images: dict[str, Path], image_dir: str, embed: bool) -> str:
@@ -146,14 +151,14 @@ def strip_first_h1(md_text: str) -> str:
 
 def page_block(page: int, images: dict[str, Path], image_dir: str, embed: bool) -> tuple[str, str, str]:
     path = TUTORIAL / f"page-{page:02d}.md"
-    md_text = path.read_text(encoding="utf-8")
+    md_text = chapterize(path.read_text(encoding="utf-8"))
     title = first_h1(md_text)
     body = convert(strip_first_h1(md_text), TUTORIAL, image_dir, images, embed)
     level, short, _ = LEVELS[page]
     cls = f"theme-{level.lower()}"
     block = f'''<section class="chapter {cls}" id="page-{page:02d}">
 <header class="ch-head">
-  <div class="ch-meta"><span class="level" data-level="{level} · {short}">{level} · {short}</span><span class="ch-no">PAGE {page:02d}</span></div>
+  <div class="ch-meta"><span class="level" data-level="{level} · {short}">{level} · {short}</span><span class="ch-no">CHAPTER {page:02d}</span></div>
   <h1>{html.escape(title)}</h1>
 </header>
 <div class="ch-body">
@@ -163,9 +168,18 @@ def page_block(page: int, images: dict[str, Path], image_dir: str, embed: bool) 
     return block, title, level
 
 
+def chapterize(text: str) -> str:
+    """只改书的渲染层：教程页 → 章；不写回 md 正典，也不动网页版。"""
+    text = re.sub(r"第\s*(\d+)\s*页", r"第 \1 章", text)
+    text = re.sub(r"第([一二三四五六七八九十]+)页", r"第\1章", text)
+    text = text.replace("这一页", "这一章").replace("每一页", "每一章")
+    text = text.replace("本页", "本章").replace("下一页", "下一章").replace("前一页", "前一章")
+    return text
+
+
 def page_summary(page: int) -> str:
-    text = (TUTORIAL / f"page-{page:02d}.md").read_text(encoding="utf-8")
-    m = re.search(r"## 这一页构建什么\n\n(.+?)(?:\n\n|\n## )", text, re.S)
+    text = chapterize((TUTORIAL / f"page-{page:02d}.md").read_text(encoding="utf-8"))
+    m = re.search(r"## 这一[页章]构建什么\n\n(.+?)(?:\n\n|\n## )", text, re.S)
     raw = m.group(1) if m else ""
     raw = re.sub(r"!\[[^\]]*\]\([^)]+\)", "", raw)
     raw = re.sub(r"[*_`>#]", "", raw)
@@ -181,18 +195,18 @@ def page_index_table(pages: list[tuple[int, str]]) -> str:
         rows.append(f'<tr class="level-row"><td colspan="3"><span class="pi-level">{level} · {short}</span> {html.escape(desc)}</td></tr>')
         for page, title in pages:
             if page in rng:
-                rows.append(f'<tr><td class="pi-no">PAGE {page:02d}</td><td class="pi-title">{html.escape(title)}</td><td class="pi-sum">{html.escape(page_summary(page))}</td></tr>')
-    return ('<table class="page-index"><thead><tr><th>页</th><th>标题</th><th>这一页构建什么</th></tr></thead>'
+                rows.append(f'<tr><td class="pi-no">第 {page} 章</td><td class="pi-title">{html.escape(title)}</td><td class="pi-sum">{html.escape(page_summary(page))}</td></tr>')
+    return ('<table class="page-index"><thead><tr><th>章</th><th>标题</th><th>这一章构建什么</th></tr></thead>'
             '<tbody>' + ''.join(rows) + '</tbody></table>')
 
 
 def front_block(images: dict[str, Path], image_dir: str, embed: bool, pages: list[tuple[int, str]]) -> tuple[str, str]:
     path = BOOK_OVERVIEW
-    md_text = path.read_text(encoding="utf-8")
+    md_text = chapterize(path.read_text(encoding="utf-8"))
     title = first_h1(md_text)
     md_text = md_text.replace("{{PAGE_INDEX}}", page_index_table(pages))
     body = convert(strip_first_h1(md_text), TUTORIAL, image_dir, images, embed)
-    body = body.replace("<h2>24 页一览</h2>", '<h2 class="page-index-heading">24 页一览</h2>')
+    body = body.replace("<h2>24 章一览</h2>", '<h2 class="page-index-heading">24 章一览</h2>')
     block = f'''<section class="chapter front-map" id="overview">
 <header class="ch-head">
   <div class="ch-meta"><span class="level">全书地图</span><span class="ch-no">OVERVIEW</span></div>
@@ -209,11 +223,11 @@ def intro_block() -> str:
     return '''<section class="intro front" id="intro">
 <div class="intro-mark">DSWS</div>
 <h1>怎么用这本手册</h1>
-<p class="lead">这不是一本“读完就会”的书，是一本“照着做、能对账”的练本。全书 24 页，分成五级：<b>造 → 换 → 审 → 守 → 装</b>。每一页只做一件事，每一页都留下一条你能亲手跑出来的判据。</p>
+<p class="lead">这不是一本“读完就会”的书，是一本“照着做、能对账”的练本。全书 24 章，分成五级：<b>造 → 换 → 审 → 守 → 装</b>。每一章只做一件事，每一章都留下一条你能亲手跑出来的判据。</p>
 <div class="intro-cols">
-<div><h2>先看地图</h2><p>先读 <b>全书地图</b>：一片空地上有十座设施，每一页盖一座、接一段管网。左边回答“为什么是这个顺序”，右边回答“这一页做完手里有什么”。</p></div>
-<div><h2>再翻一页</h2><p>每页固定六段：这一页构建什么 → 猜一猜 → 动手 → 你应该看到 → 对账 → 拆一刀。先猜，再动手；看到真实输出，再对账；最后拆掉一个组件，看系统怎么坏。</p></div>
-<div><h2>对账比读完重要</h2><p>把“你应该看到”里的真实输出和你的屏幕逐行对。对不上就停在这一页；能对账，才算学会。书的正文是 <code>tutorial/page-*.md</code>，这本 HTML/PDF 只是它的渲染版。PDF 版页眉的 <code>PAGE NN</code> 是手册页编号，页脚数字是 PDF 物理页；附录 A 有逐页对照表。</p></div>
+<div><h2>先看地图</h2><p>先读 <b>全书地图</b>：一片空地上有十座设施，每一章盖一座、接一段管网。左边回答“为什么是这个顺序”，右边回答“这一章做完手里有什么”。</p></div>
+<div><h2>再翻一页</h2><p>每章固定六段：这一章构建什么 → 猜一猜 → 动手 → 你应该看到 → 对账 → 拆一刀。先猜，再动手；看到真实输出，再对账；最后拆掉一个组件，看系统怎么坏。</p></div>
+<div><h2>对账比读完重要</h2><p>把“你应该看到”里的真实输出和你的屏幕逐行对。对不上就停在这一章；能对账，才算学会。书的正文是 <code>tutorial/page-*.md</code>，这本 HTML/PDF 只是它的渲染版。PDF 版页眉的 <code>CHAPTER NN</code> 是手册章编号，页脚数字是 PDF 物理页；附录 A 有逐章对照表。</p></div>
 </div>
 </section>'''
 
@@ -236,18 +250,18 @@ def page_map_block(page_map: dict, pages: list[tuple[int, str]]) -> str:
         v = mapping.get(f"{page:02d}")
         if not v:
             continue
-        rows.append(f'<tr><td><b>PAGE {page:02d}</b></td><td>{html.escape(title)}</td>'
+        rows.append(f'<tr><td><b>第 {page} 章</b></td><td>{html.escape(title)}</td>'
                     f'<td class="num">{v["start"]}</td><td class="num">{v["end"]}</td><td class="num">{v["pages"]}</td></tr>')
     return f'''<section class="chapter page-map" id="page-map">
 <header class="ch-head">
-  <div class="ch-meta"><span class="level">附录 A</span><span class="ch-no">PAGE MAP</span></div>
-  <h1>手册页 ↔ PDF 物理页对照</h1>
+  <div class="ch-meta"><span class="level">附录 A</span><span class="ch-no">CHAPTER MAP</span></div>
+  <h1>手册章 ↔ PDF 物理页对照</h1>
 </header>
 <div class="ch-body">
-<p>教程页（PAGE NN）是内容单位；A4 打印版一页内容会排成多张 PDF 页，所以两者不是 1:1。页眉的 <code>PAGE NN</code> 是手册页编号，页脚的阿拉伯数字是 PDF 物理页；本表用于互查，TOC 里的页码也是 PDF 物理页。</p>
-<table class="page-map-table"><thead><tr><th>手册页</th><th>标题</th><th>PDF 起</th><th>PDF 止</th><th>页数</th></tr></thead>
+<p>教程章（CHAPTER NN）是内容单位；A4 打印版一章会排成多张 PDF 页，所以两者不是 1:1。页眉的 <code>CHAPTER NN</code> 是手册章编号，页脚的阿拉伯数字是 PDF 物理页；本表用于互查，TOC 里的页码也是 PDF 物理页。</p>
+<table class="page-map-table"><thead><tr><th>手册章</th><th>标题</th><th>PDF 起</th><th>PDF 止</th><th>页数</th></tr></thead>
 <tbody>{''.join(rows)}</tbody></table>
-<p class="map-note">共 {len(pages)} 页手册内容；PDF 物理页数见 PDF 属性。</p>
+<p class="map-note">共 {len(pages)} 章手册内容；PDF 物理页数见 PDF 属性。</p>
 </div>
 </section>'''
 
@@ -260,7 +274,7 @@ def cover_block(date: str, head: str) -> str:
   <h1>电商问数<br><em>工程手册</em></h1>
   <p class="cover-sub">{SUBTITLE}</p>
   <div class="cover-rule"></div>
-  <p class="cover-deck">从契约、数据、生成、执行，到校验、安全、可观测与交付；<br>每一页都有一条能亲手跑出来的判据。</p>
+  <p class="cover-deck">从契约、数据、生成、执行，到校验、安全、可观测与交付；<br>每一章都有一条能亲手跑出来的判据。</p>
 </div>
 <div class="cover-foot"><span>{VERSION} · {date}</span><span>baseline {head}</span><span class="r">DSWS · 2026</span></div>
 </section>'''
@@ -299,7 +313,7 @@ def build_html(out: Path, embed: bool, page_map: dict | None = None) -> tuple[st
 {front}
 {''.join(blocks)}
 {map_html}
-<section class="back-cover"><p>全书 24 页 · 五级 · 一条可复现的工程学习线</p><p class="bc-small">正文正典：{TUTORIAL.name}/page-*.md · 构建 {date} · baseline {head}</p></section>
+<section class="back-cover"><p>全书 24 章 · 五级 · 一条可复现的工程学习线</p><p class="bc-small">正文正典：{TUTORIAL.name}/page-*.md · 构建 {date} · baseline {head}</p></section>
 </div>
 </body>
 </html>'''
@@ -348,7 +362,7 @@ def write_readme(out: Path) -> Path:
 由 `toolbox/book/build_manual.py` 从 `tutorial/` 正典生成；不要手改产物。
 
 - `tutorial-book.html`：自包含 HTML（CSS/图片内嵌，可直接分享）
-- `tutorial-book.pdf`：A4 打印版（WeasyPrint，含目录页码/页眉页脚；附录 A 为「手册页 ↔ PDF 物理页」对照）
+- `tutorial-book.pdf`：A4 打印版（WeasyPrint，含目录页码/页眉页脚；附录 A 为「手册章 ↔ PDF 物理页」对照）
 - 构建：`make book`（内部两遍：先渲染取页码，再写入附录 A 后重渲染）
 - 来源：`tutorial/OVERVIEW.md` + `tutorial/page-00..23.md`；图片来自 `tutorial/images/`
 - 生成日期：{_dt.date.today().isoformat()} · baseline `{git_head()}`
@@ -366,7 +380,7 @@ def main() -> None:
     ap.add_argument("--pdf", action="store_true", help="只生成 PDF")
     ap.add_argument("--no-embed", action="store_true", help="HTML 不内嵌图片（生成 assets/ 目录）")
     ap.add_argument("--print-html", action="store_true", help="只生成给 PDF 用的 .print.html + assets（不渲染 PDF）")
-    ap.add_argument("--page-map", type=Path, help="page-map.json（附录 A：手册页→PDF 页对照）")
+    ap.add_argument("--page-map", type=Path, help="page-map.json（附录 A：手册章→PDF 页对照）")
     args = ap.parse_args()
     out = args.out.resolve()
     out.mkdir(parents=True, exist_ok=True)

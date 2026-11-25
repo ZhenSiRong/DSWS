@@ -62,3 +62,6 @@ system/frontend/node_modules
 
 # 新手册生成物（HTML/PDF）
 /materials/deliverable/tutorial-book/
+
+# 手册专用的「章」版页首图缓存
+/toolbox/book/.visuals/

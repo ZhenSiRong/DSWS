@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""从已生成的 PDF 提取「手册页（PAGE NN）→ PDF 物理页」对照。
+"""从已生成的 PDF 提取「手册章（CHAPTER NN）→ PDF 物理页」对照。
 
 页眉由 book.css 的 @top-left/right 与 .ch-meta .ch-no 生成；pdftotext 提取后
-按 "PAGE NN" 归一化匹配。输出 JSON 给 build_manual.py --page-map 用。
+按 "CHAPTER NN"（兼容旧 "PAGE NN"）归一化匹配。输出 JSON 给 build_manual.py --page-map 用。
 
 用法： python3 toolbox/book/extract_page_map.py PDF [OUT.json]
 """
@@ -34,18 +34,18 @@ def main() -> int:
         text = page_text(pdf, n)
         head = " ".join(text.splitlines()[:5])
         compact = re.sub(r"\s+", "", head).upper()
-        m = re.search(r"PAGE0*(\d{1,2})", compact)
+        m = re.search(r"(?:CHAPTER|PAGE)0*(\d{1,2})", compact)
         if m:
             num = int(m.group(1))
             key = f"{num:02d}"
             if 0 <= num < 24 and key not in starts:
                 starts[key] = n
-    # 附录 A 的页眉是 "PAGE MAP"，不是 PAGE NN；用它确定最后一章真正的结束页。
+    # 附录 A 的页眉是 "CHAPTER MAP"，不是 CHAPTER NN；用它确定最后一章真正的结束页。
     appendix_start = None
     for n in range(1, total + 1):
         head = " ".join(page_text(pdf, n).splitlines()[:5])
         compact = re.sub(r"\s+", "", head).upper()
-        if "PAGEMAP" in compact or "手册页" in head:
+        if "CHAPTERMAP" in compact or "PAGEMAP" in compact or "手册章" in head:
             appendix_start = n
             break
     ordered = sorted(starts.items(), key=lambda kv: kv[1])
@@ -63,7 +63,7 @@ def main() -> int:
     print(f"page-map: {len(mapping)} chapters / {total} PDF pages → {out}")
     for k in sorted(mapping):
         v = mapping[k]
-        print(f"  PAGE {k}: {v['start']:>3}–{v['end']:<3} ({v['pages']} 页)")
+        print(f"  CHAPTER {k}: {v['start']:>3}–{v['end']:<3} ({v['pages']} 页)")
     return 0
 
 

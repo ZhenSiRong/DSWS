@@ -259,10 +259,17 @@ BOOK_OUT := materials/deliverable/tutorial-book
 
 book: book-pdf book-html
 
-book-html:
-	@if [ -f $(BOOK_OUT)/page-map.json ]; then 		python3 toolbox/book/build_manual.py --html --page-map $(BOOK_OUT)/page-map.json --out $(BOOK_OUT); 	else 		python3 toolbox/book/build_manual.py --html --out $(BOOK_OUT); 	fi
+book-visuals:
+	@python3 toolbox/book/build_book_visuals.py
 
-book-pdf:
+book-html: book-visuals
+	@if [ -f $(BOOK_OUT)/page-map.json ]; then \
+		python3 toolbox/book/build_manual.py --html --page-map $(BOOK_OUT)/page-map.json --out $(BOOK_OUT); \
+	else \
+		python3 toolbox/book/build_manual.py --html --out $(BOOK_OUT); \
+	fi
+
+book-pdf: book-visuals
 	@python3 toolbox/book/build_manual.py --print-html --out $(BOOK_OUT)
 	@uv run --offline --with weasyprint python3 toolbox/book/render_pdf.py $(BOOK_OUT)/.print.html $(BOOK_OUT)/tutorial-book.pdf
 	@python3 toolbox/book/extract_page_map.py $(BOOK_OUT)/tutorial-book.pdf $(BOOK_OUT)/page-map.json
