@@ -1,0 +1,41 @@
+{
+  "eyebrow": "第 12 页 · L2 换 · 真执行器",
+  "title": "给临时通道装上四道闸",
+  "subtitle": "左边是执行器的四道闸，右边是安检门：只放行合规的车",
+  "layout": "entity_metaphor",
+  "left_cards": [
+    {
+      "name": "行是 dict",
+      "role": "按列名取值，不再靠下标",
+      "judge": "{'sales': Decimal('1144735.50')}",
+      "icon": "mysql"
+    },
+    {
+      "name": "Decimal 原样",
+      "role": "金额不丢精度",
+      "judge": "-0.0005455017"
+    },
+    {
+      "name": "LIMIT + 只读",
+      "role": "没写 LIMIT 自动补 1000；非 SELECT 拒绝",
+      "judge": "dim_date 1461 行 → 1000"
+    }
+  ],
+  "metaphor_title": "喻体 · 安检门",
+  "art": "art/metaphor.jpeg",
+  "mappings": [
+    {
+      "n": "①",
+      "label": "① 闸门 → 执行器"
+    },
+    {
+      "n": "②",
+      "label": "② 只放 SELECT 车 → 非 SELECT 拒绝"
+    },
+    {
+      "n": "③",
+      "label": "③ 超载车补 LIMIT → 自动补 1000 行"
+    }
+  ],
+  "footer": "四道闸：dict / Decimal / LIMIT / 只读"
+}

@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>第 19 页 · 守策略：36 条注入全拒、11 条正常零误杀 · 阅读版</title>
+<link rel="stylesheet" href="../../assets/lesson.css">
+<link rel="stylesheet" href="../../assets/read.css">
+</head>
+<body>
+<main class="page">
+<p class="kicker">练本 · 阅读版（md 正典派生，改内容请改 manual/page-19.md）</p>
+<h1>第 19 页 · 守策略：36 条注入全拒、11 条正常零误杀</h1>
+<blockquote>
+<p><strong>城市坐标 · L4 城市安防 · 安检</strong>｜36 条夹带全拦、11 条正常零误杀：安检口按规矩放行。</p>
+<p>前置：L4（守）第二页。本页一条服务都不用——判据只读 <code>contracts/</code>、<code>fixtures/</code>，第 2 步还读 S4 基线 <code>backend/tests/generate/baseline.yaml</code>；</p>
+<p>不访问网络，不需要 MySQL、<code>.env</code>、模型 key，但要用 <code>backend/.venv</code>（第 0 页 <code>make install</code> 建好，缺了先回第 0 页补）。命令都在仓库根目录、同一个终端里整段连续执行；括号是子 shell，跑完你还在仓库根目录。</p>
+<p>第 18 页守的是账号（数据库层写不了），本页守的是策略（危险 SQL 根本到不了执行）。</p>
+</blockquote>
+<h2>这一页构建什么</h2>
+<p>用 36 条注入语料 + 11 条“长得像正常查询”的反向语料，审 SQL 在执行前按<strong>类别</strong>拦下的那道关（单语句、只读、集合运算、可执行注释、危险函数、白名单）。</p>
+<p><strong>判据可重放</strong>：36/36 拒绝 + 11/11 放行 + 8/8 基线。</p>
+<p>心智模型：<strong>整类拒 + 白名单，比黑名单逐个补更可靠；误杀也是事故。</strong></p>
+<p><img alt="第 19 页 · 36 条注入全拒、11 条正常零误杀：左边是三组语料，右边是门卫查名单：黑名单整类拒，白名单放行" src="../images/page-19-visual.webp" /></p>
+<h2>猜一猜</h2>
+<ol>
+<li>36 条注入里，靠“整类拒”（集合运算 / 可执行注释 / 危险函数——构造本身不许）挡下的有几条：4 条、10 条、还是 36 条？</li>
+<li>把 <code>contracts/sql.policy.yaml</code> 的 <code>forbid_set_operations</code> 关掉，重跑判据会漏几条？那 11 条正常 SQL 会不会跟着被误杀？</li>
+</ol>
+<h2>动手</h2>
+<p><strong>第 1 步：拍快照。</strong> 拆一刀要改契约，先留退路（同名快照会被拒，重做本页换个名字——换了名字，下文出现的 <code>p19-before</code> 也一起替换；回显 <code>已保存快照 "p19-before"：169 个文件。</code>，数字因工作区而异）：</p>
+<!-- verify: p19-lab-save -->
+
+<pre><code class="language-bash">scripts/lab save p19-before
+</code></pre>
+<p><strong>第 2 步：跑离线门禁。</strong> 三段各是一个判据：36 条注入必须按<strong>精确原因码</strong>全拒、11 条正常 SQL 必须全放、S4 基线里真产出 SQL 的 8 题必须全部通过策略（另 2 题在生成阶段就拒答，没有 SQL 可过）。退出码 0 才算过：</p>
+<!-- verify: p19-security-check -->
+
+<pre><code class="language-bash">(cd backend &amp;&amp; .venv/bin/python -m app.scripts.security --check)
+</code></pre>
+<p><strong>第 3 步：打判定表，看每条注入被归到哪个原因码。</strong> 表共 47 行（36 拒 + 11 放；看全表就把下面的 <code>grep</code> 那段去掉）；管道里的 <code>grep</code> 只留<strong>三类构造</strong>（多语句 / 可执行注释 / 集合运算）。</p>
+<p><strong>两个细节</strong>：末行统计走 stderr，<code>2&gt;&amp;1</code> 把它并回来；<code>PYTHONUNBUFFERED=1</code> 保证汇总落在表尾（去掉它，汇总会先跑到表头——stdout 被管道缓冲、stderr 不会）。</p>
+<p><strong>退出码</strong>：这一步全 PASS 时退出码 0，有 FAIL 时会非 0：</p>
+<!-- verify: p19-security-corpus -->
+
+<pre><code class="language-bash">(cd backend &amp;&amp; PYTHONUNBUFFERED=1 .venv/bin/python -m app.scripts.security --corpus) 2&gt;&amp;1 | grep -E &quot;multi_statement|executable_comment|union|语料：&quot;
+</code></pre>
+<p><strong>第 4 步（可选）：<code>make stage5</code>。</strong> 前提：本机有 <code>uv</code> 且 <code>backend/.venv</code> 依赖已装好；不需要 MySQL / <code>.env</code> / 模型 key。</p>
+<p><strong>先自查</strong>：<code>(cd backend &amp;&amp; .venv/bin/python -c "import app, app.security") &amp;&amp; command -v uv</code>（退出码 0 才继续；非 0 就跳过本步，<strong>跳过不影响第 2 步的判据</strong>：第 2、3 步只用 <code>.venv</code>，不经过 <code>uv</code>）。</p>
+<p><strong>跑多久</strong>：本机实测约 44 秒（先跑安全测试 179 passed + 2 skipped，再跑全后端 843 条 = 813 passed + 30 skipped、约 40 秒），末行 <code>S5 PASS</code>：</p>
+<!-- verify: p19-make-stage5 -->
+
+<pre><code class="language-bash">make stage5
+</code></pre>
+<p><strong>Makefile 直接调的 <code>stage*</code> 全走 <code>uv run --frozen</code>，不会改 <code>backend/uv.lock</code>；只有脚本里的裸 <code>uv run</code>（<code>make stage3</code>、<code>make stage0-ui</code>、<code>make stage6-ui</code>）或手敲 <code>uv run</code> 会。</strong></p>
+<p><strong>lock 变脏怎么办</strong>：它不在 <code>lab</code> 白名单里，<code>scripts/lab reset</code> 不管它——若 <code>git status</code> 里确实出现 <code>backend/uv.lock</code> 变脏（本机实测 1,250 行 registry / packages 地址从 <code>pypi.org</code> 换成镜像源），用 <code>git checkout -- backend/uv.lock</code> 还原。</p>
+<h2>你应该看到</h2>
+<p>第 2–4 步（<code>#</code> 开头是标注，不是程序输出；秒数随机器变）：</p>
+<!-- verify-out: p19-security-check p19-security-corpus -->
+
+<pre><code class="language-text"># 第 2 步
+== 1/3 注入语料（必须 100% 拒绝） ==
+  注入语料：36/36 条按预期拒绝
+== 2/3 零误杀语料（必须全部放行） ==
+  零误杀语料：11/11 条放行
+== 3/3 S4 基线零误杀 ==
+  S4 基线：8/8 条 SQL 通过策略
+S5 PASS
+# 第 3 步（节选）
+| multi_statement_drop | SQL_MULTIPLE_STATEMENTS | SQL_MULTIPLE_STATEMENTS | PASS |
+| multi_statement_update | SQL_MULTIPLE_STATEMENTS | SQL_MULTIPLE_STATEMENTS | PASS |
+| executable_comment_union | SQL_COMMENT_OBFUSCATION | SQL_COMMENT_OBFUSCATION | PASS |
+| executable_comment_drop | SQL_COMMENT_OBFUSCATION | SQL_COMMENT_OBFUSCATION | PASS |
+| union_exfiltration | SQL_FORBIDDEN_CONSTRUCT | SQL_FORBIDDEN_CONSTRUCT | PASS |
+| union_all_exfiltration | SQL_FORBIDDEN_CONSTRUCT | SQL_FORBIDDEN_CONSTRUCT | PASS |
+语料：47 条，失败 0 条
+# 第 4 步（节选）
+179 passed, 2 skipped in 1.29s
+813 passed, 30 skipped in 37.45s
+S5 PASS
+</code></pre>
+<p><img alt="第 19 页 · security --check：36/36 拒 + 11/11 放行 + 8/8 基线，S5 PASS" src="../images/page-19-policy.png" /></p>
+<h2>对账</h2>
+<ul>
+<li><strong>猜 1：10 条。</strong> 按原因码数：<code>SQL_COMMENT_OBFUSCATION</code> 2 条 + <code>SQL_FORBIDDEN_CONSTRUCT</code> 8 条（集合运算 2 + 危险函数 6）。剩下 26 条不是靠类别规则：21 条是结构（18 条“不是只读查询” + 3 条多语句），5 条是白名单（表 4 + 列 1）。类别规则不到三分之一，却接住了最会变形的那些载荷。</li>
+<li><strong>猜 2：漏到执行 0 条，漏的是 2 条原因码。</strong> 关掉 <code>forbid_set_operations</code> 后，2 条 UNION 仍被拒——策略里“根节点必须是 SELECT”的规则兜住了——但原因码从 <code>SQL_FORBIDDEN_CONSTRUCT</code> 退化成 <code>SQL_NOT_READ_ONLY</code>，门禁照样 <code>FAIL: 2 项</code>。11/11 和 8/8 一位没动：删规则只会放宽，不可能造成误杀。</li>
+<li><strong>整类拒 vs 逐个补。</strong> 黑名单是“见过一个补一个”：只拒 <code>UNION SELECT</code>，语料里的 <code>UNION ALL</code> 就过去了；只拒 <code>DROP</code>，<code>/*! DROP ... */</code> 解析器看不见、服务端却会执行。<ul>
+<li>类别规则按 AST 节点类型（<code>Union</code> / <code>Except</code> / <code>Intersect</code>，在整棵树任意深度）或 <code>/*!</code> 的握手整类拒，变体一起死。</li>
+<li>白名单同理：不列“危险表”，只允许契约里的表/列，<code>information_schema</code>、<code>mysql.user</code>、<code>secret_table</code> 自动被拒。</li>
+</ul>
+</li>
+<li><strong>零误杀为什么是硬要求。</strong> 门禁有两种错：漏拦（放行注入）和误杀（正常查询被拒）。误杀让问数直接失败，还会训练用户去关规则——最后回到没有防线。<ul>
+<li>11 条 allow 语料专钉容易误杀的地方：字符串里的分号 <code>'a;b'</code>、块注释里的 <code>; DROP</code>（服务端不执行，策略也不能当第二条语句）、中文投影别名 <code>ORDER BY 销量</code>、<code>SELECT *</code>、子查询。</li>
+<li>策略“先 AST 后词法”，就是为了不看见分号就拒。</li>
+</ul>
+</li>
+<li><strong>原因码是契约。</strong> <code>--check</code> 不只要求“拒”，还要求原因码精确匹配（<code>backend/app/scripts/security.py</code> 逐条比对）；<ul>
+<li>码表在 <code>contracts/sql.policy.yaml</code> 的 <code>errors.reason_codes</code>，执行器对外只暴露通道码 <code>SQL_REJECTED</code>，细码放在 <code>reason_code</code>。</li>
+<li>拆一刀实测“拒仍是拒、码变了”也会红——下游按码决定重试与展示（第 16、17 页），码漂移就是事故。</li>
+</ul>
+</li>
+<li><strong>和第 16 页的分工。</strong> 第 16 页的静态校验问“对不对”（列、指标、值域、行数、排序），本页策略问“危不危险”（单语句、只读、集合运算、注释、危险函数、表白名单）；<ul>
+<li>两者都在连库前，是两层网。</li>
+<li>第 16 页拆掉列存在校验时，正是本页的列白名单接住了它（<code>SQL_UNKNOWN_COLUMN</code> 退化成 <code>SQL_REJECTED</code>）；第 18 页的只读账号是第三层——策略管“能不能构造”，账号管“能不能写”。</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p><strong>你现在拥有</strong>：一条能被别人重放的安全判据（36/36 + 11/11 + 8/8），和一句可复用的判断：<strong>追着已知载荷打补丁永远慢一步；按类别拒 + 白名单放，才能让变体一起死、又不误杀正常查询。</strong></p>
+</blockquote>
+<h2>拆一刀</h2>
+<p>打开 <code>contracts/sql.policy.yaml</code>，找到 <code>statement:</code> 段里 L31 的 <code>forbid_set_operations: true</code>（2 空格缩进；4 行后还有一个 <code>forbid_executable_comments: true</code>，别改错），只把这处改成 <code>false</code>。</p>
+<p><strong>怎么验</strong>：重跑第 2 步的判据（<code>tail -8</code> 只看结尾；管道末尾是 <code>tail</code>，门禁本体的退出码靠命令里的 <code>gate=</code> 打出来）：</p>
+<!-- verify: p19-ablation-check -->
+
+<pre><code class="language-bash">(cd backend &amp;&amp; PYTHONUNBUFFERED=1 .venv/bin/python -m app.scripts.security --check) 2&gt;&amp;1 | tail -8; echo &quot;gate=${PIPESTATUS[0]}&quot;
+</code></pre>
+<pre><code class="language-text">  注入语料：34/36 条按预期拒绝
+== 2/3 零误杀语料（必须全部放行） ==
+  零误杀语料：11/11 条放行
+== 3/3 S4 基线零误杀 ==
+  S4 基线：8/8 条 SQL 通过策略
+FAIL: 2 项不符合预期
+  - union_exfiltration: 原因码不符（期望 SQL_FORBIDDEN_CONSTRUCT，实际 SQL_NOT_READ_ONLY）
+  - union_all_exfiltration: 原因码不符（期望 SQL_FORBIDDEN_CONSTRUCT，实际 SQL_NOT_READ_ONLY）
+gate=1
+</code></pre>
+<p><strong>退出码怎么看</strong>：末行 <code>gate=1</code> 是门禁本体的退出码——管道末尾是 <code>tail</code>，不带 <code>gate=</code> 直接看 <code>$?</code> 只会拿到它的 0（门禁本体看 <code>PIPESTATUS[0]</code>）。</p>
+<p><strong>漏了什么</strong>：<strong>漏到执行的是 0 条</strong>（根节点规则又把两条 UNION 兜了一次），<strong>漏掉的是这 2 条的原因码</strong>——判定表上它们从 PASS 变 FAIL，门禁红。</p>
+<p><strong>再确认一次不误杀</strong>：11/11 与 8/8 一位没动。</p>
+<p>还原并回绿（<code>reset</code> 会先拍一张 <code>pre-reset-&lt;时间戳&gt;</code> 安全快照，只贴末两行；这里的“完全一致”只算 <code>lab</code> 白名单文件——第 4 步跑过的话 <code>backend/uv.lock</code> 仍要按上面单独还原）：</p>
+<!-- verify: p19-lab-reset -->
+
+<pre><code class="language-bash">scripts/lab reset p19-before --yes
+(cd backend &amp;&amp; .venv/bin/python -m app.scripts.security --check | tail -1)
+</code></pre>
+<pre><code class="language-text">现在工作区与快照 &quot;p19-before&quot; 完全一致。
+S5 PASS
+</code></pre>
+<p>结论：<strong>整类拒的开关拆掉，门禁都会红，但红法不同——集合运算丢的是“原因码”，可执行注释丢的是“执行层”，后者才是真正的事故。</strong></p>
+<p><strong>回绿后还想看“真的漏”</strong>：把 <code>forbid_executable_comments</code> 改成 <code>false</code> 重跑同一条判据，两行会变成 <code>竟然被放行了</code>（<code>/*! ... */</code> 服务端会执行、解析器看不见，没有第二道网）；看完再 <code>scripts/lab reset p19-before --yes</code> 回绿。</p>
+<p><strong>为什么</strong>：契约在，判定就得同时满足“拒”和“码对”——这正是白名单 + 类别规则比“黑名单逐个补”可靠的原因。</p>
+</main>
+</body>
+</html>

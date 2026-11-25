@@ -1,0 +1,103 @@
+# 第 16 页 · 审校验 —— 教材可跟随性契约（T0 / T1）
+#
+# schema 与规则见 manual/verify/README.md。
+# 要点：每个 ```bash 块在页面里用 <!-- verify: <marker> --> 注解绑定到下面的块；
+#       cmd 必须与页面块内容一致（归一化后），任何一边改了另一边没改 → T0 FAIL。
+#       offline 块由 T1 真执行并断言关键行；manual 块只做同步校验、不执行。
+#       本页 coverage 缺省为 blocks：6 个 bash 块全部覆盖（3 offline / 3 manual）。
+page: page-16
+title: 第 16 页 · 审校验：错单要在执行前被拦下
+
+blocks:
+  # ---- 动手 第 1 步：拍快照（写文件，有副作用）----
+  - id: p16-lab-save
+    marker: p16-lab-save
+    kind: manual
+    reason: scripts/lab save 会往 .lab/snapshots/ 写白名单文件快照（169 个文件），且同名快照会被拒绝；有副作用、不幂等，不能无人值守重复执行
+    cmd: |
+      scripts/lab save p16-before
+
+  # ---- 动手 第 2 步：26 条静态校验测试（离线，秒级）----
+  - id: p16-pytest-guard
+    marker: p16-pytest-guard
+    kind: offline
+    cmd: |
+      backend/.venv/bin/python -m pytest backend/tests/generate/test_guard.py -q
+    expect:
+      exit: 0
+      contains: ["26 passed"]
+      regex: ["^26 passed"]
+    page_contains: ["26 passed"]     # 页面「你应该看到」里的 26 passed 必须可见，且 T1 真实输出也要有
+    timeout_sec: 60
+
+  # ---- 动手 第 3 步：9 个失败场景 + 16 码表（离线）----
+  - id: p16-failures-check
+    marker: p16-failures-check
+    kind: offline
+    cmd: |
+      (cd backend && .venv/bin/python -m app.scripts.failures --check)
+    expect:
+      exit: 0
+      contains:
+        - "S6 PASS"
+        - "错误码表：16 个码，路线图要求的 7 个全在"
+      regex: []
+    page_contains: ["S6 PASS", "错误码表：16 个码，路线图要求的 7 个全在"]
+    timeout_sec: 60
+
+  # ---- 动手 第 4 步：20 条语料对账 + expect_code 分布（离线）----
+  - id: p16-probe-corpus
+    marker: p16-probe-corpus
+    kind: offline
+    cmd: |
+      PYTHONPATH=backend backend/.venv/bin/python eval/probe_correction.py | tail -1
+      grep -o '"expect_code": "[A-Z_]*"' eval/correction.jsonl | awk -F'"' '{print $4}' | sort | uniq -c | sort -rn
+    expect:
+      exit: 0
+      contains:
+        - '{"total": 20, "mismatch": 0}'
+        - "5 SQL_REJECTED"
+        - "3 SQL_UNKNOWN_COLUMN"
+      regex: []
+    page_contains: ['{"total": 20, "mismatch": 0}', "5 SQL_REJECTED"]
+    timeout_sec: 60
+
+  # ---- 拆一刀：拆掉列存在校验后重跑三条判据（期望值是学生本机的消融态）----
+  - id: p16-ablation-commands
+    marker: p16-ablation-commands
+    kind: manual
+    reason: '期望输出（1 failed, 25 passed / FAIL: 1 项不符合预期 / mismatch: 3）只在按第 1 步把 guard.py 的列存在循环改成 `for column in []` 后才出现；CI 干净仓库跑同一块是 26 passed / S6 PASS / mismatch: 0，复现不出这个消融态'
+    note: '干净态由本页第 2–3 步的 offline 块验证（26 passed / S6 PASS / mismatch 0）；消融态与还原由 T2/人工复核'
+    cmd: |
+      backend/.venv/bin/python -m pytest backend/tests/generate/test_guard.py -q
+      (cd backend && .venv/bin/python -m app.scripts.failures --check)
+      PYTHONPATH=backend backend/.venv/bin/python eval/probe_correction.py | grep -E "FAIL|total"
+
+  # ---- 拆一刀后还原：lab reset 是破坏性回滚（依赖第 1 步快照）----
+  - id: p16-lab-reset-restore
+    marker: p16-lab-reset-restore
+    kind: manual
+    reason: scripts/lab reset 会按快照回滚工作区文件（破坏性，还依赖第 1 步拍出的 p16-before 快照），不能作为无人值守验收动作
+    cmd: |
+      scripts/lab reset p16-before --yes
+      (cd backend && .venv/bin/python -m app.scripts.failures --check | tail -1)
+      PYTHONPATH=backend backend/.venv/bin/python eval/probe_correction.py | tail -1
+
+static:
+  paths:
+    - backend/tests/generate/test_guard.py
+    - backend/app/generate/guard.py
+    - backend/app/scripts/failures.py
+    - backend/app/security/policy.py
+    - eval/probe_correction.py
+    - eval/correction.jsonl
+    - contracts/errors.yaml
+    - fixtures/failures/scenarios.yaml
+    - backend/tests/agent/test_error_alignment.py
+  symbols:
+    - {file: backend/app/generate/guard.py, pattern: "def check_sql"}
+    - {file: backend/app/generate/guard.py, pattern: "for column in tree\\.find_all\\(exp\\.Column\\):"}
+    - {file: backend/app/security/policy.py, pattern: "for column in tree\\.find_all\\(exp\\.Column\\):"}
+    - {file: backend/tests/generate/test_guard.py, pattern: "def test_unknown_column_is_rejected"}
+    - {file: contracts/errors.yaml, pattern: "SQL_UNKNOWN_COLUMN"}
+    - {file: fixtures/failures/scenarios.yaml, pattern: "id: sql_unknown_column"}

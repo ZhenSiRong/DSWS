@@ -1,0 +1,60 @@
+{
+  "eyebrow": "第 0 页 · L1 造 · 环境",
+  "title": "先体检，再开工",
+  "subtitle": "左边是真实工具，右边是装修前验房：每一件工具都在项目里对应一个动作",
+  "layout": "entity_metaphor",
+  "left_cards": [
+    {
+      "icon": "docker",
+      "name": "Docker",
+      "role": "把 MySQL / ES / Qdrant 装进容器跑起来",
+      "judge": "docker compose ps"
+    },
+    {
+      "icon": "uv",
+      "name": "uv",
+      "role": "按 uv.lock 装 Python 依赖、建 backend/.venv",
+      "judge": "uv sync --frozen"
+    },
+    {
+      "icon": "nodedotjs",
+      "name": "Node.js + npm",
+      "role": "前端脚手架与协议测试",
+      "judge": "cd frontend && npm test"
+    },
+    {
+      "icon": "gnu",
+      "name": "GNU Make",
+      "role": "一键任务入口，常用流程收成一条命令",
+      "judge": "make doctor / make docker-up"
+    },
+    {
+      "name": "curl",
+      "role": "探活接口、看 SSE 返回",
+      "judge": "curl /api/health"
+    },
+    {
+      "icon": "git",
+      "name": "Git",
+      "role": "拿到仓库、看历史与回滚",
+      "judge": "git status / git log"
+    }
+  ],
+  "metaphor_title": "喻体 · 装修前验房",
+  "art": "art/metaphor.jpeg",
+  "mappings": [
+    {
+      "n": "①",
+      "label": "逐件检查工具 → 六件工具各司其职，缺一件都开不了工"
+    },
+    {
+      "n": "②",
+      "label": "打开工具箱看齐不齐 → make doctor 逐项打 ✓ 或 ✗"
+    },
+    {
+      "n": "③",
+      "label": "检查完才开工 → 12/12 通过、三个端口空着再进第 1 页"
+    }
+  ],
+  "footer": "make doctor → 12/12 通过；三个端口 3307 / 8000 / 8081 空着"
+}

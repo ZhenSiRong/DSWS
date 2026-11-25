@@ -44,3 +44,18 @@ backup/
 # 教学练本（学生工作区与本地存档，不进仓库）
 lab/
 .lab/
+_pkg/
+# 任务看板生成物（投影，可由 task.py board 重建）
+/workflows/board.html
+/workflows/board.html.meta
+
+# 四类布局后的本地依赖/密钥（真实目录）
+system/backend/.venv/
+system/frontend/node_modules/
+system/lab/
+system/.env
+system/.env.*
+!system/.env.example
+# 兼容软链（测试用，指向主工作区依赖）
+system/backend/.venv
+system/frontend/node_modules

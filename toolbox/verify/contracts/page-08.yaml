@@ -1,0 +1,17 @@
+# 第 8 页 · 让答案一条条推送出来（SSE） —— 教材可跟随性契约（T0）
+#
+# schema 与规则见 manual/verify/README.md。
+# 本页要 8000 端口的 uvicorn + MySQL + 真跑 curl 看逐条到达，块无法在 CI 离线跑，
+# 因此 coverage: static：只查页面引用的路径还在、关键符号还命中，不执行任何命令。
+# static 页不挂 <!-- verify: --> 注解（页面保持原样）。
+page: page-08
+title: 第 8 页 · 让答案一条条推送出来（SSE）
+coverage: static
+
+static:
+  paths:
+    - contracts/steps.yaml          # 「12 个步骤名有出处」的出处
+    - contracts/sse.schema.json     # 页末指向的真实 SSE 事件契约
+  symbols:
+    - {file: contracts/steps.yaml, pattern: '^  - id: run_sql$'}
+    - {file: contracts/sse.schema.json, pattern: '"required": \["type", "step", "status", "duration_ms"\]'}

@@ -1,0 +1,94 @@
+# 第 14 页 · 审检索 —— 教材可跟随性契约（T0 / T1）
+#
+# schema 与规则见 manual/verify/README.md。
+# 要点：每个 ```bash 块在页面里用 <!-- verify: <marker> --> 注解绑定到下面的块；
+#       cmd 必须与页面块内容一致（归一化后），任何一边改了另一边没改 → T0 FAIL。
+#       offline 块由 T1 真执行并断言关键行；manual 块只做同步校验、不执行。
+page: page-14
+title: 第 14 页 · 审检索：召回空了的答案，你凭什么信
+
+blocks:
+  # ---- 动手 第 1 步：拍快照（写文件，有副作用）----
+  - id: page14-lab-save
+    marker: page14-lab-save
+    kind: manual
+    reason: 会往 .lab/snapshots/ 写白名单文件快照，且同名快照会被拒绝；有副作用，不适合无人值守重复执行
+    cmd: |
+      scripts/lab save p14-before
+
+  # ---- 动手 第 2 步：20 题黄金集离线判据（离线，秒级）----
+  - id: page14-pytest-recall
+    marker: page14-pytest-recall
+    kind: offline
+    cmd: |
+      backend/.venv/bin/python -m pytest backend/tests/recall -q
+    expect:
+      exit: 0
+      contains: ["18 passed, 23 skipped"]   # 不存秒数：in 0.44s 会因机器而变
+      regex: []
+    page_contains: ["18 passed, 23 skipped"]   # 页面「你应该看到」里的关键行必须可见，且 T1 真实输出也要有
+    timeout_sec: 60
+
+  # ---- 动手 第 3 步：source 环境 + 真跑 20 题（要整栈）----
+  - id: page14-export-env-stage3
+    marker: page14-export-env-stage3
+    kind: manual
+    reason: source 只是导出环境变量，但同一块接着的 make stage3 要 MySQL/ES/Qdrant 整栈在跑、走真实检索并写 /tmp/rebuild-s3-recall.yaml，约半分钟；CI 干净仓库没有这套栈
+    cmd: |
+      source scripts/export-docker-env.sh
+      make stage3
+
+  # ---- 拆一刀 1：停检索存储（改运行中的栈）----
+  - id: page14-stop-elasticsearch
+    marker: page14-stop-elasticsearch
+    kind: manual
+    reason: docker compose stop 会停掉运行中的 Elasticsearch 容器，是有副作用的栈状态变更；T1 无人值守环境不碰 docker
+    cmd: |
+      docker compose stop elasticsearch
+
+  # ---- 拆一刀 2：停 ES 后查数（要起着的教学栈 + 端口）----
+  - id: page14-curl-query
+    marker: page14-curl-query
+    kind: manual
+    reason: 要教学栈已起在 127.0.0.1:8080（.env 可改端口）且 ES 已停；CI 干净仓库没有这套运行中的栈和端口
+    cmd: |
+      curl -s -N -X POST http://127.0.0.1:8080/api/query -H 'Content-Type: application/json' -d '{"query":"华北销售额"}' | grep '"type": "result"'
+
+  # ---- 拆一刀 3：ES 停掉后跑集成检索（消融态，且要整栈）----
+  - id: page14-pytest-recall-integration
+    marker: page14-pytest-recall-integration
+    kind: manual
+    reason: REBUILD_INTEGRATION=1 要 MySQL/ES/Qdrant 整栈在跑；页内期望的 18 passed, 23 errors 还是「停掉 ES」之后的消融态，干净仓库/CI 复现不出，硬跑只会红
+    cmd: |
+      (cd backend && REBUILD_INTEGRATION=1 .venv/bin/python -m pytest -q tests/recall)
+
+  # ---- 拆一刀 4：拉回检索并等 healthy（改运行中的栈 + 轮询）----
+  - id: page14-start-elasticsearch
+    marker: page14-start-elasticsearch
+    kind: manual
+    reason: docker compose start 会改运行中的栈状态，且 until 轮询要等容器 healthy（可能长时间阻塞）；T1 无人值守环境不碰 docker
+    cmd: |
+      docker compose start elasticsearch
+      until docker compose ps elasticsearch | grep -q '(healthy)'; do sleep 2; done   # 无输出地退出 = 已 healthy
+
+  # ---- 拆一刀回绿：再跑一次 make stage3（要整栈）----
+  - id: page14-stage3-regreen
+    marker: page14-stage3-regreen
+    kind: manual
+    reason: make stage3 要 MySQL/ES/Qdrant 整栈在跑，会写 /tmp/rebuild-s3-recall.yaml 并跑约半分钟真实检索；CI 干净仓库没有栈
+    cmd: |
+      make stage3
+
+static:
+  paths:
+    - backend/tests/recall
+    - backend/tests/recall/golden.yaml
+    - backend/tests/recall/test_golden.py
+    - backend/app/agent/orchestrator.py
+    - scripts/export-docker-env.sh
+    - scripts/recall-demo.sh
+  symbols:
+    - {file: backend/app/agent/orchestrator.py, pattern: "OfflineContextBuilder"}
+    - {file: backend/tests/recall/test_golden.py, pattern: "_must_not_check"}
+    - {file: backend/tests/recall/test_golden.py, pattern: "test_golden_aggregate_recall_and_precision"}
+    - {file: scripts/recall-demo.sh, pattern: "华北销售额"}

@@ -1,0 +1,40 @@
+{
+  "eyebrow": "第 5 页 · L1 造 · 关键词",
+  "title": "从一句话里抽出关键词",
+  "subtitle": "左边是纯函数与词表，右边是邮局分拣：把一封信拆出两张标签",
+  "layout": "entity_metaphor",
+  "left_cards": [
+    {
+      "name": "extract_keywords()",
+      "role": "把问题当普通字符串，在词表里查词",
+      "judge": "不调 AI、不分析语法"
+    },
+    {
+      "name": "关键词词表",
+      "role": "地区与指标两张表，命中哪个抽哪个",
+      "judge": "[\"华北\",\"销售额\"]"
+    },
+    {
+      "name": "输出列表",
+      "role": "抽出来的列表就是第 6 页拼 SQL 的原料",
+      "judge": "keywords 字段"
+    }
+  ],
+  "metaphor_title": "喻体 · 邮局分拣",
+  "art": "art/metaphor.jpeg",
+  "mappings": [
+    {
+      "n": "①",
+      "label": "① 一封信 → 输入一句话"
+    },
+    {
+      "n": "②",
+      "label": "② 拆出两张标签 → 词表匹配"
+    },
+    {
+      "n": "③",
+      "label": "③ 标签分格放好 → 输出关键词列表"
+    }
+  ],
+  "footer": "extract_keywords(\"华北销售额\") → [\"华北\",\"销售额\"]"
+}

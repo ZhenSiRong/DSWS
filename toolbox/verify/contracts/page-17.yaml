@@ -1,0 +1,123 @@
+# 第 17 页 · 审纠错 —— 教材可跟随性契约（T0 / T1）
+#
+# schema 与规则见 manual/verify/README.md。
+# 要点：每个 ```bash 块在页面里用 <!-- verify: <marker> --> 注解绑定到下面的块；
+#       cmd 必须与页面块内容一致（归一化后），任何一边改了另一边没改 → T0 FAIL。
+#       offline 块由 T1 真执行并断言关键行；manual 块只做同步校验、不执行。
+page: page-17
+title: 第 17 页 · 审纠错：一次重试能修好什么、修不好什么
+
+blocks:
+  # ---- 动手 第 1 步：拍快照（写文件，有副作用）----
+  - id: p17-lab-save
+    marker: p17-lab-save
+    kind: manual
+    reason: 会往 .lab/snapshots/ 写白名单文件快照，且同名快照会被拒绝；有副作用，不适合无人值守重复执行
+    cmd: |
+      scripts/lab save p17-before
+
+  # ---- 动手 第 2 步：14 条单元测试（离线，秒级）----
+  - id: p17-pytest-correct
+    marker: p17-pytest-correct
+    kind: offline
+    cmd: |
+      backend/.venv/bin/python -m pytest backend/tests/agent/test_correct.py -q
+    expect:
+      exit: 0
+      contains: ["14 passed"]
+      regex: ["^14 passed"]
+    page_contains: ["14 passed"]     # 页面「你应该看到」里的 14 passed 必须可见，且 T1 真实输出也要有
+    timeout_sec: 60
+
+  # ---- 动手 第 3 步：9 个失败场景矩阵（离线）----
+  - id: p17-failures-check
+    marker: p17-failures-check
+    kind: offline
+    cmd: |
+      (cd backend && .venv/bin/python -m app.scripts.failures --check)
+    expect:
+      exit: 0
+      contains: ["S6 PASS"]
+      regex: []
+    page_contains: ["S6 PASS"]
+    timeout_sec: 60
+
+  # ---- 动手 第 4 步：看 corrected 行 + 数 20 条语料（离线）----
+  - id: p17-failures-scenarios
+    marker: p17-failures-scenarios
+    kind: offline
+    cmd: |
+      (cd backend && .venv/bin/python -m app.scripts.failures --scenarios | grep corrected)
+      grep -o '"retryable": [a-z]*' eval/correction.jsonl | sort | uniq -c
+      grep -o '"expect": "[a-z]*"' eval/correction.jsonl | sort | uniq -c
+    expect:
+      exit: 0
+      contains:
+        - "| `corrected` | 校正闭环成功 | result | - | - |"
+        - '9 "retryable": false'
+        - '11 "retryable": true'
+        - '11 "expect": "corrected"'
+        - '9 "expect": "rejected"'
+      regex: []
+    page_contains:
+      - '"retryable": true'
+      - '"retryable": false'
+      - '"expect": "corrected"'
+      - '"expect": "rejected"'
+    timeout_sec: 60
+
+  # ---- 动手 第 5 步：装 VizTracer + 开浏览器 + pdb 交互（不可能无人值守）----
+  - id: p17-viztracer
+    marker: p17-viztracer
+    kind: manual
+    reason: 同一块三条命令：uv pip install 要联网装包并改 backend/.venv；viztracer --open 会开浏览器；pdb 是交互式断点。都不能无人值守
+    cmd: |
+      uv pip install --python backend/.venv/bin/python viztracer
+      backend/.venv/bin/python -m viztracer --open --min_duration 1ms -m pytest backend/tests/agent/test_correct.py -q
+      backend/.venv/bin/python -m pdb -m pytest backend/tests/agent/test_correct.py -q -s -k "proposes_a_new_sql"
+
+  # ---- 动手 第 6 步：真模型多次采样（可选，需 key + 起栈）----
+  - id: p17-curl-live
+    marker: p17-curl-live
+    kind: manual
+    reason: 第 6 步可选，要真模型 key 且教学栈已起在 8080；无人值守环境没有栈和 key，无法稳定执行
+    cmd: |
+      curl -sN -X POST http://127.0.0.1:8080/api/query -H 'content-type: application/json' -d '{"query":"查询销售额大于平均销售额的商品"}'
+
+  # ---- 拆一刀：关掉校正后重跑三条判据（离线，但页内期望是消融态）----
+  - id: p17-ablation-commands
+    marker: p17-ablation-commands
+    kind: manual
+    reason: '这段命令在「拆一刀」之后执行，页面紧随的期望是消融态（5 failed, 9 passed / FAIL: 1 项）；CI 干净仓库复现不出该态（跑出来是 14 passed），故只做命令同步、不自动执行'
+    cmd: |
+      backend/.venv/bin/python -m pytest backend/tests/agent/test_correct.py -q
+      (cd backend && PYTHONUNBUFFERED=1 .venv/bin/python -m app.scripts.failures --check) 2>&1 | tail -5
+      PYTHONPATH=backend backend/.venv/bin/python eval/probe_correction.py | tail -1
+
+  # ---- 拆一刀后还原：lab reset 是破坏性回滚（依赖第 1 步快照）----
+  - id: p17-lab-reset-restore
+    marker: p17-lab-reset-restore
+    kind: manual
+    reason: scripts/lab reset 会按快照回滚工作区文件（破坏性，依赖第 1 步快照名），不能作为无人值守验收动作
+    cmd: |
+      scripts/lab reset p17-before --yes
+      backend/.venv/bin/python -m pytest backend/tests/agent/test_correct.py -q | tail -1
+      (cd backend && .venv/bin/python -m app.scripts.failures --check | tail -1)
+
+static:
+  paths:
+    - backend/tests/agent/test_correct.py
+    - backend/app/agent/correct.py
+    - backend/app/scripts/failures.py
+    - eval/correction.jsonl
+    - eval/probe_correction.py
+    - contracts/errors.yaml
+  symbols:
+    - {file: backend/app/agent/correct.py, pattern: "def propose_correction"}
+    - {file: backend/app/agent/correct.py, pattern: "policy = contract.correction"}
+    - {file: backend/tests/agent/test_correct.py, pattern: "test_corrector_refusal_keeps_the_original_error"}
+    - {file: contracts/errors.yaml, pattern: "max_attempts: 1"}
+
+evidence:
+  - {path: manual/images/page-17-correct.png, note: "14 passed + S6 PASS 截图（第 2–4 步）"}
+  - {path: manual/images/page-17-ablation.png, note: "拆一刀失败矩阵截图（5 failed / S6 FAIL / mismatch 0）"}

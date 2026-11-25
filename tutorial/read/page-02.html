@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>第 2 页 · 导入 dw.sql：建表灌数据 · 阅读版</title>
+<link rel="stylesheet" href="../../assets/lesson.css">
+<link rel="stylesheet" href="../../assets/read.css">
+</head>
+<body>
+<main class="page">
+<p class="kicker">练本 · 阅读版（md 正典派生，改内容请改 manual/page-02.md）</p>
+<h1>第 2 页 · 导入 dw.sql：建表灌数据</h1>
+<blockquote>
+<p><strong>城市坐标 · P2 仓库分区与入库通道（交付物 ③④）</strong>｜给仓库隔出 5 个分区、把 115 行货入库：从此问一句有货可取。</p>
+</blockquote>
+<h2>这一页构建什么</h2>
+<p>把 <code>fixtures/dw.sql</code> 导入第 1 页那个容器：一条命令把建库、建表、灌数据全做完（口语常说“灌数据”）。页末你自己用 SQL 数出表几张、订单几行、华北几单，才算验收。</p>
+<p><img alt="第 2 页 · 先把仓库搭好：左边是 5 张表与 115 行货，右边是仓库货架与叉车——一条命令把 dw.sql 灌进去" src="../images/page-02-visual.webp" /></p>
+<h2>猜一猜</h2>
+<p>先写下答案，再动手。</p>
+<p>第 1 条命令把 <code>dw.sql</code> 里几百行 <code>CREATE</code> / <code>INSERT</code> 送进 MySQL。终端会<strong>逐条打印</strong>每张表、每行数据，还是<strong>什么都不打印</strong>？导入完再数一次：<code>SELECT COUNT(*) FROM fact_order</code> 会回几？（0 / 115 / 其他数字）</p>
+<h2>动手</h2>
+<p>第 1 页的 <code>lab-mysql</code> 要先创建好、正在运行；报 <code>No such container: lab-mysql</code> 就回第 1 页重跑。以下命令仍在<strong>仓库根目录</strong>执行（<code>fixtures/dw.sql</code> 在这里）。</p>
+<p><strong>第 1 条：导入 <code>dw.sql</code>。</strong></p>
+<pre><code class="language-bash">docker exec -i lab-mysql mysql -uroot -plabpass &lt; fixtures/dw.sql
+</code></pre>
+<p><code>-i</code> 让容器的标准输入保持打开，<code>&lt; fixtures/dw.sql</code> 是<strong>宿主机</strong> shell 的重定向（第 1 页讲过）：文件内容从你的终端接进容器的 <code>mysql</code>，容器里的 <code>mysql</code> 把它当脚本逐句执行。<strong>少了 <code>-i</code> 会静默失败</strong>：<code>mysql</code> 读到空输入，不建表也不报错，退出码还是 0。</p>
+<p><strong>第 2 条：看库里的表。</strong></p>
+<pre><code class="language-bash">docker exec lab-mysql mysql -uroot -plabpass -N -B dw -e &quot;SHOW TABLES;&quot;
+</code></pre>
+<p><code>dw</code> 是库名；<code>-N -B</code> 让输出只留表名，方便逐行对。终端里照样会多一行密码 <code>Warning</code>，忽略它。</p>
+<p><strong>第 3 条：数行数、看华北订单。</strong> 一条命令里写三条 SQL，按顺序回三段结果。</p>
+<pre><code class="language-bash">docker exec lab-mysql mysql -uroot -plabpass -N -B dw -e &quot;
+SELECT COUNT(*) FROM fact_order;
+SELECT COUNT(*) FROM fact_order f
+JOIN dim_region r ON f.region_id = r.region_id
+WHERE r.region_name = '华北';
+SELECT f.order_id, r.province, r.region_name, f.order_amount
+FROM fact_order f
+JOIN dim_region r ON f.region_id = r.region_id
+WHERE r.region_name = '华北'
+LIMIT 3;&quot;
+</code></pre>
+<p><code>fact_order</code> 里只存了 <code>region_id</code>，没有“华北”这两个字，第二段 SQL 得 JOIN 到区域表才筛得出来；第三段只取前 3 单，下一段拿它和对账。</p>
+<h2>你应该看到</h2>
+<p>第 1 条除了那行密码 <code>Warning</code>，什么都不打印——<code>CREATE</code> / <code>INSERT</code> 不回显，<strong>一行业务输出都没有就是成功</strong>。</p>
+<p>第 2 条回 5 行表名，按字母序：<code>dim_customer</code>、<code>dim_date</code>、<code>dim_product</code>、<code>dim_region</code>、<code>fact_order</code>。</p>
+<p>第 3 条回 5 行：115 是 <code>fact_order</code> 总行数，19 是其中华北的单数，最后三行是华北的前 3 单（列之间是 Tab）：</p>
+<pre><code class="language-text">115
+19
+ORD20250102002  北京市 华北  899
+ORD20250109001  北京市 华北  599
+ORD20250114001  北京市 华北  75
+</code></pre>
+<p><img alt="第 2 页 · 导入 dw.sql 后 5 张表、115 行、华北 19 单的真实输出" src="../images/page-02-data-check.png" /></p>
+<h2>对账</h2>
+<ul>
+<li>猜“会逐条打印”：不对。<code>mysql</code> 批量读脚本时不回显执行过程；除密码 <code>Warning</code> 外一行输出都没有。所以“没输出”不是没执行，<strong>必须自己查表、数行数</strong>（第 2、3 条）才算验完。</li>
+<li>猜 0：先看第 1 条是不是漏了 <code>-i</code>——那会“成功”退出但什么都没导入；如果文件路径写错，宿主机 shell 会直接报 <code>No such file or directory</code>。</li>
+<li>猜 115：对。这个数由 <code>fixtures/dw.sql</code> 里 <code>fact_order</code> 的 <code>INSERT</code> 决定；115 行里华北（<code>region_id</code> 为 <code>R004</code>）19 单。</li>
+<li>5 张表和 <code>dw</code> 库不是 MySQL 送的：<code>dw.sql</code> 开头 <code>CREATE DATABASE</code>，后面 5 段 <code>CREATE TABLE</code>；第 2 条列出的表名就来自这 5 段。</li>
+<li>第 3 条最后三行能出现“华北”两个字，靠的是 <code>JOIN dim_region r ON f.region_id = r.region_id</code>：订单里只有编号 <code>R004</code>，“华北”是从区域表连过去取到的。JOIN 条件写错，你会看到一行都没有。</li>
+<li>最后三行只出 3 单，不是华北只有 3 单——<code>LIMIT 3</code> 只限制显示；华北一共 19 单，第二段 SQL 已经数过。</li>
+</ul>
+<blockquote>
+<p><strong>你现在拥有</strong>：一个装着 5 张表、115 单数据的 <code>dw</code> 库；它是后面每次查询要落脚的数据底座。</p>
+</blockquote>
+<h2>自己改一下</h2>
+<ol>
+<li>去掉第 2 条里的 <code>-N</code>：第一行会多出什么？（参考：表头 <code>Tables_in_dw</code>，下面还是 5 行表名。）</li>
+<li>把第 3 条第二个 <code>'华北'</code> 换成 <code>'华南'</code>：数会变成多少？再想想 <code>dim_region</code> 里“华南”对应哪个省。（参考：26 单；华南对应广东省（<code>R001</code>）。把这句的 <code>COUNT(*)</code> 换成 <code>SUM(f.order_amount)</code>，华南销售额是 <code>70202</code>。）</li>
+<li>再跑一遍第 1 条导入，再数一次第 3 条第一句：数会变吗？（参考：还是 <code>115</code>——每张表前的 <code>DROP TABLE IF EXISTS</code> 会先删旧表，不会翻倍。）</li>
+</ol>
+</main>
+</body>
+</html>

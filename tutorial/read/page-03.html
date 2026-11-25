@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>第 3 页 · 让服务在 8000 端口回答问题 · 阅读版</title>
+<link rel="stylesheet" href="../../assets/lesson.css">
+<link rel="stylesheet" href="../../assets/read.css">
+</head>
+<body>
+<main class="page">
+<p class="kicker">练本 · 阅读版（md 正典派生，改内容请改 manual/page-03.md）</p>
+<h1>第 3 页 · 让服务在 8000 端口回答问题</h1>
+<blockquote>
+<p><strong>城市坐标 · P3 查询服务中心（交付物 ⑤）</strong>｜服务中心开门值班：窗口 <code>GET /health</code> 先通，楼里第一次有人应声。</p>
+</blockquote>
+<h2>这一页构建什么</h2>
+<p>一个你自己的 HTTP 服务：跑在 <code>8000</code> 端口，只有一个接口 <code>GET /health</code>。用 <code>curl</code> 一问，它回 <code>{"ok":true}</code>。
+这是整套系统第一次对外说话。</p>
+<p><img alt="第 3 页 · 把服务开到 8000：左边是真实服务组件，右边是开张营业的柜台：每一步都能对上" src="../images/page-03-visual.webp" /></p>
+<h2>猜一猜</h2>
+<p>动手前把答案写在纸上（猜错很正常，后面要对着真实输出对账）：</p>
+<ol>
+<li>敲完启动命令，这个终端会<strong>退回</strong>给你继续敲字，还是<strong>一直卡住</strong>？</li>
+<li>再另开一个终端敲 <code>curl -s http://127.0.0.1:8000/health</code>，屏幕上会出现哪一行？</li>
+</ol>
+<h2>动手</h2>
+<p><strong>先备环境</strong>：没有 <code>backend/.venv</code> 的话先回第 0 页跑 <code>make install</code>。</p>
+<p><strong>仓库根执行</strong>：所有命令都在<strong>仓库根目录</strong>敲（<code>ls</code> 能看到 <code>backend</code>、<code>fixtures</code> 的那一层）。</p>
+<p><strong>不装新东西</strong>：Python 用仓库里现成的 <code>backend/.venv/bin/python</code>，它已经装好 fastapi 和 uvicorn，<strong>不要再用 pip 装新东西</strong>。</p>
+<ol>
+<li>在仓库根目录新建文件夹 <code>lab</code>，在 <code>lab</code> 里新建文件 <code>app.py</code>，把下面整段<strong>粘贴</strong>进去（口语常说“粘进去”）、保存：</li>
+</ol>
+<pre><code class="language-python"># lab/app.py —— 你的第一个 HTTP 服务
+from fastapi import FastAPI
+
+app = FastAPI()
+
+
+@app.get(&quot;/health&quot;)
+def health():
+    return {&quot;ok&quot;: True}
+</code></pre>
+<ol start="2">
+<li>在终端 1 敲：</li>
+</ol>
+<pre><code class="language-bash">backend/.venv/bin/python -m uvicorn lab.app:app --port 8000
+</code></pre>
+<p><strong>端口被占</strong>：如果报 <code>ERROR:    [Errno 98] error while attempting to bind on address ('127.0.0.1', 8000): address already in use</code>，说明 <code>8000</code> 被别的程序占了。</p>
+<p><strong>换端口</strong>：把命令里的 <code>--port 8000</code> 改成 <code>--port 8010</code>（或别的空闲端口），<strong>后面第 4–9 页里写 <code>8000</code> 的地方全部同步改成这个端口</strong>。</p>
+<ol start="3">
+<li>终端 1 别关。另开一个终端（终端 2；在 VS Code 里点终端面板右上角的 <code>+</code>），敲：</li>
+</ol>
+<pre><code class="language-bash">curl -s http://127.0.0.1:8000/health
+</code></pre>
+<h2>你应该看到</h2>
+<p>终端 1：</p>
+<pre><code>INFO:     Started server process [55698]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+</code></pre>
+<p><strong>访问日志</strong>：服务起来后，终端 1 还会接着打印<strong>访问日志</strong>：终端 2 每 <code>curl</code> 一次，它就多一行，格式 <code>INFO:     127.0.0.1:&lt;端口&gt; - "GET /health HTTP/1.1" 200 OK</code>。</p>
+<p><strong>正常现象</strong>：这是终端 2 的请求打进来的，正常，说明请求真的到了服务；<code>&lt;端口&gt;</code> 是这次连接的临时端口，每次都不一样。</p>
+<p>终端 2：</p>
+<pre><code>{&quot;ok&quot;:true}
+</code></pre>
+<p><code>curl -s</code> 的输出没有结尾换行，所以 <code>{"ok":true}</code> 后面可能紧贴着你的终端提示符（<code>$</code> 或 <code>%</code>），这是正常的，不是少东西。</p>
+<p><strong>版本差异</strong>：<code>Waiting for application startup.</code> 这行在有些版本里出现、有些版本里不出现，出现也不影响结果；方括号里的 <code>55698</code> 是进程号，每次都不一样。</p>
+<p><strong>判据就两条</strong>：只需确认启动日志里有一行以 <code>Uvicorn running on http://127.0.0.1:8000</code> 开头，并且终端 2 出 <code>{"ok":true}</code>。<strong>这一页做完先别关终端 1</strong>——第 4、5 页还要连这个服务；全部做完再按 Ctrl+C。</p>
+<p><img alt="第 3 页 · 服务启动与 /health 的真实输出" src="../images/page-03-health.png" /></p>
+<h2>对账</h2>
+<ul>
+<li>你猜终端会退回吗？不会。到 <code>Uvicorn running on ...</code> 这行就不动了——它在<strong>值班</strong>等请求，直到你按 Ctrl+C。这就是“服务”和“跑完就退的脚本”的区别。</li>
+<li>你猜 curl 会看到什么？<code>{"ok":true}</code> 是服务端返回的 <strong>JSON</strong>，不是网页。<code>ok</code> 这个字段名、<code>/health</code> 这个路径都是你在代码里自己起的，没有标准答案；只要代码里的路径和 curl 里的路径一致，它就能通。</li>
+<li>如果 curl 报 <code>Connection refused</code>：服务没起来（= 没<strong>启动</strong>，口语常说“起服务”），或者你敲的端口不是 <code>8000</code>。</li>
+<li>如果启动命令报 <code>ModuleNotFoundError: No module named 'lab'</code>（后面跟着一大段 traceback）：你没站在仓库根目录，或者 <code>lab</code> 文件夹名拼错了。</li>
+<li>如果报 <code>ERROR:    Error loading ASGI app. Could not import module "lab.app".</code>（uvicorn 版本不同时，同义报错可能只到 <code>Could not import module "lab.app"</code> 这半句）：<code>lab</code> 文件夹在，但里面 <code>app.py</code> 的文件名拼错了，比如建成了 <code>lab/app.py.py</code>。</li>
+<li><strong>404 不是你的错</strong>：终端 1 里出现你没请求过的路径、而且回 404，例如 <code>INFO:     127.0.0.1:40196 - "GET /v1/models HTTP/1.1" 404 Not Found</code>。<ul>
+<li><strong>来源</strong>：这是本机别的程序在探测 <code>8000</code> 端口（把它当成了 AI 服务），不是你的代码错，不影响 <code>/health</code>，忽略即可。</li>
+<li><strong>嫌吵就换端口</strong>：启动命令加 <code>--port 8010</code>，<code>curl</code> 的地址也改成 <code>8010</code>，但后面第 4–9 页里写 <code>8000</code> 的地方要一起改。</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p><strong>你现在拥有</strong>：一个在 8000 端口值班、能回 JSON 的 HTTP 服务；它是浏览器和数据库之间唯一会说话的东西。</p>
+</blockquote>
+<h2>自己改一下</h2>
+<p>把 <code>@app.get("/health")</code> 改成 <code>@app.get("/healthz")</code>，Ctrl+C 重启服务，再 <code>curl -s http://127.0.0.1:8000/healthz</code>。旧的 <code>/health</code> 现在通吗？</p>
+<p><strong>参考</strong>：<code>/healthz</code> 回 <code>{"ok":true}</code>；旧 <code>/health</code> 回 <code>{"detail":"Not Found"}</code>，HTTP 状态码 404。</p>
+<p><strong>看状态码</strong>：想看到 HTTP 状态码，用 <code>curl -i</code> 或 <code>curl -w '%{http_code}'</code>——<code>-s</code> 只给响应体，404 看不出来。</p>
+</main>
+</body>
+</html>

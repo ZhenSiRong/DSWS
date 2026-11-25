@@ -1,0 +1,40 @@
+{
+  "eyebrow": "第 11 页 · L2 换 · 真契约",
+  "title": "让 SQL 从契约里长出来",
+  "subtitle": "左边是契约文件，右边是蓝图与尺子：照图施工",
+  "layout": "entity_metaphor",
+  "left_cards": [
+    {
+      "name": "手抄 CONTRACT",
+      "role": "lab/app.py 里的字典，只是副本",
+      "judge": "删掉它"
+    },
+    {
+      "name": "contracts/schema.contract.yaml",
+      "role": "唯一事实源，表/列/口径都在这",
+      "judge": "max_attempts 等契约"
+    },
+    {
+      "name": "build_sql 输出",
+      "role": "与第 6 页逐字一致",
+      "judge": "5 行 SELECT"
+    }
+  ],
+  "metaphor_title": "喻体 · 蓝图与尺子",
+  "art": "art/metaphor.jpeg",
+  "mappings": [
+    {
+      "n": "①",
+      "label": "① 施工蓝图 → schema.contract.yaml"
+    },
+    {
+      "n": "②",
+      "label": "② 尺子量尺寸 → 按契约校验"
+    },
+    {
+      "n": "③",
+      "label": "③ 照图施工 → build_sql 输出逐字一致"
+    }
+  ],
+  "footer": "契约文件是唯一事实源；手抄字典只是副本"
+}

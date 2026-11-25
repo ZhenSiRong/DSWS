@@ -1,0 +1,40 @@
+{
+  "eyebrow": "第 21 页 · L4 守 · 可观测",
+  "title": "12 条进度 + 14 条夹具能证明什么",
+  "subtitle": "左边是三张观测面，右边是仪表盘：每个灯都对应一个可对账的数",
+  "layout": "entity_metaphor",
+  "left_cards": [
+    {
+      "name": "/api/steps",
+      "role": "12 条进度：11 常驻 + 1 条件",
+      "judge": "12，条件步骤 correct_sql"
+    },
+    {
+      "name": "/api/errors",
+      "role": "错误码表：16 个码 / 3 类",
+      "judge": "16"
+    },
+    {
+      "name": "SSE 回放",
+      "role": "14 条夹具逐字节对账",
+      "judge": "S7 SSE RECORD PASS"
+    }
+  ],
+  "metaphor_title": "喻体 · 仪表盘",
+  "art": "art/metaphor.jpeg",
+  "mappings": [
+    {
+      "n": "①",
+      "label": "① 12 个指示灯 → 12 条进度"
+    },
+    {
+      "n": "②",
+      "label": "② 16 个报警码 → 错误码表"
+    },
+    {
+      "n": "③",
+      "label": "③ 行车记录仪 → 14 条 SSE 夹具可回放对账"
+    }
+  ],
+  "footer": "可观测：12 进度 + 16 错误码 + 14 夹具"
+}

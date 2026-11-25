@@ -1,0 +1,41 @@
+{
+  "eyebrow": "第 7 页 · L1 造 · 执行",
+  "title": "把 SQL 真交给 MySQL",
+  "subtitle": "左边是执行器与结果，右边是送货单进仓库：真把单子递进去",
+  "layout": "entity_metaphor",
+  "left_cards": [
+    {
+      "name": "pymysql 执行",
+      "role": "第 6 页那 5 行 SELECT 真跑",
+      "judge": "cursor.execute(sql)",
+      "icon": "mysql"
+    },
+    {
+      "name": "填回响应",
+      "role": "sql / rows 不再为空",
+      "judge": "sql + rows"
+    },
+    {
+      "name": "41099.5",
+      "role": "华北销售额从库里取回来",
+      "judge": "rows[0] = 华北 41099.5"
+    }
+  ],
+  "metaphor_title": "喻体 · 送货单进仓库",
+  "art": "art/metaphor.jpeg",
+  "mappings": [
+    {
+      "n": "①",
+      "label": "① 递送货单 → 把 SQL 交给 MySQL"
+    },
+    {
+      "n": "②",
+      "label": "② 仓库窗口执行 → pymysql 真执行"
+    },
+    {
+      "n": "③",
+      "label": "③ 递出包裹 → rows 返回华北 41099.5"
+    }
+  ],
+  "footer": "rows → [{\"region_name\":\"华北\",\"sales\":41099.5}]"
+}

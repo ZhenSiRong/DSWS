@@ -1,0 +1,20 @@
+# 第 3 页 · 让服务在 8000 端口回答问题 —— 教材可跟随性契约（仅 T0 静态）
+#
+# schema 与规则见 manual/verify/README.md。
+# 本页要真起 uvicorn、再开另一个终端 curl 真端口，块无法在 CI 离线跑，
+# 故 coverage: static：只查页面引用的文件还在、关键符号还命中，不执行任何命令
+# （不跑 docker / uvicorn / curl / make）。
+page: page-03
+title: 第 3 页 · 让服务在 8000 端口回答问题
+coverage: static
+
+static:
+  paths:
+    - Makefile                       # 「先备环境」让你回第 0 页跑的 make install
+    - backend/pyproject.toml         # 启动命令依赖的 fastapi / uvicorn 来源
+    - fixtures                       # 页面 ls 里点名要看的仓库根目录地标
+    - manual/images/page-03-health.png
+  symbols:
+    - {file: backend/pyproject.toml, pattern: '"fastapi>=0\.115"'}
+    - {file: backend/pyproject.toml, pattern: '"uvicorn\[standard\]>=0\.32"'}
+    - {file: Makefile, pattern: '^install:'}

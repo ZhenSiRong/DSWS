@@ -1,0 +1,40 @@
+{
+  "eyebrow": "第 4 页 · L1 造 · 接口",
+  "title": "加一个能收问题的接口",
+  "subtitle": "左边是接口与请求，右边是收发窗口：先修通“收发 JSON”这条路",
+  "layout": "entity_metaphor",
+  "left_cards": [
+    {
+      "name": "POST /api/query",
+      "role": "收一个 JSON：question",
+      "judge": "{\"question\":\"华北销售额\"}"
+    },
+    {
+      "name": "JSON 回显",
+      "role": "keywords / sql / rows 先留空",
+      "judge": "不查库、不拼 SQL"
+    },
+    {
+      "name": "可复现",
+      "role": "同一请求两次，响应一字不差",
+      "judge": "硬编码 JSON"
+    }
+  ],
+  "metaphor_title": "喻体 · 收发窗口",
+  "art": "art/metaphor.jpeg",
+  "mappings": [
+    {
+      "n": "①",
+      "label": "① 递进来一张问题纸 → POST 收 question"
+    },
+    {
+      "n": "②",
+      "label": "② 窗口只递回执 → 回显一个空壳 JSON"
+    },
+    {
+      "n": "③",
+      "label": "③ 两次窗口回执一样 → 同一请求结果可复现"
+    }
+  ],
+  "footer": "{\"question\":\"华北销售额\",\"keywords\":[],\"sql\":null,\"rows\":[]}"
+}

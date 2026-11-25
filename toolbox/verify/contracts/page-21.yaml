@@ -1,0 +1,98 @@
+# 第 21 页 · 守可观测 —— 教材可跟随性契约（T0 / T1）
+#
+# schema 与规则见 manual/verify/README.md。
+# 要点：每个 ```bash 块在页面里用 <!-- verify: <marker> --> 注解绑定到下面的块；
+#       cmd 必须与页面块内容一致（归一化后），任何一边改了另一边没改 → T0 FAIL。
+#       offline 块由 T1 真执行并断言关键行；manual 块只做同步校验、不执行。
+page: page-21
+title: 第 21 页 · 守可观测：12 条进度 + 14 条夹具能证明什么
+
+blocks:
+  # ---- 动手 第 1 步：拍快照 + 进程内数目录端点与夹具（lab save 有副作用）----
+  - id: p21-lab-save
+    marker: page21-lab-save
+    kind: manual
+    reason: 块首 scripts/lab save 会往 .lab/snapshots/ 写白名单文件快照，且同名快照会被拒；有副作用，不能无人值守重复执行（后半段 TestClient 虽不启服务，但整块仍以 lab save 开头）
+    cmd: |
+      scripts/lab save p21-before
+      (cd backend && .venv/bin/python -c "
+      import json
+      from fastapi.testclient import TestClient
+      from app.scenarios.app import create_scenario_app
+      c = TestClient(create_scenario_app())
+      s = c.get('/api/steps').json()['steps']; e = c.get('/api/errors').json()
+      print('/api/steps =', len(s), '条件步骤 =', [x['id'] for x in s if x['conditional']])
+      print('/api/errors =', len(e['codes']), '类别 =', e['classes'])
+      for sid in ('happy', 'llm_refusal'):
+          steps = [json.loads(f[6:])['step'] for f in json.load(open(f'../fixtures/sse/{sid}.json'))['frames'] if json.loads(f[6:])['type'] == 'progress']
+          print(f'{sid}: {len(steps)} 条 progress 帧 / {len(set(steps))} 个步骤名；只出现一次 ' + '/'.join(x for x in dict.fromkeys(steps) if steps.count(x) == 1))
+      ")
+
+  # ---- 动手 第 2 步：14 条夹具逐字节对账（离线，约 3 秒，只读）----
+  - id: p21-record-sse
+    marker: page21-record-sse
+    kind: offline
+    cmd: |
+      (cd backend && .venv/bin/python -m app.scripts.record_sse --check)
+    expect:
+      exit: 0
+      contains: ["S7 SSE RECORD PASS（14 个夹具与真实输出一致）"]
+      regex: []
+    page_contains: ["S7 SSE RECORD PASS（14 个夹具与真实输出一致）"]  # 「你应该看到」里必须可见，且 T1 真实输出也要有
+    timeout_sec: 60
+
+  # ---- 动手 第 3 步：夹具契约测试 + 前端协议测试（npm test 要 node_modules）----
+  - id: p21-protocol-tests
+    marker: page21-protocol-tests
+    kind: manual
+    reason: 第二条 (cd frontend && npm test) 要 frontend/node_modules（缺了得先 npm ci，要联网）；CI 只装 backend 依赖、干净仓库没有 node_modules，整块跑不了。第一条 pytest 本身离线，但契约按整块绑定，不能拆开只跑前半
+    cmd: |
+      (cd backend && .venv/bin/python -m pytest tests/frontend/test_sse_fixtures.py -q)
+      (cd frontend && npm test)
+
+  # ---- 动手 第 4 步（可选）：make stage7 六段门禁（npm build + uv run）----
+  - id: p21-stage7
+    marker: page21-stage7
+    kind: manual
+    reason: make stage7 含 npm run test/build（要 node_modules）与 uv run --frozen（要 uv 和已同步的 backend 依赖），还会写 frontend/dist/，页面标注约 54 秒；CI 干净仓库没有 node_modules，不能无人值守重复执行
+    cmd: |
+      make stage7
+
+  # ---- 拆一刀：删掉 _normalize 的两个分支后重跑对账（期望值与本机改动绑定）----
+  - id: p21-ablation
+    marker: page21-ablation
+    kind: manual
+    reason: 这段在「拆一刀」之后执行，页内期望是消融态（退出码 1 / 10 条夹具不同步），依赖学生本机先删掉 record_sse.py 的 _normalize 两个分支；CI 干净仓库跑出来是 PASS，复现不出该判据，故只做命令同步、不自动执行
+    cmd: |
+      (cd backend && .venv/bin/python -m app.scripts.record_sse --check)
+
+  # ---- 拆一刀后还原：lab reset 是破坏性回滚（依赖第 1 步快照）----
+  - id: p21-lab-reset-restore
+    marker: page21-lab-reset-restore
+    kind: manual
+    reason: scripts/lab reset 会按快照回滚工作区文件（破坏性），且依赖第 1 步拍下的快照名；不能作为无人值守验收动作
+    cmd: |
+      scripts/lab reset p21-before --yes
+      (cd backend && .venv/bin/python -m app.scripts.record_sse --check | tail -1)
+
+static:
+  paths:
+    - backend/app/scripts/record_sse.py
+    - backend/app/scenarios/app.py
+    - backend/app/agent/graph.py
+    - backend/tests/frontend/test_sse_fixtures.py
+    - backend/tests/test_s6_langgraph.py
+    - contracts/steps.yaml
+    - fixtures/sse/happy.json
+    - fixtures/sse/llm_refusal.json
+    - frontend/package.json
+  symbols:
+    - {file: backend/app/scripts/record_sse.py, pattern: "def _normalize"}
+    - {file: backend/app/scripts/record_sse.py, pattern: "FIXED_DURATION_MS = 12.5"}
+    - {file: backend/app/scripts/record_sse.py, pattern: 'detail\.pop\("request_id", None\)'}
+    - {file: backend/app/scenarios/app.py, pattern: "def create_scenario_app"}
+    - {file: backend/tests/frontend/test_sse_fixtures.py, pattern: "def test_frames_follow_contract"}
+    - {file: backend/tests/test_s6_langgraph.py, pattern: 'assert len\(nodes\) == 12'}
+    - {file: backend/app/agent/graph.py, pattern: 'StateGraph\(AgentState\)'}
+    - {file: contracts/steps.yaml, pattern: 'nodes: \[correct_sql\]'}
+    - {file: frontend/package.json, pattern: '"test": "vitest run"'}

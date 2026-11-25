@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><title>先把仓库搭好</title>
+<style>:root { --font-body: "Noto Sans CJK SC", "Source Han Sans SC", sans-serif; --font-mono: "Noto Sans Mono CJK SC", "Noto Sans Mono", monospace; --font-serif: "Noto Serif CJK SC", serif; }
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; background: #e8e8e8; }
+.poster { position: relative; width: 1600px; height: 1000px; overflow: hidden; background:#fff; color:#1a1a1a; font-family:var(--font-body); }
+.head { position:absolute; left:72px; top:48px; width:1456px; }
+.eyebrow { margin:0; font-family:var(--font-mono); font-size:19px; font-weight:700; color:#E65100; letter-spacing:1.5px; }
+h1 { margin:10px 0 0; font-size:58px; font-weight:900; line-height:1.1; letter-spacing:-1px; }
+.sub { margin:12px 0 0; color:#585858; font-size:23px; line-height:1.45; }
+.rule { margin-top:20px; height:2px; background:#1a1a1a; }
+.body { position:absolute; left:72px; right:72px; top:285px; height:585px; display:flex; align-items:center; }
+.cards { width:100%; display:grid; grid-template-columns:repeat(3, 1fr); gap:18px; }
+.cards.c4 { grid-template-columns:repeat(2, 1fr); }
+.card { border:2px solid #1a1a1a; padding:22px 24px 20px; background:#fff; min-height:330px; position:relative; }
+.cards.c4 .card { min-height:250px; }
+.card .num { position:absolute; right:16px; top:12px; color:#c9c9c9; font-family:var(--font-mono); font-size:18px; }
+.card .icon { width:44px; height:44px; object-fit:contain; margin-bottom:10px; }
+.card h2 { margin:6px 0 0; font-size:29px; font-weight:800; }
+.card .role { margin:10px 0 0; font-size:19px; line-height:1.45; color:#1a1a1a; }
+.card .judge { margin-top:14px; padding-top:10px; border-top:1px solid #c9c9c9; font-family:var(--font-mono); font-size:15px; color:#E65100; line-height:1.4; }
+.steps { width:100%; display:flex; align-items:stretch; gap:0; }
+.step { flex:1; border:2px solid #1a1a1a; padding:22px 20px; margin-right:26px; position:relative; min-height:350px; }
+.step:last-child { margin-right:0; }
+.step:after { content:"→"; position:absolute; right:-24px; top:50%; transform:translateY(-50%); font-size:24px; color:#E65100; font-weight:900; }
+.step:last-child:after { content:""; }
+.step .n { font-family:var(--font-mono); font-size:20px; font-weight:700; color:#E65100; }
+.step h2 { margin:8px 0 0; font-size:26px; font-weight:800; line-height:1.25; }
+.step .detail { margin:10px 0 0; font-size:18px; line-height:1.45; color:#1a1a1a; }
+.step .judge { margin-top:14px; padding-top:10px; border-top:1px solid #c9c9c9; font-family:var(--font-mono); font-size:14px; color:#585858; line-height:1.4; }
+.compare { width:100%; display:grid; grid-template-columns:1fr 1fr; gap:28px; }
+.col { border:2px solid #1a1a1a; padding:26px 28px; min-height:400px; }
+.col .tag { display:inline-block; background:#E65100; color:#fff; font-family:var(--font-mono); font-size:15px; padding:2px 8px; }
+.col h2 { margin:12px 0 0; font-size:30px; font-weight:800; }
+.col ul { margin:16px 0 0; padding-left:22px; }
+.col li { font-size:20px; line-height:1.55; margin:8px 0; font-family:var(--font-mono); }
+.em { width:100%; display:grid; grid-template-columns:660px 1fr; gap:30px; }
+.entity { border:2px solid #1a1a1a; padding:18px 20px; }
+.entity .tag2 { display:inline-block; background:#1a1a1a; color:#fff; font-family:var(--font-mono); font-size:13px; padding:2px 7px; letter-spacing:1px; }
+.entity h2 { margin:8px 0 4px; font-size:22px; }
+.entity .egrid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px; }
+.ecard { border:1px solid #1a1a1a; padding:10px 12px; min-height:104px; position:relative; }
+.ecard .n { position:absolute; right:8px; top:6px; color:#E65100; font-family:var(--font-mono); font-size:13px; }
+.ecard .icon2 { width:26px; height:26px; object-fit:contain; vertical-align:middle; margin-right:6px; }
+.ecard .name { display:inline; font-size:17px; font-weight:800; }
+.ecard p { margin:6px 0 0; font-size:13px; line-height:1.4; }
+.ecard .j { margin-top:6px; font-family:var(--font-mono); font-size:11px; color:#E65100; }
+.metaphor { border:2px solid #1a1a1a; padding:14px 16px; }
+.metaphor .tag2 { display:inline-block; background:#E65100; color:#fff; font-family:var(--font-mono); font-size:13px; padding:2px 7px; letter-spacing:1px; }
+.metaphor h2 { margin:8px 0 8px; font-size:22px; }
+.metaphor .art { width:100%; height:340px; object-fit:contain; display:block; background:#fff; }
+.mapping { margin-top:10px; }
+.mapping .row { display:flex; gap:8px; margin:5px 0; align-items:flex-start; }
+.mapping .num { flex:0 0 auto; color:#E65100; font-family:var(--font-mono); font-weight:700; font-size:15px; }
+.mapping .txt { font-size:14px; line-height:1.35; }
+.table { width:100%; border:2px solid #1a1a1a; display:flex; flex-direction:column; justify-content:center; }
+.table .tr { display:grid; grid-template-columns:1.1fr 1fr 1fr; border-bottom:1px solid #1a1a1a; }
+.table .tr:last-child { border-bottom:0; }
+.table .th { background:#1a1a1a; color:#fff; font-family:var(--font-mono); font-size:17px; }
+.table .td { padding:24px 24px; font-size:24px; line-height:1.4; }
+.table .td.mono { font-family:var(--font-mono); font-size:18px; }
+.foot { position:absolute; left:72px; right:72px; bottom:56px; border-top:2px solid #1a1a1a; padding-top:16px; display:flex; align-items:flex-start; gap:16px; }
+.tag { flex:0 0 auto; background:#E65100; color:#fff; font-family:var(--font-mono); font-size:18px; font-weight:700; padding:3px 10px; }
+.foot p { margin:0; font-size:21px; line-height:1.45; }
+</style></head>
+<body><div class="poster" data-canvas-width="1600" data-canvas-height="1000">
+<div class="head" data-layer-id="head"><p class="eyebrow">第 2 页 · L1 造 · 数据</p>
+<h1>先把仓库搭好</h1><p class="sub">左边是 5 个分区与 115 行货，右边是仓库货架与叉车：一条命令把货入库</p><div class="rule"></div></div>
+<main class="body"><div class="em"><div class="entity"><span class="tag2">实体 · 真实对象</span><h2 data-layer-id="entity-title">在本项目里，它们各自负责什么</h2><div class="egrid"><div class="ecard" data-layer-id="entity-1"><span class="n">01</span><span class="name">fixtures/dw.sql</span><p>建库、建表、灌数据全写在一个文件里</p><p class="j">docker exec -i … &lt; fixtures/dw.sql</p></div><div class="ecard" data-layer-id="entity-2"><span class="n">02</span><span class="name">5 张表</span><p>dim_customer / dim_date / dim_product / dim_region / fact_order</p><p class="j">5 个分区</p></div><div class="ecard" data-layer-id="entity-3"><span class="n">03</span><span class="name">115 行</span><p>演示数据，够把问数链路跑通</p><p class="j">SELECT COUNT(*) FROM fact_order</p></div></div></div><div class="metaphor"><span class="tag2" data-layer-id="metaphor-tag">喻体 · 比喻场景</span><h2 data-layer-id="metaphor-title">喻体 · 仓库货架与叉车</h2><img class="art" data-layer-id="metaphor-art" src="art/metaphor.jpeg" alt=""><div class="mapping"><div class="row" data-layer-id="mapping-1"><span class="num">①</span><span class="txt">货架分区 → 5 张表，各放各的货</span></div><div class="row" data-layer-id="mapping-2"><span class="num">②</span><span class="txt">叉车搬货 → 一条命令把 dw.sql 灌进容器</span></div><div class="row" data-layer-id="mapping-3"><span class="num">③</span><span class="txt">入库后盘点 → 你自己数出 5 张表 / 115 行 / 华北 19</span></div></div></div></div></main>
+<div class="foot" data-layer-id="footer"><span class="tag">判据</span><p>SELECT COUNT(*) FROM fact_order → 115；华北 19</p></div>
+</div></body></html>

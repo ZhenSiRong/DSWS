@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>第 16 页 · 审校验：错单要在执行前被拦下 · 阅读版</title>
+<link rel="stylesheet" href="../../assets/lesson.css">
+<link rel="stylesheet" href="../../assets/read.css">
+</head>
+<body>
+<main class="page">
+<p class="kicker">练本 · 阅读版（md 正典派生，改内容请改 manual/page-16.md）</p>
+<h1>第 16 页 · 审校验：错单要在执行前被拦下</h1>
+<blockquote>
+<p><strong>城市坐标 · L3 智慧城市 · 质检口</strong>｜错单在进仓库之前就被拦下：校验挡在执行前面。</p>
+<p>前置：本页一条服务都不用——<code>pytest</code>、失败矩阵、20 条语料全在离线跑，不需要 MySQL/ES/Qdrant、不需要 <code>.env</code>、也不需要模型 key。命令都在仓库根目录、同一个终端里整段连续执行。</p>
+</blockquote>
+<h2>这一页构建什么</h2>
+<p>校验是<strong>执行前的门</strong>，不是出错后的日志：用 20 条带 <code>expect_code</code> 的错单语料 + 16 个错误码 + 9 个场景（6 类失败 + 3 条对照：happy / slow / corrected），审“每条错单到底被哪个码、在哪一步拦下”；再拆掉一条校验规则，看语料从“拦”变“放”。</p>
+<p><img alt="第 16 页 · 错单要在执行前被拦下：左边是错单与错误码，右边是质检台：检查表在手，坏箱子不放过" src="../images/page-16-visual.webp" /></p>
+<h2>猜一猜</h2>
+<ol>
+<li>20 条错单语料一共用了几种错误码——16 种（错误码表的总数）、10 种、还是 5 种？</li>
+<li>拆掉“列存在”这一条校验，20 条里会漏几条？那条错 SQL 会被真的执行到数据库上吗？</li>
+</ol>
+<h2>动手</h2>
+<p><strong>第 1 步：拍快照。</strong> 拆一刀要改校验代码，先留退路（同名快照会被拒，重做本页就换个名字）；回显 <code>已保存快照 "p16-before"：169 个文件。</code>（数字因工作区而异）：</p>
+<!-- verify: p16-lab-save -->
+
+<pre><code class="language-bash">scripts/lab save p16-before
+</code></pre>
+<p><strong>第 2 步：先验规则本身。</strong> 26 条测试 = 静态校验正例 + 每个违规码至少一条负例，秒级：</p>
+<!-- verify: p16-pytest-guard -->
+
+<pre><code class="language-bash">backend/.venv/bin/python -m pytest backend/tests/generate/test_guard.py -q
+</code></pre>
+<p><strong>第 3 步：跑失败矩阵 + 16 码表。</strong> 9 个场景各演一遍结局（码/类别/失败步骤要与 <code>fixtures/failures/scenarios.yaml</code> 一致）；<strong>不需要 MySQL / LLM</strong>——只替换了模型与数据库，校验是真的；括号是子 shell，跑完你还在仓库根目录：</p>
+<!-- verify: p16-failures-check -->
+
+<pre><code class="language-bash">(cd backend &amp;&amp; .venv/bin/python -m app.scripts.failures --check)
+</code></pre>
+<p><strong>第 4 步：验 20 条语料的期望码，并数一遍码的分布。</strong> <code>eval/probe_correction.py</code> 把每条错 SQL 真过一遍校验栈，检查“期望码 = 实际码”；<code>PYTHONPATH=backend</code> 只给这条命令临时加找包路径，不改任何文件。第二条管道从 20 行 JSON 里抠出 <code>expect_code</code> 再计数：</p>
+<!-- verify: p16-probe-corpus -->
+
+<pre><code class="language-bash">PYTHONPATH=backend backend/.venv/bin/python eval/probe_correction.py | tail -1
+grep -o '&quot;expect_code&quot;: &quot;[A-Z_]*&quot;' eval/correction.jsonl | awk -F'&quot;' '{print $4}' | sort | uniq -c | sort -rn
+</code></pre>
+<p><strong>注意：</strong> <code>eval/probe_correction.py</code> 里写的旧用法（<code>cd backend &amp;&amp; .venv/bin/python ../eval/probe_correction.py</code>）会报 <code>No module named 'app'</code>——按上面 <code>PYTHONPATH=backend ...</code> 这条跑就是对的，报错不是环境坏了。</p>
+<h2>你应该看到</h2>
+<p>三条判据的输出（依次是第 2 / 3 / 4 步；块里 <code>#</code> 开头的行是标注，不是程序输出）：</p>
+<!-- verify-out: p16-pytest-guard p16-failures-check p16-probe-corpus -->
+
+<pre><code class="language-text"># 第 2 步（秒数随机器变，看 passed/failed 就行）
+26 passed in 0.41s
+# 第 3 步（节选）
+  sql_unknown_column   期望 SQL_UNKNOWN_COLUMN   实际 SQL_UNKNOWN_COLUMN
+  错误码表：16 个码，路线图要求的 7 个全在
+S6 PASS
+# 第 4 步（分布实际 10 行，留前 6 行；其余 4 个码各 1 条：SQL_MULTIPLE_STATEMENTS / SQL_MISSING_ORDER_BY / SQL_MISSING_LIMIT / SQL_EMPTY）
+{&quot;total&quot;: 20, &quot;mismatch&quot;: 0}
+      5 SQL_REJECTED
+      3 SQL_UNKNOWN_COLUMN
+      2 SQL_UNKNOWN_TABLE
+      2 SQL_SYNTAX
+      2 SQL_NOT_READ_ONLY
+      2 SQL_CONSTANT_PROJECTION
+</code></pre>
+<p><img alt="第 16 页 · 三条离线判据：26 passed + 失败矩阵 S6 PASS + 语料对账 {&quot;total&quot;: 20, &quot;mismatch&quot;: 0}" src="../images/page-16-guard.png" /></p>
+<h2>对账</h2>
+<ul>
+<li><strong>猜 1：10 种，不是 16。</strong><ul>
+<li>16 是 <code>contracts/errors.yaml</code> 里错误码的总数；20 条语料只覆盖<strong>校验这一步能发出的</strong> 10 个码——9 个静态校验码 + 1 个策略通道码 <code>SQL_REJECTED</code>。</li>
+<li>剩下 6 个（<code>EMPTY_RESULT</code> / <code>LLM_REFUSAL</code> / <code>TIMEOUT</code> / <code>CANCELLED</code> / <code>SQL_EXECUTION_ERROR</code> / <code>INTERNAL_ERROR</code>）来自执行后、模型、取消和兜底，</li>
+<li>不在“校验拦下来”的名单里，所以本页不拿它们当判据。</li>
+</ul>
+</li>
+<li><strong>猜 2：3 条（c01/c02/c07），且错 SQL 不会被执行。</strong><ul>
+<li>拆掉列存在校验后，<code>probe</code> 从 <code>mismatch: 0</code> 变 <code>3</code>：这三条的 guard 报告都变成 ok=True（<code>actual []</code>）。</li>
+<li>但失败矩阵里 <code>sql_unknown_column</code> 的结局码不是“执行报错”，而是 <code>SQL_REJECTED</code>——第二道关（安全策略的列白名单）接住了它，仍停在执行前。</li>
+<li><strong>这一刀红的是“精确码”，不是“执行”</strong>：<code>SQL_UNKNOWN_COLUMN</code>（可重试）退化成 <code>SQL_REJECTED</code>（不可重试），第 17 页的自动校正闭环连启动的机会都没有。</li>
+<li>第二道关也兜不住的规则（如常量投影，策略不查）拆了就会被放行到执行——那是 L4 第 19 页“审策略”的话题，本页不混。</li>
+</ul>
+</li>
+<li><strong>为什么“执行前拦”比“执行报错”好：</strong><ul>
+<li>执行前，错 SQL 没碰过数据库——</li>
+<li>没有慢查询、没有副作用风险，错误信息是契约里的中文码（不是 MySQL 方言），红叉落在 <code>validate_sql</code> 步骤，<code>class</code> 决定界面画红框/空态/取消，<code>retryable</code> 决定要不要自动修一次。</li>
+<li>执行报错则要真连库跑一遍，到那时 SQL 已经被“认为合格”，能给的只剩 <code>SQL_EXECUTION_ERROR</code>——名字丢了，位置也丢了。</li>
+</ul>
+</li>
+<li><strong>错误码是契约，不是文档装饰：</strong> <code>contracts/errors.yaml</code> 是唯一事实源；<code>backend/tests/agent/test_error_alignment.py</code> 查五张表（错误码表 / <code>guard.py</code> 发出的码 / 提示词 / 策略契约 / 执行器）是不是同一批字面量，连“最多校正 1 次”这类参数也不许在代码里再写一遍。加一个码不入表、改名不同步，测试立刻红。</li>
+<li><strong>20 条语料 + 16 码 = 可复核判据：</strong> 每条语料自带 <code>expect_code</code>，<code>probe</code> 用真校验栈重跑并给出 <code>{"total": 20, "mismatch": 0}</code>——先验尺子，再量东西；9 个场景再验整条流水线的结局（码/类别/失败步骤），<code>S6 PASS</code>。换个人重跑，红绿一样。</li>
+</ul>
+<blockquote>
+<p><strong>你现在拥有</strong>：一道执行前的门——每条错单都有名字（码）、有位置（失败步骤）、有处置（能不能重试）；判据盯的是“码对不对”，不是“有没有红叉”。</p>
+</blockquote>
+<h2>拆一刀</h2>
+<ol>
+<li>
+<p>打开 <code>backend/app/generate/guard.py</code>，找到第 3 条「表与列存在」里的循环（搜 <code>for column in tree.find_all</code>），把 <code>for column in tree.find_all(exp.Column):</code> 改写成 <code>for column in []:  # 拆一刀：关掉列存在校验</code>——<strong>只改 <code>guard.py</code> 这一处</strong>，缩进别动；</p>
+<ul>
+<li><code>backend/app/security/policy.py:460</code> 有一模一样的 <code>for column in tree.find_all(exp.Column):</code>，</li>
+<li>别用 IDE 全局替换把它也拆了（两处一起拆会把第二道关也关掉，错 SQL 被放行到执行，实验结论就失真了）。</li>
+</ul>
+</li>
+<li>
+<p>重跑第 2–4 步里的三条判据（<code>1 failed</code> 的是 <code>test_unknown_column_is_rejected</code>；秒数随机器变，看 passed/failed 就行；下面只留判红的那几行）：</p>
+</li>
+</ol>
+<!-- verify: p16-ablation-commands -->
+
+<pre><code class="language-bash">backend/.venv/bin/python -m pytest backend/tests/generate/test_guard.py -q
+(cd backend &amp;&amp; .venv/bin/python -m app.scripts.failures --check)
+PYTHONPATH=backend backend/.venv/bin/python eval/probe_correction.py | grep -E &quot;FAIL|total&quot;
+</code></pre>
+<pre><code class="language-text">1 failed, 25 passed in 0.32s
+FAIL: 1 项不符合预期
+  - sql_unknown_column: 错误码不符（期望 SQL_UNKNOWN_COLUMN，实际 SQL_REJECTED）
+FAIL c01 expected SQL_UNKNOWN_COLUMN actual []
+FAIL c02 expected SQL_UNKNOWN_COLUMN actual []
+FAIL c07 expected SQL_UNKNOWN_COLUMN actual []
+{&quot;total&quot;: 20, &quot;mismatch&quot;: 3}
+</code></pre>
+<p>三条命令的退出码都是 1：前两条是判据在报红，第三条是 probe 有 3 条 mismatch——都是预期，不是脚本崩了；别用 <code>set -e</code> 或遇错即停的 runner，三条都要跑完再看输出。</p>
+<ol start="3">
+<li>还原并回绿：</li>
+</ol>
+<!-- verify: p16-lab-reset-restore -->
+
+<pre><code class="language-bash">scripts/lab reset p16-before --yes
+(cd backend &amp;&amp; .venv/bin/python -m app.scripts.failures --check | tail -1)
+PYTHONPATH=backend backend/.venv/bin/python eval/probe_correction.py | tail -1
+</code></pre>
+<pre><code class="language-text"># 第 3 步 reset（节选，末行是；真实输出还有恢复计划、pre-reset-&lt;时间戳&gt; 安全快照、覆盖明细，时间戳每次不同）
+已先拍安全快照 &quot;pre-reset-&lt;时间戳&gt;&quot;（恢复前的现场，169 个文件）。
+现在工作区与快照 &quot;p16-before&quot; 完全一致。
+# 后两条命令各取末行
+S6 PASS
+{&quot;total&quot;: 20, &quot;mismatch&quot;: 0}
+</code></pre>
+<p>结论：<strong>一条规则 = 一类错单的入口；拆掉它，判据在三处同时红（pytest / 失败矩阵 / 语料），错单却没消失</strong>——只是从“校验步骤的精确码”退化成“第二道关的粗码”。所以审校验要看“码”：红叉会骗人，码不会。</p>
+</main>
+</body>
+</html>

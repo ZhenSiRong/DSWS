@@ -1,0 +1,29 @@
+# 第 1 页 · 创建 MySQL 容器（空库） —— 教材可跟随性契约（static）
+#
+# schema 与规则见 manual/verify/README.md。
+# 本页命令全部依赖 Docker 容器 / 本机 3307 端口 / 真 MySQL，无法在 CI 离线执行，
+# 因此 coverage: static：不执行任何块，只查页面引用的文件还在、关键锚点仍命中。
+page: page-01
+title: 第 1 页 · 创建 MySQL 容器（空库）
+coverage: static
+
+static:
+  paths:
+    # 第 1 条命令最后一行从这里读 MYSQL_IMAGE；第 2 页的 dw.sql 从 fixtures 导入
+    - .env.example
+    - fixtures/dw.sql
+    - fixtures
+    # 页面指定的“仓库根目录”地标
+    - backend
+    # 页面图片（渲染后必须还能找到）
+    - manual/images/page-01-visual.webp
+    - manual/images/page-01-mysql-tables.png
+  symbols:
+    # 改键名 → 页面命令静默传空；改 tag → 页面“8.0.x”输出承诺失效
+    - {file: .env.example, pattern: '^MYSQL_IMAGE=.*mysql:8\.0$'}
+    # 删掉这个反忽略 → .env.* 会把 .env.example 一起忽略，新克隆读不到模板
+    - {file: .gitignore, pattern: '^!\.env\.example$'}
+    # 第 2 页导入后给 didilili 补 dw 库权限，页面专门解释过这句
+    - {file: fixtures/dw.sql, pattern: '^GRANT ALL PRIVILEGES ON dw\.\* TO ''didilili''@''%'';$'}
+    # dw 库的定义来源；页面说“这一页没有 dw”，第 2 页导入的正是它
+    - {file: fixtures/dw.sql, pattern: '^CREATE DATABASE IF NOT EXISTS dw\b'}

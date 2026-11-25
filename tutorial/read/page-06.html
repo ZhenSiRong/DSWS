@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>第 6 页 · 照契约生成那条带 JOIN 的 SQL · 阅读版</title>
+<link rel="stylesheet" href="../../assets/lesson.css">
+<link rel="stylesheet" href="../../assets/read.css">
+</head>
+<body>
+<main class="page">
+<p class="kicker">练本 · 阅读版（md 正典派生，改内容请改 manual/page-06.md）</p>
+<h1>第 6 页 · 照契约生成那条带 JOIN 的 SQL</h1>
+<blockquote>
+<p><strong>城市坐标 · P6 办事指南与规则室（交付物 ⑧）</strong>｜照办事指南（契约）把两把钥匙拼成一张取货单（SQL），先只写在纸上。</p>
+<p>前置：第 0 页备好环境；本页接第 5 页留下的 lab/app.py 与 8000 端口的服务。</p>
+</blockquote>
+<h2>这一页构建什么</h2>
+<p><strong>两样东西</strong>：一张<strong>契约字典</strong> <code>CONTRACT</code>（把第 1、2 页 MySQL 里的表、列、指标口径写成 Python 字典），和函数 <code>build_sql(keywords)</code>——它照着契约，把第 5 页抽出的 <code>["华北","销售额"]</code> 拼成一条带 <code>JOIN</code> 的 <code>SELECT</code>。</p>
+<p>这一页<strong>只 print，不执行</strong>。</p>
+<p><img alt="第 6 页 · 照契约生成那条带 JOIN 的 SQL：左边是契约与生成函数，右边是乐高拼装：两块积木按接口拼成成品" src="../images/page-06-visual.webp" /></p>
+<h2>猜一猜</h2>
+<p>动手前写下答案：拼出来的 SQL 会 <code>JOIN</code> 哪两张表？<code>WHERE</code> 用的是 <code>dim_region</code> 的哪一列？<code>WHERE</code> 那行等号的右边会是什么？</p>
+<h2>动手</h2>
+<p><strong>要改的文件</strong>是 <code>lab/app.py</code>。改完先按 <strong>Ctrl+S 保存</strong>再跑——本页不用重启终端 1 的服务。</p>
+<p><strong>不保存的症状</strong>：<code>python -m lab.app</code> 每次现读文件，不保存跑的还是第 5 页的旧代码（症状见「对账」）。</p>
+<p>下面这段共 24 行，<strong>分两步放</strong>：<code>CONTRACT</code> 和 <code>build_sql</code> 插在文件中间，剩下的 4 行（两个空行 + <code>__main__</code> 入口）追加到文件最末尾。</p>
+<p><strong>别整段一起插</strong>：</p>
+<pre><code class="language-python">CONTRACT = {
+    &quot;tables&quot;: {
+        &quot;fact_order&quot;: [&quot;region_id&quot;, &quot;order_amount&quot;, &quot;order_id&quot;],
+        &quot;dim_region&quot;: [&quot;region_id&quot;, &quot;region_name&quot;],
+    },
+    &quot;metrics&quot;: {&quot;销售额&quot;: &quot;SUM(fact_order.order_amount)&quot;,
+                &quot;订单量&quot;: &quot;COUNT(DISTINCT fact_order.order_id)&quot;},
+    &quot;region_values&quot;: [&quot;华北&quot;, &quot;华东&quot;, &quot;华南&quot;, &quot;西南&quot;, &quot;华中&quot;],
+}
+
+
+def build_sql(keywords: list[str]) -&gt; str:
+    region = next(k for k in keywords if k in CONTRACT[&quot;region_values&quot;])
+    metric = next(k for k in keywords if k in CONTRACT[&quot;metrics&quot;])
+    sql = f&quot;&quot;&quot;SELECT dim_region.region_name, {CONTRACT['metrics'][metric]} AS sales
+FROM fact_order
+JOIN dim_region ON fact_order.region_id = dim_region.region_id
+WHERE dim_region.region_name = '{region}'
+GROUP BY dim_region.region_name&quot;&quot;&quot;
+    return sql
+
+
+if __name__ == &quot;__main__&quot;:
+    print(build_sql(extract_keywords(&quot;华北销售额&quot;)))
+</code></pre>
+<p><strong>第 1 步：把前 20 行插中间。</strong> 从 <code>CONTRACT = {</code> 到 <code>build_sql</code> 的 <code>return sql</code>，共 20 行（中间的空行也算），插到 <code>extract_keywords</code> 函数下面、<code>@app.get("/health")</code> 上面。</p>
+<p><strong>第 2 步：把剩下的 4 行追加末尾。</strong> 就是 <code>return sql</code> 后面那两个空行，加上 <code>if __name__ == "__main__":</code> 和它下面缩进的 <code>print(...)</code>，共 4 行。</p>
+<p><strong>放哪</strong>：追加到 <code>lab/app.py</code> 的最末尾，也就是 <code>@app.post("/api/query")</code> 函数之后，让它成为全文件的最后一个块。</p>
+<p><code>if</code> 和 <code>print</code> 这 2 行是程序的入口，故意放最后：<code>uvicorn</code> 导入模块时不执行，只有 <code>python -m lab.app</code> 才执行。</p>
+<p>然后在仓库根目录跑（<strong>不用起服务</strong>，终端 1 那个服务开着也不影响）：</p>
+<pre><code class="language-bash">backend/.venv/bin/python -m lab.app
+</code></pre>
+<p><strong>对照原文件</strong>：<code>CONTRACT</code> 是 <code>contracts/schema.contract.yaml</code> 的浓缩版，你可以打开原文件对照。</p>
+<p><strong>三处对应</strong>：<code>fact_order.region_id</code> 指向 <code>dim_region.region_id</code>（外键），<code>销售额</code> 的口径是 <code>SUM(fact_order.order_amount)</code>，<code>华北</code> 是 <code>dim_region.region_name</code> 的一个取值。</p>
+<h2>你应该看到</h2>
+<pre><code>SELECT dim_region.region_name, SUM(fact_order.order_amount) AS sales
+FROM fact_order
+JOIN dim_region ON fact_order.region_id = dim_region.region_id
+WHERE dim_region.region_name = '华北'
+GROUP BY dim_region.region_name
+</code></pre>
+<p><img alt="第 6 页 · 拼出 SQL 的真实输出" src="../images/page-06-build-sql.png" /></p>
+<h2>对账</h2>
+<ul>
+<li><strong>为什么 JOIN 这两张表？</strong> 金额 <code>order_amount</code> 在 <code>fact_order</code>，地区名 <code>region_name</code> 在 <code>dim_region</code>，而“华北”这个值只存在后者。</li>
+<li><strong>必须连起来</strong>：要把“华北的金额”加出来，必须靠 <code>region_id</code> 把两张表连起来，否则 <code>WHERE dim_region.region_name = '华北'</code> 无从下手。</li>
+<li><strong><code>WHERE</code> 用 <code>dim_region.region_name</code>，不是 <code>province</code></strong>：<code>province</code> 里存的是“北京市”，而“华北”是大区名，在 <code>region_name</code> 列。用错列，查出来会是空的。</li>
+<li><strong>等号右边</strong>：<code>'华北'</code> 就是 <code>build_sql</code> 里 <code>region</code> 变量的值，来自第 5 页抽出的关键词。</li>
+<li>SQL 是<strong>照契约拼</strong>的，不是让 AI 直接写的：表名、列名、指标公式都能在 <code>CONTRACT</code> 里逐字对上，错了你能查出来。</li>
+<li><strong>只 print 不执行</strong>：<code>print</code> 出来说明拼接成功；这条 SQL 到第 7 页才交给数据库执行。</li>
+<li><strong>服务没起也正常</strong>：<code>print</code> 在 <code>if __name__ == "__main__":</code> 里，只有命令行直接运行这个文件时才执行；uvicorn 导入 <code>lab.app</code> 时不会执行它。</li>
+<li><strong>输出 0 字节 = 没保存</strong>：<code>python -m lab.app</code> 跑完退出码 0、屏幕上一个字都没有，多半是 <code>lab/app.py</code> 还没存盘——跑的是第 5 页那份没有 <code>__main__</code> 块的旧文件（<code>echo $?</code> 也是 0，看不出错）。按 Ctrl+S 保存再跑。</li>
+</ul>
+<blockquote>
+<p><strong>你现在拥有</strong>：一个照着契约把关键词拼成带 <code>JOIN</code> 的 <code>SELECT</code> 的 <code>build_sql</code>；它是第 7 页交给 MySQL 执行的那条命令，拼得对不对，在这一页就能逐字核对。</p>
+</blockquote>
+<h2>自己改一下</h2>
+<p>把最后一行里的 <code>"华北销售额"</code> 换成 <code>"华东销售额"</code>，再跑一次，看 5 行里哪一行变了。</p>
+<p>（参考：只有第 4 行 <code>WHERE dim_region.region_name = '华北'</code> 变成 <code>'华东'</code>，其余 4 行一字不变。）</p>
+<p>再换成 <code>"华南订单量"</code>：<code>SELECT</code> 那行里的 <code>SUM(fact_order.order_amount)</code> 变成了什么？</p>
+<p>（参考：变成 <code>COUNT(DISTINCT fact_order.order_id)</code>；同一行末尾的 <code>AS sales</code> 不变，<code>WHERE</code> 那行同时变成 <code>'华南'</code>。）</p>
+</main>
+</body>
+</html>

@@ -1,0 +1,19 @@
+# 第 9 页 · 给浏览器一个入口 —— 教材可跟随性契约（static）
+#
+# schema 与规则见 manual/verify/README.md。
+# 本页要真起 uvicorn、真跑 docker run、再用浏览器点「问一句」；
+# 命令依赖本地端口 / Docker 网卡 / 浏览器，无法在 CI 离线跑，
+# 故 coverage: static：只查页面引用的文件还在、关键符号还命中，不执行任何命令
+# （不跑 docker / uvicorn / curl / make）。页面也不挂 verify 块注解。
+page: page-09
+title: 第 9 页 · 给浏览器一个入口：nginx 反代 + 一个页面
+coverage: static
+
+static:
+  paths:
+    - .env.example                  # 第 3 步 docker run 最后一行从这里读 NGINX_IMAGE
+    - docker/nginx.conf             # 「对账」引用的仓库自带配置
+  symbols:
+    - {file: .env.example, pattern: '^NGINX_IMAGE=.*nginx:1\.27-alpine$'}
+    - {file: docker/nginx.conf, pattern: 'proxy_buffering off;'}
+    - {file: docker/nginx.conf, pattern: 'set \$backend_upstream http://backend:8100;'}

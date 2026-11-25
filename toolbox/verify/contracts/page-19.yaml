@@ -1,0 +1,96 @@
+# 第 19 页 · 守策略 —— 教材可跟随性契约（T0 / T1）
+#
+# schema 与规则见 manual/verify/README.md。
+# 要点：每个 ```bash 块在页面里用 <!-- verify: <marker> --> 注解绑定到下面的块；
+#       cmd 必须与页面块内容一致（归一化后），任何一边改了另一边没改 → T0 FAIL。
+#       offline 块由 T1 真执行并断言关键行；manual 块只做同步校验、不执行。
+page: page-19
+title: 第 19 页 · 守策略：36 条注入全拒、11 条正常零误杀
+
+blocks:
+  # ---- 动手 第 1 步：拍快照（写 .lab 快照，有副作用）----
+  - id: p19-lab-save
+    marker: p19-lab-save
+    kind: manual
+    reason: 会往 .lab/snapshots/ 写白名单文件快照，且同名快照会被拒绝；有副作用，不能无人值守重复执行
+    cmd: |
+      scripts/lab save p19-before
+
+  # ---- 动手 第 2 步：三段离线门禁 36/36 + 11/11 + 8/8（离线，秒级）----
+  - id: p19-security-check
+    marker: p19-security-check
+    kind: offline
+    cmd: |
+      (cd backend && .venv/bin/python -m app.scripts.security --check)
+    expect:
+      exit: 0
+      contains:
+        - "注入语料：36/36 条按预期拒绝"
+        - "零误杀语料：11/11 条放行"
+        - "S5 PASS"
+      regex: []
+    page_contains:
+      - "注入语料：36/36 条按预期拒绝"
+      - "零误杀语料：11/11 条放行"
+      - "S5 PASS"
+    timeout_sec: 60
+
+  # ---- 动手 第 3 步：判定表按三类构造过滤（离线，秒级）----
+  - id: p19-security-corpus
+    marker: p19-security-corpus
+    kind: offline
+    cmd: |
+      (cd backend && PYTHONUNBUFFERED=1 .venv/bin/python -m app.scripts.security --corpus) 2>&1 | grep -E "multi_statement|executable_comment|union|语料："
+    expect:
+      exit: 0
+      contains:
+        - "| multi_statement_drop | SQL_MULTIPLE_STATEMENTS | SQL_MULTIPLE_STATEMENTS | PASS |"
+        - "| union_all_exfiltration | SQL_FORBIDDEN_CONSTRUCT | SQL_FORBIDDEN_CONSTRUCT | PASS |"
+        - "语料：47 条，失败 0 条"
+      regex: []
+    page_contains:
+      - "| multi_statement_drop | SQL_MULTIPLE_STATEMENTS | SQL_MULTIPLE_STATEMENTS | PASS |"
+      - "| union_all_exfiltration | SQL_FORBIDDEN_CONSTRUCT | SQL_FORBIDDEN_CONSTRUCT | PASS |"
+      - "语料：47 条，失败 0 条"
+    timeout_sec: 60
+
+  # ---- 动手 第 4 步（可选）：make stage5 跑全量后端测试（要 uv、耗时长、可能动 lock）----
+  - id: p19-make-stage5
+    marker: p19-make-stage5
+    kind: manual
+    reason: 要本机已装 uv 并解析依赖，会跑安全测试 + 全后端全量 pytest（843 条，本页实测约 44 秒），且 `uv run` 有改写 backend/uv.lock 的风险（页内专门留了 lock 变脏的还原步骤）；T1 无人值守环境没有 uv，耗时也超出单块 60s 预算
+    cmd: |
+      make stage5
+
+  # ---- 拆一刀：先改 contracts/sql.policy.yaml 再跑（期望值依赖本机改动）----
+  - id: p19-ablation-check
+    marker: p19-ablation-check
+    kind: manual
+    reason: 期望输出（34/36 条按预期拒绝、FAIL 2 项、gate=1）要先把 contracts/sql.policy.yaml 的 forbid_set_operations 改成 false 才出现；CI 的干净仓库跑出的是 36/36 + S5 PASS，复现不出这个消融态
+    cmd: |
+      (cd backend && PYTHONUNBUFFERED=1 .venv/bin/python -m app.scripts.security --check) 2>&1 | tail -8; echo "gate=${PIPESTATUS[0]}"
+
+  # ---- 拆一刀后还原：lab reset 是破坏性回滚（依赖第 1 步快照）----
+  - id: p19-lab-reset
+    marker: p19-lab-reset
+    kind: manual
+    reason: scripts/lab reset 会按快照回滚工作区文件（破坏性，依赖第 1 步的快照名），并且会先写一张 pre-reset-<时间戳> 安全快照到 .lab/；不能作为无人值守验收动作
+    cmd: |
+      scripts/lab reset p19-before --yes
+      (cd backend && .venv/bin/python -m app.scripts.security --check | tail -1)
+
+static:
+  paths:
+    - backend/app/scripts/security.py
+    - backend/app/security/corpus.py
+    - backend/tests/security
+    - backend/tests/generate/baseline.yaml
+    - contracts/sql.policy.yaml
+    - fixtures/injection/sql-injection.yaml
+  symbols:
+    - {file: backend/app/scripts/security.py, pattern: "S5 PASS"}
+    - {file: backend/app/security/corpus.py, pattern: "def load_corpus"}
+    - {file: backend/tests/generate/baseline.yaml, pattern: "expect: sql"}
+    - {file: contracts/sql.policy.yaml, pattern: "forbid_set_operations: true"}
+    - {file: contracts/sql.policy.yaml, pattern: "forbid_executable_comments: true"}
+    - {file: fixtures/injection/sql-injection.yaml, pattern: "union_all_exfiltration"}

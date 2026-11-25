@@ -1,0 +1,41 @@
+{
+  "eyebrow": "第 14 页 · L3 审 · 检索",
+  "title": "召回空了的答案，你凭什么信",
+  "subtitle": "左边是黄金集与检索存储，右边是图书馆：书架停了，索引卡还能兜底",
+  "layout": "entity_metaphor",
+  "left_cards": [
+    {
+      "name": "20 题黄金集",
+      "role": "三条判据：该命中/不该出现/规模上限",
+      "judge": "18 passed, 23 skipped",
+      "icon": "elasticsearch"
+    },
+    {
+      "name": "ES / Qdrant",
+      "role": "检索存储，给上下文补货",
+      "judge": "停掉它"
+    },
+    {
+      "name": "契约上下文",
+      "role": "停检索后仍能靠契约离线裁剪出数",
+      "judge": "41099.5 照常返回"
+    }
+  ],
+  "metaphor_title": "喻体 · 图书馆",
+  "art": "art/metaphor.jpeg",
+  "mappings": [
+    {
+      "n": "①",
+      "label": "① 书架 → 检索存储"
+    },
+    {
+      "n": "②",
+      "label": "② 索引卡 → 契约上下文"
+    },
+    {
+      "n": "③",
+      "label": "③ 书架关了仍能借到书 → 检索没了，契约兜底仍出数"
+    }
+  ],
+  "footer": "检索是增强，契约才是底线"
+}

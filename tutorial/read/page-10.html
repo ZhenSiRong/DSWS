@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>第 10 页 · 换真数据：把演示数据换成甲方数据 · 阅读版</title>
+<link rel="stylesheet" href="../../assets/lesson.css">
+<link rel="stylesheet" href="../../assets/read.css">
+</head>
+<body>
+<main class="page">
+<p class="kicker">练本 · 阅读版（md 正典派生，改内容请改 manual/page-10.md）</p>
+<h1>第 10 页 · 换真数据：把演示数据换成甲方数据</h1>
+<blockquote>
+<p><strong>城市坐标 · L2 通水电网 · 换水源</strong>｜把临时水箱换成市政自来水：115 行演示数据整份换成甲方真数据。</p>
+<p>前置：第 0 页备好环境；本页接第 1、2 页的 <code>lab-mysql</code>（115 行演示数据），要改的 <code>contracts/schema.contract.yaml</code> 在仓库里现成就有。不用启动服务。</p>
+</blockquote>
+<h2>这一页构建什么</h2>
+<p>把 <code>lab-mysql</code> 里的 115 行演示数据整份换成甲方真数据（410 行），用 <code>fixtures/dw-real.checks.sql</code> 数出“不洗直接汇总”比正确口径多算 8,394.40，并撞见一件事：契约门禁（自动校验，过不了就不许发布）<code>--check</code> 根本不看库里这份数据。</p>
+<p><img alt="第 10 页 · 换真数据：把演示数据换成甲方数据：左边是两套数据与差额，右边是洗菜：先洗，再报数" src="../images/page-10-visual.webp" /></p>
+<h2>猜一猜</h2>
+<p>动手前写下答案：</p>
+<ol>
+<li>换完数据，<code>schema_contract --check</code> 会拦住这个变化（变红）吗？</li>
+<li>它到底在核对哪份数据——MySQL 里的 <code>dw</code> 库？</li>
+</ol>
+<h2>动手</h2>
+<p>以下命令都在仓库根目录执行（有 <code>fixtures/</code>、<code>backend/</code> 的那一层）：命令逐段复制粘贴即可，但<strong>第 5 步要手动打开 <code>contracts/schema.contract.yaml</code> 改一行并保存</strong>，不能只靠粘贴走完。</p>
+<p><strong>第 1 步：拍快照（口语常说“备份”；这里只备份文件）。</strong></p>
+<!-- verify: p10-lab-save -->
+
+<pre><code class="language-bash">scripts/lab save p10-before
+</code></pre>
+<p><strong>白名单</strong>：<code>lab</code> 只跟踪白名单文件（<code>contracts/</code>、<code>compose.yaml</code>、<code>lab/</code>、<code>backend/app/</code>、<code>backend/tests/</code>、<code>fixtures/</code>、<code>frontend/src/</code>）——快照含 <code>lab/</code>（<code>lab/app.py</code>、<code>lab/db.py</code> 都能回滚）。</p>
+<p><strong>但不含数据库</strong>：库里那 115 行它记不住，第 2 步换完数据后要靠本页末的拆一刀 3 手动重灌回来。</p>
+<p><strong>命名规则</strong>：名字只能用字母、数字、点、下划线、短横线，且<strong>必须以字母或数字开头</strong>、最多 64 字符；快照只读，同名 save 会被拒绝——复跑本页要换个名字（如 <code>p10-before-2</code>）。</p>
+<p><strong>第 2 步：换数据。</strong> 命令和第 2 页灌 <code>dw.sql</code> 同款，只换文件（唯一多出的是那句可省略的 <code>--default-character-set=utf8mb4</code>）：</p>
+<!-- verify: p10-load-real -->
+
+<pre><code class="language-bash">docker exec -i lab-mysql mysql -uroot -plabpass --default-character-set=utf8mb4 &lt; fixtures/dw-real.sql
+</code></pre>
+<p><strong>第二数据集</strong>：<code>dw-real.sql</code> 是和 <code>dw.sql</code> 同结构、同列名的第二数据集，里面自带 <code>CREATE DATABASE dw</code> 和每张表的 <code>DROP TABLE</code>，导入后 <code>dw</code> 的演示数据被整份替换。</p>
+<p><strong>中文不靠这个 flag</strong>：文件里有 <code>SET NAMES utf8mb4</code>，实测去掉 <code>--default-character-set=utf8mb4</code> 重灌，<code>华东区</code> 入库仍是正确的 UTF-8（HEX <code>E58D8EE4B89CE58CBA</code>）；flag 只是让客户端也统一用 UTF-8，可以省略。</p>
+<p><strong>静默导入</strong>：和灌 <code>dw.sql</code> 一样，除了密码 <code>Warning</code> 一行都不打印，数要从下一步查。</p>
+<p><strong>第 3 步：对账真数据。</strong> 这个文件把 7 类脏数据计数、清洗后对账表、原始装数一次跑完：</p>
+<!-- verify: p10-checks -->
+
+<pre><code class="language-bash">docker exec -i lab-mysql mysql -uroot -plabpass --default-character-set=utf8mb4 &lt; fixtures/dw-real.checks.sql
+</code></pre>
+<p><strong>第 4 步：跑门禁。</strong></p>
+<!-- verify: p10-schema-contract -->
+
+<pre><code class="language-bash">(cd backend &amp;&amp; .venv/bin/python -m app.schema_contract --check)
+</code></pre>
+<p>最外层的括号是<strong>子 shell</strong>：只在括号里切到 <code>backend/</code>，跑完你人还站在仓库根目录——所以后面的 <code>scripts/lab reset</code> 才找得到。</p>
+<p><strong>第 5 步：把契约里的期望值改成真值，再跑一次。</strong> 打开 <code>contracts/schema.contract.yaml</code>，顶部 <code>dataset:</code> 段的 <code>expected_fact_rows: 115</code> 改成 <code>410</code>（410 是第 3 步数出来的真行数）；<strong>先 Ctrl+S 保存</strong>，再重跑第 4 步。</p>
+<p><strong>只改 <code>expected_fact_rows</code> 这一行，别顺手全改</strong>：同段的 <code>date_range</code>、<code>total_amount</code>（还有 <code>total_quantity</code>）对的是 <code>fixtures/dw.sql</code> 那份旧快照，顺手改成“真值”只会多红——实测行数/日期域/总额 3 个字段一起改得到 <code>FAIL: 3</code>，不是本步要的 <code>FAIL: 1</code>。</p>
+<p><strong>没保存不红</strong>：没保存的话重跑还是绿——红不出来先回去看文件存没存。</p>
+<h2>你应该看到</h2>
+<p>第 4 步——换完真数据，门禁<strong>还是绿的</strong>，报的数还是演示集那套（节选）：</p>
+<!-- verify-out: p10-schema-contract -->
+
+<pre><code class="language-text">== 1/3 契约 ↔ DDL/数据 ==
+PASS: 5 张表 / 24 列 / 115 行 / GMV=279159.5 / 销量=622
+S1 PASS
+</code></pre>
+<p>第 5 步——只改契约、没换门禁的数据源，门禁<strong>红了</strong>：</p>
+<pre><code class="language-text">== 1/3 契约 ↔ DDL/数据 ==
+  [DATASET_ROW_COUNT] dataset.expected_fact_rows: 契约声明 410 行，fact_order 实际 115 行
+FAIL: 1 个契约问题
+</code></pre>
+<p>第 3 步的对账关键行（只摘关键行，中间省略的段落见文件本身；列间是 Tab。<strong>每段 SELECT 前先打一行表头</strong>：下面这行 <code>id dirty_class rows_hit</code> 就是 D1 的表头，<code>clean_rows clean_orders total_sales</code>、<code>naive_sum_amount</code> 两行同样是表头，不是数据行）：</p>
+<pre><code class="language-text">id  dirty_class rows_hit
+D1  order_amount 为 NULL 2
+D2  order_id 重复 2   1
+D3  region_name 带“区”后缀  2   华东区,华北区
+D4  region_id 孤儿行   1
+D5  未来日期行   1
+clean_rows  clean_orders    total_sales
+405 405 1136341.10
+D6  dim_region 同名(province)重复   1   1
+D7  金额带分（非整数金额） 191
+5   fact_order 原始行数 410
+naive_sum_amount
+1144735.50
+</code></pre>
+<p><img alt="第 10 页 · dw-real.checks.sql 全 37 行对账输出（D1–D7 计数、清洗后 405 行 / 1136341.10、naive 1144735.50）" src="../images/page-10-checks.png" />
+<img alt="第 10 页 · 门禁两屏对照：换真数据后仍绿 S1 PASS（115 行旧快照），expected_fact_rows 改 410 后红 FAIL: 1" src="../images/page-10-gate.png" /></p>
+<h2>对账</h2>
+<ul>
+<li>两个预测都错：<strong>换数据后门禁没红，它也不看 MySQL</strong>。<ul>
+<li><code>backend/app/schema_contract.py</code> 里 <code>DDL_PATH = REBUILD_ROOT / "fixtures" / "dw.sql"</code>，<code>load_ddl()</code> 把这份仓库文件读进<strong>内存 SQLite</strong> 再核对；</li>
+<li>文件头也写着“不需要 MySQL / Docker”。</li>
+<li><strong>第 4 步那一刻</strong>有三份数据在说话：运行库（<code>dw</code>，410 行真数据）、门禁快照（<code>fixtures/dw.sql</code>，115 行演示数据）、契约期望值（<code>expected_fact_rows: 115</code>）。</li>
+<li>门禁只读后两份，所以绿。第 5 步把契约期望值改成 410 只是<strong>探针</strong>：它立刻红（<code>FAIL: 1</code>），正好证明门禁不读运行库。</li>
+<li>只换运行库这一份，另外两份还在讲旧故事——<strong>门禁绿，不代表数据真</strong>。</li>
+</ul>
+</li>
+<li>真数据差在哪：不洗不筛直接 <code>SUM(order_amount)</code>（naive）= <code>1144735.50</code>，清洗后 = <code>1136341.10</code>，差 <strong>8,394.40</strong>。<ul>
+<li>这笔差只由三行脏数据组成，三笔金额在 <code>fixtures/dw-real.expected.json</code> 里各带一句可重跑的 SQL：D2 重复订单被同额算两次：+5197.40；</li>
+<li>D4 孤儿行（<code>region_id=R099</code>）连不到地区表：+1798.00；D5 未来单 2026-12-15（对账基准 2026-11-19）：+1399.00。</li>
+<li>5197.40 + 1798.00 + 1399.00 = 8394.40。</li>
+</ul>
+</li>
+<li>D1（2 行金额为 NULL）不改这个差额：<code>SUM</code> 本来就跳过 NULL。但它和其余几类一起决定行数：<code>410 − 1</code>（重复多出的 1 行）<code>− 2</code>（NULL）<code>− 1</code>（未来）<code>− 1</code>（孤儿）<code>= 405</code>，与第 3 步的 <code>clean_rows</code> 对上。</li>
+<li>D3 和 D6 不改 naive 总额，改的是“按地区出数”的口径：<code>region_name</code> 里混着 <code>华东区</code>/<code>华北区</code>，按契约枚举过滤会漏掉这两个区的单；<ul>
+<li><code>dim_region</code> 里北京市有两行，按 <code>province</code> 连接会被放大成 <code>496 行 / 1359154.30</code>（第 3 步的 <code>wrong_join</code> 两行）。</li>
+<li>D7 的 191 行带分金额要求按 <code>DECIMAL(16,2)</code> 聚合。<strong>7 类脏数据全在，真数据必须洗过才敢报数。</strong></li>
+</ul>
+</li>
+<li>契约要不要跟着改？要，但只改契约不够：<ul>
+<li>门禁读的 <code>fixtures/dw.sql</code> 也得换成真数据，而真数据原始导出件直接冒充 <code>fixtures/dw.sql</code> 装不进内存 SQLite——</li>
+<li>卡在 SQLite 不支持的 <code>ALTER TABLE fact_order DROP PRIMARY KEY</code>（<code>sqlite3.OperationalError: near "PRIMARY": syntax error</code>，裸 traceback，不是契约报错）；</li>
+<li>重复 <code>order_id</code> 在它后面才 INSERT，根本执行不到。</li>
+<li><strong>运行库、门禁快照、契约期望值三处必须一起换</strong>；本页正式换的只有运行库，契约只临时改行数当探针（拆一刀 2 会还原），其余两处的统一留到 L3 的“单一数据源”任务。</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p><strong>你现在拥有</strong>：一份带 7 类脏数据的真数据集、一条把 8,394.40 差在哪说清楚的对账链，和一条结论——门禁只护它读的那份快照，换数据要换三处。</p>
+</blockquote>
+<h2>拆一刀</h2>
+<ol>
+<li>契约现在停在 <code>expected_fact_rows: 410</code>，门禁红着。再拆一刀：把 <code>metrics:</code> 里 <code>name: GMV</code> 那条的 <code>expected_value: 279159.5</code> 改成 <code>1</code>，保存，重跑 <code>--check</code>，红会多一条——契约写错，门禁拦得住（只摘新冒出来的那条）：</li>
+</ol>
+<pre><code class="language-text">  [METRIC_VALUE_MISMATCH] metric.GMV: 公式实际值 279159.5 ≠ 契约期望 1
+FAIL: 2 个契约问题
+</code></pre>
+<ol start="2">
+<li>
+<p>还原：<code>scripts/lab reset p10-before --yes</code>，末行是 <code>现在工作区与快照 "p10-before" 完全一致。</code>；再跑 <code>--check</code> 回到 <code>S1 PASS</code>。这个绿是<strong>假绿</strong>：门禁又对着 115 行的旧快照说“没问题”。</p>
+</li>
+<li>
+<p><strong>数据库不跟着还原</strong>：<code>lab</code> 只管文件。</p>
+<ul>
+<li>先数一次 <code>docker exec lab-mysql mysql -uroot -plabpass -N -B dw -e "SELECT COUNT(*) FROM fact_order;"</code>——还是 <code>410</code>。</li>
+<li><strong>本页的收尾动作</strong>：① 拆一刀 2 的 <code>reset</code> 把契约和文件还原（不做的话下一关第 11 页验收的 <code>--check</code> 会红）——必做；</li>
+<li>② <strong>要回 L1 演示态才需重灌 <code>fixtures/dw.sql</code> 回到 115 行</strong>——第 12 页第 1 步会自己重灌 <code>dw-real</code>，不重灌也能直接进下一页。</li>
+<li>只是真数据下 <code>WHERE region_name='华北'</code> 是 35 行 / 61890.00，不是演示集的 19 行 / 41099.5，留着演示态才对得上。重灌命令：</li>
+</ul>
+</li>
+</ol>
+<!-- verify: p10-restore-demo -->
+
+<pre><code class="language-bash">docker exec -i lab-mysql mysql -uroot -plabpass &lt; fixtures/dw.sql
+</code></pre>
+</main>
+</body>
+</html>
