@@ -12,7 +12,7 @@
 
 **意义**：华北销售额第一次是从数据库里算出来的，不是你写死的。
 
-![第 7 页 · 把 SQL 真交给 MySQL：pymysql 真执行，把结果填回 sql 和 rows](images/page-07-visual.webp)
+![第 7 页 · 把 SQL 真交给 MySQL：左边是执行器与结果，右边是送货单进仓库：真把单子递进去](images/page-07-visual.webp)
 
 ## 猜一猜
 

@@ -20,7 +20,7 @@
 </blockquote>
 <h2>这一页构建什么</h2>
 <p>把“只读”从一条<strong>约定</strong>搬进<strong>数据库权限</strong>：开通一个在 <code>dw</code> 上只有 <code>SELECT</code> 的账号 <code>dw_reader</code>，再让门禁亲手证明它写不了。做完你得到一个能力边界——应用层的提示词、校验、策略全部失效，数据库也只会让它读。心智模型：<strong>只读要从“约定”变成“能力边界”。</strong></p>
-<p><img alt="第 18 页 · 只读账号真的写不了吗：把“只读”从约定搬进数据库权限：dw_reader 只有 SELECT" src="../images/page-18-visual.webp" /></p>
+<p><img alt="第 18 页 · 只读账号真的写不了吗：左边是权限与账号，右边是锁与钥匙：只有 SELECT 这把钥匙" src="../images/page-18-visual.webp" /></p>
 <h2>猜一猜</h2>
 <ol>
 <li>要“证明”只读账号写不了：是读 <code>SHOW GRANTS</code> 看它只有 SELECT，还是真执行一次写操作、等数据库拒绝？</li>

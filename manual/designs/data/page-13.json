@@ -1,33 +1,41 @@
 {
   "eyebrow": "第 13 页 · L2 换 · 真部署",
   "title": "一条命令起整座城",
-  "subtitle": "compose.yaml 编排六个服务，一条 docker-smoke 验收",
-  "layout": "steps",
-  "steps": [
+  "subtitle": "左边是编排与验收，右边是工地竣工：楼都亮灯，收尾机器人跑一次",
+  "layout": "entity_metaphor",
+  "left_cards": [
     {
-      "n": "1",
-      "title": "compose.yaml",
-      "detail": "mysql / elasticsearch / qdrant / init / backend / frontend",
-      "judge": "6 个服务"
+      "name": "compose.yaml",
+      "role": "mysql / elasticsearch / qdrant / init / backend / frontend",
+      "judge": "6 个服务",
+      "icon": "docker"
     },
     {
-      "n": "2",
-      "title": "init 跑一次",
-      "detail": "先 Started 再 Exited，不算长驻",
+      "name": "init 跑一次",
+      "role": "先 Started 再 Exited，不算长驻",
       "judge": "Exited (0)"
     },
     {
-      "n": "3",
-      "title": "backend / frontend",
-      "detail": "最后都 Healthy",
-      "judge": "Up (healthy)"
-    },
-    {
-      "n": "4",
-      "title": "docker-smoke",
-      "detail": "一条命令验收整座城",
+      "name": "docker-smoke",
+      "role": "一条命令验收整座城",
       "judge": "DOCKER SMOKE PASS"
     }
   ],
-  "footer": "起得来 ≠ 部署好：六个服务 + init 一次性任务"
+  "metaphor_title": "喻体 · 工地竣工",
+  "art": "art/metaphor.jpeg",
+  "mappings": [
+    {
+      "n": "①",
+      "label": "① 五座楼 → compose 长驻服务"
+    },
+    {
+      "n": "②",
+      "label": "② 收尾机器人 → init 一次性任务"
+    },
+    {
+      "n": "③",
+      "label": "③ 竣工验收 → docker-smoke，起得来 ≠ 部署好"
+    }
+  ],
+  "footer": "六个服务 + init 一次性任务；DOCKER SMOKE PASS"
 }

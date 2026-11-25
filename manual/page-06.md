@@ -10,7 +10,7 @@
 
 这一页**只 print，不执行**。
 
-![第 6 页 · 照契约生成那条带 JOIN 的 SQL：契约字典 + build_sql(keywords)：把关键词拼成 5 行 SELECT](images/page-06-visual.webp)
+![第 6 页 · 照契约生成那条带 JOIN 的 SQL：左边是契约与生成函数，右边是乐高拼装：两块积木按接口拼成成品](images/page-06-visual.webp)
 
 ## 猜一猜
 

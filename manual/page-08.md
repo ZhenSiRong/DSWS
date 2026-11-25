@@ -12,7 +12,7 @@
 
 **步骤名有出处**：这 12 个步骤名不是现编的，`contracts/steps.yaml` 里就声明了这 12 个节点。
 
-![第 8 页 · 让答案一条条推送出来（SSE）：12 条 progress + 1 条 result，text/event-stream](images/page-08-visual.webp)
+![第 8 页 · 让答案一条条推送出来（SSE）：左边是事件流，右边是传送带：一件一件送出来，最后才给结果](images/page-08-visual.webp)
 
 ## 猜一猜
 

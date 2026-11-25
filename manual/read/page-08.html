@@ -19,7 +19,7 @@
 <p><strong>同一个服务再加一条流式通道</strong> <code>GET /api/stream?q=...</code>：把一次查询拆成 12 条 <code>progress</code> 事件（每个步骤一条），最后再发 1 条 <code>result</code>，内容类型是 <code>text/event-stream</code>。</p>
 <p><strong>旧入口不动</strong>：第 7 页的 <code>POST /api/query</code> 保留不动——一个“憋到最后一次给”，一个“干一步报一步”，你正好对照。</p>
 <p><strong>步骤名有出处</strong>：这 12 个步骤名不是现编的，<code>contracts/steps.yaml</code> 里就声明了这 12 个节点。</p>
-<p><img alt="第 8 页 · 让答案一条条推送出来（SSE）：12 条 progress + 1 条 result，text/event-stream" src="../images/page-08-visual.webp" /></p>
+<p><img alt="第 8 页 · 让答案一条条推送出来（SSE）：左边是事件流，右边是传送带：一件一件送出来，最后才给结果" src="../images/page-08-visual.webp" /></p>
 <h2>猜一猜</h2>
 <p>动手前写下答案：</p>
 <p>用 <code>curl</code> 打这条流，12 条 <code>progress</code> 会<strong>一起</strong>冒出来，还是<strong>隔一小段</strong>冒一条（这里“冒”就是服务端<strong>逐条推送</strong>，SSE）？</p>

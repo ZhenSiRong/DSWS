@@ -115,3 +115,10 @@ scripts/design-save.sh 00
 
 启动：`python3 scripts/design-serve.py 8788`；入口 `http://127.0.0.1:8788/manual/designs/`。  
 若服务没起，也可用命令行：`scripts/design-save.sh 00 ~/Downloads/page-00-edited.html`。
+
+
+## 24 页版式状态
+
+- 24/24 页均为 `entity_metaphor`：左实体卡、右喻体插画 + 映射；文案数据在 `data/page-NN.json`。
+- 喻体 prompt 索引：`art-prompts.md`（p00–p02 另有各自 `art-prompt.md`）。
+- 图片里不出现文字；发现生成图带字必须重生成，不要用图片里的字。

@@ -9,7 +9,7 @@
 **三样**：一个 8 行的 nginx 配置（把 `/api/` 转给第 8 页那个服务）、一个 17 行的页面（输入框 + 结果区，用浏览器自带的 `EventSource` 接第 8 页的流）、一条 `docker run` 把 nginx 跑起来。
 **入口**：给系统加一个浏览器入口，让浏览器能接上第 8 页那条流。
 
-![第 9 页 · 给浏览器一个入口：nginx 反代 + 17 行页面 + docker run](images/page-09-visual.webp)
+![第 9 页 · 给浏览器一个入口：左边是入口三件套，右边是门房：nginx 把访客引进门](images/page-09-visual.webp)
 
 ## 猜一猜
 

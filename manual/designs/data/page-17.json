@@ -1,38 +1,39 @@
 {
   "eyebrow": "第 17 页 · L3 审 · 纠错",
   "title": "一次重试能修好什么、修不好什么",
-  "subtitle": "把纠错当成一次有上限的赌博来审：只重试 1 次，改完必须重新过校验",
-  "layout": "steps",
-  "steps": [
+  "subtitle": "左边是校验与校正，右边是赌桌：只有一枚代币，只许改一次",
+  "layout": "entity_metaphor",
+  "left_cards": [
     {
-      "n": "1",
-      "title": "validate_sql → error",
-      "detail": "静态校验先拦下",
+      "name": "validate_sql",
+      "role": "静态校验先拦下，返回可重试/不可重试",
       "judge": "SQL_UNKNOWN_COLUMN"
     },
     {
-      "n": "2",
-      "title": "三个触发条件",
-      "detail": "有校正器 / 可重试 / 契约允许",
+      "name": "三个触发条件",
+      "role": "有校正器 / 可重试 / 契约允许",
       "judge": "max_attempts: 1"
     },
     {
-      "n": "3",
-      "title": "只校正一次",
-      "detail": "一次重试，改出的 SQL 重过两道关",
-      "judge": "attempted=True"
-    },
-    {
-      "n": "4",
-      "title": "二次校验",
-      "detail": "改完的 SQL 还要过 guard + policy",
-      "judge": "error=None"
-    },
-    {
-      "n": "5",
-      "title": "真执行",
-      "detail": "过校验才交给 MySQL",
+      "name": "二次校验 + 执行",
+      "role": "改出的 SQL 重过 guard + policy 才执行",
       "judge": "rows=5 行"
+    }
+  ],
+  "metaphor_title": "喻体 · 赌桌",
+  "art": "art/metaphor.jpeg",
+  "mappings": [
+    {
+      "n": "①",
+      "label": "① 一枚代币 → 只重试 1 次"
+    },
+    {
+      "n": "②",
+      "label": "② 改完再验 → 二次校验"
+    },
+    {
+      "n": "③",
+      "label": "③ 赢或交回原码 → 对上了就执行，对不上保留原错误"
     }
   ],
   "footer": "14 passed / S6 PASS；成功率按多次采样写，不写“已修复”"

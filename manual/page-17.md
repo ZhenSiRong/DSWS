@@ -23,7 +23,7 @@
 - v1 演示没复现：`deliverable/PRD-对照表.md` 第 13 行，触发=true、纠正成功=false。
 - v2 **单次复现过**纠正成功态：`deliverable/v2/README-v2.md:172`；证据 `deliverable/v2/evidence/v2-natural-correct-success.sse`，故障注入样本 `v2-correct-success.sse` 另存作回归。
 
-![第 17 页 · 一次重试能修好什么、修不好什么：把纠错当成一次有上限的赌博来审：只重试 1 次，改完必须重新过校验](images/page-17-visual.webp)
+![第 17 页 · 一次重试能修好什么、修不好什么：左边是校验与校正，右边是赌桌：只有一枚代币，只许改一次](images/page-17-visual.webp)
 
 ▲ 纠错 = 一次有上限的赌博：只重试 1 次、只对可重试错误生效；令牌用完就交回原错码，改出来的 SQL 还要重新过校验与安全策略。
 

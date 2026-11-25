@@ -16,7 +16,7 @@
 | 2 | **`frontend/` 教学版重建前端** | compose 默认的 `frontend` 服务（默认端口 8080），「从零重建 · 教学版」界面、`12 步` 步骤轨，自带 40 条协议测试——它是**脚手架**，把系统结构摆在明面上。 |
 | 3 | **成熟版原版 `shopkeeper-agent`** | 交付时的样子（`deliverable/v2/original-frontend/`，React 19 + Tailwind 3.4.17 的构建产物 `dist/`）。 |
 
-![第 23 页 · 装修不换承重墙：同一后端、同一份契约、同一条 SSE：三种入口，同一个数](images/page-23-visual.webp)
+![第 23 页 · 装修不换承重墙：左边是三种前端入口，右边是装修队：换门面，承重墙不动](images/page-23-visual.webp)
 
 ## 猜一猜
 

@@ -19,7 +19,7 @@
 <p>给生成层立一把可重复的尺子：10 题基线 <code>baseline</code>（问题 → SQL/拒答 → 判定；<code>backend/tests/generate/baseline.yaml</code>）+ 一套语义断言。</p>
 <p><strong>别搞混</strong>：它和第 14 页 <code>backend/tests/recall/golden.yaml</code> 的 20 题召回黄金集不是同一个东西：这 10 题是 8 题复用那 20 题的题面 + 2 题越界拒答。</p>
 <p><strong>审什么</strong>：生成器是确定性的、不走模型；你审的不是“像不像人写的”，而是<strong>同一个判据能不能同时量模板和模型</strong>——改契约、改生成逻辑，同一把尺立刻红，改回来立刻绿。</p>
-<p><img alt="第 15 页 · 同一把尺子，量模板也量模型：10 题基线 + 语义断言，模板与模型都跑同一套尺子" src="../images/page-15-visual.webp" /></p>
+<p><img alt="第 15 页 · 同一把尺子，量模板也量模型：左边是三张判据，右边是翻译官与模板台：模板和模型都过同一把尺" src="../images/page-15-visual.webp" /></p>
 <h2>猜一猜</h2>
 <p>动手前写下答案：</p>
 <ol>

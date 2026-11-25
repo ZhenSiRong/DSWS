@@ -9,7 +9,7 @@
 在同一个服务里加 `POST /api/query`：你发过去一个 JSON `{"question": "..."}`，它回给你一个 JSON。
 这一页先让接口能收到问题：**不查库、不生成 SQL**（口语常说“拼 SQL”），只把“收发 JSON”这条路修通。
 
-![第 4 页 · 加一个能收问题的接口：先修通“收发 JSON”这条路，不查库、不生成 SQL](images/page-04-visual.webp)
+![第 4 页 · 加一个能收问题的接口：左边是接口与请求，右边是收发窗口：先修通“收发 JSON”这条路](images/page-04-visual.webp)
 
 ## 猜一猜
 

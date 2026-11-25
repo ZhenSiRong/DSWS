@@ -12,7 +12,7 @@
 
 **两条命令**：一条 `make docker-up` 起整座城，一条 `make docker-smoke` 用 8 步自动验收。部署不是“起得来”，是“起得来 + 能被自动验收”。
 
-![第 13 页 · 一条命令起整座城：compose.yaml 编排六个服务，一条 docker-smoke 验收](images/page-13-visual.webp)
+![第 13 页 · 一条命令起整座城：左边是编排与验收，右边是工地竣工：楼都亮灯，收尾机器人跑一次](images/page-13-visual.webp)
 
 ## 猜一猜
 

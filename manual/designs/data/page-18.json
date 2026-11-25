@@ -1,21 +1,41 @@
 {
   "eyebrow": "第 18 页 · L4 守 · 账号",
   "title": "只读账号真的写不了吗",
-  "subtitle": "把“只读”从约定搬进数据库权限：dw_reader 只有 SELECT",
-  "layout": "compare",
-  "left": {
-    "title": "约定：应用层",
-    "lines": [
-      "提示词 / 校验 / 策略",
-      "全部失效也还有最后一道"
-    ]
-  },
-  "right": {
-    "title": "能力边界：数据库权限",
-    "lines": [
-      "GRANT SELECT ON dw.*",
-      "UPDATE → 1142 command denied"
-    ]
-  },
+  "subtitle": "左边是权限与账号，右边是锁与钥匙：只有 SELECT 这把钥匙",
+  "layout": "entity_metaphor",
+  "left_cards": [
+    {
+      "name": "dw_reader",
+      "role": "只读账号，只拿到 SELECT 权限",
+      "judge": "GRANT SELECT ON dw.*",
+      "icon": "mysql"
+    },
+    {
+      "name": "UPDATE 试探",
+      "role": "越权写操作被数据库拒绝",
+      "judge": "1142 command denied"
+    },
+    {
+      "name": "能力边界",
+      "role": "只读不是约定，是数据库权限",
+      "judge": "应用层失效也写不了"
+    }
+  ],
+  "metaphor_title": "喻体 · 锁与钥匙",
+  "art": "art/metaphor.jpeg",
+  "mappings": [
+    {
+      "n": "①",
+      "label": "① 锁 → 数据库权限"
+    },
+    {
+      "n": "②",
+      "label": "② 只有 SELECT 钥匙 → 账号只能读"
+    },
+    {
+      "n": "③",
+      "label": "③ 没钥匙的写操作 → UPDATE 直接 1142 拒绝"
+    }
+  ],
   "footer": "只读要从“约定”变成“能力边界”"
 }

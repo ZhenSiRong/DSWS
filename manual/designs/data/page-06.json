@@ -1,26 +1,39 @@
 {
   "eyebrow": "第 6 页 · L1 造 · 生成",
   "title": "照契约生成那条带 JOIN 的 SQL",
-  "subtitle": "契约字典 + build_sql(keywords)：把关键词拼成 5 行 SELECT",
-  "layout": "steps",
-  "steps": [
+  "subtitle": "左边是契约与生成函数，右边是乐高拼装：两块积木按接口拼成成品",
+  "layout": "entity_metaphor",
+  "left_cards": [
     {
-      "n": "1",
-      "title": "CONTRACT 字典",
-      "detail": "表、列、指标口径写进 Python",
+      "name": "CONTRACT 字典",
+      "role": "表、列、指标口径写进 Python",
       "judge": "表 / 列 / 口径"
     },
     {
-      "n": "2",
-      "title": "build_sql(keywords)",
-      "detail": "照契约拼 JOIN，不靠猜",
+      "name": "build_sql(keywords)",
+      "role": "照契约拼 JOIN，不靠猜",
       "judge": "fact_order JOIN dim_region"
     },
     {
-      "n": "3",
-      "title": "5 行 SELECT",
-      "detail": "可直接交给 MySQL 执行",
+      "name": "5 行 SELECT",
+      "role": "可直接交给 MySQL 执行",
       "judge": "WHERE region_name = '华北'"
+    }
+  ],
+  "metaphor_title": "喻体 · 乐高拼装",
+  "art": "art/metaphor.jpeg",
+  "mappings": [
+    {
+      "n": "①",
+      "label": "① 两块积木 → 订单表与地区表"
+    },
+    {
+      "n": "②",
+      "label": "② 按接口拼合 → ON region_id"
+    },
+    {
+      "n": "③",
+      "label": "③ 拼成成品 → 5 行带 JOIN 的 SELECT"
     }
   ],
   "footer": "SELECT … FROM fact_order JOIN dim_region ON … WHERE region_name='华北' GROUP BY …"

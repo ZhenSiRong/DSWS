@@ -309,3 +309,9 @@ Answer:除了Q2选B(多插漫画解释图少插文字,我们用ark-cli中的模�
 - 改版：改 `data/page-NN.json` → 重跑构建 → `render_read.py` → audit；不需要生图 token。
 - 闸门：`audit_book 24/24`、`verify T0/T1`（24 个契约，含页面图的静态路径）。
 - 说明：p00–p02 目前仍是 pilot 定制版式，后续可统一迁到共享模板（若用户要求视觉完全一致）。
+## 第 8 轮 · 24 页实体/喻体版铺开（2026-11-25）
+
+- 全部 24 页统一为「左实体 / 右喻体 + ①②③映射」；喻体插画由 Seedream 生成（无字），文字全部 HTML。
+- 21 条 prompt 见 `manual/designs/art-prompts.md`；p12/p18 曾把 SELECT 画进图里，已重生成无字版。
+- 编辑器新增「另存为 HTML / 覆盖保存」顶栏按钮；`scripts/design-serve.py` 提供保存接口。
+- 闸门：audit 24/24、make audit 5/5、verify T0/T1 PASS、render_read 幂等。

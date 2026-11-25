@@ -18,7 +18,7 @@
 <h2>这一页构建什么</h2>
 <p>在同一个服务里加 <code>POST /api/query</code>：你发过去一个 JSON <code>{"question": "..."}</code>，它回给你一个 JSON。
 这一页先让接口能收到问题：<strong>不查库、不生成 SQL</strong>（口语常说“拼 SQL”），只把“收发 JSON”这条路修通。</p>
-<p><img alt="第 4 页 · 加一个能收问题的接口：先修通“收发 JSON”这条路，不查库、不生成 SQL" src="../images/page-04-visual.webp" /></p>
+<p><img alt="第 4 页 · 加一个能收问题的接口：左边是接口与请求，右边是收发窗口：先修通“收发 JSON”这条路" src="../images/page-04-visual.webp" /></p>
 <h2>猜一猜</h2>
 <p>动手前写下答案：把 <code>-d</code> 里的问题写成 <code>{"question": "华南订单量"}</code> 发过去，
 返回 JSON 里的 <code>"question"</code> 会是 <code>"华南订单量"</code>，还是 <code>"华北销售额"</code>？<code>"sql"</code>、<code>"rows"</code> 里又是什么？</p>

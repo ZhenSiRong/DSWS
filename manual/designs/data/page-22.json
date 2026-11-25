@@ -1,34 +1,41 @@
 {
   "eyebrow": "第 22 页 · L4 守 · 回归",
   "title": "一套门禁能不能替你值班",
-  "subtitle": "8 步 smoke、stage0–7、全量 pytest、前端测试拼成一张回归网",
-  "layout": "table",
-  "headers": [
-    "门禁",
-    "命令",
-    "抓什么"
+  "subtitle": "左边是四类门禁，右边是安全网：哪一格破了，红在哪一步",
+  "layout": "entity_metaphor",
+  "left_cards": [
+    {
+      "name": "docker-smoke",
+      "role": "8 步部署/健康/账号检查",
+      "judge": "8 步",
+      "icon": "docker"
+    },
+    {
+      "name": "stage0–7",
+      "role": "每一层的判据逐级跑",
+      "judge": "S0–S7 PASS"
+    },
+    {
+      "name": "pytest + npm test",
+      "role": "代码与前端回归",
+      "judge": "813 passed, 30 skipped"
+    }
   ],
-  "rows": [
-    [
-      "docker-smoke",
-      "8 步",
-      "部署/健康/只读账号"
-    ],
-    [
-      "stage0–7",
-      "逐级",
-      "每一层的判据"
-    ],
-    [
-      "全量 pytest",
-      "backend",
-      "代码回归"
-    ],
-    [
-      "前端测试",
-      "npm test",
-      "协议/组件回归"
-    ]
+  "metaphor_title": "喻体 · 安全网",
+  "art": "art/metaphor.jpeg",
+  "mappings": [
+    {
+      "n": "①",
+      "label": "① 一张网 → 回归门禁集合"
+    },
+    {
+      "n": "②",
+      "label": "② 编号网眼 → 8 步 smoke"
+    },
+    {
+      "n": "③",
+      "label": "③ 网眼破了能定位 → 全绿不是目标，红了能定位才是"
+    }
   ],
   "footer": "全绿不是目标，红了能定位才是"
 }

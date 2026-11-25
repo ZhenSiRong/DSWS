@@ -18,7 +18,7 @@
 <h2>这一页构建什么</h2>
 <p><strong>两样东西</strong>：一张<strong>契约字典</strong> <code>CONTRACT</code>（把第 1、2 页 MySQL 里的表、列、指标口径写成 Python 字典），和函数 <code>build_sql(keywords)</code>——它照着契约，把第 5 页抽出的 <code>["华北","销售额"]</code> 拼成一条带 <code>JOIN</code> 的 <code>SELECT</code>。</p>
 <p>这一页<strong>只 print，不执行</strong>。</p>
-<p><img alt="第 6 页 · 照契约生成那条带 JOIN 的 SQL：契约字典 + build_sql(keywords)：把关键词拼成 5 行 SELECT" src="../images/page-06-visual.webp" /></p>
+<p><img alt="第 6 页 · 照契约生成那条带 JOIN 的 SQL：左边是契约与生成函数，右边是乐高拼装：两块积木按接口拼成成品" src="../images/page-06-visual.webp" /></p>
 <h2>猜一猜</h2>
 <p>动手前写下答案：拼出来的 SQL 会 <code>JOIN</code> 哪两张表？<code>WHERE</code> 用的是 <code>dim_region</code> 的哪一列？<code>WHERE</code> 那行等号的右边会是什么？</p>
 <h2>动手</h2>

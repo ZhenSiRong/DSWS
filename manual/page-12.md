@@ -12,7 +12,7 @@
 
 **口径提醒**：这仍是第 10 页的 naive 口径，本页只证明 FLOAT→DECIMAL 的类型问题，不代表数据已洗。
 
-![第 12 页 · 给临时通道装上四道闸：lab/db.py：dict 行、Decimal 精度、自动 LIMIT、只读](images/page-12-visual.webp)
+![第 12 页 · 给临时通道装上四道闸：左边是执行器的四道闸，右边是安检门：只放行合规的车](images/page-12-visual.webp)
 
 ## 猜一猜
 

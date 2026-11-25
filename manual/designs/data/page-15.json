@@ -1,9 +1,9 @@
 {
   "eyebrow": "第 15 页 · L3 审 · 生成",
   "title": "同一把尺子，量模板也量模型",
-  "subtitle": "10 题基线 + 语义断言，模板与模型都跑同一套尺子",
-  "layout": "cards",
-  "cards": [
+  "subtitle": "左边是三张判据，右边是翻译官与模板台：模板和模型都过同一把尺",
+  "layout": "entity_metaphor",
+  "left_cards": [
     {
       "name": "10 题基线",
       "role": "问题 → SQL/拒答 → 判定",
@@ -18,6 +18,22 @@
       "name": "拒答也要对",
       "role": "该拒答的必须拒",
       "judge": "S4 PASS"
+    }
+  ],
+  "metaphor_title": "喻体 · 翻译官与模板台",
+  "art": "art/metaphor.jpeg",
+  "mappings": [
+    {
+      "n": "①",
+      "label": "① 模板格 → 确定性生成器"
+    },
+    {
+      "n": "②",
+      "label": "② 翻译对照 → 语义断言"
+    },
+    {
+      "n": "③",
+      "label": "③ 交卷判定 → 模板与模型跑同一套基线"
     }
   ],
   "footer": "同一把尺子：模板和模型都量，不靠单次演示"

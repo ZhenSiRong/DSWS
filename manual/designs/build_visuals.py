@@ -321,12 +321,17 @@ def main() -> None:
     no_editor = "--no-editor" in sys.argv
     pages = args or [p for p in DATA if (DESIGNS/f"page-{p}").exists() or True]
     for page in pages:
-        data = DATA[page]
+        data_path = DATA_DIR / f"page-{page}.json"
+        if data_path.exists():
+            data = json.loads(data_path.read_text(encoding="utf-8"))
+        else:
+            data = DATA[page]
+            DATA_DIR.mkdir(parents=True, exist_ok=True)
+            data_path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         proj = DESIGNS / f"page-{page}"
         proj.mkdir(parents=True, exist_ok=True)
         (proj/"assets").mkdir(exist_ok=True)
         DATA_DIR.mkdir(parents=True, exist_ok=True)
-        (DATA_DIR/f"page-{page}.json").write_text(json.dumps(data, ensure_ascii=False, indent=2)+"\n", encoding="utf-8")
         (proj/"index.html").write_text(render(data), encoding="utf-8")
         (proj/"poster.json").write_text(json.dumps({"canvas":{"width":W,"height":H}}, ensure_ascii=False)+"\n", encoding="utf-8")
         print(f"page-{page}: html written")

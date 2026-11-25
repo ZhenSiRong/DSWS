@@ -19,7 +19,7 @@
 <p>把第 7 页那条裸 <code>pymysql</code> 临时通道换成一个执行器 <code>lab/db.py</code>：行是 dict、Decimal 原样交出来、没写 LIMIT 自动补 1000、5 秒不回就断、非 SELECT 拒绝。</p>
 <p><strong>类型问题</strong>：换上它，<code>dw-real</code> 的 410 行带分金额在十进制下 <code>SUM</code> 得 <code>1144735.50</code>，不再是 <code>1144735.4994544983</code>。</p>
 <p><strong>口径提醒</strong>：这仍是第 10 页的 naive 口径，本页只证明 FLOAT→DECIMAL 的类型问题，不代表数据已洗。</p>
-<p><img alt="第 12 页 · 给临时通道装上四道闸：lab/db.py：dict 行、Decimal 精度、自动 LIMIT、只读" src="../images/page-12-visual.webp" /></p>
+<p><img alt="第 12 页 · 给临时通道装上四道闸：左边是执行器的四道闸，右边是安检门：只放行合规的车" src="../images/page-12-visual.webp" /></p>
 <h2>猜一猜</h2>
 <ol>
 <li>裸 <code>SELECT SUM(order_amount) FROM fact_order</code>（第 10 页的 naive 口径）和十进制值 <code>1144735.50</code> 差多少——0、0.0005、还是 5 元？</li>
