@@ -1,59 +1,75 @@
-/* 编辑器的「另存为 / 覆盖保存」浮动面板（由 inject_save_ui.py 注入到 editor.html） */
+/* 编辑器的「另存为 / 覆盖保存」按钮（注入 editor.html；挂到顶栏 .hf-bar） */
 (function () {
   'use strict';
   const page = (location.pathname.match(/page-(\d{2})/) || [])[1];
   if (!page) return;
 
-  const css = `
-  #ds-save-ui{position:fixed;right:18px;bottom:18px;z-index:2147483000;display:flex;flex-direction:column;gap:8px;
-    background:#1a1a1a;color:#fff;padding:12px 14px;border-radius:6px;font:13px/1.4 "Noto Sans CJK SC",sans-serif;
-    box-shadow:0 6px 24px rgba(0,0,0,.28);min-width:210px}
-  #ds-save-ui .row{display:flex;gap:8px}
-  #ds-save-ui button{flex:1;border:0;border-radius:4px;padding:8px 10px;font:inherit;font-weight:700;cursor:pointer}
-  #ds-save-ui .as{background:#fff;color:#1a1a1a}
-  #ds-save-ui .save{background:#E65100;color:#fff}
-  #ds-save-ui .status{color:#cfcfcf;font-size:11px;min-height:16px;white-space:pre-wrap}
-  `;
-  const style = document.createElement('style'); style.textContent = css; document.head.appendChild(style);
-  const box = document.createElement('div'); box.id = 'ds-save-ui';
-  box.innerHTML = '<div class="row"><button class="as" type="button">另存为 HTML</button>' +
-                  '<button class="save" type="button">覆盖保存到项目</button></div>' +
-                  '<div class="status">改完先点「覆盖保存」，会自动重建 PNG/WebP</div>';
-  document.body.appendChild(box);
-  const status = box.querySelector('.status');
-
-  function getHTML() {
-    if (window.__layerEditor && typeof window.__layerEditor.fullHTML === 'function') {
-      return window.__layerEditor.fullHTML();
+  function toast(msg) {
+    if (window.__layerEditor && typeof window.__layerEditor.toast === 'function') {
+      window.__layerEditor.toast(msg);
+    } else {
+      console.log('[save-ui]', msg);
     }
-    return null;
   }
-  function setStatus(t) { status.textContent = t; }
+  function getHTML() {
+    return (window.__layerEditor && typeof window.__layerEditor.fullHTML === 'function')
+      ? window.__layerEditor.fullHTML() : null;
+  }
+  function makeBtn(text, primary) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'hf-btn' + (primary ? ' primary' : '');
+    b.textContent = text;
+    return b;
+  }
+  function mount() {
+    if (!window.__layerEditor || !document.querySelector('.hf-bar')) return false;
+    if (document.getElementById('ds-save-as')) return true;
+    const bar = document.querySelector('.hf-bar');
+    const zoom = bar.querySelector('.hf-zoom');
+    const asBtn = makeBtn('另存为 HTML', false); asBtn.id = 'ds-save-as';
+    const saveBtn = makeBtn('覆盖保存', true); saveBtn.id = 'ds-save-overwrite';
 
-  box.querySelector('.as').addEventListener('click', function () {
-    const html = getHTML();
-    if (!html) { setStatus('编辑器还没就绪，稍等一秒再试'); return; }
-    const name = prompt('另存文件名（保存到浏览器下载目录）', 'page-' + page + '-edited.html');
-    if (!name) return;
-    const url = URL.createObjectURL(new Blob([html], { type: 'text/html;charset=utf-8' }));
-    const a = Object.assign(document.createElement('a'), { href: url, download: name });
-    document.body.appendChild(a); a.click(); a.remove();
-    URL.revokeObjectURL(url);
-    setStatus('已另存：' + name);
-  });
+    asBtn.addEventListener('click', function () {
+      const html = getHTML();
+      if (!html) { toast('编辑器还没就绪'); return; }
+      const name = prompt('另存文件名（浏览器下载目录）', 'page-' + page + '-edited.html');
+      if (!name) return;
+      const url = URL.createObjectURL(new Blob([html], { type: 'text/html;charset=utf-8' }));
+      const a = Object.assign(document.createElement('a'), { href: url, download: name });
+      document.body.appendChild(a); a.click(); a.remove();
+      URL.revokeObjectURL(url);
+      toast('已另存：' + name);
+    });
 
-  box.querySelector('.save').addEventListener('click', function () {
-    const html = getHTML();
-    if (!html) { setStatus('编辑器还没就绪，稍等一秒再试'); return; }
-    if (!confirm('覆盖 page-' + page + '/index.html 并重建 PNG/WebP？旧版会自动备份。')) return;
-    setStatus('正在保存并重建，约 5–10 秒…');
-    fetch('/api/save', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ page: page, html: html })
-    }).then(r => r.json()).then(function (res) {
-      if (!res.ok) { setStatus('保存失败：' + (res.error || '未知错误')); return; }
-      setStatus('已覆盖保存并重建：\n' + (res.messages || []).join('\n'));
-    }).catch(function (e) { setStatus('保存请求失败：' + e.message); });
-  });
+    saveBtn.addEventListener('click', function () {
+      const html = getHTML();
+      if (!html) { toast('编辑器还没就绪'); return; }
+      if (!confirm('覆盖 page-' + page + '/index.html 并重建 PNG/WebP？旧版会备份到 out/。')) return;
+      const old = saveBtn.textContent;
+      saveBtn.disabled = true; saveBtn.textContent = '保存中…';
+      fetch('/api/save', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ page: page, html: html })
+      }).then(function (r) { return r.json(); }).then(function (res) {
+        if (!res.ok) { toast('保存失败：' + (res.error || '未知错误')); return; }
+        toast('已覆盖保存；' + ((res.messages || []).join('；') || '重建完成'));
+      }).catch(function (e) {
+        toast('保存请求失败：' + e.message + '（请确认用 scripts/design-serve.py 启动服务）');
+      }).finally(function () {
+        saveBtn.disabled = false; saveBtn.textContent = old;
+      });
+    });
+
+    if (zoom) { bar.insertBefore(asBtn, zoom); bar.insertBefore(saveBtn, zoom); }
+    else { bar.appendChild(asBtn); bar.appendChild(saveBtn); }
+    return true;
+  }
+
+  let tries = 0;
+  const timer = setInterval(function () {
+    if (mount() || ++tries > 400) clearInterval(timer);
+  }, 250);
+  window.addEventListener('load', mount);
 })();
