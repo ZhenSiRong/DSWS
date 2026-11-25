@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-CN" data-hf-source-revision="62b799c620cf" data-hf-runtime-revision="c7b5508595"><head><meta charset="utf-8"><title>一台容器，一个世界</title>
+<html lang="zh-CN" data-hf-source-revision="166f0ae381a3" data-hf-runtime-revision="c7b5508595"><head><meta charset="utf-8"><title>一台容器，一个世界</title>
 <style>:root { --font-body: "Noto Sans CJK SC", "Source Han Sans SC", sans-serif; --font-mono: "Noto Sans Mono CJK SC", "Noto Sans Mono", monospace; --font-serif: "Noto Serif CJK SC", serif; }
 * { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; background: #e8e8e8; }
@@ -64,12 +64,12 @@ h1 { margin:10px 0 0; font-size:58px; font-weight:900; line-height:1.1; letter-s
 .foot p { margin:0; font-size:21px; line-height:1.45; }
 </style>  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
-  <link rel="stylesheet" href="layer-editor.css?v=62b799c620cf-c7b5508595">
-  <script src="layer-editor.js?v=62b799c620cf-c7b5508595" defer></script>
+  <link rel="stylesheet" href="layer-editor.css?v=166f0ae381a3-c7b5508595">
+  <script src="layer-editor.js?v=166f0ae381a3-c7b5508595" defer></script>
 </head>
-<body><div class="poster" data-layer-id="poster" data-canvas-width="1600" data-canvas-height="1000">
+<body><div class="poster" data-canvas-width="1600" data-canvas-height="1000">
 <div class="head" data-layer-id="head"><p class="eyebrow">第 1 页 · L1 造 · 容器</p>
 <h1>一台容器，一个世界</h1><p class="sub">左边是容器与宿主机，右边是集装箱与房子：边界在哪，数据就在哪</p><div class="rule"></div></div>
-<main class="body" data-layer-id="body"><div class="em"><div class="entity"><span class="tag2">实体 · 真实对象</span><h2>在本项目里，它们各自负责什么</h2><div class="egrid"><div class="ecard" data-layer-id="entity-1"><span class="n">01</span><img class="icon2" src="../_shared/icons/mysql.svg" alt=""><span class="name">lab-mysql 容器</span><p>一个独立的 MySQL 空库，端口只开给本机</p><p class="j">-p 127.0.0.1:3307:3306</p></div><div class="ecard" data-layer-id="entity-2"><span class="n">02</span><span class="name">你的电脑（宿主机）</span><p>容器跑在它上面，但不是同一个“本机”</p><p class="j">从宿主机连 127.0.0.1:3307</p></div><div class="ecard" data-layer-id="entity-3"><span class="n">03</span><span class="name">127.0.0.1</span><p>容器里的回环地址指向容器自己</p><p class="j">不是你的电脑</p></div></div></div><div class="metaphor"><span class="tag2">喻体 · 比喻场景</span><h2>喻体 · 集装箱与房子</h2><img class="art" src="art/metaphor.jpeg" alt=""><div class="mapping"><div class="row"><span class="num">①</span><span class="txt">集装箱有独立门牌 → 容器里的 127.0.0.1 是容器自己</span></div><div class="row"><span class="num">②</span><span class="txt">房子放在电脑上 → 宿主机是另一个“本机”</span></div><div class="row"><span class="num">③</span><span class="txt">箱门只对码头开 → 3307 只绑 127.0.0.1，外网进不来</span></div></div></div></div></main>
+<main class="body"><div class="em"><div class="entity"><span class="tag2">实体 · 真实对象</span><h2 data-layer-id="entity-title">在本项目里，它们各自负责什么</h2><div class="egrid"><div class="ecard" data-layer-id="entity-1"><span class="n">01</span><img class="icon2" src="../_shared/icons/mysql.svg" alt=""><span class="name">lab-mysql 容器</span><p>一个独立的 MySQL 空库，端口只开给本机</p><p class="j">-p 127.0.0.1:3307:3306</p></div><div class="ecard" data-layer-id="entity-2"><span class="n">02</span><span class="name">你的电脑（宿主机）</span><p>容器跑在它上面，但不是同一个“本机”</p><p class="j">从宿主机连 127.0.0.1:3307</p></div><div class="ecard" data-layer-id="entity-3"><span class="n">03</span><span class="name">127.0.0.1</span><p>容器里的回环地址指向容器自己</p><p class="j">不是你的电脑</p></div></div></div><div class="metaphor"><span class="tag2" data-layer-id="metaphor-tag">喻体 · 比喻场景</span><h2 data-layer-id="metaphor-title">喻体 · 集装箱与房子</h2><img class="art" data-layer-id="metaphor-art" src="art/metaphor.jpeg" alt=""><div class="mapping"><div class="row" data-layer-id="mapping-1"><span class="num">①</span><span class="txt">集装箱有独立门牌 → 容器里的 127.0.0.1 是容器自己</span></div><div class="row" data-layer-id="mapping-2"><span class="num">②</span><span class="txt">房子放在电脑上 → 宿主机是另一个“本机”</span></div><div class="row" data-layer-id="mapping-3"><span class="num">③</span><span class="txt">箱门只对码头开 → 3307 只绑 127.0.0.1，外网进不来</span></div></div></div></div></main>
 <div class="foot" data-layer-id="footer"><span class="tag">判据</span><p>容器 running + 能连上（SELECT VERSION() 有输出）+ 没有 dw</p></div>
 </div></body></html>

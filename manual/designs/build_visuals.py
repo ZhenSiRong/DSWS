@@ -267,11 +267,11 @@ def render(data: dict) -> str:
             ip = icon_path(c.get("icon")) if c.get("icon") else None
             icon = f'<img class="icon2" src="{ip}" alt="">' if ip else ""
             ecards.append(f'<div class="ecard" data-layer-id="entity-{i}"><span class="n">{i:02d}</span>{icon}<span class="name">{esc(c["name"])}</span><p>{esc(c["role"])}</p><p class="j">{esc(c["judge"])}</p></div>')
-        maps="".join(f'<div class="row"><span class="num">{m["n"]}</span><span class="txt">{esc(m["label"])}</span></div>' for m in data["mappings"])
+        maps="".join(f'<div class="row" data-layer-id="mapping-{i}"><span class="num">{m["n"]}</span><span class="txt">{esc(m["label"])}</span></div>' for i,m in enumerate(data["mappings"],1))
         body = ('<div class="em">'
-                f'<div class="entity"><span class="tag2">实体 · 真实对象</span><h2>在本项目里，它们各自负责什么</h2><div class="egrid">{"".join(ecards)}</div></div>'
-                f'<div class="metaphor"><span class="tag2">喻体 · 比喻场景</span><h2>{esc(data["metaphor_title"])}</h2>'
-                f'<img class="art" src="{esc(data["art"])}" alt=""><div class="mapping">{maps}</div></div>'
+                f'<div class="entity"><span class="tag2">实体 · 真实对象</span><h2 data-layer-id="entity-title">在本项目里，它们各自负责什么</h2><div class="egrid">{"".join(ecards)}</div></div>'
+                f'<div class="metaphor"><span class="tag2" data-layer-id="metaphor-tag">喻体 · 比喻场景</span><h2 data-layer-id="metaphor-title">{esc(data["metaphor_title"])}</h2>'
+                f'<img class="art" data-layer-id="metaphor-art" src="{esc(data["art"])}" alt=""><div class="mapping">{maps}</div></div>'
                 '</div>')
     elif layout == "table":
         head = "".join(f'<div class="td th">{esc(h)}</div>' for h in data["headers"])
@@ -283,10 +283,10 @@ def render(data: dict) -> str:
     return f'''<!doctype html>
 <html lang="zh-CN"><head><meta charset="utf-8"><title>{esc(data["title"])}</title>
 <style>{css}</style></head>
-<body><div class="poster" data-layer-id="poster" data-canvas-width="1600" data-canvas-height="1000">
+<body><div class="poster" data-canvas-width="1600" data-canvas-height="1000">
 <div class="head" data-layer-id="head"><p class="eyebrow">{esc(data["eyebrow"])}</p>
 <h1>{esc(data["title"])}</h1><p class="sub">{esc(data["subtitle"])}</p><div class="rule"></div></div>
-<main class="body" data-layer-id="body">{body}</main>
+<main class="body">{body}</main>
 <div class="foot" data-layer-id="footer"><span class="tag">判据</span><p>{esc(data["footer"])}</p></div>
 </div></body></html>'''
 
