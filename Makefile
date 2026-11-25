@@ -1,4 +1,4 @@
-.PHONY: install doctor doctor-v dev-backend dev-frontend stage0 stage0-ui stage1 stage2 stage3 stage4 stage5 stage5-live stage6 stage6-ui stage7 stage7-ui baseline audit verify verify-fast accept-l1 accept-l2 accept-l3 accept-l4 accept-l5 install-hooks docker-env docker-env-require docker-up docker-down docker-logs docker-smoke docker-reset
+.PHONY: install doctor doctor-v dev-backend dev-frontend stage0 stage0-ui stage1 stage2 stage3 stage4 stage5 stage5-live stage6 stage6-ui stage7 stage7-ui baseline audit verify verify-fast accept-l1 accept-l2 accept-l3 accept-l4 accept-l5 install-hooks docker-env docker-env-require docker-up docker-down docker-logs docker-smoke docker-reset book book-html book-pdf
 
 install:
 	cd system/backend && uv sync --frozen
@@ -253,6 +253,19 @@ audit:
 	@echo "== 5/5 任务台账准确性：done 钉证据 + 依赖/review/甘特身份 =="
 	@python3 toolbox/scripts/task.py check --quick || { echo "AUDIT FAIL：任务台账漂移（done 无证据/review，或甘特旧于台账，见上）"; exit 1; }
 	@echo "AUDIT PASS：5/5 全绿（结构 / 空白 / uv.lock / 敏感串 / 台账）"
+
+# 新手册：tutorial/ 正典 → 自包含 HTML + A4 PDF（管线在 toolbox/book/）
+BOOK_OUT := materials/deliverable/tutorial-book
+
+book: book-html book-pdf
+
+book-html:
+	@python3 toolbox/book/build_manual.py --html --out $(BOOK_OUT)
+
+book-pdf:
+	@python3 toolbox/book/build_manual.py --print-html --out $(BOOK_OUT)
+	@uv run --offline --with weasyprint python3 toolbox/book/render_pdf.py $(BOOK_OUT)/.print.html $(BOOK_OUT)/tutorial-book.pdf
+	@rm -f $(BOOK_OUT)/.print.html
 
 # 教材可跟随性验收线（ADR 0002 / materials/docs/verify-line.md）
 # T0：静态，不执行页面命令（pre-commit 调）；T1：加跑 kind: offline 命令。

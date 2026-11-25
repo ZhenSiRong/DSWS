@@ -30,6 +30,7 @@ toolbox/
   page-visuals/   # 页首图：data/page-NN.json、index.html、editor.html、art/、build_visuals.py
   shots/          # 截图/图表/渲染脚本 + 审计 audit_book.py + render_read.py
   verify/         # T0/T1 契约：contracts/page-NN.yaml、README
+  book/           # 新手册构建管线：tutorial → 自包含 HTML + A4 PDF
   scripts/        # 验收、docker、lab、task、设计服务等工具脚本
   workflows/      # 任务台账 ledger.yaml / reviews / 甘特
 ```
