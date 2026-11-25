@@ -187,7 +187,7 @@ def intro_block() -> str:
 <div class="intro-cols">
 <div><h2>先看地图</h2><p>先读 <b>全书地图</b>：一片空地上有十座设施，每一页盖一座、接一段管网。左边回答“为什么是这个顺序”，右边回答“这一页做完手里有什么”。</p></div>
 <div><h2>再翻一页</h2><p>每页固定六段：这一页构建什么 → 猜一猜 → 动手 → 你应该看到 → 对账 → 拆一刀。先猜，再动手；看到真实输出，再对账；最后拆掉一个组件，看系统怎么坏。</p></div>
-<div><h2>对账比读完重要</h2><p>把“你应该看到”里的真实输出和你的屏幕逐行对。对不上就停在这一页；能对账，才算学会。书的正文是 <code>tutorial/page-*.md</code>，这本 HTML/PDF 只是它的渲染版。</p></div>
+<div><h2>对账比读完重要</h2><p>把“你应该看到”里的真实输出和你的屏幕逐行对。对不上就停在这一页；能对账，才算学会。书的正文是 <code>tutorial/page-*.md</code>，这本 HTML/PDF 只是它的渲染版。PDF 版页眉的 <code>PAGE NN</code> 是手册页编号，页脚数字是 PDF 物理页；附录 A 有逐页对照表。</p></div>
 </div>
 </section>'''
 
@@ -201,6 +201,29 @@ def toc_block(front_title: str, pages: list[tuple[int, str]]) -> str:
             if page in rng:
                 items.append(f'<li class="toc-row"><a href="#page-{page:02d}"><span class="toc-no">{page:02d}</span><span class="toc-t">{html.escape(title)}</span></a></li>')
     return '<section class="toc front" id="toc"><div class="toc-head"><div class="toc-k">Contents</div><h1>目录</h1></div><ol class="toc-list">' + "\n".join(items) + '</ol></section>'
+
+
+def page_map_block(page_map: dict, pages: list[tuple[int, str]]) -> str:
+    mapping = page_map.get("mapping", {})
+    rows = []
+    for page, title in pages:
+        v = mapping.get(f"{page:02d}")
+        if not v:
+            continue
+        rows.append(f'<tr><td><b>PAGE {page:02d}</b></td><td>{html.escape(title)}</td>'
+                    f'<td class="num">{v["start"]}</td><td class="num">{v["end"]}</td><td class="num">{v["pages"]}</td></tr>')
+    return f'''<section class="chapter page-map" id="page-map">
+<header class="ch-head">
+  <div class="ch-meta"><span class="level">附录 A</span><span class="ch-no">PAGE MAP</span></div>
+  <h1>手册页 ↔ PDF 物理页对照</h1>
+</header>
+<div class="ch-body">
+<p>教程页（PAGE NN）是内容单位；A4 打印版一页内容会排成多张 PDF 页，所以两者不是 1:1。页眉的 <code>PAGE NN</code> 是手册页编号，页脚的阿拉伯数字是 PDF 物理页；本表用于互查，TOC 里的页码也是 PDF 物理页。</p>
+<table class="page-map-table"><thead><tr><th>手册页</th><th>标题</th><th>PDF 起</th><th>PDF 止</th><th>页数</th></tr></thead>
+<tbody>{''.join(rows)}</tbody></table>
+<p class="map-note">共 {len(pages)} 页手册内容；PDF 物理页数见 PDF 属性。</p>
+</div>
+</section>'''
 
 
 def cover_block(date: str, head: str) -> str:
@@ -217,7 +240,7 @@ def cover_block(date: str, head: str) -> str:
 </section>'''
 
 
-def build_html(out: Path, embed: bool) -> tuple[str, dict[str, Path], list[tuple[int, str]]]:
+def build_html(out: Path, embed: bool, page_map: dict | None = None) -> tuple[str, dict[str, Path], list[tuple[int, str]]]:
     out.mkdir(parents=True, exist_ok=True)
     image_dir = "assets/images"
     images: dict[str, Path] = {}
@@ -230,6 +253,7 @@ def build_html(out: Path, embed: bool) -> tuple[str, dict[str, Path], list[tuple
         blocks.append(block)
     date = _dt.date.today().isoformat()
     head = git_head()
+    map_html = page_map_block(page_map, pages) if page_map else ""
     css = CSS_FILE.read_text(encoding="utf-8")
     doc = f'''<!doctype html>
 <html lang="zh-CN">
@@ -248,6 +272,7 @@ def build_html(out: Path, embed: bool) -> tuple[str, dict[str, Path], list[tuple
 {toc_block(front_title, pages)}
 {front}
 {''.join(blocks)}
+{map_html}
 <section class="back-cover"><p>全书 24 页 · 五级 · 一条可复现的工程学习线</p><p class="bc-small">正文正典：{TUTORIAL.name}/page-*.md · 构建 {date} · baseline {head}</p></section>
 </div>
 </body>
@@ -261,15 +286,15 @@ def build_html(out: Path, embed: bool) -> tuple[str, dict[str, Path], list[tuple
     return doc, images, pages
 
 
-def write_html(out: Path, embed: bool) -> Path:
-    html_doc, _, _ = build_html(out, embed)
+def write_html(out: Path, embed: bool, page_map: dict | None = None) -> Path:
+    html_doc, _, _ = build_html(out, embed, page_map)
     target = out / "tutorial-book.html"
     target.write_text(html_doc, encoding="utf-8")
     return target
 
 
-def write_print_html(out: Path) -> Path:
-    html_doc, _, _ = build_html(out, embed=False)
+def write_print_html(out: Path, page_map: dict | None = None) -> Path:
+    html_doc, _, _ = build_html(out, embed=False, page_map=page_map)
     print_html = out / ".print.html"
     print_html.write_text(html_doc, encoding="utf-8")
     return print_html
@@ -297,8 +322,8 @@ def write_readme(out: Path) -> Path:
 由 `toolbox/book/build_manual.py` 从 `tutorial/` 正典生成；不要手改产物。
 
 - `tutorial-book.html`：自包含 HTML（CSS/图片内嵌，可直接分享）
-- `tutorial-book.pdf`：A4 打印版（WeasyPrint，含目录页码/页眉页脚）
-- 构建：`make book`（或 `uv run --offline --with weasyprint --with markdown python3 toolbox/book/build_manual.py`）
+- `tutorial-book.pdf`：A4 打印版（WeasyPrint，含目录页码/页眉页脚；附录 A 为「手册页 ↔ PDF 物理页」对照）
+- 构建：`make book`（内部两遍：先渲染取页码，再写入附录 A 后重渲染）
 - 来源：`tutorial/OVERVIEW.md` + `tutorial/page-00..23.md`；图片来自 `tutorial/images/`
 - 生成日期：{_dt.date.today().isoformat()} · baseline `{git_head()}`
 - 注意：改内容请改 md，然后重跑；本目录是生成物。
@@ -315,19 +340,23 @@ def main() -> None:
     ap.add_argument("--pdf", action="store_true", help="只生成 PDF")
     ap.add_argument("--no-embed", action="store_true", help="HTML 不内嵌图片（生成 assets/ 目录）")
     ap.add_argument("--print-html", action="store_true", help="只生成给 PDF 用的 .print.html + assets（不渲染 PDF）")
+    ap.add_argument("--page-map", type=Path, help="page-map.json（附录 A：手册页→PDF 页对照）")
     args = ap.parse_args()
     out = args.out.resolve()
     out.mkdir(parents=True, exist_ok=True)
     do_html = args.html or not args.pdf
     do_pdf = args.pdf or not args.html
+    page_map = None
+    if args.page_map and args.page_map.is_file():
+        page_map = __import__("json").loads(args.page_map.read_text(encoding="utf-8"))
     if args.print_html:
-        target = write_print_html(out)
+        target = write_print_html(out, page_map)
         print(f"PRINT: {target}  {target.stat().st_size/1024/1024:.1f} MB")
         readme = write_readme(out)
         print(f"README: {readme}")
         return
     if do_html:
-        target = write_html(out, embed=not args.no_embed)
+        target = write_html(out, embed=not args.no_embed, page_map=page_map)
         print(f"HTML: {target}  {target.stat().st_size/1024/1024:.1f} MB")
     if do_pdf:
         target = write_pdf(out)

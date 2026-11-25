@@ -46,3 +46,10 @@ uv run --offline --with weasyprint python3 toolbox/book/render_pdf.py \
 - `toolbox/book/book.css`：A4 版式、封面、目录、章节、代码块、表格、图注、页眉页脚。
 - 字体：Noto Serif/Sans CJK SC + Noto Sans Mono CJK SC（系统已有）。
 - 自包含 HTML 是发布阅读版；PDF 是打印/评审版，两者同一份 HTML 结构。
+
+
+## 页码：声明页 vs PDF 物理页
+
+- 教程页（PAGE 00…23）是内容单位，不是 PDF 页；一页内容在 A4 上会排成 4–7 页，**不可能 1:1**。
+- 页眉 `PAGE NN` = 手册页编号；页脚数字 = PDF 物理页；TOC 里是 PDF 物理页。
+- PDF 附录 A 自动生成「手册页 → PDF 起止页」对照表，由 `extract_page_map.py` 在第一遍渲染后提取，第二遍渲染写入（`make book-pdf` 已封装两遍）。

@@ -257,15 +257,20 @@ audit:
 # 新手册：tutorial/ 正典 → 自包含 HTML + A4 PDF（管线在 toolbox/book/）
 BOOK_OUT := materials/deliverable/tutorial-book
 
-book: book-html book-pdf
+book: book-pdf book-html
 
 book-html:
-	@python3 toolbox/book/build_manual.py --html --out $(BOOK_OUT)
+	@if [ -f $(BOOK_OUT)/page-map.json ]; then 		python3 toolbox/book/build_manual.py --html --page-map $(BOOK_OUT)/page-map.json --out $(BOOK_OUT); 	else 		python3 toolbox/book/build_manual.py --html --out $(BOOK_OUT); 	fi
 
 book-pdf:
 	@python3 toolbox/book/build_manual.py --print-html --out $(BOOK_OUT)
 	@uv run --offline --with weasyprint python3 toolbox/book/render_pdf.py $(BOOK_OUT)/.print.html $(BOOK_OUT)/tutorial-book.pdf
+	@python3 toolbox/book/extract_page_map.py $(BOOK_OUT)/tutorial-book.pdf $(BOOK_OUT)/page-map.json
+	@python3 toolbox/book/build_manual.py --print-html --page-map $(BOOK_OUT)/page-map.json --out $(BOOK_OUT)
+	@uv run --offline --with weasyprint python3 toolbox/book/render_pdf.py $(BOOK_OUT)/.print.html $(BOOK_OUT)/tutorial-book.pdf
+	@python3 toolbox/book/extract_page_map.py $(BOOK_OUT)/tutorial-book.pdf $(BOOK_OUT)/page-map.json
 	@rm -f $(BOOK_OUT)/.print.html
+	@rm -rf $(BOOK_OUT)/assets
 
 # 教材可跟随性验收线（ADR 0002 / materials/docs/verify-line.md）
 # T0：静态，不执行页面命令（pre-commit 调）；T1：加跑 kind: offline 命令。

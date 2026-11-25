@@ -471,3 +471,9 @@ body {
   .toc-row a::after { content: ""; }
   .ch-body pre { white-space: pre-wrap; }
 }
+
+/* ---------- 附录 A：页码对照 ---------- */
+.page-map .ch-body > p { font-size: 9.4pt; }
+.page-map-table td.num { text-align: right; font-family: var(--mono); white-space: nowrap; }
+.page-map-table th { font-family: var(--sans); }
+.page-map .map-note { margin-top: 3mm; font-family: var(--mono); font-size: 7.6pt; color: var(--muted); }
