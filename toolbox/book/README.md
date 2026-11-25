@@ -53,3 +53,10 @@ uv run --offline --with weasyprint python3 toolbox/book/render_pdf.py \
 - 教程页（PAGE 00…23）是内容单位，不是 PDF 页；一页内容在 A4 上会排成 4–7 页，**不可能 1:1**。
 - 页眉 `PAGE NN` = 手册页编号；页脚数字 = PDF 物理页；TOC 里是 PDF 物理页。
 - PDF 附录 A 自动生成「手册页 → PDF 起止页」对照表，由 `extract_page_map.py` 在第一遍渲染后提取，第二遍渲染写入（`make book-pdf` 已封装两遍）。
+
+
+## 全书地图（book-only）
+
+- 书的前置「全书地图」不再直接搬 `tutorial/OVERVIEW.md`（那是给网页/城市图用的，含大图、长链接和 PRD 表）。
+- 书用 `toolbox/book/overview.md`：五级阶梯 + L1 AON 图 + 24 页一览（页标题/一句话自动从 `page-*.md` 提取）+ 怎么读，约 3 页。
+- 网页版 OVERVIEW 不变，两边各自解决各自的问题。

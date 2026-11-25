@@ -29,6 +29,7 @@ import markdown
 ROOT = Path(__file__).resolve().parents[2]
 TUTORIAL = ROOT / "tutorial"
 CSS_FILE = Path(__file__).resolve().parent / "book.css"
+BOOK_OVERVIEW = Path(__file__).resolve().parent / "overview.md"
 DEFAULT_OUT = ROOT / "materials" / "deliverable" / "tutorial-book"
 
 TITLE = "电商问数 · 工程手册"
@@ -162,11 +163,36 @@ def page_block(page: int, images: dict[str, Path], image_dir: str, embed: bool) 
     return block, title, level
 
 
-def front_block(images: dict[str, Path], image_dir: str, embed: bool) -> tuple[str, str]:
-    path = TUTORIAL / "OVERVIEW.md"
+def page_summary(page: int) -> str:
+    text = (TUTORIAL / f"page-{page:02d}.md").read_text(encoding="utf-8")
+    m = re.search(r"## 这一页构建什么\n\n(.+?)(?:\n\n|\n## )", text, re.S)
+    raw = m.group(1) if m else ""
+    raw = re.sub(r"!\[[^\]]*\]\([^)]+\)", "", raw)
+    raw = re.sub(r"[*_`>#]", "", raw)
+    raw = re.sub(r"\s+", " ", raw).strip()
+    m2 = re.search(r"^(.+?[。；])", raw)
+    s = m2.group(1) if m2 else raw
+    return s[:64] + ("…" if len(s) > 64 else "")
+
+
+def page_index_table(pages: list[tuple[int, str]]) -> str:
+    rows = []
+    for level, short, desc, rng in LEVEL_ORDER:
+        rows.append(f'<tr class="level-row"><td colspan="3"><span class="pi-level">{level} · {short}</span> {html.escape(desc)}</td></tr>')
+        for page, title in pages:
+            if page in rng:
+                rows.append(f'<tr><td class="pi-no">PAGE {page:02d}</td><td class="pi-title">{html.escape(title)}</td><td class="pi-sum">{html.escape(page_summary(page))}</td></tr>')
+    return ('<table class="page-index"><thead><tr><th>页</th><th>标题</th><th>这一页构建什么</th></tr></thead>'
+            '<tbody>' + ''.join(rows) + '</tbody></table>')
+
+
+def front_block(images: dict[str, Path], image_dir: str, embed: bool, pages: list[tuple[int, str]]) -> tuple[str, str]:
+    path = BOOK_OVERVIEW
     md_text = path.read_text(encoding="utf-8")
     title = first_h1(md_text)
+    md_text = md_text.replace("{{PAGE_INDEX}}", page_index_table(pages))
     body = convert(strip_first_h1(md_text), TUTORIAL, image_dir, images, embed)
+    body = body.replace("<h2>24 页一览</h2>", '<h2 class="page-index-heading">24 页一览</h2>')
     block = f'''<section class="chapter front-map" id="overview">
 <header class="ch-head">
   <div class="ch-meta"><span class="level">全书地图</span><span class="ch-no">OVERVIEW</span></div>
@@ -244,13 +270,13 @@ def build_html(out: Path, embed: bool, page_map: dict | None = None) -> tuple[st
     out.mkdir(parents=True, exist_ok=True)
     image_dir = "assets/images"
     images: dict[str, Path] = {}
-    front, front_title = front_block(images, image_dir, embed)
     pages: list[tuple[int, str]] = []
     blocks = []
     for p in range(24):
         block, title, _ = page_block(p, images, image_dir, embed)
         pages.append((p, title))
         blocks.append(block)
+    front, front_title = front_block(images, image_dir, embed, pages)
     date = _dt.date.today().isoformat()
     head = git_head()
     map_html = page_map_block(page_map, pages) if page_map else ""
