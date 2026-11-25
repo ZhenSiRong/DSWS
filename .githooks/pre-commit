@@ -4,11 +4,12 @@
 # 启用：make install-hooks     # git config core.hooksPath .githooks（仅本仓库）
 # 绕过：git commit --no-verify # 不推荐；只在确认误报时用
 #
-# 检查四件事（离线、目标 < 2s）：
-#   1) python3 manual/shots/audit_book.py：24 页结构 / 图引用 / README 坏链
-#   2) backend/uv.lock 不允许提交（uv 会按本机镜像源重写 registry URL）
-#   3) staged 的 manual/**/*.md 不得出现用户名 / 家目录绝对路径
-#   4) 页面契约 T0（scripts/verify.py --fast）：页面 ↔ 契约双向同步 / 静态路径符号 / 证据存在
+# 检查五件事（离线、目标 < 2s）：
+#   1) python3 toolbox/shots/audit_book.py：24 页结构 / 图引用 / README 坏链
+#   2) system/system/backend/uv.lock 不允许提交（uv 会按本机镜像源重写 registry URL）
+#   3) staged 的 tutorial/**/*.md 不得出现用户名 / 家目录绝对路径
+#   4) 任务台账准确性：done 钉证据 + 依赖/review/甘特身份（task.py check --quick）
+#   5) 页面契约 T0（toolbox/scripts/verify.py --fast）：页面 ↔ 契约双向同步 / 静态路径符号 / 证据存在
 # 脚本缺失时对应检查跳过（防误伤历史/浅克隆 checkout）。
 set -u
 
@@ -19,12 +20,12 @@ fail=0
 note() { printf '%s\n' "$*" >&2; }
 
 # ---- 1) 全书结构审计（输出只在失败时展示，避免每次提交刷屏）--------------
-if [ -f manual/shots/audit_book.py ]; then
+if [ -f toolbox/shots/audit_book.py ]; then
   if command -v python3 >/dev/null 2>&1; then
-    audit_out="$(python3 manual/shots/audit_book.py 2>&1)"
+    audit_out="$(python3 toolbox/shots/audit_book.py 2>&1)"
     if [ $? -ne 0 ]; then
       note "$audit_out"
-      note "✗ pre-commit 拒绝：manual/shots/audit_book.py 结构审计未通过（明细见上）。"
+      note "✗ pre-commit 拒绝：toolbox/shots/audit_book.py 结构审计未通过（明细见上）。"
       note "  改好页面后 git add 再提交；确认误报可临时绕过：git commit --no-verify"
       fail=$((fail + 1))
     fi
@@ -32,21 +33,21 @@ if [ -f manual/shots/audit_book.py ]; then
     note "⚠ pre-commit 跳过结构审计：未找到 python3"
   fi
 else
-  note "⚠ pre-commit 跳过结构审计：manual/shots/audit_book.py 不存在"
+  note "⚠ pre-commit 跳过结构审计：toolbox/shots/audit_book.py 不存在"
 fi
 
-# ---- 2) 锁文件：backend/uv.lock 禁止提交 -----------------------------------
-if ! git diff --cached --quiet -- backend/uv.lock; then
-  note "✗ pre-commit 拒绝：backend/uv.lock 被修改并暂存。"
+# ---- 2) 锁文件：system/system/backend/uv.lock 禁止提交 -----------------------------------
+if ! git diff --cached --quiet -- system/system/backend/uv.lock; then
+  note "✗ pre-commit 拒绝：system/system/backend/uv.lock 被修改并暂存。"
   note "  uv 会按本机镜像源（~/.config/uv/uv.toml）重写 registry URL；锁文件必须与仓库一致。"
-  note "  修复：git restore --staged --worktree backend/uv.lock"
-  note "        （尚未暂存时等价于 git checkout -- backend/uv.lock）"
+  note "  修复：git restore --staged --worktree system/system/backend/uv.lock"
+  note "        （尚未暂存时等价于 git checkout -- system/system/backend/uv.lock）"
   fail=$((fail + 1))
 fi
 
 # ---- 3) staged 的 manual Markdown：敏感串 ----------------------------------
-staged_md="$(git diff --cached --name-only --diff-filter=ACMR -- 'manual/' \
-  | grep -E '\.md$' | grep -vE '^manual/review/' || true)"
+staged_md="$(git diff --cached --name-only --diff-filter=ACMR -- 'tutorial/' \
+  | grep -E '\.md$' | grep -vE '^materials/review/' || true)"
 while IFS= read -r f; do
   [ -n "$f" ] || continue
   hit="$(git show ":$f" 2>/dev/null | grep -nIE 'zhensirong|/home/' || true)"
@@ -60,14 +61,28 @@ done <<EOF
 $staged_md
 EOF
 
-# ---- 4) 页面契约 T0（ADR 0002；<2s，不执行页面命令）------------------------
-if [ -f scripts/verify.py ] && [ -d manual/verify/contracts ]; then
+# ---- 4) 任务台账准确性（done 钉证据 / 依赖·review / 甘特身份对账）------------
+if [ -f toolbox/scripts/task.py ]; then
   if command -v python3 >/dev/null 2>&1; then
-    verify_out="$(python3 scripts/verify.py --fast 2>&1)"
+    prog_out="$(python3 toolbox/scripts/task.py check --quick 2>&1)"
+    if [ $? -ne 0 ]; then
+      note "$prog_out"
+      note "✗ pre-commit 拒绝：任务台账 workflows/ledger.yaml 有漂移（done 无证据/review，或甘特旧于台账）。"
+      note "  重渲：python3 toolbox/scripts/task.py render && git add materials/humen-desicions/progress-gantt.png*"
+      note "  或经 toolbox/scripts/task.py 修正台账后 git add 再提交；确认误报可临时绕过：git commit --no-verify"
+      fail=$((fail + 1))
+    fi
+  fi
+fi
+
+# ---- 5) 页面契约 T0（ADR 0002；<2s，不执行页面命令）------------------------
+if [ -f toolbox/scripts/verify.py ] && [ -d toolbox/verify/contracts ]; then
+  if command -v python3 >/dev/null 2>&1; then
+    verify_out="$(python3 toolbox/scripts/verify.py --fast 2>&1)"
     if [ $? -ne 0 ]; then
       note "$verify_out"
       note "✗ pre-commit 拒绝：页面契约 T0 未通过（页面块与契约不同步、静态路径/符号不存在、证据缺失）。"
-      note "  修复：同步 manual/page-*.md 与 manual/verify/contracts/page-*.yaml（见 docs/verify-line.md）"
+      note "  修复：同步 tutorial/page-*.md 与 toolbox/verify/system/contracts/page-*.yaml（见 materials/docs/verify-line.md）"
       note "  确认误报可临时绕过：git commit --no-verify"
       fail=$((fail + 1))
     fi
@@ -82,4 +97,4 @@ if [ "$fail" -ne 0 ]; then
   exit 1
 fi
 
-echo "✓ pre-commit 护栏通过（结构审计 / uv.lock / 敏感串）"
+echo "✓ pre-commit 护栏通过（结构审计 / uv.lock / 敏感串 / 进度 / 契约 T0）"

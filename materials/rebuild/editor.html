@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>重构轨编辑器 · GrapesJS 试点（p17）</title>
+<!-- 自托管 GrapesJS（BSD-3），vendor 由 npm grapesjs@0.21.13 的 dist 拷入 -->
+<link rel="stylesheet" href="vendor/grapes.min.css">
+<script src="vendor/grapes.min.js"></script>
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; font-family: system-ui, "Segoe UI", sans-serif; }
+  #topbar { display: flex; align-items: center; gap: .5rem; padding: .5rem .8rem;
+    background: #1f2328; color: #e6edf3; flex-wrap: wrap; }
+  #topbar strong { font-size: .95rem; margin-right: .5rem; }
+  #topbar button { padding: .3rem .7rem; font-size: .8rem; color: #e6edf3;
+    background: #30363d; border: 1px solid #444c56; border-radius: 6px; cursor: pointer; }
+  #topbar button:hover { background: #444c56; }
+  #topbar .hint { font-size: .75rem; color: #9198a1; margin-left: auto; }
+  #layout { display: flex; height: calc(100% - 44px); }
+  #left { width: 240px; overflow-y: auto; border-right: 1px solid #d0d7de; background: #fff; }
+  #center { flex: 1; min-width: 0; }
+  #right { width: 260px; overflow-y: auto; border-left: 1px solid #d0d7de; background: #fff; }
+  .panel-title { font-size: .75rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .04em; color: #57606a; padding: .6rem .8rem .3rem; }
+  #gjs { height: 100%; }
+  /* GrapesJS 块管理器视觉微调 */
+  .gjs-block { width: auto; min-height: auto; padding: .6rem; font-size: .8rem; }
+  .gjs-block-category .gjs-title { font-size: .8rem; }
+</style>
+</head>
+<body>
+<div id="topbar">
+  <strong>重构轨编辑器 · p17 试点</strong>
+  <button id="btn-import">导入 p17 阅读版</button>
+  <button id="btn-export-html">导出 HTML</button>
+  <button id="btn-export-css">导出 CSS</button>
+  <button id="btn-save-state">保存 state JSON</button>
+  <button id="btn-load-state">载入 state JSON</button>
+  <span class="hint">重构版自正典（不以 md 为事实源）；md 派生阅读版永不手改</span>
+</div>
+<div id="layout">
+  <div id="left">
+    <div class="panel-title">组件块（8 块词表）</div>
+    <div id="blocks"></div>
+  </div>
+  <div id="center"><div id="gjs"></div></div>
+  <div id="right">
+    <div class="panel-title">样式管理器</div>
+    <div id="styles"></div>
+    <div class="panel-title">图层</div>
+    <div id="layers"></div>
+    <div class="panel-title">属性</div>
+    <div id="traits"></div>
+  </div>
+</div>
+<input type="file" id="file-state" accept="application/json" style="display:none">
+
+<script>
+// 画布内加载阅读版基线样式 + 重构组件样式（相对 editor.html 位置）
+const CANVAS_STYLES = ["../../assets/lesson.css", "../../assets/read.css", "rebuild.css"];
+
+const editor = grapesjs.init({
+  container: "#gjs",
+  height: "100%",
+  width: "auto",
+  fromElement: false,
+  storageManager: { type: "local", autosave: true, autoload: false, stepsBeforeSave: 1,
+    options: { local: { key: "gjs-rebuild-p17" } } },
+  canvas: { styles: CANVAS_STYLES },
+  blockManager: { appendTo: "#blocks" },
+  styleManager: { appendTo: "#styles" },
+  layerManager: { appendTo: "#layers" },
+  traitManager: { appendTo: "#traits" },
+  panels: { defaults: [] },
+  deviceManager: { devices: [
+    { name: "桌面", width: "" },
+    { name: "移动", width: "375px", widthMedia: "480px" },
+  ]},
+});
+
+// ---- 注册 8 块（Q7 词表；p17 先用 ③④⑤⑥⑦⑧）----
+const bm = editor.BlockManager;
+const CAT = "重构组件";
+
+bm.add("rb-nav", { label: "① 页面导航", category: CAT, content:
+  '<nav class="rb-nav"><a href="#prev">← 上一页</a><a href="#toc">目录</a><a href="#next">下一页 →</a></nav>' });
+
+bm.add("rb-progress", { label: "② 阅读进度条", category: CAT, content:
+  '<div class="rb-progress"><span></span></div>' });
+
+bm.add("rb-code", { label: "③ 代码块+复制", category: CAT, content:
+  '<div class="rb-code"><button class="rb-copy" type="button">复制</button>' +
+  '<pre><code class="language-bash">scripts/lab save p17-before</code></pre></div>' });
+
+bm.add("rb-callout", { label: "④ 提示卡 callout", category: CAT, content:
+  '<div class="rb-callout note"><p class="rb-callout-title">提示</p>' +
+  '<p>只重试 1 次、只对可重试错误生效。</p></div>' });
+
+bm.add("rb-step", { label: "⑤ 步骤卡", category: CAT, content:
+  '<div class="rb-step"><div class="rb-step-num">1</div><div>' +
+  '<p class="rb-step-title">拍快照</p><p>拆一刀前先留退路。</p>' +
+  '<p class="rb-step-expect">预期：已保存快照 "p17-before"。</p></div></div>' });
+
+bm.add("rb-compare", { label: "⑥ 对照表", category: CAT, content:
+  '<table class="rb-compare"><thead><tr><th>事实</th><th>说明</th></tr></thead>' +
+  '<tbody><tr><td>触发</td><td>取决于模型是否生成可重试错误</td></tr>' +
+  '<tr><td>纠正成功</td><td>不能稳定复现，不能当判据</td></tr></tbody></table>' });
+
+bm.add("rb-comic", { label: "⑦ 漫画+caption", category: CAT, content:
+  '<figure class="rb-comic"><img alt="漫画" src="../images/page-17-comic-one-retry.webp">' +
+  '<figcaption>▲ 纠错 = 一次有上限的赌博。</figcaption></figure>' });
+
+bm.add("rb-toc", { label: "⑧ 锚点目录", category: CAT, content:
+  '<nav class="rb-toc"><p class="rb-toc-title">本页目录</p><ul>' +
+  '<li><a href="#build">这一页构建什么</a></li><li><a href="#guess">猜一猜</a></li>' +
+  '<li><a href="#do">动手</a></li></ul></nav>' });
+
+// ---- 导入 p17 阅读版为起点（提取 main.page 内容）----
+document.getElementById("btn-import").addEventListener("click", async () => {
+  try {
+    const res = await fetch("../read/page-17.html");
+    const txt = await res.text();
+    const doc = new DOMParser().parseFromString(txt, "text/html");
+    const main = doc.querySelector("main.page") || doc.body;
+    editor.setComponents(main.innerHTML);
+    editor.DomComponents.getWrapper().set({ stylable: true });
+    alert("已导入 p17 阅读版为起点（main.page 内容）");
+  } catch (e) { alert("导入失败：" + e.message); }
+});
+
+// ---- 导出干净 HTML / CSS 落盘（浏览器下载）----
+function download(name, text, mime) {
+  const blob = new Blob([text], { type: mime });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(a.href);
+}
+document.getElementById("btn-export-html").addEventListener("click", () => {
+  const html = editor.getHtml();
+  const css = editor.getCss();
+  const page = '<!DOCTYPE html>\n<html lang="zh-CN">\n<head>\n<meta charset="utf-8">\n' +
+    '<meta name="viewport" content="width=device-width, initial-scale=1">\n' +
+    '<title>p17 重构版</title>\n<link rel="stylesheet" href="rebuild.css">\n' +
+    '<style>\n' + css + '\n</style>\n</head>\n<body>\n<main class="page">\n' +
+    html + '\n</main>\n<script src="rebuild.js"></script>\n</body>\n</html>\n';
+  download("page-17.rebuild.html", page, "text/html");
+});
+document.getElementById("btn-export-css").addEventListener("click", () => {
+  download("page-17.rebuild.css", editor.getCss(), "text/css");
+});
+
+// ---- 项目 state JSON 存/取（幂等重开：Q8 判据6）----
+document.getElementById("btn-save-state").addEventListener("click", () => {
+  download("page-17.rebuild.state.json", JSON.stringify(editor.getProjectData()), "application/json");
+});
+const fileInput = document.getElementById("file-state");
+document.getElementById("btn-load-state").addEventListener("click", () => fileInput.click());
+fileInput.addEventListener("change", async () => {
+  const f = fileInput.files[0]; if (!f) return;
+  editor.loadProjectData(JSON.parse(await f.text()));
+  alert("已载入 state JSON");
+});
+
+// ---- 画布内接通「复制」按钮（③ 代码块）----
+editor.on("load", () => {
+  const doc = editor.Canvas.getDocument();
+  if (!doc) return;
+  doc.addEventListener("click", (ev) => {
+    const btn = ev.target.closest(".rb-copy");
+    if (!btn) return;
+    const code = btn.parentElement.querySelector("code");
+    if (code) navigator.clipboard && navigator.clipboard.writeText(code.textContent);
+  });
+});
+
+// 暴露给自动化实测探针
+window.__editor = editor;
+window.__blockCount = () => bm.getAll().length;
+</script>
+</body>
+</html>

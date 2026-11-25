@@ -3,29 +3,40 @@
 > 按契约从零搭的第二套实现。旧系统（`../shopkeeper-agent` + `../shopkeeper-agent-frontend`）
 > 冻结为 `legacy`，只作反例库与负向夹具来源。
 
-- 从零搭建 / 排障 / 环境变量：[`docs/SETUP-FROM-SCRATCH.md`](docs/SETUP-FROM-SCRATCH.md)
-- Docker 部署：[`docs/DOCKER-DEPLOY.md`](docs/DOCKER-DEPLOY.md)
-- S7 设计记录：[`docs/S7-HANDOFF.md`](docs/S7-HANDOFF.md)
+- 从零搭建 / 排障 / 环境变量：[`materials/docs/SETUP-FROM-SCRATCH.md`](materials/docs/SETUP-FROM-SCRATCH.md)
+- Docker 部署：[`materials/docs/DOCKER-DEPLOY.md`](materials/docs/DOCKER-DEPLOY.md)
+- S7 设计记录：[`materials/docs/S7-HANDOFF.md`](materials/docs/S7-HANDOFF.md)
 - 路线图：`../shopkeeper-agent/docs/REBUILD-ROADMAP.md`
+
+## 仓库布局（四类）
+
+| 目录 | 内容 |
+|---|---|
+| `tutorial/` | 教程正典：24 页正文、阅读版、图片、课程/城市地图 |
+| `toolbox/` | 制作教程的工具：页首图、截图、审计、T1 契约、任务台账 |
+| `system/` | 教程所教的示例系统：backend / frontend / contracts / fixtures / compose |
+| `materials/` | 设计文档、研究决策、评审证据、发布物 |
+
+根目录旧路径（`manual/`、`backend/`、`scripts/`…）保留兼容软链；新文件写进上面四个真实目录。完整地图见 [`PROJECT-MAP.md`](PROJECT-MAP.md)。
 
 ## 演示
 
 > GitHub 不支持在 README 内嵌 MP4；另外 README 原生相对路径会走 `raw.githubusercontent.com`，
-> 国内网络常加载失败，所以这里用 jsDelivr CDN 预览（GIF 与 MP4 都在仓库 `deliverable/v2/`）。
+> 国内网络常加载失败，所以这里用 jsDelivr CDN 预览（GIF 与 MP4 都在仓库 `materials/deliverable/v2/`）。
 > 点击 GIF 即可跳到完整 MP4。
 
-[![v2 演示：原版界面 + LangGraph 12 节点 + 真实问数 + 右上角功能角标](https://gcore.jsdelivr.net/gh/ZhenSiRong/DSWS@main/deliverable/v2/screenshots/v2-demo-preview.gif)](https://gcore.jsdelivr.net/gh/ZhenSiRong/DSWS@89611d9/deliverable/v2/DSWS-v2-original-ui-demo.mp4)
+[![v2 演示：原版界面 + LangGraph 12 节点 + 真实问数 + 右上角功能角标](https://gcore.jsdelivr.net/gh/ZhenSiRong/DSWS@main/materials/deliverable/v2/screenshots/v2-demo-preview.gif)](https://gcore.jsdelivr.net/gh/ZhenSiRong/DSWS@89611d9/materials/deliverable/v2/DSWS-v2-original-ui-demo.mp4)
 
-[直接打开 GIF](https://gcore.jsdelivr.net/gh/ZhenSiRong/DSWS@main/deliverable/v2/screenshots/v2-demo-preview.gif) · [下载 / 全屏播放 MP4（61s：GMV 问数、商品级排名、校正回环、UNION 策略拒绝；右上角标注当前功能）](https://gcore.jsdelivr.net/gh/ZhenSiRong/DSWS@89611d9/deliverable/v2/DSWS-v2-original-ui-demo.mp4)
+[直接打开 GIF](https://gcore.jsdelivr.net/gh/ZhenSiRong/DSWS@main/materials/deliverable/v2/screenshots/v2-demo-preview.gif) · [下载 / 全屏播放 MP4（61s：GMV 问数、商品级排名、校正回环、UNION 策略拒绝；右上角标注当前功能）](https://gcore.jsdelivr.net/gh/ZhenSiRong/DSWS@89611d9/materials/deliverable/v2/DSWS-v2-original-ui-demo.mp4)
 
-> v2 的部署、验证与证据见 [`deliverable/v2/README-v2.md`](deliverable/v2/README-v2.md)。
+> v2 的部署、验证与证据见 [`materials/deliverable/v2/README-v2.md`](materials/deliverable/v2/README-v2.md)。
 
 ## 文档
 
 | 文档 | 内容 | 链接 |
 |---|---|---|
-| **设计文档** | 32 张设计图 + 每张图的读图地图（一图一页 + 一图一地图） | [design-doc.pdf](https://gcore.jsdelivr.net/gh/ZhenSiRong/DSWS@335f118/design/design-doc.pdf) |
-| **参考书**（原完整版，查字典用；主线见 manual/） | 162 页，S0–S8 的施工顺序与验收 | [dev-book.pdf](https://gcore.jsdelivr.net/gh/ZhenSiRong/DSWS@335f118/design/book-editorial/pdf/dev-book.pdf) |
+| **设计文档** | 32 张设计图 + 每张图的读图地图（一图一页 + 一图一地图） | [design-doc.pdf](https://gcore.jsdelivr.net/gh/ZhenSiRong/DSWS@335f118/materials/design/design-doc.pdf) |
+| **参考书**（原完整版，查字典用；主线见 tutorial/） | 162 页，S0–S8 的施工顺序与验收 | [dev-book.pdf](https://gcore.jsdelivr.net/gh/ZhenSiRong/DSWS@335f118/materials/design/book-editorial/pdf/dev-book.pdf) |
 
 ## 当前进度
 
@@ -182,7 +193,7 @@ rebuild/
 │   ├── src/components/         # StepRail / ErrorCard / PseudoErrorCard
 │   └── tests/                  # 无头浏览器 + SSE 回放服务器
 ├── scripts/                    # docker-smoke / docker-reset / *-ui 验收脚本
-└── docs/                       # 搭建手册、Schema 文档、部署与交接文档
+└── materials/docs/                       # 搭建手册、Schema 文档、部署与交接文档
 ```
 
 HTTP 接口：`GET /api/health`、`GET /api/steps`、`GET /api/errors`、
@@ -272,4 +283,4 @@ SQL 在**连库之前**过六道检查：可执行注释/词法禁词 → 单语
 7. **浏览器验收需要 Chrome / Edge**：`playwright-core` 不自带浏览器。
 8. **端口隔离**：后端 8100 / 前端 5273；临时验收 8101/5274（S0）、8102/5275（S6）、
    8103/5276（S7），可与旧系统 8000/5173 同时运行。
-9. **排障**：先看 [`docs/SETUP-FROM-SCRATCH.md`](docs/SETUP-FROM-SCRATCH.md) 的常见故障表。
+9. **排障**：先看 [`materials/docs/SETUP-FROM-SCRATCH.md`](materials/docs/SETUP-FROM-SCRATCH.md) 的常见故障表。
