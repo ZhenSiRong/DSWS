@@ -77,3 +77,26 @@ scripts/design-serve.sh 8788
 
 - 入口页列出三张试点；点「编辑」进 `editor.html`：双击改字、拖动、四角缩放、顶部导出 HTML。
 - 浏览器里的草稿存在 localStorage；要写回仓库需「下载 HTML」替换对应 `page-NN/index.html`，再跑 `python3 manual/designs/build_visuals.py NN` 重出 PNG/WebP。
+
+
+## 在编辑器里改完，怎么「另存 / 覆盖保存」
+
+编辑器没有"保存到仓库"按钮，分三层：
+
+1. **浏览器草稿（自动）**：改完自动存 localStorage，刷新会恢复；只存在当前浏览器，不是仓库文件。
+2. **另存文件**：点顶部「下载 HTML」→ 浏览器下载到下载目录（文件名以浏览器为准），这就是你的编辑版，可以自己改名保存。
+3. **覆盖回项目**：
+
+```bash
+# 把下载的 HTML 覆盖 page-00 的 index.html，并重出 editor/PNG/WebP/阅读版
+scripts/design-save.sh 00 ~/Downloads/index.edited.html
+
+# 只重出当前 index.html 的 PNG/WebP（没有再传 HTML）
+scripts/design-save.sh 00
+```
+
+- 覆盖前会备份旧版：`page-NN/index.YYYYMMDD-HHMMSS.bak.html`
+- 会重新生成 `editor.html`（否则编辑器还显示旧版本）
+- 会重渲染 `out/poster.png` → `manual/images/page-NN-visual.webp`，并重生成阅读版 HTML + 跑 audit
+
+**注意**：`python3 manual/designs/build_visuals.py NN` 会用 `data/page-NN.json` **完全重建 index.html**，会覆盖你在编辑器里的手工改动。只想改文案时用它；想保留手工拖拽/排版时用 `design-save.sh`。
