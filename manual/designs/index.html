@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><title>页首图编辑入口</title>
+<style>
+ body{font-family:"Noto Sans CJK SC",sans-serif;max-width:960px;margin:48px auto;color:#1a1a1a;padding:0 20px}
+ h1{font-size:34px;margin:0 0 8px} p{color:#585858;line-height:1.6}
+ .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:28px}
+ .card{border:2px solid #1a1a1a;padding:18px}
+ .card h2{font-size:22px;margin:0 0 6px} .card .sub{font-size:14px;color:#585858;margin:0 0 14px}
+ a{color:#E65100;text-decoration:none;font-weight:700;display:block;margin:6px 0}
+ .hint{border-left:4px solid #E65100;padding:10px 14px;background:#fff8f3;margin-top:28px;font-size:14px;line-height:1.7}
+</style></head><body>
+<h1>页首图 · 编辑入口</h1>
+<p>三张试点：左边「实体」、右边「喻体」+ ①②③ 映射；文字全部 HTML 实时渲染。点「编辑」可拖拽/双击改字/导出。</p>
+<div class="grid">
+  <div class="card"><h2>p00 · 先体检，再开工</h2><p class="sub">六件工具 ↔ 装修前验房</p>
+    <a href="page-00/editor.html">✏️ 编辑 p00</a><a href="page-00/index.html">看设计源</a><a href="page-00/out/poster.png">看渲染 PNG</a></div>
+  <div class="card"><h2>p01 · 一台容器，一个世界</h2><p class="sub">容器/宿主机 ↔ 集装箱/房子</p>
+    <a href="page-01/editor.html">✏️ 编辑 p01</a><a href="page-01/index.html">看设计源</a><a href="page-01/out/poster.png">看渲染 PNG</a></div>
+  <div class="card"><h2>p02 · 先把仓库搭好</h2><p class="sub">5 表/115 行 ↔ 货架/叉车</p>
+    <a href="page-02/editor.html">✏️ 编辑 p02</a><a href="page-02/index.html">看设计源</a><a href="page-02/out/poster.png">看渲染 PNG</a></div>
+</div>
+<div class="hint">
+  <b>怎么改：</b>双击文字直接改；拖动移动；选中后用四角手柄缩放；左上角可切换「扫描 / 拆解 / 拼合」；导出按钮下载编辑后的 HTML。导出文件替换对应 <code>page-NN/index.html</code> 后，运行 <code>python3 manual/designs/build_visuals.py NN</code> 可重出 PNG/WebP。浏览器本地草稿只存在当前浏览器。
+</div>
+</body></html>

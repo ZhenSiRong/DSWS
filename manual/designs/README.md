@@ -66,3 +66,14 @@ python3 manual/designs/build_visuals.py --no-editor  # 只出 PNG/WebP
 - 插画生成记录：每页 `art-prompt.md`（Seedream 端点/尺寸/prompt）。
 - 注意：本机 `arkcli --input @本地图` 图生图需要 SSO 登录，当前为纯 prompt 生成；旧图归档在 `manual/images/archive/comics-v1/`。
 - 示例：`manual/designs/page-00`、`page-01`、`page-02`。
+
+
+## 编辑服务（给用户直接改）
+
+```bash
+scripts/design-serve.sh 8788
+# 浏览器打开： http://127.0.0.1:8788/manual/designs/
+```
+
+- 入口页列出三张试点；点「编辑」进 `editor.html`：双击改字、拖动、四角缩放、顶部导出 HTML。
+- 浏览器里的草稿存在 localStorage；要写回仓库需「下载 HTML」替换对应 `page-NN/index.html`，再跑 `python3 manual/designs/build_visuals.py NN` 重出 PNG/WebP。

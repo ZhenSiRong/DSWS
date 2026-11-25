@@ -22,6 +22,45 @@ FONT_BODY = '"Noto Sans CJK SC", "Source Han Sans SC", sans-serif'
 FONT_MONO = '"Noto Sans Mono CJK SC", "Noto Sans Mono", monospace'
 
 DATA = {
+ "00": {"eyebrow":"第 0 页 · L1 造 · 环境","title":"先体检，再开工","subtitle":"左边是真实工具，右边是装修前验房：每一件工具都在项目里对应一个动作","layout":"entity_metaphor",
+   "left_cards":[
+     {"icon":"docker","name":"Docker","role":"把 MySQL / ES / Qdrant 装进容器跑起来","judge":"docker compose ps"},
+     {"icon":"uv","name":"uv","role":"按 uv.lock 装 Python 依赖、建 backend/.venv","judge":"uv sync --frozen"},
+     {"icon":"nodedotjs","name":"Node.js + npm","role":"前端脚手架与协议测试","judge":"cd frontend && npm test"},
+     {"icon":"gnu","name":"GNU Make","role":"一键任务入口，常用流程收成一条命令","judge":"make doctor / make docker-up"},
+     {"name":"curl","role":"探活接口、看 SSE 返回","judge":"curl /api/health"},
+     {"icon":"git","name":"Git","role":"拿到仓库、看历史与回滚","judge":"git status / git log"}],
+   "metaphor_title":"喻体 · 装修前验房",
+   "art":"art/metaphor.jpeg",
+   "mappings":[
+     {"n":"①","label":"逐件检查工具 → 六件工具各司其职，缺一件都开不了工"},
+     {"n":"②","label":"打开工具箱看齐不齐 → make doctor 逐项打 ✓ 或 ✗"},
+     {"n":"③","label":"检查完才开工 → 12/12 通过、三个端口空着再进第 1 页"}],
+   "footer":"make doctor → 12/12 通过；三个端口 3307 / 8000 / 8081 空着"},
+ "01": {"eyebrow":"第 1 页 · L1 造 · 容器","title":"一台容器，一个世界","subtitle":"左边是容器与宿主机，右边是集装箱与房子：边界在哪，数据就在哪","layout":"entity_metaphor",
+   "left_cards":[
+     {"icon":"mysql","name":"lab-mysql 容器","role":"一个独立的 MySQL 空库，端口只开给本机","judge":"-p 127.0.0.1:3307:3306"},
+     {"name":"你的电脑（宿主机）","role":"容器跑在它上面，但不是同一个“本机”","judge":"从宿主机连 127.0.0.1:3307"},
+     {"name":"127.0.0.1","role":"容器里的回环地址指向容器自己","judge":"不是你的电脑"}],
+   "metaphor_title":"喻体 · 集装箱与房子",
+   "art":"art/metaphor.jpeg",
+   "mappings":[
+     {"n":"①","label":"集装箱有独立门牌 → 容器里的 127.0.0.1 是容器自己"},
+     {"n":"②","label":"房子放在电脑上 → 宿主机是另一个“本机”"},
+     {"n":"③","label":"箱门只对码头开 → 3307 只绑 127.0.0.1，外网进不来"}],
+   "footer":"容器 running + 能连上（SELECT VERSION() 有输出）+ 没有 dw"},
+ "02": {"eyebrow":"第 2 页 · L1 造 · 数据","title":"先把仓库搭好","subtitle":"左边是 5 个分区与 115 行货，右边是仓库货架与叉车：一条命令把货入库","layout":"entity_metaphor",
+   "left_cards":[
+     {"name":"fixtures/dw.sql","role":"建库、建表、灌数据全写在一个文件里","judge":"docker exec -i … < fixtures/dw.sql"},
+     {"name":"5 张表","role":"dim_customer / dim_date / dim_product / dim_region / fact_order","judge":"5 个分区"},
+     {"name":"115 行","role":"演示数据，够把问数链路跑通","judge":"SELECT COUNT(*) FROM fact_order"}],
+   "metaphor_title":"喻体 · 仓库货架与叉车",
+   "art":"art/metaphor.jpeg",
+   "mappings":[
+     {"n":"①","label":"货架分区 → 5 张表，各放各的货"},
+     {"n":"②","label":"叉车搬货 → 一条命令把 dw.sql 灌进容器"},
+     {"n":"③","label":"入库后盘点 → 你自己数出 5 张表 / 115 行 / 华北 19"}],
+   "footer":"SELECT COUNT(*) FROM fact_order → 115；华北 19"},
  "03": {"eyebrow":"第 3 页 · L1 造 · 服务","title":"把服务开到 8000","subtitle":"一个 HTTP 服务，一个接口，一次真正的“对外说话”","layout":"steps","steps":[
    {"n":"1","title":"写服务","detail":"FastAPI 应用，只留一个 GET /health","judge":"app = FastAPI()"},
    {"n":"2","title":"跑起来","detail":"uvicorn 监听本机 8000","judge":"Uvicorn running on http://127.0.0.1:8000"},
@@ -127,12 +166,12 @@ DATA = {
    "footer":"装修只换入口载体，不换承重墙"},
 }
 
-CSS = """
+CSS = """:root { --font-body: %(body)s; --font-mono: %(mono)s; --font-serif: "Noto Serif CJK SC", serif; }
 * { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; background: #e8e8e8; }
-.poster { position: relative; width: 1600px; height: 1000px; overflow: hidden; background:#fff; color:#1a1a1a; font-family:%(body)s; }
+.poster { position: relative; width: 1600px; height: 1000px; overflow: hidden; background:#fff; color:#1a1a1a; font-family:var(--font-body); }
 .head { position:absolute; left:72px; top:48px; width:1456px; }
-.eyebrow { margin:0; font-family:%(mono)s; font-size:19px; font-weight:700; color:#E65100; letter-spacing:1.5px; }
+.eyebrow { margin:0; font-family:var(--font-mono); font-size:19px; font-weight:700; color:#E65100; letter-spacing:1.5px; }
 h1 { margin:10px 0 0; font-size:58px; font-weight:900; line-height:1.1; letter-spacing:-1px; }
 .sub { margin:12px 0 0; color:#585858; font-size:23px; line-height:1.45; }
 .rule { margin-top:20px; height:2px; background:#1a1a1a; }
@@ -141,34 +180,53 @@ h1 { margin:10px 0 0; font-size:58px; font-weight:900; line-height:1.1; letter-s
 .cards.c4 { grid-template-columns:repeat(2, 1fr); }
 .card { border:2px solid #1a1a1a; padding:22px 24px 20px; background:#fff; min-height:330px; position:relative; }
 .cards.c4 .card { min-height:250px; }
-.card .num { position:absolute; right:16px; top:12px; color:#c9c9c9; font-family:%(mono)s; font-size:18px; }
+.card .num { position:absolute; right:16px; top:12px; color:#c9c9c9; font-family:var(--font-mono); font-size:18px; }
 .card .icon { width:44px; height:44px; object-fit:contain; margin-bottom:10px; }
 .card h2 { margin:6px 0 0; font-size:29px; font-weight:800; }
 .card .role { margin:10px 0 0; font-size:19px; line-height:1.45; color:#1a1a1a; }
-.card .judge { margin-top:14px; padding-top:10px; border-top:1px solid #c9c9c9; font-family:%(mono)s; font-size:15px; color:#E65100; line-height:1.4; }
+.card .judge { margin-top:14px; padding-top:10px; border-top:1px solid #c9c9c9; font-family:var(--font-mono); font-size:15px; color:#E65100; line-height:1.4; }
 .steps { width:100%; display:flex; align-items:stretch; gap:0; }
 .step { flex:1; border:2px solid #1a1a1a; padding:22px 20px; margin-right:26px; position:relative; min-height:350px; }
 .step:last-child { margin-right:0; }
 .step:after { content:"→"; position:absolute; right:-24px; top:50%; transform:translateY(-50%); font-size:24px; color:#E65100; font-weight:900; }
 .step:last-child:after { content:""; }
-.step .n { font-family:%(mono)s; font-size:20px; font-weight:700; color:#E65100; }
+.step .n { font-family:var(--font-mono); font-size:20px; font-weight:700; color:#E65100; }
 .step h2 { margin:8px 0 0; font-size:26px; font-weight:800; line-height:1.25; }
 .step .detail { margin:10px 0 0; font-size:18px; line-height:1.45; color:#1a1a1a; }
-.step .judge { margin-top:14px; padding-top:10px; border-top:1px solid #c9c9c9; font-family:%(mono)s; font-size:14px; color:#585858; line-height:1.4; }
+.step .judge { margin-top:14px; padding-top:10px; border-top:1px solid #c9c9c9; font-family:var(--font-mono); font-size:14px; color:#585858; line-height:1.4; }
 .compare { width:100%; display:grid; grid-template-columns:1fr 1fr; gap:28px; }
 .col { border:2px solid #1a1a1a; padding:26px 28px; min-height:400px; }
-.col .tag { display:inline-block; background:#E65100; color:#fff; font-family:%(mono)s; font-size:15px; padding:2px 8px; }
+.col .tag { display:inline-block; background:#E65100; color:#fff; font-family:var(--font-mono); font-size:15px; padding:2px 8px; }
 .col h2 { margin:12px 0 0; font-size:30px; font-weight:800; }
 .col ul { margin:16px 0 0; padding-left:22px; }
-.col li { font-size:20px; line-height:1.55; margin:8px 0; font-family:%(mono)s; }
+.col li { font-size:20px; line-height:1.55; margin:8px 0; font-family:var(--font-mono); }
+.em { width:100%; display:grid; grid-template-columns:660px 1fr; gap:30px; }
+.entity { border:2px solid #1a1a1a; padding:18px 20px; }
+.entity .tag2 { display:inline-block; background:#1a1a1a; color:#fff; font-family:var(--font-mono); font-size:13px; padding:2px 7px; letter-spacing:1px; }
+.entity h2 { margin:8px 0 4px; font-size:22px; }
+.entity .egrid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px; }
+.ecard { border:1px solid #1a1a1a; padding:10px 12px; min-height:104px; position:relative; }
+.ecard .n { position:absolute; right:8px; top:6px; color:#E65100; font-family:var(--font-mono); font-size:13px; }
+.ecard .icon2 { width:26px; height:26px; object-fit:contain; vertical-align:middle; margin-right:6px; }
+.ecard .name { display:inline; font-size:17px; font-weight:800; }
+.ecard p { margin:6px 0 0; font-size:13px; line-height:1.4; }
+.ecard .j { margin-top:6px; font-family:var(--font-mono); font-size:11px; color:#E65100; }
+.metaphor { border:2px solid #1a1a1a; padding:14px 16px; }
+.metaphor .tag2 { display:inline-block; background:#E65100; color:#fff; font-family:var(--font-mono); font-size:13px; padding:2px 7px; letter-spacing:1px; }
+.metaphor h2 { margin:8px 0 8px; font-size:22px; }
+.metaphor .art { width:100%; height:340px; object-fit:contain; display:block; background:#fff; }
+.mapping { margin-top:10px; }
+.mapping .row { display:flex; gap:8px; margin:5px 0; align-items:flex-start; }
+.mapping .num { flex:0 0 auto; color:#E65100; font-family:var(--font-mono); font-weight:700; font-size:15px; }
+.mapping .txt { font-size:14px; line-height:1.35; }
 .table { width:100%; border:2px solid #1a1a1a; display:flex; flex-direction:column; justify-content:center; }
 .table .tr { display:grid; grid-template-columns:1.1fr 1fr 1fr; border-bottom:1px solid #1a1a1a; }
 .table .tr:last-child { border-bottom:0; }
-.table .th { background:#1a1a1a; color:#fff; font-family:%(mono)s; font-size:17px; }
+.table .th { background:#1a1a1a; color:#fff; font-family:var(--font-mono); font-size:17px; }
 .table .td { padding:24px 24px; font-size:24px; line-height:1.4; }
-.table .td.mono { font-family:%(mono)s; font-size:18px; }
+.table .td.mono { font-family:var(--font-mono); font-size:18px; }
 .foot { position:absolute; left:72px; right:72px; bottom:56px; border-top:2px solid #1a1a1a; padding-top:16px; display:flex; align-items:flex-start; gap:16px; }
-.tag { flex:0 0 auto; background:#E65100; color:#fff; font-family:%(mono)s; font-size:18px; font-weight:700; padding:3px 10px; }
+.tag { flex:0 0 auto; background:#E65100; color:#fff; font-family:var(--font-mono); font-size:18px; font-weight:700; padding:3px 10px; }
 .foot p { margin:0; font-size:21px; line-height:1.45; }
 """
 
@@ -203,6 +261,18 @@ def render(data: dict) -> str:
             lis = "".join(f"<li>{esc(x)}</li>" for x in side["lines"])
             return f'<div class="col" data-layer-id="col-{side["title"]}"><span class="tag">对比</span><h2>{esc(side["title"])}</h2><ul>{lis}</ul></div>'
         body = f'<div class="compare">{col(data["left"])}{col(data["right"])}</div>'
+    elif layout == "entity_metaphor":
+        ecards=[]
+        for i,c in enumerate(data["left_cards"],1):
+            ip = icon_path(c.get("icon")) if c.get("icon") else None
+            icon = f'<img class="icon2" src="{ip}" alt="">' if ip else ""
+            ecards.append(f'<div class="ecard" data-layer-id="entity-{i}"><span class="n">{i:02d}</span>{icon}<span class="name">{esc(c["name"])}</span><p>{esc(c["role"])}</p><p class="j">{esc(c["judge"])}</p></div>')
+        maps="".join(f'<div class="row"><span class="num">{m["n"]}</span><span class="txt">{esc(m["label"])}</span></div>' for m in data["mappings"])
+        body = ('<div class="em">'
+                f'<div class="entity"><span class="tag2">实体 · 真实对象</span><h2>在本项目里，它们各自负责什么</h2><div class="egrid">{"".join(ecards)}</div></div>'
+                f'<div class="metaphor"><span class="tag2">喻体 · 比喻场景</span><h2>{esc(data["metaphor_title"])}</h2>'
+                f'<img class="art" src="{esc(data["art"])}" alt=""><div class="mapping">{maps}</div></div>'
+                '</div>')
     elif layout == "table":
         head = "".join(f'<div class="td th">{esc(h)}</div>' for h in data["headers"])
         rows = "".join('<div class="tr">' + "".join(f'<div class="td{" mono" if j>0 else ""}">{esc(c)}</div>' for j,c in enumerate(r)) + "</div>" for r in data["rows"])
