@@ -270,11 +270,11 @@ def cover_block(date: str, head: str) -> str:
     return f'''<section class="cover">
 <div class="cover-top"><span>{KICKER}</span><span class="cover-right">STUDENT HANDBOOK</span></div>
 <div class="cover-main">
-  <div class="cover-index">24 / 05</div>
+  <div class="cover-index">24 章 · 14 次拆一刀</div>
   <h1>电商问数<br><em>工程手册</em></h1>
   <p class="cover-sub">{SUBTITLE}</p>
   <div class="cover-rule"></div>
-  <p class="cover-deck">从契约、数据、生成、执行，到校验、安全、可观测与交付；<br>每一章都有一条能亲手跑出来的判据。</p>
+  <p class="cover-deck">从契约、数据、生成、执行，到校验、安全、可观测与交付；<br>L2–L5 共 14 次拆一刀：先写预测，再看哪条判据变红。</p>
 </div>
 <div class="cover-foot"><span>{VERSION} · {date}</span><span>baseline {head}</span><span class="r">DSWS · 2026</span></div>
 </section>'''
