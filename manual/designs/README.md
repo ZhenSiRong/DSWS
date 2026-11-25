@@ -57,3 +57,12 @@ python3 manual/designs/build_visuals.py --no-editor  # 只出 PNG/WebP
 
 - 编辑器（editable-design 运行时）能改字/拖拽/缩放/导出；其 `verify.mjs` 的「拆解视图」若干布局断言对这类卡片版式不一定全过（改字/导出不受影响）。
 - 文件是**实时 HTML 文本**，不是生成图；不要再用 AI 重画整张图，否则又回到不可 diff 的旧路。
+
+
+## 实体 / 喻体对照版式（`layout: "entity_metaphor"`）
+
+用于有"比喻解释"的页：左栏 `left_cards`（真实对象 + 职责 + 命令），右栏一张 AI 生成的喻体插画 `art/metaphor.jpeg`，下方 `mappings` 用 ①②③ 把喻体元素映射回真实职能；文字全部 HTML 实时文本，插画可重生成。
+
+- 插画生成记录：每页 `art-prompt.md`（Seedream 端点/尺寸/prompt）。
+- 注意：本机 `arkcli --input @本地图` 图生图需要 SSO 登录，当前为纯 prompt 生成；旧图归档在 `manual/images/archive/comics-v1/`。
+- 示例：`manual/designs/page-00`、`page-01`、`page-02`。

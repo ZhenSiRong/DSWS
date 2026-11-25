@@ -1,0 +1,40 @@
+{
+  "eyebrow": "第 2 页 · L1 造 · 数据",
+  "title": "先把仓库搭好",
+  "subtitle": "左边是 5 个分区与 115 行货，右边是仓库货架与叉车：一条命令把货入库",
+  "layout": "entity_metaphor",
+  "left_cards": [
+    {
+      "name": "fixtures/dw.sql",
+      "role": "建库、建表、灌数据全写在一个文件里",
+      "judge": "docker exec -i … < fixtures/dw.sql"
+    },
+    {
+      "name": "5 张表",
+      "role": "dim_customer / dim_date / dim_product / dim_region / fact_order",
+      "judge": "5 个分区"
+    },
+    {
+      "name": "115 行",
+      "role": "演示数据，够把问数链路跑通",
+      "judge": "SELECT COUNT(*) FROM fact_order"
+    }
+  ],
+  "metaphor_title": "喻体 · 仓库货架与叉车",
+  "art": "art/metaphor.jpeg",
+  "mappings": [
+    {
+      "n": "①",
+      "label": "货架分区 → 5 张表，各放各的货"
+    },
+    {
+      "n": "②",
+      "label": "叉车搬货 → 一条命令把 dw.sql 灌进容器"
+    },
+    {
+      "n": "③",
+      "label": "入库后盘点 → 你自己数出 5 张表 / 115 行 / 华北 19"
+    }
+  ],
+  "footer": "SELECT COUNT(*) FROM fact_order → 115；华北 19"
+}

@@ -16,7 +16,7 @@
 </blockquote>
 <h2>这一页构建什么</h2>
 <p>把 <code>fixtures/dw.sql</code> 导入第 1 页那个容器：一条命令把建库、建表、灌数据全做完（口语常说“灌数据”）。页末你自己用 SQL 数出表几张、订单几行、华北几单，才算验收。</p>
-<p><img alt="第 2 页 · 先把仓库搭好：一条命令导入 dw.sql——5 个分区、115 行货" src="../images/page-02-visual.webp" /></p>
+<p><img alt="第 2 页 · 先把仓库搭好：左边是 5 张表与 115 行货，右边是仓库货架与叉车——一条命令把 dw.sql 灌进去" src="../images/page-02-visual.webp" /></p>
 <h2>猜一猜</h2>
 <p>先写下答案，再动手。</p>
 <p>第 1 条命令把 <code>dw.sql</code> 里几百行 <code>CREATE</code> / <code>INSERT</code> 送进 MySQL。终端会<strong>逐条打印</strong>每张表、每行数据，还是<strong>什么都不打印</strong>？导入完再数一次：<code>SELECT COUNT(*) FROM fact_order</code> 会回几？（0 / 115 / 其他数字）</p>

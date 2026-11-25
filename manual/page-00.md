@@ -8,7 +8,7 @@
 
 把克隆下来的仓库变成「能开始第 1 页」的状态：工具装齐、依赖装好、三个端口空着。这一页没有代码，也不讲业务概念，只补克隆后缺的东西。
 
-![第 0 页 · 先体检，再开工：开发环境是一套真实工具——Docker / uv / Node+npm / GNU Make / curl / Git，每件都要能说清“在本项目里干什么”](images/page-00-visual.webp)
+![第 0 页 · 先体检，再开工：左边是真实工具（Docker/uv/Node+Make/curl/Git），右边是装修前验房——每件工具对应一个项目动作](images/page-00-visual.webp)
 
 ## 提前说明
 
