@@ -1,0 +1,64 @@
+/* rebuild.css — 重构轨 8 组件样式（GrapesJS 点选块的呈现真相）
+ * 与阅读版 lesson.css/read.css 并存；重构版自正典，不以 md 为事实源。
+ * 8 块词表见 humen-desicions/13-html-rebuild.md Q7；p17 先用 ③④⑤⑥⑦⑧。
+ */
+
+/* ① 页面导航 */
+.rb-nav { display: flex; justify-content: space-between; gap: 1rem;
+  padding: .6rem 1rem; border: 1px solid #d0d7de; border-radius: 8px;
+  background: #f6f8fa; font-size: .9rem; }
+.rb-nav a { color: #0969da; text-decoration: none; }
+.rb-nav a:hover { text-decoration: underline; }
+
+/* ② 阅读进度条 */
+.rb-progress { position: relative; height: 6px; border-radius: 3px;
+  background: #eaeef2; overflow: hidden; }
+.rb-progress > span { display: block; height: 100%; width: 40%;
+  background: linear-gradient(90deg, #0969da, #2da44e); }
+
+/* ③ 代码块 + 复制按钮 */
+.rb-code { position: relative; margin: 1rem 0; }
+.rb-code pre { margin: 0; padding: 1rem; background: #1f2328; color: #e6edf3;
+  border-radius: 8px; overflow-x: auto; font-size: .85rem; line-height: 1.5; }
+.rb-code .rb-copy { position: absolute; top: .5rem; right: .5rem;
+  padding: .25rem .6rem; font-size: .75rem; color: #e6edf3;
+  background: #30363d; border: 1px solid #444c56; border-radius: 6px; cursor: pointer; }
+.rb-code .rb-copy:hover { background: #444c56; }
+
+/* ④ 提示卡 callout（4 色） */
+.rb-callout { padding: .8rem 1rem; margin: 1rem 0; border-left: 4px solid;
+  border-radius: 0 8px 8px 0; }
+.rb-callout.note { border-color: #0969da; background: #ddf4ff; }
+.rb-callout.tip { border-color: #2da44e; background: #dafbe1; }
+.rb-callout.warn { border-color: #bf8700; background: #fff8c5; }
+.rb-callout.danger { border-color: #cf222e; background: #ffebe9; }
+.rb-callout > .rb-callout-title { font-weight: 700; margin: 0 0 .3rem; }
+
+/* ⑤ 步骤卡（编号 + 标题 + 正文 + 预期输出） */
+.rb-step { display: grid; grid-template-columns: 2.2rem 1fr; gap: .8rem;
+  padding: 1rem; margin: 1rem 0; border: 1px solid #d0d7de; border-radius: 8px; }
+.rb-step > .rb-step-num { width: 2.2rem; height: 2.2rem; border-radius: 50%;
+  background: #0969da; color: #fff; font-weight: 700; display: flex;
+  align-items: center; justify-content: center; }
+.rb-step .rb-step-title { font-weight: 700; margin: 0 0 .4rem; }
+.rb-step .rb-step-expect { margin: .5rem 0 0; padding: .5rem .7rem;
+  background: #f6f8fa; border-radius: 6px; font-size: .85rem; color: #57606a; }
+
+/* ⑥ 对照表（两列事实） */
+.rb-compare { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: .9rem; }
+.rb-compare th, .rb-compare td { border: 1px solid #d0d7de; padding: .5rem .7rem; text-align: left; }
+.rb-compare th { background: #f6f8fa; font-weight: 700; }
+
+/* ⑦ 漫画图 + caption 卡 */
+.rb-comic { margin: 1.2rem 0; padding: .6rem; border: 1px solid #d0d7de;
+  border-radius: 10px; background: #fff; }
+.rb-comic img { display: block; width: 100%; border-radius: 6px; }
+.rb-comic figcaption { margin-top: .5rem; font-size: .85rem; color: #57606a; text-align: center; }
+
+/* ⑧ 锚点目录（右侧 TOC） */
+.rb-toc { padding: .8rem 1rem; border: 1px solid #d0d7de; border-radius: 8px;
+  background: #f6f8fa; font-size: .85rem; }
+.rb-toc > .rb-toc-title { font-weight: 700; margin: 0 0 .5rem; }
+.rb-toc ul { margin: 0; padding-left: 1.1rem; }
+.rb-toc a { color: #0969da; text-decoration: none; }
+.rb-toc a:hover { text-decoration: underline; }
