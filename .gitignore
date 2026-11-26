@@ -79,3 +79,6 @@ system/frontend/node_modules
 /deliverables/tutorial-doc/
 
 /deliverables/packages/
+
+# 废弃图集（历史构建产物，不再入库）
+/materials/design/book/pdf/dsws-design-atlas*.pdf

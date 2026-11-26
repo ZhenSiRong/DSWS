@@ -13,7 +13,7 @@
 | 软件普查 | `design/inventory/software-census.md` | 模块、入口、端口、契约、计数、测试数全部有出处 |
 | 开发手册 | `design/book/chapters/**` | S0–S8 每阶段：问题→实体→输入→动作→输出→验收→故障→证据 |
 | 书稿 | `design/book/book.md` | 合并后的单一 Markdown 源 |
-| PDF | `design/book/pdf/dsws-design-atlas.pdf` | ≥30 页，A4，有封面、目录、页码、图目录、书签 |
+| PDF | `design/design-doc.pdf` | ≥30 页，A4，有封面、目录、页码、图目录、书签；旧 atlas 已归档 |
 | 渲染脚本 | `design/scripts/**` | 一条命令重建全部 SVG 与 PDF |
 
 ## 1. 任务分解

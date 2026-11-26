@@ -41,7 +41,7 @@
 ## P2 · 历史资产
 
 - [ ] `backup/` 里确认不再需要的归档（v1 视频、frames、.rec）
-- [ ] 旧 `design/book/pdf/dsws-design-atlas.pdf` 标为 archive 或移入 backup
+- [x] 旧 `design/book/pdf/dsws-design-atlas.pdf` 已归档到 `../DSWS-archive/2026-11-25/design-atlas-deprecated/`（2026-11-26）
 - [ ] `docs/*.md` 的本地改动单独提交或还原（非本次任务）
 
 ## 完成记录

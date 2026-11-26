@@ -42,3 +42,9 @@ design/
   assets/        mermaid.min.js
   tasks/         派发给 agent 的任务书
 ```
+
+## 设计文档与废弃图集（2026-11-26）
+
+- **当前设计文档**：`design-doc.pdf`（78 页，32 张图 + 读图地图）与 `design-doc-30.pdf`（32 页精选）。
+- `book/pdf/dsws-design-atlas.pdf` 与 `.pre-icons.pdf` 是**废弃的教程/图集文档**，已从仓库移除，归档在 `../DSWS-archive/2026-11-25/design-atlas-deprecated/`（含 SHA256SUMS）。
+- 旧 `book/` 构建脚本仍保留，仅作历史复现，不再作为设计文档交付。

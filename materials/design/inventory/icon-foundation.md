@@ -1,3 +1,5 @@
+> **历史记录（2026-11-26 更新）**：下文的 `dsws-design-atlas.pdf` 已从仓库移除（废弃教程/图集）；当前设计文档是 `design-doc.pdf` / `design-doc-30.pdf`。
+
 # 证据标记图标系统 · 基础版
 
 > 基线 `eea5e75` · 工作树 `/home/zhensirong/VM-Share/DSWS-design` · 2026-11-03
