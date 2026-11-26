@@ -60,3 +60,13 @@ uv run --offline --with weasyprint python3 toolbox/book/render_pdf.py \
 - 书的前置「全书地图」不再直接搬 `tutorial/OVERVIEW.md`（那是给网页/城市图用的，含大图、长链接和 PRD 表）。
 - 书用 `toolbox/book/overview.md`：五级阶梯 + L1 AON 图 + 24 章一览（章标题/一句话自动从 `page-*.md` 提取）+ 怎么读，约 3 页。
 - 网页版 OVERVIEW 不变，两边各自解决各自的问题。
+
+
+## 附录 D · 城市图版（拆分 + 可编辑）
+
+- `tutorial/images/city-4stages.png` 是旧的网页四阶段图（历史资产，保留）。
+- 书里的五级图由 `toolbox/book/city-stages/index.html`（可编辑 HTML，1600×1000）生成：
+  `python3 toolbox/book/build_city_stages.py` → `tutorial/images/city-5stages.png`（3200×2000）。
+- 每级在书里拆成「上：城市俯瞰/阶段说明」「下：横切系统/判据」两页；24 页城市图拆成总览 + A1–B4 八块。
+- `toolbox/book/city-stages/editor.html` 可直接打开编辑（双击文字、拖动图层、导出 HTML）。
+- 生成物 `toolbox/book/.plates/` 是 A4 图版缓存，不进 git。

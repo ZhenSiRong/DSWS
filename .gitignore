@@ -65,3 +65,9 @@ system/frontend/node_modules
 
 # 手册专用的「章」版页首图缓存
 /toolbox/book/.visuals/
+
+# 手册图版缓存
+/toolbox/book/.plates/
+
+# 五级城市可编辑设计的渲染产物
+/toolbox/book/city-stages/out/

@@ -528,3 +528,16 @@ body {
 .ch-body .page-index { break-inside: auto; }
 
 .page-index-heading { break-before: page; }
+
+/* ---------- 附录 D：城市图版 ---------- */
+.city-plates .fig { break-before: page; margin: 0; text-align: center; }
+.city-plates .fig:first-of-type { break-before: auto; }
+.city-plates .fig img { width: 100%; max-height: 220mm; object-fit: contain; border: .5pt solid #e2dacd; }
+.city-plates .fig:first-of-type img { max-height: 112mm; }
+.city-plates .fig figcaption { margin-top: 2mm; font-size: 7.6pt; text-align: left; }
+
+.city-plates .plate { break-before: page; margin: 0; padding: 0; text-align: center; }
+.city-plates .plate.overview { break-before: auto; }
+.city-plates .plate img { width: 100%; height: auto; max-height: 225mm; object-fit: contain; border: .5pt solid #e2dacd; }
+.city-plates .plate.overview img { max-height: 112mm; }
+.city-plates .plate figcaption { margin-top: 2mm; font-size: 7.6pt; text-align: left; }

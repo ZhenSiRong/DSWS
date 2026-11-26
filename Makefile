@@ -257,19 +257,23 @@ audit:
 # 新手册：tutorial/ 正典 → 自包含 HTML + A4 PDF（管线在 toolbox/book/）
 BOOK_OUT := materials/deliverable/tutorial-book
 
-book: book-pdf book-html
+book: book-plates book-pdf book-html
+
+book-plates:
+	@python3 toolbox/book/build_city_stages.py
+	@python3 toolbox/book/build_city_plates.py
 
 book-visuals:
 	@python3 toolbox/book/build_book_visuals.py
 
-book-html: book-visuals
+book-html: book-plates book-visuals
 	@if [ -f $(BOOK_OUT)/page-map.json ]; then \
 		python3 toolbox/book/build_manual.py --html --page-map $(BOOK_OUT)/page-map.json --out $(BOOK_OUT); \
 	else \
 		python3 toolbox/book/build_manual.py --html --out $(BOOK_OUT); \
 	fi
 
-book-pdf: book-visuals
+book-pdf: book-plates book-visuals
 	@python3 toolbox/book/build_manual.py --print-html --out $(BOOK_OUT)
 	@uv run --offline --with weasyprint python3 toolbox/book/render_pdf.py $(BOOK_OUT)/.print.html $(BOOK_OUT)/tutorial-book.pdf
 	@python3 toolbox/book/extract_page_map.py $(BOOK_OUT)/tutorial-book.pdf $(BOOK_OUT)/page-map.json

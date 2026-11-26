@@ -31,6 +31,7 @@ TUTORIAL = ROOT / "tutorial"
 CSS_FILE = Path(__file__).resolve().parent / "book.css"
 BOOK_OVERVIEW = Path(__file__).resolve().parent / "overview.md"
 BOOK_VISUALS = Path(__file__).resolve().parent / ".visuals"
+CITY_PLATES_DIR = Path(__file__).resolve().parent / ".plates"
 DEFAULT_OUT = ROOT / "materials" / "deliverable" / "tutorial-book"
 
 TITLE = "电商问数 · 工程手册"
@@ -140,7 +141,9 @@ def preprocess_links(md_text: str) -> str:
     return re.sub(r"(?<!!)\[([^\]]*)\]\(([^)]+)\)", repl, md_text)
 
 
-def convert(md_text: str, chapter_dir: Path, image_dir: str, images: dict[str, Path], embed: bool) -> str:
+def convert(md_text: str, chapter_dir: Path, image_dir: str, images: dict[str, Path], embed: bool, strip_title: bool = False) -> str:
+    if strip_title:
+        md_text = strip_first_h1(md_text)
     text = preprocess_images(md_text, chapter_dir, images, image_dir, embed)
     text = preprocess_links(text)
     return markdown.markdown(text, extensions=MD_EXTENSIONS)
@@ -259,6 +262,7 @@ def toc_block(front_title: str, pages: list[tuple[int, str]]) -> str:
     items.append('<li class="toc-row"><a href="#page-map"><span class="toc-no">A</span><span class="toc-t">手册章 ↔ PDF 物理页对照</span></a></li>')
     items.append('<li class="toc-row"><a href="#appendix-tools"><span class="toc-no">B</span><span class="toc-t">工具卡：装一次、一条命令、浏览器里点开</span></a></li>')
     items.append('<li class="toc-row"><a href="#appendix-llm"><span class="toc-no">C</span><span class="toc-t">真 LLM 端点配置（可选支线）</span></a></li>')
+    items.append('<li class="toc-row"><a href="#city-plates"><span class="toc-no">D</span><span class="toc-t">城市图版：把两张全景大图拆进 A4</span></a></li>')
     return '<section class="toc front" id="toc"><div class="toc-head"><div class="toc-k">Contents</div><h1>目录</h1></div><ol class="toc-list">' + "\n".join(items) + '</ol></section>'
 
 
@@ -283,6 +287,45 @@ def appendix_block(spec: tuple[str, str, str, Path], images: dict[str, Path], im
 </div>
 </section>'''
     return block, title, anchor_id
+
+
+def city_plates_block(images: dict[str, Path], image_dir: str, embed: bool) -> str:
+    manifest_path = CITY_PLATES_DIR / "plates.json"
+    if not manifest_path.is_file():
+        return ""
+    import json as _json
+    manifest = _json.loads(manifest_path.read_text(encoding="utf-8"))
+    figs = []
+    for i, plate in enumerate(manifest.get("plates", [])):
+        p = CITY_PLATES_DIR / plate["file"]
+        if not p.is_file():
+            continue
+        name = safe_name(p, images)
+        if embed:
+            mime = "image/png"
+            src = "data:%s;base64,%s" % (mime, base64.b64encode(p.read_bytes()).decode())
+        else:
+            src = f"{image_dir}/{name}"
+        cls = "plate"
+        if i == 0:
+            cls += " overview"
+        figs.append(
+            f'<figure class="{cls}"><img src="{src}" alt="{html.escape(plate["caption"], quote=True)}">'
+            f'<figcaption>{html.escape(plate["caption"])}</figcaption></figure>'
+        )
+    intro = """<p>两张城市全景图（<code>city-5stages.png</code> / <code>city-map-24.png</code>）按 A4 可读性拆成图版：
+五级各取一整列，横向阅读，不切断文字；24 页城市图拆成总览 + A1–B4 八块放大图。网页版原图仍是整张：
+<code>tutorial/OVERVIEW.md</code> 与 <code>tutorial/city/</code>；书里只放拆分后的图版。</p>"""
+    return f'''<section class="chapter city-plates" id="city-plates">
+<header class="ch-head">
+  <div class="ch-meta"><span class="level">附录 D</span><span class="ch-no">CITY PLATES</span></div>
+  <h1>城市图版：把两张全景大图拆进 A4</h1>
+</header>
+<div class="ch-body">
+{intro}
+{''.join(figs)}
+</div>
+</section>'''
 
 
 def page_map_block(page_map: dict, pages: list[tuple[int, str]]) -> str:
@@ -337,6 +380,7 @@ def build_html(out: Path, embed: bool, page_map: dict | None = None) -> tuple[st
     head = git_head()
     map_html = page_map_block(page_map, pages) if page_map else ""
     appendix_html = "".join(appendix_block(spec, images, image_dir, embed)[0] for spec in APPENDICES)
+    city_html = city_plates_block(images, image_dir, embed)
     css = CSS_FILE.read_text(encoding="utf-8")
     doc = f'''<!doctype html>
 <html lang="zh-CN">
@@ -357,6 +401,7 @@ def build_html(out: Path, embed: bool, page_map: dict | None = None) -> tuple[st
 {''.join(blocks)}
 {map_html}
 {appendix_html}
+{city_html}
 <section class="back-cover"><p>全书 24 章 · 五级 · 一条可复现的工程学习线</p><p class="bc-small">正文正典：{TUTORIAL.name}/page-*.md · 构建 {date} · baseline {head}</p></section>
 </div>
 </body>
