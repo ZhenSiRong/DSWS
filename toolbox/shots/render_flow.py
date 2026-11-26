@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""render_flow.py —— 把练本总览图 `manual/flow.mmd` 渲染成 `manual/images/flow-aon.png`。
+"""render_flow.py —— 把练本总览图 `tutorial/flow.mmd` 渲染成 `tutorial/images/flow-aon.png`。
 
 一条命令重跑（在仓库根目录）：
 
-    python3 manual/shots/render_flow.py
+    python3 tutorial/shots/render_flow.py
 
 它做四件事：
 
-1. **核对**：读 `manual/flow.mmd`，用图里的工期和 FS 箭头重算一遍 CPM
+1. **核对**：读 `tutorial/flow.mmd`，用图里的工期和 FS 箭头重算一遍 CPM
    （正推 ES/EF、逆推 LS/LF），与节点里写的数值逐项比对；对不上就报错退出。
    顺带核对：10 个活动 A0–A9、每条箭头都标 `FS`、关键路径的 `class ... critical`
    与「总浮动 = 0」的集合一致、不出现「验证」节点。
@@ -34,13 +34,13 @@ import tempfile
 import urllib.request
 from pathlib import Path
 
-HERE = Path(__file__).resolve().parent      # manual/shots
+HERE = Path(__file__).resolve().parent      # tutorial/shots
 REPO = HERE.parents[1]                      # 仓库根目录
 MMD = REPO / "manual" / "flow.mmd"
 OUT = REPO / "manual" / "images" / "flow-aon.png"
 
 MERMAID_URL = "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"
-DEFAULT_WIDTH = 1100   # 与 manual/shots/term_render.py 的 WINDOW_W 一致
+DEFAULT_WIDTH = 1100   # 与 tutorial/shots/term_render.py 的 WINDOW_W 一致
 MARGIN = 16            # 最终 PNG 四周留白（px）
 FORBIDDEN = ["/home/", "/Users/", "/tmp/", "zhensirong", "root@", ".dsh"]
 
@@ -310,7 +310,7 @@ def trim_and_resize(raw: Path, out: Path, width: int, work: Path) -> tuple[int, 
 # ------------------------------------------------------------------ main
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description="把 manual/flow.mmd 渲染成 manual/images/flow-aon.png")
+    ap = argparse.ArgumentParser(description="把 tutorial/flow.mmd 渲染成 tutorial/images/flow-aon.png")
     ap.add_argument("--width", type=int, default=DEFAULT_WIDTH,
                     help=f"输出 PNG 宽度（默认 {DEFAULT_WIDTH}px；答辩投影可用 1400）")
     ap.add_argument("--out", type=Path, default=OUT, help="输出 PNG 路径")

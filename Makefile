@@ -215,7 +215,7 @@ docker-reset: docker-env-require
 # 2) git diff --check 空白错误
 # 3) system/system/backend/uv.lock 必须与仓库一致（本机 uv 镜像源会按 index 重写 registry URL，
 #    而 toolbox/scripts/lab 快照白名单不含它，所以只能靠 git 还原）
-# 4) tutorial/ 不得泄露用户名 / 家目录（排除 review/ 证据报告与 *.py 校验脚本）
+# 4) tutorial/ 不得泄露用户名 / 家目录（排除 materials/review/ 证据报告与 *.py 校验脚本）
 # 5) 任务台账准确性：done 钉证据 + 依赖/review/甘特身份（task.py check）
 audit:
 	@echo "== 1/5 结构审计：24 页 / 图引用 / README 坏链 =="
@@ -236,7 +236,7 @@ audit:
 		if [ $$rc -eq 0 ]; then \
 			echo "AUDIT FAIL：tutorial/ 出现敏感串（泄露本机用户名 / 家目录，学生材料不可提交）"; \
 			echo "$$hits"; \
-			echo "  说明：review/ 证据报告与 *.py 校验/生成脚本不在检查范围（见 materials/docs/checks.md）"; \
+			echo "  说明：materials/review/ 证据报告与 *.py 校验/生成脚本不在检查范围（见 materials/docs/checks.md）"; \
 			exit 1; \
 		elif [ $$rc -ne 1 ]; then \
 			echo "AUDIT ERROR：敏感串扫描失败（grep rc=$$rc）"; exit 1; \

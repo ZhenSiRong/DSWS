@@ -5,7 +5,7 @@
 # 引号一起吃掉，配方直接报 shell 语法错。放在这里，shell 直接读文件，
 # 字节原样输出，不经过 Windows 命令行这一层。
 #
-# 格式：<键>|<横幅正文>。键由 scripts/say.sh 使用，Makefile 里只写 ASCII 的键。
+# 格式：<键>|<横幅正文>。键由 toolbox/scripts/say.sh 使用，Makefile 里只写 ASCII 的键。
 s0-backend-contract|== S0 · 后端契约测试 ==
 s0-frontend-sse|== S0 · 前端 SSE 协议单测 ==
 s0-frontend-build|== S0 · 前端类型检查 + 构建 ==

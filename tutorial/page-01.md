@@ -20,7 +20,7 @@
 
 ## 动手
 
-以下命令都在**仓库根目录**执行（有 `fixtures/`、`backend/` 的那一层）。
+以下命令都在**仓库根目录**执行（有 `system/fixtures/`、`system/backend/` 的那一层）。
 
 **第 1 条：创建并启动容器。**
 
@@ -44,9 +44,9 @@ docker run -d --name lab-mysql \
 - `LANG=C.UTF-8`：让容器里的 `mysql` 认 UTF-8，少了它，第 2 页按中文筛数据会一条也筛不到。
 - 最后一行不手抄镜像名，从仓库自带的 `.env.example` 里读 `MYSQL_IMAGE`（`.env` 是你本地的密钥配置，被 `.gitignore` 忽略，克隆下来没有）。这行一旦被改名或删除，命令会**静默传空**、拉不到镜像——所以别删它。
 
-**顺带把第 2 页要用的输入重定向认下来。** 第 2 页导入 `dw.sql` 的命令是 `docker exec -i lab-mysql mysql -uroot -plabpass < fixtures/dw.sql`。
+**顺带把第 2 页要用的输入重定向认下来。** 第 2 页导入 `dw.sql` 的命令是 `docker exec -i lab-mysql mysql -uroot -plabpass < system/fixtures/dw.sql`。
 
-**输入重定向**：`<` 是**宿主机** shell 的重定向：在你的终端里打开 `fixtures/dw.sql`，把内容接到 `docker exec` 的标准输入；`-i` 让容器的标准输入保持打开，这些内容才能递进容器里的 `mysql`。
+**输入重定向**：`<` 是**宿主机** shell 的重定向：在你的终端里打开 `system/fixtures/dw.sql`，把内容接到 `docker exec` 的标准输入；`-i` 让容器的标准输入保持打开，这些内容才能递进容器里的 `mysql`。
 
 **少了 `-i`，`mysql` 读到的是空输入：命令不建表、不报错，退出码还是 0**——“没报错”不等于“执行了”。
 

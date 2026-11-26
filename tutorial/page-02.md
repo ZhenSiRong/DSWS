@@ -4,7 +4,7 @@
 
 ## 这一页构建什么
 
-把 `fixtures/dw.sql` 导入第 1 页那个容器：一条命令把建库、建表、灌数据全做完（口语常说“灌数据”）。页末你自己用 SQL 数出表几张、订单几行、华北几单，才算验收。
+把 `system/fixtures/dw.sql` 导入第 1 页那个容器：一条命令把建库、建表、灌数据全做完（口语常说“灌数据”）。页末你自己用 SQL 数出表几张、订单几行、华北几单，才算验收。
 
 ![第 2 页 · 先把仓库搭好：左边是 5 张表与 115 行货，右边是仓库货架与叉车——一条命令把 dw.sql 灌进去](images/page-02-visual.webp)
 
@@ -16,15 +16,15 @@
 
 ## 动手
 
-第 1 页的 `lab-mysql` 要先创建好、正在运行；报 `No such container: lab-mysql` 就回第 1 页重跑。以下命令仍在**仓库根目录**执行（`fixtures/dw.sql` 在这里）。
+第 1 页的 `lab-mysql` 要先创建好、正在运行；报 `No such container: lab-mysql` 就回第 1 页重跑。以下命令仍在**仓库根目录**执行（`system/fixtures/dw.sql` 在这里）。
 
 **第 1 条：导入 `dw.sql`。**
 
 ```bash
-docker exec -i lab-mysql mysql -uroot -plabpass < fixtures/dw.sql
+docker exec -i lab-mysql mysql -uroot -plabpass < system/fixtures/dw.sql
 ```
 
-`-i` 让容器的标准输入保持打开，`< fixtures/dw.sql` 是**宿主机** shell 的重定向（第 1 页讲过）：文件内容从你的终端接进容器的 `mysql`，容器里的 `mysql` 把它当脚本逐句执行。**少了 `-i` 会静默失败**：`mysql` 读到空输入，不建表也不报错，退出码还是 0。
+`-i` 让容器的标准输入保持打开，`< system/fixtures/dw.sql` 是**宿主机** shell 的重定向（第 1 页讲过）：文件内容从你的终端接进容器的 `mysql`，容器里的 `mysql` 把它当脚本逐句执行。**少了 `-i` 会静默失败**：`mysql` 读到空输入，不建表也不报错，退出码还是 0。
 
 **第 2 条：看库里的表。**
 
@@ -73,7 +73,7 @@ ORD20250114001	北京市	华北	75
 
 - 猜“会逐条打印”：不对。`mysql` 批量读脚本时不回显执行过程；除密码 `Warning` 外一行输出都没有。所以“没输出”不是没执行，**必须自己查表、数行数**（第 2、3 条）才算验完。
 - 猜 0：先看第 1 条是不是漏了 `-i`——那会“成功”退出但什么都没导入；如果文件路径写错，宿主机 shell 会直接报 `No such file or directory`。
-- 猜 115：对。这个数由 `fixtures/dw.sql` 里 `fact_order` 的 `INSERT` 决定；115 行里华北（`region_id` 为 `R004`）19 单。**115 只是 `fact_order` 单数**；5 张表合计 246 行（`dim_date` 90 等），别拿 115 去对全库行数。
+- 猜 115：对。这个数由 `system/fixtures/dw.sql` 里 `fact_order` 的 `INSERT` 决定；115 行里华北（`region_id` 为 `R004`）19 单。**115 只是 `fact_order` 单数**；5 张表合计 246 行（`dim_date` 90 等），别拿 115 去对全库行数。
 - 5 张表和 `dw` 库不是 MySQL 送的：`dw.sql` 开头 `CREATE DATABASE`，后面 5 段 `CREATE TABLE`；第 2 条列出的表名就来自这 5 段。
 - 第 3 条最后三行能出现“华北”两个字，靠的是 `JOIN dim_region r ON f.region_id = r.region_id`：订单里只有编号 `R004`，“华北”是从区域表连过去取到的。JOIN 条件写错，你会看到一行都没有。
 - 最后三行只出 3 单，不是华北只有 3 单——`LIMIT 3` 只限制显示；华北一共 19 单，第二段 SQL 已经数过。

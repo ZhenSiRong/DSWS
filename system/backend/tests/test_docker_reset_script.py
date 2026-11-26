@@ -22,7 +22,7 @@ import pytest
 from shellkit import fake_program, run_in_sh, to_shell_path, usable_sh
 
 ROOT = Path(__file__).resolve().parents[2]
-RESET = ROOT / "scripts" / "docker-reset.sh"
+RESET = ROOT.parent / "toolbox" / "scripts" / "docker-reset.sh"
 
 SH = usable_sh()
 

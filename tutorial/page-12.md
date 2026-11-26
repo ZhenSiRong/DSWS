@@ -2,7 +2,7 @@
 
 > **城市坐标 · L2 通水电网 · 换泵站**｜临时通道换成带四道闸的真执行器：只读、限行数、限时长、只准 SELECT。
 
-> 前置：第 0 页备好环境；本页接第 11 页的 `lab/app.py` 和第 10 页的 `fixtures/dw-real.sql`。不用启动服务。
+> 前置：第 0 页备好环境；本页接第 11 页的 `lab/app.py` 和第 10 页的 `system/fixtures/dw-real.sql`。不用启动服务。
 
 ## 这一页构建什么
 
@@ -21,11 +21,11 @@
 
 ## 动手
 
-**第 1 步：把真数据灌回库**（命令都在仓库根目录执行：有 `fixtures/`、`backend/` 的那一层）。
+**第 1 步：把真数据灌回库**（命令都在仓库根目录执行：有 `system/fixtures/`、`system/backend/` 的那一层）。
 
 **为什么灌 `dw-real`**：如果第 10 章收尾时重灌回了演示集（115 行），本步把它换回带金额的 `dw-real`（若库里还是 410 行，本步幂等无害），用第 10 页同一条命令：
 ```bash
-docker exec -i lab-mysql mysql -uroot -plabpass --default-character-set=utf8mb4 < fixtures/dw-real.sql
+docker exec -i lab-mysql mysql -uroot -plabpass --default-character-set=utf8mb4 < system/fixtures/dw-real.sql
 ```
 
 **第 2 步：新建 `lab/db.py`，把下面整段粘进去，Ctrl+S 保存：**
@@ -92,14 +92,14 @@ def run_sql(sql: str) -> list[dict]:
 ```
 
 ```bash
-backend/.venv/bin/python -c "from lab.app import run_sql; print(len(run_sql('SELECT * FROM dim_date')))"
+system/backend/.venv/bin/python -c "from lab.app import run_sql; print(len(run_sql('SELECT * FROM dim_date')))"
 # 回 1000 才算接上：dim_date 共 1461 行，执行器补 LIMIT 1000；旧 run_sql 会回 1461，报 ModuleNotFoundError 说明不在仓库根
 ```
 
 **第 4 步：跑自检。** 文件末尾的 `if __name__` 把四道闸和你猜的两个数一次打出来（这条整体要等 5 秒多，最后一项是超时，别以为卡住）：
 
 ```bash
-backend/.venv/bin/python -m lab.db
+system/backend/.venv/bin/python -m lab.db
 ```
 
 ## 你应该看到
@@ -137,14 +137,14 @@ float   ： 1144735.4994544983 float
 
 ## 拆一刀
 
-1. 先拍快照：`scripts/lab save p12-before`（名字只能用字母、数字、点、下划线、短横线，且必须以字母或数字开头；中文会被拒）。
+1. 先拍快照：`toolbox/scripts/lab save p12-before`（名字只能用字母、数字、点、下划线、短横线，且必须以字母或数字开头；中文会被拒）。
 
-**白名单含 `lab/`**：`scripts/lab` 的白名单现在含 `lab/`：`lab/db.py`、`lab/app.py` 也进快照，改代码同样能 reset 还原——所以第 2 步改契约不是为了「只能改契约」，而是为了证明**上限来自契约**（改 `lab/db.py` 里写死的 LIMIT 也能过自检，却测不出这个单源）。
-2. 打开 `contracts/sql.policy.yaml`，把 `limits:` 下 `# 明细查询默认最多返回多少行` 那行的 `default_limit: 1000` 改成 `100000`。
+**白名单含 `lab/`**：`toolbox/scripts/lab` 的白名单现在含 `lab/`：`lab/db.py`、`lab/app.py` 也进快照，改代码同样能 reset 还原——所以第 2 步改契约不是为了「只能改契约」，而是为了证明**上限来自契约**（改 `lab/db.py` 里写死的 LIMIT 也能过自检，却测不出这个单源）。
+2. 打开 `system/contracts/sql.policy.yaml`，把 `limits:` 下 `# 明细查询默认最多返回多少行` 那行的 `default_limit: 1000` 改成 `100000`。
 
 **上限来自契约**：`lab/db.py` 里 `LIMIT = POLICY["limits"]["default_limit"]` 那一行就是从契约这里读上限——改契约这一行、执行器下次起进程就换上限，这才叫「上限来自契约」。
 
 **注意本页执行器只读 `default_limit`；`max_limit` 是工业版概念，这里没实现**：别改下面 `max_limit: 1000`，只改它自检还是回 1000 行；而且 `default_limit: 100000` 已经比 `max_limit: 1000` 还大，工业版会当配置错误（默认上限不能超截断上限），本页不读它所以照样跑。
 
-**拆完什么样**：Ctrl+S，再跑一次 `backend/.venv/bin/python -m lab.db`（这条同样要等 5 秒多，别以为卡死）：上限这道闸拆掉，1461 行全跑出来，`上限    ： 1461 行（dim_date 共 1461 行）`；其它几行不变，说明只拆了这一道闸。
-3. 还原：`scripts/lab reset p12-before --yes`，末行 `现在工作区与快照 "p12-before" 完全一致。`；再跑一次，`上限    ： 1000 行（dim_date 共 1461 行）` 回来。
+**拆完什么样**：Ctrl+S，再跑一次 `system/backend/.venv/bin/python -m lab.db`（这条同样要等 5 秒多，别以为卡死）：上限这道闸拆掉，1461 行全跑出来，`上限    ： 1461 行（dim_date 共 1461 行）`；其它几行不变，说明只拆了这一道闸。
+3. 还原：`toolbox/scripts/lab reset p12-before --yes`，末行 `现在工作区与快照 "p12-before" 完全一致。`；再跑一次，`上限    ： 1000 行（dim_date 共 1461 行）` 回来。

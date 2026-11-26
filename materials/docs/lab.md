@@ -1,7 +1,7 @@
 # `lab`：教学用快照与回滚（v1）
 
 > 对应 D33（对学生隐藏 VCS 的版本快照）与 D46 第 6 条（工程债里 `lab` CLI 最先做）。
-> 实现：`scripts/lab`；测试：`scripts/tests/test_lab.sh`。
+> 实现：`toolbox/scripts/lab`；测试：`toolbox/scripts/tests/test_lab.sh`。
 
 ## 为什么需要
 
@@ -24,7 +24,7 @@ L2–L4 每页都有一个「拆一刀」：改一行契约、删一个校验、
 ```
 如果现在恢复（--yes），会：
   删除（快照里没有、工作区多出来的文件）：1 个
-    - contracts/new.contract.yaml
+    - system/contracts/new.contract.yaml
   …（写回、覆盖同理，各带文件清单）
 没有 --yes，一个文件都没动。
 ```
@@ -40,7 +40,7 @@ L2–L4 每页都有一个「拆一刀」：改一行契约、删一个校验、
 
 ## 白名单与排除
 
-只跟踪：`contracts/`、`compose.yaml`、`lab/`、`backend/app/`、`backend/tests/`、`fixtures/`、`frontend/src/`。
+只跟踪：`system/contracts/`、`compose.yaml`、`lab/`、`system/backend/app/`、`system/backend/tests/`、`system/fixtures/`、`system/frontend/src/`。
 目录不存在就跳过，manifest 里记 `present: false`；`manifest.json` 还记录时间、git HEAD、
 每个文件的 sha256 与文件数，方便老师对账。
 学生自己的代码（`lab/app.py`、`lab/db.py` 等）也在保护范围内：拆坏执行器/应用后一样能 `reset` 回来（`reset` 会删掉 `lab/` 里快照之外的新文件，这是整目录恢复语义）。
@@ -55,7 +55,7 @@ L2–L4 每页都有一个「拆一刀」：改一行契约、删一个校验、
 
 ```bash
 make docker-down && make docker-up   # 重建容器；卷内容保留
-make docker-reset                    # 连卷一起删（破坏性；之后需重新灌 fixtures/dw.sql）
+make docker-reset                    # 连卷一起删（破坏性；之后需重新灌 system/fixtures/dw.sql）
 ```
 
 v1 也不跟踪符号链接、空目录、文件名含换行/制表符的极端文件；没有 `lab start/done`
@@ -77,4 +77,4 @@ overlay 跳转（D33 的跳转留到 v2，先用 `save`/`reset` 顶住）。
 | 快照只读、不可覆盖 | ✅ 同名 save 拒绝 |
 | 学生不接触 git | ✅ 三条命令都不出现 git 操作 |
 
-验证：`bash scripts/tests/test_lab.sh`（纯 shell）；语法检查 `bash -n scripts/lab`（有 shellcheck 时再跑 `shellcheck scripts/lab`）。
+验证：`bash toolbox/scripts/tests/test_lab.sh`（纯 shell）；语法检查 `bash -n toolbox/scripts/lab`（有 shellcheck 时再跑 `shellcheck toolbox/scripts/lab`）。

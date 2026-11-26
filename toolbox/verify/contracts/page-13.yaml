@@ -1,6 +1,6 @@
 # 第 13 页 · 换真部署 —— 教材可跟随性契约（T0）
 #
-# schema 与规则见 manual/verify/README.md。
+# schema 与规则见 tutorial/verify/README.md。
 # 本页 coverage: static：整座城要 docker compose 起 6 个服务并构建镜像（首次约 8 分钟），
 # 页内 make / docker / curl 命令都无法在 CI 无人值守执行；本页不执行任何块，
 # 只做 T0 的静态存在性 + 符号命中（页面本身不挂 <!-- verify: --> 注解）。
@@ -11,11 +11,11 @@ coverage: static
 static:
   paths:
     - compose.yaml
-    - fixtures/dw.sql
-    - scripts/docker-smoke.sh
-    - scripts/lab
+    - system/fixtures/dw.sql
+    - toolbox/scripts/docker-smoke.sh
+    - toolbox/scripts/lab
     - Makefile
-    - docker/nginx.conf
+    - system/docker/nginx.conf
   symbols:
     # init 服务跑的就是这个模块：改名 → init 起不来，backend 永远不会被放行
     - {file: compose.yaml, pattern: "app\\.scripts\\.docker_init"}
@@ -24,8 +24,8 @@ static:
     # make docker-smoke 这个入口名是页面两条命令之一
     - {file: Makefile, pattern: "^docker-smoke:"}
     # 页面承诺的 smoke 末行
-    - {file: scripts/docker-smoke.sh, pattern: '^echo "DOCKER SMOKE PASS"$'}
+    - {file: toolbox/scripts/docker-smoke.sh, pattern: '^echo "DOCKER SMOKE PASS"$'}
     # 6/8 的判据：/api/ 的代理缓冲必须关着
-    - {file: docker/nginx.conf, pattern: "proxy_buffering off;"}
+    - {file: system/docker/nginx.conf, pattern: "proxy_buffering off;"}
     # 首次建库的数据源；库名/建库语句没了，mysql 初始化即断
-    - {file: fixtures/dw.sql, pattern: "CREATE DATABASE IF NOT EXISTS dw"}
+    - {file: system/fixtures/dw.sql, pattern: "CREATE DATABASE IF NOT EXISTS dw"}

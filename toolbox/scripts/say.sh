@@ -1,5 +1,5 @@
 #!/bin/sh
-# 打印 scripts/banners.txt 里的一条横幅。
+# 打印 toolbox/scripts/banners.txt 里的一条横幅。
 #
 # 为什么横幅不直接写在 Makefile 里：Windows 上 mingw-make 构造 Windows 命令行时，
 # 会把配方里的字节按**系统 ANSI 代码页**（中文 Windows 是 cp936 / GBK）解码一次。
@@ -10,16 +10,16 @@
 #
 # 放在文件里、由 shell 直接读，字节原样输出，不经过 Windows 命令行这一层。
 #
-# 用法：sh scripts/say.sh <键>
+# 用法：sh toolbox/scripts/say.sh <键>
 
 set -u
 
-ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 BANNERS="$ROOT/scripts/banners.txt"
 
 key="${1:-}"
 if [ -z "$key" ]; then
-  echo "用法: sh scripts/say.sh <键>" >&2
+  echo "用法: sh toolbox/scripts/say.sh <键>" >&2
   exit 2
 fi
 

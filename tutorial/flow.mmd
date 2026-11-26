@@ -2,7 +2,7 @@
 %% 节点内：编号+活动名 / 工期 / ES EF LS LF（单位：分钟）/ 完成判据
 %% 关键路径：A0 → A3 → A4 → A5 → A6 → A7 → A8 → A9，总工期 61 分钟
 %% 数据层支线 A0 → A1 → A2 → A7 有 22 分钟总浮动，故不进关键路径
-%% 渲染成 PNG：python3 manual/shots/render_flow.py（同一份源文件供练本总览页与答辩共用）
+%% 渲染成 PNG：python3 tutorial/shots/render_flow.py（同一份源文件供练本总览页与答辩共用）
 flowchart LR
     A0["<b>A0 环境准备</b><br/>工期 10<br/>ES0 EF10 LS0 LF10<br/>判据：python -V<br/>有输出、三端口空闲"]
     A1["<b>A1 创建 MySQL 容器</b><br/>工期 3<br/>ES10 EF13 LS32 LF35<br/>判据：容器 running<br/>SELECT VERSION()<br/>有输出"]

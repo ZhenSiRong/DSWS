@@ -9,7 +9,7 @@
 </head>
 <body>
 <main class="page">
-<p class="kicker">练本 · 阅读版（md 正典派生，改内容请改 manual/page-09.md）</p>
+<p class="kicker">练本 · 阅读版（md 正典派生，改内容请改 tutorial/page-09.md）</p>
 <h1>第 9 页 · 给浏览器一个入口：nginx 反代 + 一个页面</h1>
 <blockquote>
 <p><strong>城市坐标 · P9 城市门户 + 道路网（交付物 ⑪⑫）</strong>｜城门口立起来（<code>8081</code>）：市民从门户进来问一句，路一直通到服务中心。</p>
@@ -34,7 +34,7 @@
 <ol>
 <li>先让“容器里的 nginx”够得着你的服务。终端 1 按 Ctrl+C 停掉，把启动命令加一个参数再起：</li>
 </ol>
-<pre><code class="language-bash">backend/.venv/bin/python -m uvicorn lab.app:app --host 0.0.0.0 --port 8000
+<pre><code class="language-bash">system/backend/.venv/bin/python -m uvicorn lab.app:app --host 0.0.0.0 --port 8000
 </code></pre>
 <p><strong>为什么要改</strong>：第 3 页那条命令默认只监听 <code>127.0.0.1</code>（只有你本机的进程连得上）。</p>
 <p><strong>为什么是 <code>0.0.0.0</code></strong>：nginx 跑在容器里，从 Docker 网卡进来，所以要改成 <code>0.0.0.0</code>（意思是所有网卡）。</p>
@@ -101,10 +101,10 @@ function ask(question) {
 <img alt="第 9 页 · 效果预览：敲问题→进度逐条刷新→41099.5（真跑录制 GIF）" src="../images/page-09-demo.gif" /></p>
 <h2>对账</h2>
 <ul>
-<li><strong>你猜一条条还是一次给？</strong> 一条条：点完 0.6 秒左右，页面上正停着 <code>recall_value</code> 这样的步骤名；1.8 秒后变成 <code>41099.5</code>。</li>
+<li><strong>你猜一条条还是一次给？</strong> 一条条：点完约 0.4–0.6 秒，页面上会停在 <code>recall_value</code> / <code>merge_retrieved_info</code> 一带的步骤名（具体哪步随机器变）；1.8 秒后变成 <code>41099.5</code>。</li>
 <li><strong>转发不改内容</strong>：浏览器收到的就是第 8 页 <code>curl -N</code> 收到的那串字节，nginx 只负责转发。</li>
 <li><strong><code>proxy_buffering off</code> 这一行是保险</strong>：nginx 默认会把后端响应先收着，攒一批再给你。</li>
-<li><strong>攒起来的坏处</strong>：真实系统的流要跑好几秒、内容也多得多，被攒起来就变成“等半天、然后一次性出现”，所以仓库里 <code>docker/nginx.conf</code> 的 <code>/api/</code> 也专门关了它。</li>
+<li><strong>攒起来的坏处</strong>：真实系统的流要跑好几秒、内容也多得多，被攒起来就变成“等半天、然后一次性出现”，所以仓库里 <code>system/docker/nginx.conf</code> 的 <code>/api/</code> 也专门关了它。</li>
 <li><strong>看不出差别也照写</strong>：你这条流只有约 1.2 KB、1.8 秒，两种配置下可能都看不出差别——但配置要按“会出问题”的那天写。</li>
 <li>拆一刀：把 nginx 删掉，再验一次主干。一条命令做完：</li>
 </ul>

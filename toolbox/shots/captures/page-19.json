@@ -4,7 +4,7 @@
   "output": "/tmp/shots-demo/page-19-policy.png",
   "stack": {"mode": "none"},
   "embed": {
-    "path": "manual/page-19.md",
+    "path": "tutorial/page-19.md",
     "image": "images/page-19-policy.png",
     "alt": "第 19 页 · `security --check`：36/36 拒 + 11/11 放行 + 8/8 基线，S5 PASS",
     "anchor": "## 对账",
@@ -15,7 +15,7 @@
   "panels": [
     {
       "heading": "终端 · 第 2 步：security --check——36/36 全拒 + 11/11 放行 + 8/8 基线，末行 S5 PASS（纯离线）",
-      "commands": ["(cd backend && .venv/bin/python -m app.scripts.security --check)"],
+      "commands": ["(cd system/backend && .venv/bin/python -m app.scripts.security --check)"],
       "expect_lines": [
         "== 1/3 注入语料（必须 100% 拒绝） ==",
         "  注入语料：36/36 条按预期拒绝",
@@ -28,7 +28,7 @@
     },
     {
       "heading": "第 3 步：语料判定表（节选三类构造）——末行统计走 stderr，PYTHONUNBUFFERED=1 保证它落在表尾",
-      "commands": ["(cd backend && PYTHONUNBUFFERED=1 .venv/bin/python -m app.scripts.security --corpus) 2>&1 | grep -E \"multi_statement|executable_comment|union|语料：\""],
+      "commands": ["(cd system/backend && PYTHONUNBUFFERED=1 .venv/bin/python -m app.scripts.security --corpus) 2>&1 | grep -E \"multi_statement|executable_comment|union|语料：\""],
       "expect_lines": [
         "| multi_statement_drop | SQL_MULTIPLE_STATEMENTS | SQL_MULTIPLE_STATEMENTS | PASS |",
         "| multi_statement_update | SQL_MULTIPLE_STATEMENTS | SQL_MULTIPLE_STATEMENTS | PASS |",

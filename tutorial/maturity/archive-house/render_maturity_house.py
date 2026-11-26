@@ -4,12 +4,12 @@
 
 在仓库根目录一条命令重跑：
 
-    python3 manual/shots/render_maturity_house.py
+    python3 tutorial/shots/render_maturity_house.py
 
-读：`manual/maturity/data.json`（12 件交付物：no / name / location / skeleton / mature）
-    `manual/maturity/stages.json`（4 阶段：id / name / subtitle / metaphor_line / artifacts_grown / mechanisms）
-写：`manual/maturity/house.html`（单文件、零外部请求、离线可开：数据与 SVG 全部内联）
-    `manual/maturity/house-4stages.png`（1600×800 CSS @2x → 3200×1600，convert -trim 收边）
+读：`tutorial/maturity/data.json`（12 件交付物：no / name / location / skeleton / mature）
+    `tutorial/maturity/stages.json`（4 阶段：id / name / subtitle / metaphor_line / artifacts_grown / mechanisms）
+写：`tutorial/maturity/house.html`（单文件、零外部请求、离线可开：数据与 SVG 全部内联）
+    `tutorial/maturity/house-4stages.png`（1600×800 CSS @2x → 3200×1600，convert -trim 收边）
 
 图在说什么（一句话）：**同一栋房子 —— 毛坯能站人，通水通电才能住，装上智能才好用，有了安防才敢交付。**
 所以版式不是四张不同的房子，而是**同一栋、同一户型、同一视角（正面剖视）的房子，从左到右四个阶段**：
@@ -52,7 +52,7 @@ import tempfile
 import zlib
 from pathlib import Path
 
-HERE = Path(__file__).resolve().parent              # manual/shots
+HERE = Path(__file__).resolve().parent              # tutorial/shots
 REPO = HERE.parents[1]                              # 仓库根目录
 MAT = REPO / "manual" / "maturity"
 DATA_PATH = MAT / "data.json"
@@ -67,7 +67,7 @@ DESIGN_W, DESIGN_H = 1600, 800                      # CSS 设计画布
 SCALE = 2
 OUT_W, OUT_H = DESIGN_W * SCALE, DESIGN_H * SCALE    # 3200×1600
 PAPER = "#F4F1EA"
-RERUN = "python3 manual/shots/render_maturity_house.py"
+RERUN = "python3 tutorial/shots/render_maturity_house.py"
 
 # 成图 / HTML / 数据里不许出现的字符串（用户名、绝对路径、口令）。
 HOST_USER = Path.home().name
@@ -1898,7 +1898,7 @@ def main() -> int:
     page = build_html(data, stages_doc)
     check_html(page, data, stages_doc)
     OUT_HTML.write_text(page, encoding="utf-8")
-    print(f"  ✓ 写入 manual/maturity/house.html（{OUT_HTML.stat().st_size // 1024} KB，零外部请求）")
+    print(f"  ✓ 写入 tutorial/maturity/house.html（{OUT_HTML.stat().st_size // 1024} KB，零外部请求）")
 
     with tempfile.TemporaryDirectory(prefix="house-") as td:
         work = Path(td)
@@ -1913,9 +1913,9 @@ def main() -> int:
         check_png(OUT_PNG, raw_size, trimmed_size)
 
     print("\n✓ 交付：")
-    print(f"  manual/maturity/stages.json          （4 阶段定义）")
-    print(f"  manual/maturity/house.html           （{OUT_HTML.stat().st_size // 1024} KB，离线可开）")
-    print(f"  manual/maturity/house-4stages.png    （{OUT_W}×{OUT_H}，{OUT_PNG.stat().st_size // 1024} KB）")
+    print(f"  tutorial/maturity/stages.json          （4 阶段定义）")
+    print(f"  tutorial/maturity/house.html           （{OUT_HTML.stat().st_size // 1024} KB，离线可开）")
+    print(f"  tutorial/maturity/house-4stages.png    （{OUT_W}×{OUT_H}，{OUT_PNG.stat().st_size // 1024} KB）")
     print(f"  重跑：{RERUN}")
     print("\n12 枚编号圆牌在房子上的位置：")
     for no in range(1, 13):

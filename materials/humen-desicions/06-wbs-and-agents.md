@@ -33,20 +33,20 @@
 
 | ID | 任务 | 产出 | 门禁 | Owner | 依赖 | 估时 | 优先级 |
 |---|---|---|---|---|---|---|---|
-| 1.1 | 锁定 main commit、契约、5051 现状 | `eval/freeze.json` | 三项哈希一致 | C | —— | 10m | P0 |
-| 1.2 | 导出 30 条黄金问数（8 召回 + 10 基线 + 12 新增） | `eval/golden.jsonl` | 每条有期望结果或拒答码 | C+D | 1.1 | 40m | P0 |
-| 1.3 | 编写 20 条校正用例（6 类） | `eval/correction.jsonl` | 每类 ≥3 条；含期望原因码 | C | 1.1 | 50m | P0 |
-| 1.4 | 实现一致性测试 `run.py`（C1–C6） | `eval/conformance/` | 参考实现全绿 | C | 1.2,1.3 | 90m | P0 |
+| 1.1 | 锁定 main commit、契约、5051 现状 | `system/eval/freeze.json` | 三项哈希一致 | C | —— | 10m | P0 |
+| 1.2 | 导出 30 条黄金问数（8 召回 + 10 基线 + 12 新增） | `system/eval/golden.jsonl` | 每条有期望结果或拒答码 | C+D | 1.1 | 40m | P0 |
+| 1.3 | 编写 20 条校正用例（6 类） | `system/eval/correction.jsonl` | 每类 ≥3 条；含期望原因码 | C | 1.1 | 50m | P0 |
+| 1.4 | 实现一致性测试 `run.py`（C1–C6） | `system/eval/conformance/` | 参考实现全绿 | C | 1.2,1.3 | 90m | P0 |
 | 1.5 | 配置 DeepSeek（`REBUILD_LLM_*`）并验证一次真实调用 | 环境就绪日志（不打印 Key） | 返回 2xx 且 SQL 可执行 | O | —— | 15m | P0 |
-| 1.6 | 参考实现基线跑分 | `eval/baseline.json` | C1/C4 100% | D | 1.4,1.5 | 30m | P0 |
+| 1.6 | 参考实现基线跑分 | `system/eval/baseline.json` | C1/C4 100% | D | 1.4,1.5 | 30m | P0 |
 
 ### 2. 教材审计（对应 P1）
 
 | ID | 任务 | 产出 | 门禁 | Owner | 依赖 | 估时 | 优先级 |
 |---|---|---|---|---|---|---|---|
-| 2.1 | 章节 → 代码映射表 | `pilot/chapter-map.md` | 每章至少 3 个 `file:line` | C | 1.1 | 60m | P0 |
+| 2.1 | 章节 → 代码映射表 | `materials/pilot/chapter-map.md` | 每章至少 3 个 `file:line` | C | 1.1 | 60m | P0 |
 | 2.2 | 事实断言抽取与回查（6 章） | 断言清单 | 每条有出处或标“无来源” | C | 2.1 | 180m | P0 |
-| 2.3 | 缺口分级（阻断/重要/可选） | `pilot/audit.md` | 阻断项有修法 | C | 2.2 | 30m | P0 |
+| 2.3 | 缺口分级（阻断/重要/可选） | `materials/pilot/audit.md` | 阻断项有修法 | C | 2.2 | 30m | P0 |
 | 2.4 | 已知缺口确认：LangGraph 0 次、12→10 无契约定义 | 缺口条目 | 可复现 | C | 2.2 | 15m | P0 |
 
 ### 3. 教材改写与插图（对应 P2）
@@ -66,12 +66,12 @@
 
 | ID | 任务 | 产出 | 门禁 | Owner | 依赖 | 估时 | 优先级 |
 |---|---|---|---|---|---|---|---|
-| 4.1 | **C3 校正基准（旁路，最先跑）** | `eval/correction-report.json` | ≥80% 修复率，0 越权 | D | 1.3,1.5 | 60m | P0 |
+| 4.1 | **C3 校正基准（旁路，最先跑）** | `system/eval/correction-report.json` | ≥80% 修复率，0 越权 | D | 1.3,1.5 | 60m | P0 |
 | 4.2 | 6 份章节任务书（**移出今晚**） | `student/task-0x.md` | 每条可判定 | C | 2.3 | 60m | P2 |
 | 4.3 | 学生 low 跑 6 个章节任务（**移出今晚**） | 6 份 report | 独立复跑一致 | S | 3.8,4.2 | 180m（并发2） | P2 |
 | 4.4 | 修复型 capstone starter | `starter/` | 5 个注入缺陷、可运行 | C | 4.1 | 90m | P0 |
 | 4.5 | capstone low + medium 对照 | 2 份 report | 通过 C1–C6 | S | 4.4 | 120m | P0 |
-| 4.6 | 协调方独立复跑 | `eval/student-result.json` | 与参考基线差异 ≤1 条 | C+D | 4.5 | 60m | P0 |
+| 4.6 | 协调方独立复跑 | `system/eval/student-result.json` | 与参考基线差异 ≤1 条 | C+D | 4.5 | 60m | P0 |
 | 4.7 | 卡点归因与教材回写 | 归因表 | 教材/环境/学生三选一 | C | 4.3,4.6 | 60m | P1 |
 | 4.8 | 复测 | 新 report | 同一任务通过 | S | 4.7 | 60m | P1 |
 
@@ -82,7 +82,7 @@
 | 5.1 | 远程预检与备份（镜像 tag、nginx 根目录） | 备份清单 | 可回滚 | O | 1.1 | 20m | P0 |
 | 5.2 | 注入 `REBUILD_LLM_*`（服务器 env，不落仓库） | 环境就绪 | 不打印 Key | O | 1.5 | 10m | P0 |
 | 5.3 | 远程构建 + `up -d` | 新容器 | health 200 | O | 5.1,5.2 | 20m | P0 |
-| 5.4 | 冒烟：C1/C2/C3/C4/C6 | `deliverable/v2/evidence/*` | 全绿 | D | 5.3 | 30m | P0 |
+| 5.4 | 冒烟：C1/C2/C3/C4/C6 | `materials/deliverable/v2/evidence/*` | 全绿 | D | 5.3 | 30m | P0 |
 | 5.5 | 回滚演练 | 回滚记录 | 2 分钟内恢复 | O | 5.3 | 10m | P1 |
 
 ### 6. 视频修补（对应 P4）——只补一段，不重录全片
@@ -91,8 +91,8 @@
 
 | 视频 | 规格 | 现状 | 与 README 的关系 |
 |---|---|---|---|
-| `deliverable/DSWS-cloud-demo.mp4`（181s） | 1920×1080 / 30fps / 无音轨 | `seg-03` 52.7–103.3s 是**校正失败**（`SQL_UNKNOWN_COLUMN`，纠正成功=false） | **不在** README |
-| `deliverable/v2/DSWS-v2-original-ui-demo.mp4`（46.3s） | 同上 | **没有校正段** | README 当前嵌入 |
+| `materials/deliverable/DSWS-cloud-demo.mp4`（181s） | 1920×1080 / 30fps / 无音轨 | `seg-03` 52.7–103.3s 是**校正失败**（`SQL_UNKNOWN_COLUMN`，纠正成功=false） | **不在** README |
+| `materials/deliverable/v2/DSWS-v2-original-ui-demo.mp4`（46.3s） | 同上 | **没有校正段** | README 当前嵌入 |
 
 **结论**：失败段在 181s 的 v1（5050 旧界面）；README 挂的是 46s 的 v2（5051 新界面）。
 把 5051 的新段直接剪进 181s，会在同一片里出现两套界面，观感是断的。
@@ -103,7 +103,7 @@
 | ID | 任务 | 产出 | 门禁 | Owner | 依赖 | 估时 | 优先级 |
 |---|---|---|---|---|---|---|---|
 | 6.1 | 复用 `.rec/record.mjs` + DOM 角标/subs，确认 5051 录制链路 | 可重跑脚本 | 录 3s 样片无错 | C | —— | 15m | P0 |
-| 6.2 | **前置门禁：C3 校正基准通过** | `eval/correction-report.json` | ≥80%，0 越权 | D | 4.1 | 复用 | P0 |
+| 6.2 | **前置门禁：C3 校正基准通过** | `system/eval/correction-report.json` | ≥80%，0 越权 | D | 4.1 | 复用 | P0 |
 | 6.3 | 录「校正成功」段（问题：查询销售额大于平均销售额的商品） | 原始片段 | 真实 SSE + `correct_sql` 成功 | F+O | 5.4,6.1,6.2 | 20m | P0 |
 | 6.4 | 拼接：插入 46s 视频 30.2s 处（UNION 之前） | 新 MP4 | 段落顺序不变 | D | 6.3 | 30m | P0 |
 | 6.5 | 规格校验：1920×1080 / 30fps / H.264 / yuv420p / 无音轨；总长 56±1s | 校验日志 | 逐项一致 | D | 6.4 | 10m | P0 |
@@ -115,7 +115,7 @@
 
 | ID | 任务 | 产出 | 门禁 | Owner | 依赖 | 估时 | 优先级 |
 |---|---|---|---|---|---|---|---|
-| 7.1 | 交付清单核对（≥30 页 / 源码 / 手册） | `deliverable/checklist.md` | 逐项有证据 | C | 3.8,5.4 | 20m | P0 |
+| 7.1 | 交付清单核对（≥30 页 / 源码 / 手册） | `materials/deliverable/checklist.md` | 逐项有证据 | C | 3.8,5.4 | 20m | P0 |
 | 7.2 | 开发手册单独成册 | `MANUAL.pdf` | ≥30 页、目录可跳转 | D | 3.8 | 30m | P1 |
 | 7.3 | 全量回归 | 回归报告 | C1–C6 + 学生复测 | D | 全部 | 60m | P0 |
 | 7.4 | 终审材料打包 | 一页纸 + 链接 | 可点开 | C | 7.1-7.3 | 30m | P0 |

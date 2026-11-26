@@ -8,11 +8,11 @@
 #     unexpected EOF while looking for matching `"'
 # 脚本文件是被 shell 直接读的，字节原样输出，不经过 Windows 命令行这一层。
 #
-# 用法：sh scripts/docker-reset.sh   （或 make docker-reset）
+# 用法：sh toolbox/scripts/docker-reset.sh   （或 make docker-reset）
 
 set -u
 
-ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "$ROOT"
 
 # 从 .env 里读一个键的值。只处理这一个键，规则照 Compose 的 dotenv 来：

@@ -56,7 +56,7 @@
         if (!res.ok) { toast('保存失败：' + (res.error || '未知错误')); return; }
         toast('已覆盖保存；' + ((res.messages || []).join('；') || '重建完成'));
       }).catch(function (e) {
-        toast('保存请求失败：' + e.message + '（请确认用 scripts/design-serve.py 启动服务）');
+        toast('保存请求失败：' + e.message + '（请确认用 toolbox/scripts/design-serve.py 启动服务）');
       }).finally(function () {
         saveBtn.disabled = false; saveBtn.textContent = old;
       });

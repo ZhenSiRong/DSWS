@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """页首图编辑服务：静态文件 + /api/save（覆盖保存并重建 PNG/WebP/阅读版）。
 
-用法： scripts/design-serve.py [PORT]   # 默认 8788
+用法： toolbox/scripts/design-serve.py [PORT]   # 默认 8788
 入口：http://127.0.0.1:8788/manual/designs/
 """
 from __future__ import annotations

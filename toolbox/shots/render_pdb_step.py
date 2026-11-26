@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# 教师/CI 夹具：不是学生入口；学生工具见 manual/appendix/gui-debugging.md
+# 教师/CI 夹具：不是学生入口；学生工具见 tutorial/appendix/gui-debugging.md
 """render_pdb_step.py —— 第 21 页补图：pdb 终端单步 + 前端 12 节点左右对照 GIF。
 
 一条命令重跑（在仓库根目录）：
 
-    python3 manual/shots/render_pdb_step.py
+    python3 tutorial/shots/render_pdb_step.py
 
 它做四件事：
 
 1. **真 pdb 会话**：用 Python 标准库 pty 驱动
-   `backend/.venv/bin/python -m pdb manual/shots/pdb_step_demo.py`，
+   `system/backend/.venv/bin/python -m pdb tutorial/shots/pdb_step_demo.py`，
    按固定命令序列在 6 个断点单步（断点行号见下），捕获完整会话
    （提示符 `(Pdb)` + 命令 + 源码行 + 变量值）。仓库绝对前缀归一成相对
    路径，去掉 ANSI；命令/输出本身不改。落盘
-   `manual/review/pdb-step-transcript.txt`，并断言必含关键证据。
-2. **左栏 12 节点时间轴**：12 个节点 id 来自 `contracts/steps.yaml`；
+   `tutorial/review/pdb-step-transcript.txt`，并断言必含关键证据。
+2. **左栏 12 节点时间轴**：12 个节点 id 来自 `system/contracts/steps.yaml`；
    脚本打印的 `=== NODE validate_sql ===` 等标记驱动高亮，左栏还有
    本次 4 步路径、触发条件、关键变量、当前断点、断点命令。
 3. **右栏 pdb 终端**：transcript 从第一行开始逐行出现（每帧 1–2 行，
@@ -26,20 +26,20 @@
 
 断点行号（真实代码行，runbook 里有同样的命令序列）：
 
-    backend/app/generate/guard.py:306          if violations:——拒绝分支
-    backend/app/agent/correct.py:169           if corrector is None:（触发条件①）
-    backend/app/agent/correct.py:176           if not error.retryable:（触发条件②）
-    backend/app/agent/correct.py:183           if policy.max_attempts < 1:（触发条件③）
-    backend/app/generate/provider.py:257       parse_model_payload 的 return
-    backend/app/agent/validate.py:71           validate_sql 的 return None（二次校验通过）
+    system/backend/app/generate/guard.py:306          if violations:——拒绝分支
+    system/backend/app/agent/correct.py:169           if corrector is None:（触发条件①）
+    system/backend/app/agent/correct.py:176           if not error.retryable:（触发条件②）
+    system/backend/app/agent/correct.py:183           if policy.max_attempts < 1:（触发条件③）
+    system/backend/app/generate/provider.py:257       parse_model_payload 的 return
+    system/backend/app/agent/validate.py:71           validate_sql 的 return None（二次校验通过）
 
 常用参数：
 
     --capture-only   只重录 transcript，不渲染
     --render-only    用现有 transcript 只渲染
-    --keep-frames    把全部帧留在 manual/review/pdb-step-frames/（默认只留首/中/末）
+    --keep-frames    把全部帧留在 tutorial/review/pdb-step-frames/（默认只留首/中/末）
 
-依赖（本机已装，不新装）：仓库 backend/.venv（Python 3.14）、google-chrome、
+依赖（本机已装，不新装）：仓库 system/backend/.venv（Python 3.14）、google-chrome、
 ffmpeg、ImageMagick convert/identify/compare、tesseract（只用了英文包）。
 不启容器、不连 MySQL / ES / Qdrant / LLM、不读 .env。
 """
@@ -65,7 +65,7 @@ from pathlib import Path
 
 # ---------------------------------------------------------------- 常量
 
-HERE = Path(__file__).resolve().parent          # manual/shots
+HERE = Path(__file__).resolve().parent          # tutorial/shots
 REPO = HERE.parents[1]                          # 仓库根目录
 IMAGES = REPO / "manual" / "images"
 REVIEW = REPO / "manual" / "review"
@@ -89,7 +89,7 @@ MIN_SECONDS = 6.0
 MAX_SECONDS = 10.0
 GIF_MAX_BYTES = 3_000_000
 
-#: 12 个节点，id 与顺序逐字取自 `contracts/steps.yaml`。
+#: 12 个节点，id 与顺序逐字取自 `system/contracts/steps.yaml`。
 NODES = [
     ("extract_keywords", "抽取关键词", "离线跳过"),
     ("recall_column", "召回字段信息", "离线跳过"),
@@ -281,9 +281,9 @@ def check_transcript(text: str) -> None:
         if bad in text:
             raise RuntimeError(f"transcript 出现敏感串：{bad!r}")
     say("    无用户名 / 家目录 / key 串")
-    if not text.splitlines()[0].startswith("> manual/shots/pdb_step_demo.py("):
+    if not text.splitlines()[0].startswith("> tutorial/shots/pdb_step_demo.py("):
         raise RuntimeError(f"首行不是相对路径的启动 banner：{text.splitlines()[0]!r}")
-    say("    启动 banner 是相对路径（manual/shots/pdb_step_demo.py）")
+    say("    启动 banner 是相对路径（tutorial/shots/pdb_step_demo.py）")
 
 
 def write_transcript(text: str) -> None:
@@ -367,7 +367,7 @@ class State:
             ]),
             "run": ("run_sql · 执行（边界）", [
                 "本演示到此为止用假执行器，不连 MySQL；只证明代码路径走到这里。",
-                "真实触发与真实结果见 review/correction-live-trigger.sse。",
+                "真实触发与真实结果见 materials/review/correction-live-trigger.sse。",
             ]),
         }[self.phase]
 
@@ -513,12 +513,12 @@ STATUS_STYLE = {
 #: 断点：(显示名, 真实源文件, 行号)。源码行在渲染时从仓库真文件里读，
 #: 所以左栏的「行号 ↔ 源码行」永远和代码一致，不会手抄漂移。
 BREAKPOINTS = [
-    ("guard.py", "backend/app/generate/guard.py", 306),
-    ("correct.py", "backend/app/agent/correct.py", 169),
-    ("correct.py", "backend/app/agent/correct.py", 176),
-    ("correct.py", "backend/app/agent/correct.py", 183),
-    ("provider.py", "backend/app/generate/provider.py", 257),
-    ("validate.py", "backend/app/agent/validate.py", 71),
+    ("guard.py", "system/backend/app/generate/guard.py", 306),
+    ("correct.py", "system/backend/app/agent/correct.py", 169),
+    ("correct.py", "system/backend/app/agent/correct.py", 176),
+    ("correct.py", "system/backend/app/agent/correct.py", 183),
+    ("provider.py", "system/backend/app/generate/provider.py", 257),
+    ("validate.py", "system/backend/app/agent/validate.py", 71),
 ]
 
 
@@ -563,7 +563,7 @@ def sse_evidence() -> list[str]:
                         durations[step] = float(payload["duration_ms"])
         except OSError:
             _SSE_CACHE = None
-            return ["（缺 review/correction-live-trigger.sse）"]
+            return ["（缺 materials/review/correction-live-trigger.sse）"]
         text = " → ".join(sequence) if sequence else "（SSE 里没有 SQL 节点事件）"
         detail = "correct_sql " + f"{durations.get('correct_sql', 0):.0f}ms"
         if "validate_sql" in durations:
@@ -890,7 +890,7 @@ def build_html(lines: list[str], state: State, height_css: int | None) -> str:
   <div class="pane left">
     <div class="titlebar"><b>左栏 · 12 节点时间轴</b><span class="tag">NODE 标记驱动</span></div>
     <div class="lbody">
-      <div class="sect"><h4>12 节点时间轴（contracts/steps.yaml）</h4>
+      <div class="sect"><h4>12 节点时间轴（system/contracts/steps.yaml）</h4>
         <div class="tl">{''.join(tl_rows)}</div></div>
       <div class="sect"><h4>本次 pdb 路径（校正回边 4 步）</h4>
         <div class="path">{'<div class="parrow">↓</div>'.join(chips)}</div></div>
@@ -916,10 +916,10 @@ def build_html(lines: list[str], state: State, height_css: int | None) -> str:
       <div class="sect"><h4>真模型现场（SSE 旁证）</h4>
         <div class="sseq">{sse_html}</div>
         <div class="ssed">{esc(sse_evidence()[1])}<br>{esc(sse_evidence()[2])}<br>
-        见 review/correction-live-trigger.sse</div></div>
+        见 materials/review/correction-live-trigger.sse</div></div>
       <div class="spacer"></div>
       <div class="foot"><b>✓ 真代码路径</b> guard → validate_sql → correct_sql → validate_sql → run_sql；
-        离线、不读 .env。<br>review/correction-live-trigger.sse 是真模型现场 27 帧</div>
+        离线、不读 .env。<br>materials/review/correction-live-trigger.sse 是真模型现场 27 帧</div>
     </div>
   </div>
   <div class="pane right">
@@ -1135,7 +1135,7 @@ def main() -> int:
                         help="复用临时工作目录（调样式时省掉重渲染）")
     args = parser.parse_args()
     if not PY.exists():
-        raise SystemExit(f"缺 {PY}（先按第 0 页 make install 生成 backend/.venv）")
+        raise SystemExit(f"缺 {PY}（先按第 0 页 make install 生成 system/backend/.venv）")
 
     if args.workdir is not None:
         work = args.workdir
@@ -1169,7 +1169,7 @@ def main() -> int:
         compose_gif(work, paths, delays)
         verify(work)
         section("完成")
-        say(f"    transcript: manual/review/pdb-step-transcript.txt")
+        say(f"    transcript: tutorial/review/pdb-step-transcript.txt")
         say(f"    GIF:        {GIF.relative_to(REPO)}")
         return 0
     finally:

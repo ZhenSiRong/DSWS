@@ -4,7 +4,7 @@
   "output": "/tmp/shots-demo/page-16-guard.png",
   "stack": {"mode": "none"},
   "embed": {
-    "path": "manual/page-16.md",
+    "path": "tutorial/page-16.md",
     "image": "images/page-16-guard.png",
     "alt": "第 16 页 · 三条离线判据：26 passed + 失败矩阵 S6 PASS + 语料对账 {\"total\": 20, \"mismatch\": 0}",
     "anchor": "## 对账",
@@ -15,13 +15,13 @@
   "panels": [
     {
       "heading": "终端 · 第 2 步：pytest test_guard.py——静态校验 26 条全过（秒数随机器变）",
-      "commands": ["backend/.venv/bin/python -m pytest backend/tests/generate/test_guard.py -q"],
+      "commands": ["system/backend/.venv/bin/python -m pytest system/backend/tests/generate/test_guard.py -q"],
       "display": "matched",
       "expect_lines": ["26 passed in …"]
     },
     {
       "heading": "第 3 步：失败矩阵（9 个场景）+ 16 码表——S6 PASS",
-      "commands": ["(cd backend && .venv/bin/python -m app.scripts.failures --check)"],
+      "commands": ["(cd system/backend && .venv/bin/python -m app.scripts.failures --check)"],
       "display": "matched",
       "expect_lines": [
         "sql_unknown_column 期望 SQL_UNKNOWN_COLUMN 实际 SQL_UNKNOWN_COLUMN",
@@ -32,8 +32,8 @@
     {
       "heading": "第 4 步：20 条错单的期望码对账 + 码分布——mismatch 0（分布共 10 行，留前 7 行）",
       "commands": [
-        "PYTHONPATH=backend backend/.venv/bin/python eval/probe_correction.py | tail -1",
-        "grep -o '\"expect_code\": \"[A-Z_]*\"' eval/correction.jsonl | awk -F'\"' '{print $4}' | sort | uniq -c | sort -rn"
+        "PYTHONPATH=system/backend system/backend/.venv/bin/python system/eval/probe_correction.py | tail -1",
+        "grep -o '\"expect_code\": \"[A-Z_]*\"' system/eval/correction.jsonl | awk -F'\"' '{print $4}' | sort | uniq -c | sort -rn"
       ],
       "display": "matched",
       "expect_lines": [

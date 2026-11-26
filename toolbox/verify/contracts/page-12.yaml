@@ -3,7 +3,7 @@
 # 本页命令要 docker exec 重灌 MySQL、跑连 3307 的执行器自检（最后一项真等 5 秒读超时），
 # 依赖整栈 + 数据库 + 端口，不适合离线无人值守重复执行，所以 coverage: static：
 # 只验页面引用的路径还在、四道闸依赖的关键锚点没漂移。本页不执行任何块。
-# schema 与规则见 manual/verify/README.md。
+# schema 与规则见 tutorial/verify/README.md。
 page: page-12
 title: 第 12 页 · 换真执行器：给临时通道装上四道闸
 coverage: static
@@ -11,11 +11,11 @@ coverage: static
 static:
   # 页面明说的仓库内路径：真数据源、执行器读取的策略契约、快照/还原 CLI
   paths:
-    - fixtures/dw-real.sql
-    - contracts/sql.policy.yaml
-    - scripts/lab
+    - system/fixtures/dw-real.sql
+    - system/contracts/sql.policy.yaml
+    - toolbox/scripts/lab
   symbols:
-    - {file: contracts/sql.policy.yaml, pattern: 'default_limit: 1000'}
-    - {file: contracts/sql.policy.yaml, pattern: 'max_execution_time_ms: 5000'}
-    - {file: contracts/sql.policy.yaml, pattern: 'connect_timeout_s: 5'}
-    - {file: scripts/lab, pattern: 'WHITELIST=\(.*\blab\b'}
+    - {file: system/contracts/sql.policy.yaml, pattern: 'default_limit: 1000'}
+    - {file: system/contracts/sql.policy.yaml, pattern: 'max_execution_time_ms: 5000'}
+    - {file: system/contracts/sql.policy.yaml, pattern: 'connect_timeout_s: 5'}
+    - {file: toolbox/scripts/lab, pattern: 'WHITELIST=\(.*\blab\b'}

@@ -12,7 +12,7 @@
 
 ## 提前说明
 
-**先确认起点**：你已经克隆好仓库，终端停在**仓库根目录**（`ls` 能看到 `Makefile`、`backend/`、`fixtures/` 的那一层）。
+**先确认起点**：你已经克隆好仓库，终端停在**仓库根目录**（`ls` 能看到 `Makefile`、`system/backend/`、`system/fixtures/` 的那一层）。
 
 **用 bash 敲**：以下命令都在这一层敲（Windows 用 Git Bash 或 WSL；macOS 默认是 zsh，先敲一下 `bash`）。
 
@@ -38,13 +38,13 @@
 
 **或建临时 venv**：`uv venv /tmp/tools` 后 `uv pip install --python /tmp/tools/bin/python <包名>`。
 
-**p17 另有一步**：要追项目自己的 pytest 时，另按该页第 5 步装进 `backend/.venv`。
+**p17 另有一步**：要追项目自己的 pytest 时，另按该页第 5 步装进 `system/backend/.venv`。
 
 > **注意**：`make doctor` 不查宿主机 Python——只装了 `uv` 时，它管理的解释器不在系统 PATH 上。
 >
 > `make docker-env` 会回退到 `uv python find`，若仍报错，装 Python 3.8+ 或先 `uv python install`。
 
-**三个被忽略的**：`.env`、`backend/.venv`、`frontend/node_modules` 都被 `.gitignore` 忽略，克隆下来没有。
+**三个被忽略的**：`.env`、`system/backend/.venv`、`system/frontend/node_modules` 都被 `.gitignore` 忽略，克隆下来没有。
 
 **怎么补**：`.env` 不用你建（第 1 页会从 `.env.example` 读），后两个由 `make install` 生成，**别手动 pip 装**。
 
@@ -71,7 +71,7 @@ make doctor
 第 1 条最长，真跑输出是（中间 62 行 `+ 包名==版本` 太长，只留两行）：
 
 ```text
-cd backend && uv sync --frozen
+cd system/backend && uv sync --frozen
 Using CPython 3.14.8
 Creating virtual environment at: .venv
 Prepared 62 packages in 12ms
@@ -79,7 +79,7 @@ Installed 62 packages in 41ms
  + annotated-doc==0.0.5
  + annotated-types==0.8.0
 …（其余安装清单略）
-cd frontend && npm ci
+cd system/frontend && npm ci
 added 118 packages, and audited 125 packages in 3s
 ```
 
@@ -112,10 +112,10 @@ added 118 packages, and audited 125 packages in 3s
 - `✗ daemon`：装了但没跑起来——Docker Desktop 打开窗口；Linux 用 `sudo systemctl start docker`。
 - **别被版本骗**：`docker --version` 有输出**不代表** daemon 在跑。
 - `✗ uv` / `✗ node` / `✗ make` / `✗ curl`：对应工具没装，装完**重开一个终端**再试（老终端认不到新装的命令）。
-- `✗ Python`：`backend/.venv` 没造出来，多半是第 1 条失败了——先修 `make install`。
-- **还不行就分开跑**：网络问题重跑一次；再不行就分开跑 `cd backend && uv sync --frozen` 和 `cd frontend && npm ci`，看哪段先红。
-- `✗ uv 62 个包全兼容`：有包装不上或互相冲突，`cd backend && uv sync --frozen` 会打印第一段红字，照它说缺什么。
-- `✗ npm 依赖无缺失`：跑 `cd frontend && npm ci`（**不要**用 `npm install`，它会改写锁文件，后面的人装出来和你不一样）。
+- `✗ Python`：`system/backend/.venv` 没造出来，多半是第 1 条失败了——先修 `make install`。
+- **还不行就分开跑**：网络问题重跑一次；再不行就分开跑 `cd system/backend && uv sync --frozen` 和 `cd system/frontend && npm ci`，看哪段先红。
+- `✗ uv 62 个包全兼容`：有包装不上或互相冲突，`cd system/backend && uv sync --frozen` 会打印第一段红字，照它说缺什么。
+- `✗ npm 依赖无缺失`：跑 `cd system/frontend && npm ci`（**不要**用 `npm install`，它会改写锁文件，后面的人装出来和你不一样）。
 - `✗ 端口`：`ss -tlnp | grep -E ':(3307|8000|8081) '` 列出占用者，把 PID 那列找出来停掉。
 - **看不到 PID**：说明是 root 的进程（比如系统自带的 MySQL），加 `sudo` 再看：`sudo ss -tlnp | grep -E ':(3307|8000|8081) '`。
 - **改端口要连带改**：第 1 页写死 3307、第 3 页写死 8000、第 9 页写死 8081，改端口要连带改后面命令。
@@ -130,7 +130,7 @@ added 118 packages, and audited 125 packages in 3s
 把 8000 占住，再跑一次 `make doctor`，看它怎么报错（这就是"判据可被第三方复核"的意思——不用作者在场，输出自己会说话）：
 
 ```bash
-backend/.venv/bin/python -m http.server 8000 &
+system/backend/.venv/bin/python -m http.server 8000 &
 make doctor
 kill %1
 ```
@@ -149,7 +149,7 @@ kill %1
 再敲（别用 `docker system prune`——会误删本机别的栈）：
 
 ```bash
-docker rm -f lab-nginx lab-mysql   # 数据随容器消失；重跑第 1 页起容器、再跑第 2 页重新导入 fixtures/dw.sql
+docker rm -f lab-nginx lab-mysql   # 数据随容器消失；重跑第 1 页起容器、再跑第 2 页重新导入 system/fixtures/dw.sql
 rm -rf lab
 docker ps -a --format '{{.Names}}' | grep '^lab-' || echo "容器干净"   # 验证 1
 ss -tln | grep -E ':(3307|8000|8081) ' || echo "端口全空"              # 验证 2
@@ -160,5 +160,5 @@ ss -tln | grep -E ':(3307|8000|8081) ' || echo "端口全空"              # 验
 | 想回到 | 删掉 | 保留 |
 |---|---|---|
 | 第 3 页 | `lab-nginx`、整个 `lab/` | `lab-mysql`（数据不用重新导入） |
-| 第 7 页 | `lab-nginx`，并把 `lab/app.py` 退回第 6 页的版本（重抄第 6 页代码；或先 `scripts/lab save` 再 `reset`——第 10 页起介绍） | `lab-mysql`、`lab/` |
+| 第 7 页 | `lab-nginx`，并把 `lab/app.py` 退回第 6 页的版本（重抄第 6 页代码；或先 `toolbox/scripts/lab save` 再 `reset`——第 10 页起介绍） | `lab-mysql`、`lab/` |
 | 只重第 9 页 | 只删 `lab-nginx` | `lab-mysql`、`lab/`（配置和页面直接重用） |

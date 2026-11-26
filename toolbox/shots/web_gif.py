@@ -5,21 +5,21 @@
 
 在仓库根目录一条命令重跑：
 
-    python3 manual/shots/web_gif.py
+    python3 tutorial/shots/web_gif.py
 
 输出（只新增这一个文件，不动已有 PNG）：
 
-    manual/images/page-09-demo.gif   约 6.5 秒循环，含最终结果停留 2.5 秒以上
+    tutorial/images/page-09-demo.gif   约 6.5 秒循环，含最终结果停留 2.5 秒以上
 
 它做四件事（复用 web_shots.py 的真三层环境，不改原脚本）：
 
-1. 在 /tmp 建临时工作区：软链 `backend/`（复用仓库 venv），拷入 `fixtures/dw.sql`
+1. 在 /tmp 建临时工作区：软链 `system/backend/`（复用仓库 venv），拷入 `system/fixtures/dw.sql`
    和 `.env.example`，写 `lab/app.py`（复用 term_render.py 的 APP_PAGE_08，即第 3–8 页
    产物的最终形态）、第 9 页逐字的 `lab/default.conf` / `lab/index.html`。
 2. 起三层环境（容器名带 shots- 前缀，与用户自己的 lab-* 栈隔离）：
    `shots-web-mysql`（127.0.0.1:3307）→ uvicorn `--host 0.0.0.0 --port 8000` →
    `shots-web-nginx`（127.0.0.1:8081）。
-3. Playwright（frontend/node_modules/playwright-core）驱动 /usr/bin/google-chrome：
+3. Playwright（system/frontend/node_modules/playwright-core）驱动 /usr/bin/google-chrome：
    打开 8081 → `#q` 清空 → 逐字敲「华北销售额」（delay≈60ms）→ 点「问一句」→
    每约 120ms 截一帧，直到 `#out` 文本是 `41099.5` 后再多截约 1.6 秒（约 15 帧）。
 4. 所有帧统一裁掉页面上下空白（与 page-09-browser-ok.png 同一套裁剪逻辑：宽度 1100px、
@@ -35,7 +35,7 @@
   - GIF 尺寸 / 帧数 / 字节数打印出来，目标 ≤ 2.5MB。
 
 依赖（本机已装，不新装）：docker、google-chrome、ImageMagick、node、tesseract；
-仓库的 `backend/.venv` 与 `frontend/node_modules/playwright-core`。
+仓库的 `system/backend/.venv` 与 `system/frontend/node_modules/playwright-core`。
 端口只用 3307 / 8000 / 8081，不碰用户的 dsws-lab-ui-* 栈（18081 等）。
 """
 
@@ -60,7 +60,7 @@ from pathlib import Path
 
 # ---------------------------------------------------------------- 常量
 
-HERE = Path(__file__).resolve().parent          # manual/shots
+HERE = Path(__file__).resolve().parent          # tutorial/shots
 REPO = HERE.parents[1]                          # 仓库根目录
 IMAGES = REPO / "manual" / "images"
 PLAYWRIGHT_CORE = REPO / "frontend" / "node_modules" / "playwright-core"
@@ -116,7 +116,7 @@ def load_app_py() -> str:
 
 
 # ---------------------------------------------------------------- 第 9 页逐字代码
-# 与 manual/page-09.md「动手」第 2 步的两段代码逐字一致。
+# 与 tutorial/page-09.md「动手」第 2 步的两段代码逐字一致。
 
 DEFAULT_CONF = """\
 server {
@@ -150,7 +150,7 @@ function ask(question) {
 """
 
 # ---------------------------------------------------------------- 浏览器录制脚本
-# 由本脚本写进临时工作区再 `node` 执行（NODE_PATH 指向 frontend/node_modules）。
+# 由本脚本写进临时工作区再 `node` 执行（NODE_PATH 指向 system/frontend/node_modules）。
 # 录制流程（与页面「动手」一模一样）：打开 8081 → 清空输入框 → 逐字敲问题 →
 # 点「问一句」→ 等 #out 变 41099.5 → 再多录 1.6 秒。
 # 截图由一个后台 async 循环每 ~120ms 做一次，与键盘/点击并发，所以敲字过程本身
@@ -396,7 +396,7 @@ class UvicornServer:
 
     @property
     def command(self) -> str:
-        return f"backend/.venv/bin/python -m uvicorn lab.app:app --host 0.0.0.0 --port {API_PORT}"
+        return f"system/backend/.venv/bin/python -m uvicorn lab.app:app --host 0.0.0.0 --port {API_PORT}"
 
     def start(self, timeout: float = 60.0) -> None:
         self.lines = []
@@ -466,7 +466,7 @@ def preflight() -> None:
     if missing:
         sys.exit(f"缺少依赖：{', '.join(missing)}（本脚本不装新依赖）")
     if not (PLAYWRIGHT_CORE / "package.json").is_file():
-        sys.exit(f"找不到 {PLAYWRIGHT_CORE}（需要 frontend/node_modules/playwright-core）")
+        sys.exit(f"找不到 {PLAYWRIGHT_CORE}（需要 system/frontend/node_modules/playwright-core）")
     for path in (REPO / "backend" / ".venv" / "bin" / "python", REPO / "fixtures" / "dw.sql"):
         if not path.exists():
             sys.exit(f"缺少仓库产物：{path}")
@@ -520,7 +520,7 @@ def start_mysql(work: Path) -> None:
         return proc.returncode == 0 and proc.stdout.strip() == "115"
 
     try:
-        wait_until("MySQL 灌完 fixtures/dw.sql（fact_order = 115）", data_ready,
+        wait_until("MySQL 灌完 system/fixtures/dw.sql（fact_order = 115）", data_ready,
                    timeout=300, interval=1.0)
     except RuntimeError:
         logs = subprocess.run(
@@ -560,7 +560,7 @@ def start_nginx(work: Path) -> None:
 def run_browser_capture(work: Path, timeout: float = 180.0) -> dict:
     meta_path = work / "capture-meta.json"
     env = os.environ.copy()
-    env["NODE_PATH"] = str(PLAYWRIGHT_CORE.parent)   # frontend/node_modules
+    env["NODE_PATH"] = str(PLAYWRIGHT_CORE.parent)   # system/frontend/node_modules
     env["LANGUAGE"] = "zh_CN.UTF-8"
     env["LANG"] = "zh_CN.UTF-8"
     cmd = ["node", str(work / "capture_page.cjs"), str(work / "frames"), str(meta_path)]
@@ -779,7 +779,7 @@ def main() -> int:
         say("")
         say("── 环境 1/3：MySQL 容器 shots-web-mysql（127.0.0.1:3307）──")
         start_mysql(work)
-        say("    ✅ fact_order = 115（fixtures/dw.sql 已灌入）")
+        say("    ✅ fact_order = 115（system/fixtures/dw.sql 已灌入）")
 
         say("")
         say("── 环境 2/3：uvicorn 8000（第 9 页命令：--host 0.0.0.0）──")
@@ -929,7 +929,7 @@ def main() -> int:
                         timeout=60).stdout.splitlines()[0]
         say(f"  {ident.strip()}")
         say(f"  {GIF.stat().st_size / 1024:.0f} KB（上限 {GIF_MAX_BYTES // 1024} KB）")
-        say(f"用时 {time.monotonic() - started:.1f}s；重跑：python3 manual/shots/web_gif.py")
+        say(f"用时 {time.monotonic() - started:.1f}s；重跑：python3 tutorial/shots/web_gif.py")
         return 0
     except KeyboardInterrupt:
         say("\n被 Ctrl+C 中断，开始清理……")

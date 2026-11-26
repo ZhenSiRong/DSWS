@@ -3,28 +3,28 @@
 # 本页命令全是环境装配（make install / make doctor），依赖 Docker daemon、宿主机
 # 工具链与三个端口，不能离线无人值守重复执行，所以 coverage: static：
 # 只验页面引用的路径还在、关键锚点（Makefile 目标 / 端口 / 判定行 / 数据源）没漂移。
-# schema 与规则见 manual/verify/README.md；本页不执行任何块。
+# schema 与规则见 tutorial/verify/README.md；本页不执行任何块。
 page: page-00
 title: 第 0 页 · 开课前准备
 coverage: static
 
 static:
-  # 页面明说要看到 / 使用的仓库内路径（Makefile、backend/、fixtures/、.env.example、
-  # 重来一遍里重新导入的 fixtures/dw.sql，以及第 10 页前会用的 scripts/lab）。
+  # 页面明说要看到 / 使用的仓库内路径（Makefile、system/backend/、system/fixtures/、.env.example、
+  # 重来一遍里重新导入的 system/fixtures/dw.sql，以及第 10 页前会用的 toolbox/scripts/lab）。
   paths:
     - Makefile
-    - backend
-    - fixtures
+    - system/backend
+    - system/fixtures
     - .env.example
-    - fixtures/dw.sql
-    - scripts/lab
+    - system/fixtures/dw.sql
+    - toolbox/scripts/lab
   symbols:
     # make install / make doctor / make doctor-v 三个目标名，删了或改名学生命令直接失效
     - {file: Makefile, pattern: "^install:$"}
     - {file: Makefile, pattern: "^doctor:$"}
     - {file: Makefile, pattern: "^doctor-v:$"}
     # 页面承诺的三个端口（3307 / 8000 / 8081）与末行「12/12 通过」的判定格式
-    - {file: scripts/doctor.sh, pattern: "for port in 3307 8000 8081"}
-    - {file: scripts/doctor.sh, pattern: "printf '%d/%d 通过"}
-    # 「重跑第 2 页重新导入 fixtures/dw.sql」依赖的数据源锚点
-    - {file: fixtures/dw.sql, pattern: "CREATE TABLE dim_region"}
+    - {file: toolbox/scripts/doctor.sh, pattern: "for port in 3307 8000 8081"}
+    - {file: toolbox/scripts/doctor.sh, pattern: "printf '%d/%d 通过"}
+    # 「重跑第 2 页重新导入 system/fixtures/dw.sql」依赖的数据源锚点
+    - {file: system/fixtures/dw.sql, pattern: "CREATE TABLE dim_region"}

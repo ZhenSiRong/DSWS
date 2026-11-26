@@ -4,17 +4,17 @@
 
 在仓库根目录一条命令重跑：
 
-    python3 manual/shots/build_explorer.py
+    python3 tutorial/shots/build_explorer.py
 
 它做五件事（依据 D38 / D39 / D40 / D41，D41 = 状态粒度下沉到「能力格」）：
 
-1. **读单源**：`manual/completeness/data.json`（12 个节点 = 四层「责任 × 证据」矩阵的
+1. **读单源**：`tutorial/completeness/data.json`（12 个节点 = 四层「责任 × 证据」矩阵的
    12 行；10 个槽位 A0–A9；15 项能力列；13 条链路边；D38 三条完备性判据；
    D41 能力格真源 = 每节点每能力的 `cell_state`）。
 2. **反向核对**（防止两版漂移）：
-   - 解析 `manual/completeness/poster.md` 的四张矩阵，逐行核对「节点名 / 能力列名 /
+   - 解析 `tutorial/completeness/poster.md` 的四张矩阵，逐行核对「节点名 / 能力列名 /
      `cell_state` 的 ■ 与 — / 证据文本」，要求与 data.json 一字一致；
-   - 解析 `manual/flow.mmd`，核对槽位 A0–A9 的活动名与工期；
+   - 解析 `tutorial/flow.mmd`，核对槽位 A0–A9 的活动名与工期；
    - 核对槽位↔节点归属（每个槽位有且只有一个所属节点；节点拥有的槽位合计 10 个）、
      答案态自检（10/10 槽位、12/12 行、15/15 列、13/13 边、15■ + 33— 能力格）。
 3. **内联**：把 data.json 原样内联进 HTML 模板的 `<script type="application/json">`，
@@ -31,7 +31,7 @@
    本脚本读回。找不到 Chrome 时跳过该步并打印警告（静态断言仍然生效）。
 
 依赖：python3；DOM 自检需要本机 `google-chrome`（或 `chromium`），截图见
-manual/review/explorer-shots/（由本机 playwright-core + 系统 Chrome 生成）。
+tutorial/review/explorer-shots/（由本机 playwright-core + 系统 Chrome 生成）。
 """
 
 from __future__ import annotations
@@ -45,7 +45,7 @@ import sys
 import tempfile
 from pathlib import Path
 
-HERE = Path(__file__).resolve().parent          # manual/shots
+HERE = Path(__file__).resolve().parent          # tutorial/shots
 REPO = HERE.parents[1]                          # 仓库根目录
 MANUAL = REPO / "manual"
 DATA_PATH = MANUAL / "completeness" / "data.json"

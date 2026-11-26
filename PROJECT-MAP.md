@@ -1,8 +1,8 @@
 # 项目地图 · 四类存放
 
 > 目标：教程内容、制作教程的工具、教程所教的示例系统、设计/研究资料**分开存放**。
-> 旧路径（`manual/`、`backend/`、`scripts/`…）在仓库根保留了**兼容软链**，所以旧命令/旧文档还能跑；
-> **新内容请写进下面四个真实目录**，软链只是过渡层。
+> **根目录不再保留任何兼容软链**；所有命令、文档、脚本都直接使用下面四个真实目录。
+> 例外只有 `.venv/bin/*`、`node_modules/.bin/*` 这类 Python/npm 自己生成的软链。
 
 ## 1. `tutorial/` · 教程正典
 
@@ -15,10 +15,6 @@ tutorial/
   images/                   # 页内截图、图表、页首图 WebP、archive/ 旧漫画
   curriculum/ city/ map/ completeness/ maturity/ aon/ appendix/
   SPEC.md TRAPS.md ACCEPTANCE.md OVERVIEW.md README.md
-  designs -> ../toolbox/page-visuals   # 兼容旧链接
-  shots   -> ../toolbox/shots
-  verify  -> ../toolbox/verify
-  review  -> ../materials/review
 ```
 
 ## 2. `toolbox/` · 制作教程的工具
@@ -28,9 +24,9 @@ tutorial/
 ```
 toolbox/
   page-visuals/   # 页首图：data/page-NN.json、index.html、editor.html、art/、build_visuals.py
-  shots/          # 截图/图表/渲染脚本 + 审计 audit_book.py + render_read.py
+  shots/          # 截图/图表/渲染脚本 + audit_book.py + render_read.py
   verify/         # T0/T1 契约：contracts/page-NN.yaml、README
-  book/           # 新手册构建管线：tutorial → 自包含 HTML + A4 PDF
+  book/           # 手册构建管线：tutorial → 自包含 HTML + A4 PDF
   scripts/        # 验收、docker、lab、task、设计服务等工具脚本
   workflows/      # 任务台账 ledger.yaml / reviews / 甘特
 ```
@@ -41,10 +37,12 @@ toolbox/
 
 ```
 system/
-  backend/ frontend/ contracts/ fixtures/ docker/ deploy/
-  compose.yaml compose.lab-ui.yaml
-  lab/ eval/
+  backend/ frontend/ contracts/ fixtures/ docker/ deploy/ eval/
+  README.md
 ```
+
+Compose 部署入口在**仓库根目录**（真实文件，不是软链）：`compose.yaml`、`compose.lab-ui.yaml`；
+`.env` 也在根目录，`docker compose` 默认读取它们。
 
 ## 4. `materials/` · 设计 / 研究 / 证据
 
@@ -62,18 +60,8 @@ materials/
 
 ## 根目录
 
-`deliverables/`（PRD 三类交付物快照，`make deliverables` 生成）、`README.md`（总入口）、`AGENTS.md`（导航）、`GLOSSARY.md`（术语）、`Makefile`（命令入口）、
-`PROJECT-MAP.md`（本文件）、`.github/`、`.githooks/`、`.env.example`。
-
-## 兼容软链（过渡，别在新代码里用）
-
-| 旧路径 | 真实位置 |
-|---|---|
-| `manual/` | `tutorial/` |
-| `backend/` `frontend/` `contracts/` `fixtures/` `docker/` `deploy/` `eval/` | `system/…` |
-| `scripts/` | `toolbox/scripts/` |
-| `design/` `docs/` `humen-desicions/` `packages/` `deliverable/` | `materials/…` |
-| `compose.yaml` `compose.lab-ui.yaml` | `system/…` |
-| `workflows/` | `toolbox/workflows/` |
+`README.md`（总入口）、`AGENTS.md`（导航）、`GLOSSARY.md`（术语）、`Makefile`（命令入口）、
+`PROJECT-MAP.md`（本文件）、`compose.yaml` / `compose.lab-ui.yaml`（部署入口）、
+`deliverables/`（PRD 三类交付物快照，`make deliverables` 生成）、`.github/`、`.githooks/`、`.env.example`。
 
 > 生成物/缓存/发布归档不进仓库：已移到仓库外 `../DSWS-archive/2026-11-25/`（见归档 README）。

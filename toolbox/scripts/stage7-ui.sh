@@ -7,7 +7,7 @@
 # 为什么用回放而不是真后端：
 #   有些界面行为真系统产生不了（旧系统的伪 SQL 行、契约之外的事件），
 #   但界面必须照样处理对。夹具录的是后端真吐出的字节流，只归一化了
-#   duration_ms / request_id（见 backend/app/scripts/record_sse.py）。
+#   duration_ms / request_id（见 system/backend/app/scripts/record_sse.py）。
 #
 # 默认端口 8103 / 5276，避开正在运行的 dev 服务（8100 / 5273）与
 # stage0-ui（8101 / 5274）、stage6-ui（8102 / 5275）。
@@ -17,7 +17,7 @@
 
 set -euo pipefail
 
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 API_PORT="${API_PORT:-8103}"
 WEB_PORT="${WEB_PORT:-5276}"
 LOG_ROOT="${TMPDIR:-/tmp}"

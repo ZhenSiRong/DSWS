@@ -23,18 +23,18 @@
 
 ## 动手
 
-以下命令都在仓库根目录执行（有 `compose.yaml`、`fixtures/` 的那一层），可整段复制。
+以下命令都在仓库根目录执行（有 `compose.yaml`、`system/fixtures/` 的那一层），可整段复制。
 
 **第 1 步：拍快照。** 本页要改 `compose.yaml`，先拍一张（`.env` 不在快照里；同名快照会被拒，重做本页就换个名字）：
 ```bash
-scripts/lab save p13-before
+toolbox/scripts/lab save p13-before
 ```
 
 **第 2 步：停掉手动起的三个东西。** 终端 1 里第 3/9 页的 uvicorn 按 `Ctrl+C`；两个容器删掉：`docker rm -f lab-mysql lab-nginx`（回显被删的容器名；报 `No such container` 说明早删了）。
 
 **为什么要停**：它们占的 3307 / 8000 / 8081 和 compose 不冲突，但手动进程不会自己退，留着就是新旧两套系统同时在跑、容易对着旧入口验收（`make docker-down` 也管不到它们）。
 
-**两份库互不相干**：`lab-mysql` 没有数据卷，删容器 = 第 1–12 页的库没了；部署库的数据来自 `fixtures/dw.sql` 首次灌进 `mysql_data` 卷，所以删它不影响这边（想重做前 12 页就回第 1、2 页重建并导入）。
+**两份库互不相干**：`lab-mysql` 没有数据卷，删容器 = 第 1–12 页的库没了；部署库的数据来自 `system/fixtures/dw.sql` 首次灌进 `mysql_data` 卷，所以删它不影响这边（想重做前 12 页就回第 1、2 页重建并导入）。
 
 **第 3 步：生成 `.env`。** 密码和宿主机端口都从这里读；`.env` 被忽略、不进快照：
 ```bash
@@ -159,7 +159,7 @@ DOCKER SMOKE PASS
 
   **smoke 的意义**：每一步都是一条判据，红一步就 `DOCKER SMOKE FAIL`，并把 `ps -a` 和相关日志全打出来。
 
-> **你现在拥有**：一套“一条命令重建、一条命令验收”的部署——`compose.yaml` 写清怎么起和依赖顺序，`scripts/docker-smoke.sh` 写清“起对了没有”；换台机器 clone 下来，两条命令复跑同一套判据。
+> **你现在拥有**：一套“一条命令重建、一条命令验收”的部署——`compose.yaml` 写清怎么起和依赖顺序，`toolbox/scripts/docker-smoke.sh` 写清“起对了没有”；换台机器 clone 下来，两条命令复跑同一套判据。
 
 ## 拆一刀
 
@@ -187,6 +187,6 @@ DOCKER SMOKE FAIL: 120 秒内服务状态没齐
 
 **假象**：五座设施全 healthy、`/api/health` 也回 200——只看这些，部署像好的；但没有 init，下一次从零初始化就没人做了。**起得来**，不等于部署好。
 
-4. 还原：`scripts/lab reset p13-before --yes`，末行 `现在工作区与快照 "p13-before" 完全一致。`；再 `make docker-up`（init 回来会重跑一次，backend / frontend 重建，等它健康），最后 `make docker-smoke` 回到 `DOCKER SMOKE PASS`。
+4. 还原：`toolbox/scripts/lab reset p13-before --yes`，末行 `现在工作区与快照 "p13-before" 完全一致。`；再 `make docker-up`（init 回来会重跑一次，backend / frontend 重建，等它健康），最后 `make docker-smoke` 回到 `DOCKER SMOKE PASS`。
 
    **等不到别慌**：smoke 第 2 步会重新等 `/api/health`（最多 360 秒），先看它打出来的日志。整座城先留着跑——L3 的“审”要在它上面做。

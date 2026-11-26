@@ -9,12 +9,12 @@
 </head>
 <body>
 <main class="page">
-<p class="kicker">练本 · 阅读版（md 正典派生，改内容请改 manual/page-22.md）</p>
+<p class="kicker">练本 · 阅读版（md 正典派生，改内容请改 tutorial/page-22.md）</p>
 <h1>第 22 页 · 守回归：一套门禁能不能替你值班</h1>
 <blockquote>
 <p><strong>城市坐标 · L4 城市安防 · 应急演练</strong>｜一套门禁替你值班：测试、冒烟、越权三件事每次自动跑一遍。</p>
 <p>前置：L4（守）第五页，也是 L4 最后一页。</p>
-<p><strong>前两条判据离线</strong>：<code>backend/.venv</code> 由第 0 页 <code>make install</code> 生成，<code>frontend/node_modules</code> 缺了就先 <code>npm ci</code>（要联网）。</p>
+<p><strong>前两条判据离线</strong>：<code>system/backend/.venv</code> 由第 0 页 <code>make install</code> 生成，<code>system/frontend/node_modules</code> 缺了就先 <code>npm ci</code>（要联网）。</p>
 <p><strong>第三条要整栈</strong>：Docker 可用、<code>.env</code> 已由 <code>make docker-env</code> 生成、第 13 页的 <code>make docker-up</code> 起过栈。</p>
 <p>（栈停过/机器重启过就先 <code>make docker-up</code> 或 <code>docker compose up -d</code>，第 13 页起过 ≠ 现在还在跑。）</p>
 <p><strong>宿主机还要有</strong>：<code>python3</code>（≥3.8）与 <code>curl</code>，smoke 预检要用。</p>
@@ -33,14 +33,14 @@
 </ol>
 <h2>动手</h2>
 <p><strong>第 1 步：拍快照。</strong> 本页不改文件，但留一张退路（同名快照会被拒，重做本页换个名字；回显的文件数因工作区而异）：</p>
-<pre><code class="language-bash">scripts/lab save p22-before
+<pre><code class="language-bash">toolbox/scripts/lab save p22-before
 </code></pre>
 <p><strong>第 2 步：全量后端测试。</strong> 843 条，本机约半分钟：</p>
 <p><strong>判据</strong>：末行里不能出现 <code>failed</code> / <code>error</code>，通过数可以变——「没有失败」才算过，不是记死一个数字：</p>
-<pre><code class="language-bash">(cd backend &amp;&amp; .venv/bin/python -m pytest -q)
+<pre><code class="language-bash">(cd system/backend &amp;&amp; .venv/bin/python -m pytest -q)
 </code></pre>
-<p><strong>第 3 步：前端测试。</strong> 40 条离线协议与渲染测试，前提是第 0 页装好的 <code>frontend/node_modules</code>：</p>
-<pre><code class="language-bash">(cd frontend &amp;&amp; npm test)
+<p><strong>第 3 步：前端测试。</strong> 40 条离线协议与渲染测试，前提是第 0 页装好的 <code>system/frontend/node_modules</code>：</p>
+<pre><code class="language-bash">(cd system/frontend &amp;&amp; npm test)
 </code></pre>
 <p><strong>第 4 步：一键门禁。</strong> 前提：Docker 可用、<code>.env</code> 已生成、第 13 页起的栈在跑（栈停过就先 <code>docker compose up -d</code> 或按第 13 页重起；端口被占就先按第 13 页第 3 步改 <code>.env</code>）。</p>
 <p><strong>它会做什么</strong>：自己 <code>up</code> 一次（幂等；首次或镜像被清会重建，约 8 分钟），再 8 步逐条验；任何一步红都立刻停：</p>
@@ -151,7 +151,7 @@ DOCKER SMOKE PASS
 <td></td>
 </tr>
 <tr>
-<td>- 不防性能退化：仓库没有 S8 性能门禁（根目录 <code>../README.md</code> 的 S8 性能标「待做」），系统变慢不会红。</td>
+<td>- 不防性能退化：仓库没有 S8 性能门禁（根目录 <code>README.md</code> 的 S8 性能标「待做」），系统变慢不会红。</td>
 <td></td>
 </tr>
 <tr>
@@ -180,7 +180,7 @@ DOCKER SMOKE PASS
 <p><strong>看不到 init 时</strong>：<code>id</code> 为空，B 最多空等 60 秒后报错退出（见代码块 <code>SECONDS+60</code>），A 照样跑——这一轮既不红也会白跑，先确认 init 可见再开 B。</p>
 <p><strong>窗口很短</strong>：实测只有约 3 秒（init 退出 → 第 7 步开始），靠手速会输，让循环替你等；终端 A 只有一条 <code>make docker-smoke</code>：</p>
 <pre><code class="language-bash"># 终端 B（仓库根目录，先启动、回车）：每轮重取 id（A 的 up 会重建 init），60 秒等不到就退出
-source scripts/export-docker-env.sh
+source toolbox/scripts/export-docker-env.sh
 seen=0; end=$((SECONDS+60)); while [ &quot;$SECONDS&quot; -lt &quot;$end&quot; ]; do
   id=&quot;$(docker compose ps -aq init 2&gt;/dev/null)&quot;; [ -z &quot;$id&quot; ] &amp;&amp; { sleep 0.1; continue; }
   s=&quot;$(docker inspect -f '{{.State.Status}}' &quot;$id&quot; 2&gt;/dev/null)&quot;; [ &quot;$s&quot; = running ] &amp;&amp; seen=1
@@ -205,9 +205,9 @@ DOCKER SMOKE FAIL: 只读账号验证未通过
 </code></pre>
 <p><strong>第 4 步：验「定位精确」。</strong> 同一个越权状态下，第 8 步的判据单独跑仍是绿的——红的只有第 7 步，不是整片红。</p>
 <p><strong>单独跑第 8 步判据</strong>：<code>docker compose run --rm --no-deps init python -m app.build_meta_knowledge --verify | tail -1</code> → <code>S2 VERIFY PASS</code>。</p>
-<p><strong>第 5 步：还原、回 PASS。</strong> 在<strong>终端 B（已 <code>source</code> 过）</strong>里跑；新开的终端要先 <code>source scripts/export-docker-env.sh</code>，否则会红 <code>缺少环境变量 REBUILD_DW_RO_PASSWORD</code>。</p>
+<p><strong>第 5 步：还原、回 PASS。</strong> 在<strong>终端 B（已 <code>source</code> 过）</strong>里跑；新开的终端要先 <code>source toolbox/scripts/export-docker-env.sh</code>，否则会红 <code>缺少环境变量 REBUILD_DW_RO_PASSWORD</code>。</p>
 <p><strong>还原命令</strong>：还原就是第 18 页那句重开账号（权限集合回到 <code>SELECT</code>），再整跑一次（回显节选：实际前面还有 4 行 <code>已执行：…</code>）：</p>
-<pre><code class="language-bash">(cd backend &amp;&amp; .venv/bin/python -m app.scripts.security --provision-ro-account)
+<pre><code class="language-bash">(cd system/backend &amp;&amp; .venv/bin/python -m app.scripts.security --provision-ro-account)
 make docker-smoke
 </code></pre>
 <pre><code class="language-text">只读账号就绪：'dw_reader'@'%' on dw (SELECT)
@@ -216,7 +216,7 @@ DOCKER SMOKE PASS
 </code></pre>
 <p><strong>答案。</strong> 网有牙（第 7 步抓住越权）、定位精确（只红第 7 步）、边界清楚（跑之前就存在的越权会被 init 修好，归第 18 页的单步判据管）。</p>
 <p>L4 五页合起来是一句话：<strong>账号、策略、取消、观测、回归，出了事都兜得住，兜不住时也知道红在哪一层。</strong></p>
-<p>全书四层到此收尾：L1 造 10 页 → L2 换 4 页 → L3 审 4 页 → L4 守 5 页。</p>
+<p>工程四层（L1–L4）到此收尾：L1 造 10 章 → L2 换 4 章 → L3 审 4 章 → L4 守 5 章；L5 只换门面。</p>
 </main>
 </body>
 </html>

@@ -29,8 +29,8 @@ v2 复用旧实例的 `shopkeeper-rebuild_default` 网络解析 `mysql` / `elast
 
 ### 1. LangGraph（真实执行，不是只加依赖）
 
-- 依赖：`langgraph 1.2.19`（`backend/pyproject.toml` / `uv.lock`）。
-- 新增 `backend/app/agent/graph.py`：`StateGraph(AgentState)`，12 个节点 id 与 `contracts/steps.yaml` 完全一致：
+- 依赖：`langgraph 1.2.19`（`system/backend/pyproject.toml` / `uv.lock`）。
+- 新增 `system/backend/app/agent/graph.py`：`StateGraph(AgentState)`，12 个节点 id 与 `system/contracts/steps.yaml` 完全一致：
   `extract_keywords, recall_column, recall_value, recall_metric, merge_retrieved_info, filter_table, filter_metric, add_extra_context, generate_sql, validate_sql, correct_sql, run_sql`。
 - 边：`START → 8 个上下文节点 → generate_sql → validate_sql`；`validate_sql` 条件边 → `run_sql` / `correct_sql` / `END`；`correct_sql → validate_sql`；`run_sql → END`。
 - `AgentRunner.events()` 改为执行编译后的图；SSE 事件顺序、payload、错误码、取消语义、`correct_sql` 显式 `skipped`、`INTERNAL_ERROR` 兜底保持不变。
@@ -38,15 +38,15 @@ v2 复用旧实例的 `shopkeeper-rebuild_default` 网络解析 `mysql` / `elast
 
 ### 2. 原版 shopkeeper-agent 界面（含 SSE 展示适配）
 
-- 界面来源：`A020-电商问数智能体实战教程fixed/code/shopkeeper-agent-frontend`，复制到 `deliverable/v2/original-frontend/`；技术栈为 React 19 + Tailwind 3.4 + Vite 6。
+- 界面来源：`A020-电商问数智能体实战教程fixed/code/shopkeeper-agent-frontend`，复制到 `materials/deliverable/v2/original-frontend/`；技术栈为 React 19 + Tailwind 3.4 + Vite 6。
 - 只改展示层，不改后端 SSE 契约：
   - `src/lib/agentApi.ts`：步骤 id → 中文节点名（`extract_keywords` → `抽取关键词` 等 12 个）；`{columns, rows}` → 原版结果表使用的行对象；错误消息追加错误码。
   - `src/types/agent.ts` / `src/components/StepRail.tsx`：支持 `skipped` 状态；`校正SQL` 未触发时显示「· 未触发」。
   - `src/App.tsx`：API 地址回退改为 `/api`，经 nginx 反代到 v2 backend。
 - 构建产物：`dist/assets/index-BST44iiq.js`（252.86 kB，gzip 78.41 kB）、`dist/assets/index-DqE4c5df.css`（16.55 kB，gzip 4.46 kB）。
 - 线上验证：页面标题 `电商问数 | Shopkeeper Agent`，首屏与结果页均不含「教学版」「从零重建」。
-- 部署：`deploy/v2/compose.v2.yaml` 的 frontend 改为 `dsws-v2/frontend-original:local`，构建上下文 `./original-frontend`、`Dockerfile.original`；原教学重建版镜像 `dsws-v2/frontend:local` 保留可回滚。
-- 重新构建：`cd deliverable/v2/original-frontend && npm install && npm run build`；`Dockerfile.original` 只把 `dist/` 拷进 nginx，不在容器里跑 npm。
+- 部署：`system/deploy/v2/compose.v2.yaml` 的 frontend 改为 `dsws-v2/frontend-original:local`，构建上下文 `./original-frontend`、`Dockerfile.original`；原教学重建版镜像 `dsws-v2/frontend:local` 保留可回滚。
+- 重新构建：`cd materials/deliverable/v2/original-frontend && npm install && npm run build`；`Dockerfile.original` 只把 `dist/` 拷进 nginx，不在容器里跑 npm。
 
 ## 验证记录
 
@@ -114,9 +114,9 @@ error SQL_UNKNOWN_COLUMN: 列 fact_order.order_quantity 不在契约上下文里
 
 **修复**：
 
-- `backend/app/generate/context.py`：排名意图 + 没有命中任何指标时，把事实表的 measure 列补进上下文；只补 measure，不放开整张宽表，维表裁剪仍然保留。
-- `backend/app/generate/context.py`：同一条规则下，如果问题问的是「商品/产品」实体（如「哪个商品卖得最好」）且没有命中品类/品牌等维度，补上 `dim_product.product_name`，避免只能按 `product_id` 分组、把商品答成 `P001`。
-- `contracts/prompts/correct_sql.prompt` + `backend/app/agent/correct.py`：校正提示词增加 `column_infos`，模型能看到「只能使用这里列出的表与字段」。
+- `system/backend/app/generate/context.py`：排名意图 + 没有命中任何指标时，把事实表的 measure 列补进上下文；只补 measure，不放开整张宽表，维表裁剪仍然保留。
+- `system/backend/app/generate/context.py`：同一条规则下，如果问题问的是「商品/产品」实体（如「哪个商品卖得最好」）且没有命中品类/品牌等维度，补上 `dim_product.product_name`，避免只能按 `product_id` 分组、把商品答成 `P001`。
+- `system/contracts/prompts/correct_sql.prompt` + `system/backend/app/agent/correct.py`：校正提示词增加 `column_infos`，模型能看到「只能使用这里列出的表与字段」。
 - 新增回归测试：`test_implicit_ranking_question_exposes_fact_measures`、`test_implicit_ranking_measure_passes_guard`、`test_product_level_ranking_question_exposes_product_name`、`test_prompt_exposes_allowed_columns`。
 
 **验证**：
@@ -131,9 +131,9 @@ error SQL_UNKNOWN_COLUMN: 列 fact_order.order_quantity 不在契约上下文里
 
 **修复**：
 
-- `backend/app/generate/context.py`：把「实体粒度补齐」与 `metric_candidates` 解耦。实体词从契约推导（维表主键 + 名称列别名去掉 `ID`/`名称`/`name` 等后缀），覆盖商品、客户、地区等；只在问题确实按该实体粒度提问时补名称列，只补名称列，FK 仍只补命中实体那一对，避免把整张维表塞进上下文。
-- `contracts/prompts/correct_sql.prompt`：明确 `SQL_UNKNOWN_COLUMN` / `SQL_UNKNOWN_TABLE` 且存在语义等价字段时，必须替换或补 JOIN，不得仅因原名未知拒答；安全边界不变，校正结果仍重新过 guard + policy。
-- `backend/app/agent/graph.py`：把 `proposal.note` 写入 `error.detail.reason`，这样 `correct_sql error` 不再只有一块红叉，而能看到「校正被拒答 / 崩溃 / 产物不合契约」的原因。
+- `system/backend/app/generate/context.py`：把「实体粒度补齐」与 `metric_candidates` 解耦。实体词从契约推导（维表主键 + 名称列别名去掉 `ID`/`名称`/`name` 等后缀），覆盖商品、客户、地区等；只在问题确实按该实体粒度提问时补名称列，只补名称列，FK 仍只补命中实体那一对，避免把整张维表塞进上下文。
+- `system/contracts/prompts/correct_sql.prompt`：明确 `SQL_UNKNOWN_COLUMN` / `SQL_UNKNOWN_TABLE` 且存在语义等价字段时，必须替换或补 JOIN，不得仅因原名未知拒答；安全边界不变，校正结果仍重新过 guard + policy。
+- `system/backend/app/agent/graph.py`：把 `proposal.note` 写入 `error.detail.reason`，这样 `correct_sql error` 不再只有一块红叉，而能看到「校正被拒答 / 崩溃 / 产物不合契约」的原因。
 
 **线上验证（2026-11-06，真实 LLM + MySQL）**：
 
@@ -145,7 +145,7 @@ error SQL_UNKNOWN_COLUMN: 列 fact_order.order_quantity 不在契约上下文里
 ### 自动化测试
 
 ```text
-backend:  812 passed, 30 skipped, 0 failed（干净 worktree；主工作区未提交的 docs/SCHEMA-CONTRACT.md 会另带 3 个文档新鲜度失败，与本次修复无关）
+backend:  812 passed, 30 skipped, 0 failed（干净 worktree；主工作区未提交的 materials/docs/SCHEMA-CONTRACT.md 会另带 3 个文档新鲜度失败，与本次修复无关）
 frontend: 40 tests passed
 frontend build: ✓ built
 ```
@@ -156,7 +156,7 @@ frontend build: ✓ built
 
 > 点击 GIF 跳到完整 MP4；CDN 地址供国内直接访问：[GIF](https://gcore.jsdelivr.net/gh/ZhenSiRong/DSWS@main/deliverable/v2/screenshots/v2-demo-preview.gif) · [MP4](https://cdn.jsdelivr.net/gh/ZhenSiRong/DSWS@main/deliverable/v2/DSWS-v2-original-ui-demo.mp4)
 
-`deliverable/v2/DSWS-v2-original-ui-demo.mp4`（46.27s，1920×1080 / 30fps，H.264，1.7 MB）。
+`materials/deliverable/v2/DSWS-v2-original-ui-demo.mp4`（46.27s，1920×1080 / 30fps，H.264，1.7 MB）。
 
 - 录制方式：Playwright 驱动系统 Chrome 操作 `http://8.155.135.97:5051`，真实 SSE，无回放、无 mock；录制于 2026-11-06（界面切换 + 2SQL 修复之后）。
 - 0–3.8s 片头：原版界面已恢复，后端仍是 LangGraph 12 节点；「教学版」字样已移除。
@@ -176,19 +176,19 @@ frontend build: ✓ built
 
 ## 复现 / 重建
 
-见 `deploy/v2/README.md`。核心步骤：
+见 `system/deploy/v2/README.md`。核心步骤：
 
 ```bash
 cd /opt/dsws-v2/repo
 # 国内网络：先用腾讯云镜像重写锁文件（版本不变，只换 URL）
-cd backend && uv lock --index-url https://mirrors.cloud.tencent.com/pypi/simple && cd ..
+cd system/backend && uv lock --index-url https://mirrors.cloud.tencent.com/pypi/simple && cd ..
 docker compose -f compose.v2.yaml up -d --build
 ```
 
 ## 文件清单
 
 ```text
-deliverable/v2/
+materials/deliverable/v2/
 ├── README-v2.md                         # 本文件
 ├── PRD-差异补齐.md                       # v1/v2 三项差距对照
 ├── DSWS-v2-original-ui-demo.mp4         # 演示视频（46.27s / 1920x1080 / 30fps）

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# scripts/acceptance/common.sh —— T2 级考核脚本（scripts/acceptance/level-lN.sh）公共库。
+# toolbox/scripts/acceptance/common.sh —— T2 级考核脚本（toolbox/scripts/acceptance/level-lN.sh）公共库。
 #
 # 用法（在每个 level-lN.sh 里）：
 #
@@ -9,10 +9,10 @@
 #   require_root
 #   require_backend_python
 #   check_contains "生成层 pytest（122 passed）" '122 passed' \
-#       "$BACKEND_PY" -m pytest backend/tests/generate -q
+#       "$BACKEND_PY" -m pytest system/backend/tests/generate -q
 #   accept_finish
 #
-# 设计约束（对应 docs/acceptance-line.md）：
+# 设计约束（对应 materials/docs/acceptance-line.md）：
 #   * 脚本可在任意 cwd 调用：自己算 ROOT，不依赖调用者。
 #   * 只做只读/安全动作：不启动/停止 stack、不 down、不删卷、不改代码、
 #     不写数据库。破坏性步骤只打印 MANUAL，绝不执行。
@@ -151,7 +151,7 @@ accept_finish() {
   _accept_print_details '可选子项（SKIP/WARN，不影响判定）：' "$ACCEPT_WARN_DETAILS"
   if [ "$ACCEPT_FAILED" -gt 0 ]; then
     status='FAIL'
-    reason='自动检查有 FAIL；先按上方失败明细修，再看 manual/ACCEPTANCE.md「失败时看哪」'
+    reason='自动检查有 FAIL；先按上方失败明细修，再看 tutorial/ACCEPTANCE.md「失败时看哪」'
   elif [ "$ACCEPT_SKIPPED" -gt 0 ]; then
     status='SKIP'
     reason='必须的前置/环境未就绪；SKIP 不是通过（栈没起先按第 13 页起栈）'
@@ -180,7 +180,7 @@ require_root() {
     exit 2
   fi
   if [ ! -f "$ROOT/Makefile" ] || [ ! -d "$ROOT/backend" ] || [ ! -d "$ROOT/manual" ]; then
-    printf 'ERROR: %s 不是本仓库根（缺 Makefile / backend/ / manual/）\n' "$ROOT" >&2
+    printf 'ERROR: %s 不是本仓库根（缺 Makefile / system/backend/ / tutorial/）\n' "$ROOT" >&2
     printf 'LEVEL %s SKIP\n' "${ACCEPT_LEVEL:-?}"
     exit 2
   fi
@@ -201,7 +201,7 @@ require_python() {
     return 0
   fi
   local candidate=''
-  candidate="$(cd "$ROOT" && sh scripts/find-python.sh 2>/dev/null)" || candidate=''
+  candidate="$(cd "$ROOT" && sh toolbox/scripts/find-python.sh 2>/dev/null)" || candidate=''
   if [ -z "$candidate" ]; then
     candidate="$(command -v python3 2>/dev/null || true)"
   fi
@@ -211,19 +211,19 @@ require_python() {
     log "Python：$PYTHON（$("$PYTHON" -V 2>&1)）"
     return 0
   fi
-  skip 'Python 前置' '宿主机找不到可用的 Python 3.8+（page-00 前置，见 docs/SETUP-FROM-SCRATCH.md）'
+  skip 'Python 前置' '宿主机找不到可用的 Python 3.8+（page-00 前置，见 materials/docs/SETUP-FROM-SCRATCH.md）'
   accept_finish
   return 1
 }
 
-# require_backend_python：离线判据都跑在 backend/.venv 里；缺了记 SKIP 并结束本级。
+# require_backend_python：离线判据都跑在 system/backend/.venv 里；缺了记 SKIP 并结束本级。
 require_backend_python() {
   if [ -x "$ROOT/backend/.venv/bin/python" ]; then
     BACKEND_PY="$ROOT/backend/.venv/bin/python"
   elif [ -x "$ROOT/backend/.venv/Scripts/python.exe" ]; then
     BACKEND_PY="$ROOT/backend/.venv/Scripts/python.exe"
   else
-    skip 'backend/.venv 前置' '缺少 backend/.venv：先按 page-00 跑 make install'
+    skip 'system/backend/.venv 前置' '缺少 system/backend/.venv：先按 page-00 跑 make install'
     accept_finish
     return 1
   fi
@@ -386,12 +386,12 @@ check_last_contains_in() {
 # audit_gate：结构审计（离线只读）。失败即 LEVEL FAIL（记一条 fail）。
 audit_gate() {
   local last=''
-  run_in "$ROOT" "$PYTHON" manual/shots/audit_book.py
+  run_in "$ROOT" "$PYTHON" tutorial/shots/audit_book.py
   last="$(printf '%s\n' "$CAPTURE_OUT" | sed -n '/[^[:space:]]/p' | tail -n 1)" || last=''
   if [ "$CAPTURE_RC" -eq 0 ] && [ "$last" = "$ACCEPT_AUDIT_EXPECT" ]; then
     ok "结构审计（${ACCEPT_AUDIT_EXPECT}）"
   else
-    fail '结构审计（manual/shots/audit_book.py）' \
+    fail '结构审计（tutorial/shots/audit_book.py）' \
       "退出码 ${CAPTURE_RC}；期望末行「${ACCEPT_AUDIT_EXPECT}」，实际「${last}」"
   fi
   return 0
@@ -400,13 +400,13 @@ audit_gate() {
 # frontend_npm_test：前端协议单测（40 passed）。缺 npm/node_modules 只记可选 SKIP+WARN。
 frontend_npm_test() {
   if ! command -v npm >/dev/null 2>&1; then
-    skip_optional '前端协议单测（cd frontend && npm test）' \
+    skip_optional '前端协议单测（cd system/frontend && npm test）' \
       '找不到 npm（page-00 前置）；本子项 SKIP'
     return 0
   fi
   if [ ! -d "$ROOT/frontend/node_modules" ]; then
-    skip_optional '前端协议单测（cd frontend && npm test）' \
-      '缺少 frontend/node_modules：先 cd frontend && npm ci；本子项 SKIP'
+    skip_optional '前端协议单测（cd system/frontend && npm test）' \
+      '缺少 system/frontend/node_modules：先 cd system/frontend && npm ci；本子项 SKIP'
     return 0
   fi
   check_contains_in "$ROOT/frontend" '前端协议单测（40 passed）' '40 passed' npm test
@@ -443,8 +443,8 @@ preflight_stack() {
     return 1
   fi
   # 与 compose / docker-smoke 同一份凭据：只读校验 .env 可解析（不改 .env）。
-  if ! ( cd "$ROOT" && source scripts/export-docker-env.sh ); then
-    STACK_PREFLIGHT_REASON='读取 .env 失败（scripts/export-docker-env.sh 退出非 0）：先 make docker-env，再按第 13 页起栈'
+  if ! ( cd "$ROOT" && source toolbox/scripts/export-docker-env.sh ); then
+    STACK_PREFLIGHT_REASON='读取 .env 失败（toolbox/scripts/export-docker-env.sh 退出非 0）：先 make docker-env，再按第 13 页起栈'
     log "$STACK_PREFLIGHT_REASON"
     return 1
   fi

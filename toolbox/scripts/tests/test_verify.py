@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""test_verify.py —— scripts/verify.py 的单元测试（离线、临时沙箱目录）
+"""test_verify.py —— toolbox/scripts/verify.py 的单元测试（离线、临时沙箱目录）
 
 覆盖：
   * 命令归一化（空白 / 空行 / CRLF，等价与不等价）
@@ -13,7 +13,7 @@
   * --json / --list / --page / 无契约退出 0
 
 用法：
-    python3 scripts/tests/test_verify.py
+    python3 toolbox/scripts/tests/test_verify.py
 """
 
 from __future__ import annotations
@@ -35,7 +35,7 @@ VERIFY_PATH = REPO_ROOT / "toolbox" / "scripts" / "verify.py"
 
 def _load_verify_module():
     spec = importlib.util.spec_from_file_location("verify_under_test", VERIFY_PATH)
-    assert spec is not None and spec.loader is not None, "找不到 scripts/verify.py"
+    assert spec is not None and spec.loader is not None, "找不到 toolbox/scripts/verify.py"
     module = importlib.util.module_from_spec(spec)
     sys.modules[spec.name] = module
     spec.loader.exec_module(module)
@@ -199,17 +199,17 @@ class VerifyCase(unittest.TestCase):
     # ---- 静态存在性 -----------------------------------------------------
     def test_static_path_missing_fails(self) -> None:
         self.happy_fixture()
-        self.make_contract(echo_contract(extra="\nstatic:\n  paths:\n    - backend/not-there.py\n"))
+        self.make_contract(echo_contract(extra="\nstatic:\n  paths:\n    - system/backend/not-there.py\n"))
         code, out, _ = self.run_verify("--fast")
         self.assertEqual(code, 1)
         self.assertIn("路径不存在", out)
 
     def test_static_symbol_hit_and_miss(self) -> None:
-        self.write("backend/app/correct.py", "def propose_correction():\n    pass\n")
+        self.write("system/backend/app/correct.py", "def propose_correction():\n    pass\n")
         self.happy_fixture()
         hit = (
             "\nstatic:\n  symbols:\n"
-            '    - {file: backend/app/correct.py, pattern: "def propose_correction"}\n'
+            '    - {file: system/backend/app/correct.py, pattern: "def propose_correction"}\n'
         )
         self.make_contract(echo_contract(extra=hit))
         code, out, _ = self.run_verify("--fast")
@@ -217,7 +217,7 @@ class VerifyCase(unittest.TestCase):
 
         miss = (
             "\nstatic:\n  symbols:\n"
-            '    - {file: backend/app/correct.py, pattern: "def missing_symbol"}\n'
+            '    - {file: system/backend/app/correct.py, pattern: "def missing_symbol"}\n'
         )
         self.make_contract(echo_contract(extra=miss))
         code, out, _ = self.run_verify("--fast")
@@ -492,7 +492,7 @@ class VerifyCase(unittest.TestCase):
         self.assertNotIn(str(self.root), out)
 
     # ---- coverage: static（整栈页只挂静态断言，不执行块）-------------------
-    def static_contract(self, *, paths: str = '["fixtures/dw.sql"]', symbols: str = "") -> str:
+    def static_contract(self, *, paths: str = '["system/fixtures/dw.sql"]', symbols: str = "") -> str:
         text = (
             "page: page-17\n"
             "title: 第 17 页 · 测试页\n"
@@ -505,7 +505,7 @@ class VerifyCase(unittest.TestCase):
         return text
 
     def test_static_coverage_passes_without_blocks(self) -> None:
-        self.write("fixtures/dw.sql", "CREATE TABLE t (id INT);\n")
+        self.write("system/fixtures/dw.sql", "CREATE TABLE t (id INT);\n")
         self.make_page(["整栈页：块不挂注解也不执行", *self.make_block(None, ["docker run --rm mysql"])])
         self.make_contract(self.static_contract())
         code, out, _ = self.run_verify("--fast")
@@ -516,14 +516,14 @@ class VerifyCase(unittest.TestCase):
         self.assertIn("静态页：1", out)
 
     def test_static_coverage_allows_missing_blocks_key(self) -> None:
-        self.write("fixtures/dw.sql", "SELECT 1;\n")
+        self.write("system/fixtures/dw.sql", "SELECT 1;\n")
         self.make_page(self.make_block(None, ["docker compose up -d"]))
         self.make_contract(self.static_contract())
         code, _, _ = self.run_verify("--fast")
         self.assertEqual(code, 0)
 
     def test_static_coverage_rejects_blocks(self) -> None:
-        self.write("fixtures/dw.sql", "SELECT 1;\n")
+        self.write("system/fixtures/dw.sql", "SELECT 1;\n")
         self.make_page(self.make_block("p17-echo", ["echo hello"]))
         contract = self.static_contract() + (
             "blocks:\n"
@@ -548,7 +548,7 @@ class VerifyCase(unittest.TestCase):
         self.assertIn("至少要有一条 static.paths 或 static.symbols", out)
 
     def test_static_coverage_rejects_marker_annotation(self) -> None:
-        self.write("fixtures/dw.sql", "SELECT 1;\n")
+        self.write("system/fixtures/dw.sql", "SELECT 1;\n")
         self.make_page(self.make_block("p17-echo", ["docker run --rm mysql"]))
         self.make_contract(self.static_contract())
         code, out, _ = self.run_verify("--fast")

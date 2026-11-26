@@ -4,13 +4,13 @@
 
 一条命令重跑这张图（在仓库根目录）：
 
-    python3 manual/shots/prep_render.py
+    python3 tutorial/shots/prep_render.py
 
 它模拟**学生刚克隆完**的状态：用 `git ls-files` 把工作区里「未忽略的文件」导到临时目录
-（所以没有 `.env`、`backend/.venv`、`frontend/node_modules`），在那里逐字真跑
-`manual/page-00.md`「## 动手」里的 2 条命令，捕获「命令 + 真实输出」，复用
+（所以没有 `.env`、`system/backend/.venv`、`system/frontend/node_modules`），在那里逐字真跑
+`tutorial/page-00.md`「## 动手」里的 2 条命令，捕获「命令 + 真实输出」，复用
 `term_render.py` 的 HTML 模板与 chrome 无头截图，输出
-`manual/images/page-00-prep.png`（1100px 宽，深色终端版式）。
+`tutorial/images/page-00-prep.png`（1100px 宽，深色终端版式）。
 
 `uv sync` 的 62 行 `+ 包名==版本` 安装清单太长，图上只保留前 2 行 + 一行省略说明。
 不新增依赖：只用本机已有的 git / docker / uv / node / make / google-chrome / ImageMagick。
@@ -28,14 +28,14 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
-sys.dont_write_bytecode = True  # 不生成 manual/shots/__pycache__
+sys.dont_write_bytecode = True  # 不生成 tutorial/shots/__pycache__
 
 import term_render as tr  # noqa: E402
 
 OUT_NAME = "page-00-prep.png"
 FORBIDDEN = ["/home/", "/Users/", ".dsh", "zhensirong"]
 
-# 与 manual/page-00.md「## 动手」逐字一致（改页面时这里要同步）
+# 与 tutorial/page-00.md「## 动手」逐字一致（改页面时这里要同步）
 STEPS = [
     "make install",
     "make doctor",
@@ -60,9 +60,9 @@ def export_tree(dest: Path) -> None:
     """把「一次干净克隆会拿到的东西」导出到 dest。
 
     为什么不用 `git archive HEAD`：HEAD 里没有刚改的 Makefile 目标与
-    scripts/doctor.sh，图就会拍到旧命令。这里按 `git ls-files` 从工作区拷，
+    toolbox/scripts/doctor.sh，图就会拍到旧命令。这里按 `git ls-files` 从工作区拷，
     既带上未提交的改动，又靠 `--exclude-standard` 自动跳过 `.env`、
-    `backend/.venv`、`frontend/node_modules`——第 0 页的前提是「刚克隆完」。
+    `system/backend/.venv`、`system/frontend/node_modules`——第 0 页的前提是「刚克隆完」。
     """
     listing = subprocess.run(
         ["git", "ls-files", "-z", "--cached", "--others", "--exclude-standard"],
@@ -103,7 +103,7 @@ def main() -> int:
         clone.mkdir()
         export_tree(clone)
 
-        for gone in (".env", "backend/.venv", "frontend/node_modules"):
+        for gone in (".env", "system/backend/.venv", "system/frontend/node_modules"):
             if (clone / gone).exists():
                 raise RuntimeError(f"临时克隆里不该有 {gone}，模拟学生环境失败")
 

@@ -397,7 +397,7 @@ a.pg:hover{background:var(--ink);color:#fff;}
   <nav class="aon" id="aon" aria-label="AON 流水导航（只定位，不勾选）">
     <div class="aon-head">
       <span class="aon-title">AON 流水 · 位置导航</span>
-      <span class="aon-note">A0–A9 活动名 / 顺序取自 manual/flow.mmd · 点它只高亮左侧零件行，<b>不参与勾选</b></span>
+      <span class="aon-note">A0–A9 活动名 / 顺序取自 tutorial/flow.mmd · 点它只高亮左侧零件行，<b>不参与勾选</b></span>
     </div>
     <div class="aon-body"><div class="aon-line main" id="aon-main"><button type="button" class="aon-node" data-activity="A0" data-arts="env" title="A0 环境准备 · 位置：#01 开发机环境（工具 + venv + 端口） · 只高亮左侧对应零件行，不参与勾选"><span class="an">A0</span>环境准备</button><span class="aon-arw">→</span><button type="button" class="aon-node" data-activity="A3" data-arts="service" title="A3 最小 HTTP 服务 · 位置：#05 服务进程 · 只高亮左侧对应零件行，不参与勾选"><span class="an">A3</span>最小 HTTP 服务</button><span class="aon-arw">→</span><button type="button" class="aon-node" data-activity="A4" data-arts="api-query" title="A4 POST /api/query · 位置：#06 端点 POST /api/query · 只高亮左侧对应零件行，不参与勾选"><span class="an">A4</span>POST /api/query</button><span class="aon-arw">→</span><button type="button" class="aon-node" data-activity="A5" data-arts="keywords-fn" title="A5 关键词抽取 · 位置：#07 函数 extract_keywords · 只高亮左侧对应零件行，不参与勾选"><span class="an">A5</span>关键词抽取</button><span class="aon-arw">→</span><button type="button" class="aon-node" data-activity="A6" data-arts="sql-fn" title="A6 契约 + 生成 SQL · 位置：#08 函数 build_sql + 契约 CONTRACT · 只高亮左侧对应零件行，不参与勾选"><span class="an">A6</span>契约 + 生成 SQL</button><span class="aon-arw">→</span><button type="button" class="aon-node" data-activity="A7" data-arts="exec-chain" title="A7 真执行 SQL · 位置：#09 执行链路 · 只高亮左侧对应零件行，不参与勾选"><span class="an">A7</span>真执行 SQL</button><span class="aon-arw">→</span><button type="button" class="aon-node" data-activity="A8" data-arts="stream-endpoint" title="A8 SSE 流式 · 位置：#10 端点 GET /api/stream · 只高亮左侧对应零件行，不参与勾选"><span class="an">A8</span>SSE 流式</button><span class="aon-arw">→</span><button type="button" class="aon-node" data-activity="A9" data-arts="nginx-page e2e-chain" title="A9 nginx 反代 + 页面 · 位置：#11 容器 lab-nginx + 页面 · #12 端到端链路 · 只高亮左侧对应零件行，不参与勾选"><span class="an">A9</span>nginx 反代 + 页面</button></div><div class="aon-line branch" id="aon-branch"><span class="aon-arw">└</span><button type="button" class="aon-node" data-activity="A1" data-arts="mysql-container" title="A1 创建 MySQL 容器 · 位置：#02 容器 lab-mysql · 只高亮左侧对应零件行，不参与勾选"><span class="an">A1</span>创建 MySQL 容器</button><span class="aon-arw">→</span><button type="button" class="aon-node" data-activity="A2" data-arts="dw-tables dw-data" title="A2 导入 dw.sql · 位置：#03 库 dw + 5 张表 · #04 数据 115 行 · 只高亮左侧对应零件行，不参与勾选"><span class="an">A2</span>导入 dw.sql</button><span class="aon-join">↘ 汇入 A7（真执行 SQL）；数据支线有浮动</span></div></div>
   </nav>
@@ -493,10 +493,10 @@ a.pg:hover{background:var(--ink);color:#fff;}
     "evidence_source": "溯源（页:行 / 页内段）"
   },
   "source_refs": {
-    "decision": "humen-desicions/09-ablation-course.md · D42（行=交付物、显式位置、1–3 检验点、命令+期望输出、单页样例先行）",
-    "pages": "manual/page-00.md – manual/page-09.md（唯一事实标准：「你应该看到」）",
-    "order": "manual/flow.mmd（A0–A9 活动名 / 工期 / AON 紧前关系）",
-    "style": "manual/completeness/poster-answer.png（v1 视觉：黑白灰 + Noto Sans CJK）"
+    "decision": "materials/humen-desicions/09-ablation-course.md · D42（行=交付物、显式位置、1–3 检验点、命令+期望输出、单页样例先行）",
+    "pages": "tutorial/page-00.md – tutorial/page-09.md（唯一事实标准：「你应该看到」）",
+    "order": "tutorial/flow.mmd（A0–A9 活动名 / 工期 / AON 紧前关系）",
+    "style": "tutorial/completeness/poster-answer.png（v1 视觉：黑白灰 + Noto Sans CJK）"
   },
   "counts": {
     "artifacts": 12,
@@ -519,14 +519,14 @@ a.pg:hover{background:var(--ink);color:#fff;}
       "desc": "输出与页面「你应该看到」逐字对上"
     }
   ],
-  "order_hint": "顺序按 manual/flow.mmd 的 AON 紧前关系：A0→A3→A4→A5→A6→A7→A8→A9；数据支线 A0→A1→A2→A7 有浮动。顺序只作提示，不参与勾选。",
+  "order_hint": "顺序按 tutorial/flow.mmd 的 AON 紧前关系：A0→A3→A4→A5→A6→A7→A8→A9；数据支线 A0→A1→A2→A7 有浮动。顺序只作提示，不参与勾选。",
   "artifacts": [
     {
       "no": 1,
       "id": "env",
       "name": "开发机环境（工具 + venv + 端口）",
       "kind": "工具 + venv + 端口",
-      "location": "本机 · `docker` / `uv` / `node` / `make` / `curl` + `backend/.venv`；3307 / 8000 / 8081 空着",
+      "location": "本机 · `docker` / `uv` / `node` / `make` / `curl` + `system/backend/.venv`；3307 / 8000 / 8081 空着",
       "pages": [
         "page-00"
       ],
@@ -539,7 +539,7 @@ a.pg:hover{background:var(--ink);color:#fff;}
           "evidence_source": "page-00.md:54（「你应该看到」第 2 条末行；:48 结论句）"
         },
         {
-          "criterion": "依赖装好：`backend/.venv` + `frontend/node_modules`",
+          "criterion": "依赖装好：`system/backend/.venv` + `system/frontend/node_modules`",
           "command": "make install",
           "expected_output": "Creating virtual environment at: .venv\nadded 118 packages, and audited 125 packages in 3s",
           "evidence_source": "page-00.md:36-46（「你应该看到」第 1 条真跑输出）"
@@ -605,7 +605,7 @@ a.pg:hover{background:var(--ink);color:#fff;}
       "id": "dw-data",
       "name": "数据 115 行",
       "kind": "数据行",
-      "location": "`dw.fact_order`（由 `fixtures/dw.sql` 灌入）",
+      "location": "`dw.fact_order`（由 `system/fixtures/dw.sql` 灌入）",
       "pages": [
         "page-02"
       ],
@@ -723,13 +723,13 @@ a.pg:hover{background:var(--ink);color:#fff;}
       "checkpoints": [
         {
           "criterion": "照契约拼出 `SELECT`：指标 = `SUM(fact_order.order_amount)`，带 `JOIN`",
-          "command": "backend/.venv/bin/python -m lab.app",
+          "command": "system/backend/.venv/bin/python -m lab.app",
           "expected_output": "SELECT dim_region.region_name, SUM(fact_order.order_amount) AS sales\nFROM fact_order\nJOIN dim_region ON fact_order.region_id = dim_region.region_id",
           "evidence_source": "page-06.md:56-58（「你应该看到」第 1–3 行）"
         },
         {
           "criterion": "地区和 `GROUP BY` 来自关键词：等号右边是 `'华北'`",
-          "command": "backend/.venv/bin/python -m lab.app",
+          "command": "system/backend/.venv/bin/python -m lab.app",
           "expected_output": "WHERE dim_region.region_name = '华北'\nGROUP BY dim_region.region_name",
           "evidence_source": "page-06.md:59-60（「你应该看到」第 4–5 行）"
         }
@@ -870,7 +870,7 @@ a.pg:hover{background:var(--ink);color:#fff;}
     "版本号、包数量、耗时随机器不同：看到同类的行就算对上（第 0/1 页已声明）。",
     "库内 SQL 检验点（#2–#4）用第 1/2 页的 `docker exec lab-mysql mysql … -e \"<SQL>\"` 执行；账号口令按第 1 页输入，本图不印。"
   ],
-  "rerun": "python3 manual/shots/render_completeness.py（海报）· python3 manual/shots/build_explorer.py --shots（交互页+截图）"
+  "rerun": "python3 tutorial/shots/render_completeness.py（海报）· python3 tutorial/shots/build_explorer.py --shots（交互页+截图）"
 }</script>
 <script id="city-data" type="application/json">{
   "schema": "explorer-city/1",
@@ -880,10 +880,10 @@ a.pg:hover{background:var(--ink);color:#fff;}
   "one_liner": "我们不是在发明系统，是在一片空地上，为问题一座一座盖设施、一段一段接管网。",
   "note": "单源：四区 / 10 件设施（3 座楼 + 1 块场地 + 5 个楼内房间 + 1 条流线）/ 12 件交付物 / 11 条道路 / 23 页标题都只改本文件；重跑渲染脚本会重建 city-map.html 与 titles-v2.md。artifacts 用 1–12，对应 completeness/v2 的 ①–⑫（渲染时转圈号）。流线 P8 用 flow_path + flow_width 定位，box 是由它派生的外接框（不是独立地块）。",
   "sources": {
-    "city": "manual/city/data.json（4 区 / 10 设施 / 真楼嵌套 / page_id ↔ 页码）",
-    "titles": "manual/page-00.md – page-09.md 的 H1（运行期读取，不手写）",
-    "artifacts": "manual/completeness/v2/data.json 的 1–12 件交付物（名字逐字取它）",
-    "stages": "manual/city/stages-city.json"
+    "city": "tutorial/city/data.json（4 区 / 10 设施 / 真楼嵌套 / page_id ↔ 页码）",
+    "titles": "tutorial/page-00.md – page-09.md 的 H1（运行期读取，不手写）",
+    "artifacts": "tutorial/completeness/v2/data.json 的 1–12 件交付物（名字逐字取它）",
+    "stages": "tutorial/city/stages-city.json"
   },
   "zones": [
     {
@@ -1558,7 +1558,7 @@ a.pg:hover{background:var(--ink);color:#fff;}
       "desc": "同一栋楼、同一扇门：入口和契约都不动，只把第 9 页那 17 行 HTML 换成成熟版原版前端（shopkeeper-agent 前端）。"
     }
   ],
-  "stages_source": "manual/city/stages-city.json"
+  "stages_source": "tutorial/city/stages-city.json"
 }</script>
 <script>
 (function () {
@@ -1588,7 +1588,7 @@ a.pg:hover{background:var(--ink);color:#fff;}
   if (!E2E_ART) { E2E_ART = ARTS[ARTS.length - 1]; }
   var TOTAL_CHECKS = ARTS.reduce(function (sum, art) { return sum + art.checkpoints.length; }, 0);
 
-  // 城市地图（4 区 / 10 设施 ↔ 10 页）：数据由生成器从 manual/city/data.json + page-0X.md 的 H1
+  // 城市地图（4 区 / 10 设施 ↔ 10 页）：数据由生成器从 tutorial/city/data.json + page-0X.md 的 H1
   // + v2 data 的交付物名 + D44+D50 五阶段文字合成后内联；页标题不在这里手写。
   var CITY = JSON.parse(document.getElementById('city-data').textContent);
   var CITY_ZONES = CITY.zones || [];

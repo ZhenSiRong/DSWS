@@ -6,10 +6,10 @@
 - **环境**：Docker 已运行；`uv`、Node.js LTS + npm、GNU Make、curl 齐（[page-00](page-00.md)「提前说明」）。`make install` 后 `make doctor` 末行 `12/12 通过`（page-00）。整栈建议至少 8 GB 内存（ES 堆固定 512 MB，来源 `../docs/DOCKER-DEPLOY.md` §1），并留出镜像与 ES 索引的磁盘空间（见下方水位坑）。
 - **端口**：L1 用 3307 / 8000 / 8081（page-00 的端口三行）；L2 起 compose 用 3307 / 9200 / 6333 / 8100 / 8080（[page-13](page-13.md) 第 3 步）。被占就改 `.env` 里对应的 `*_HOST_PORT`，**别改 `compose.yaml`**（page-13）。
 - **整栈与耗时**：p13 的级考核与 p22 要整栈；`make docker-up` 第一次构建约 8 分钟（page-13 实测）。L3 的 p15–p17、L4 的 p19–p21 判据大多离线（各页前置）。
-- **已知环境坑**（重放报告实测）：① 带裸 `uv run` 的 `make stage3` / `stage0-ui` / `stage6-ui`（脚本里没有 `--frozen`）或手敲 `uv run` 会按本机镜像源重写 `backend/uv.lock`（`lab reset` 管不到它）——`git status` 显示变脏再 `git checkout -- backend/uv.lock`；Makefile 直接调的 `stage*` 都已 `uv run --frozen`，不会脏（[page-15](page-15.md)、[page-19](page-19.md)、[page-21](page-21.md)）；② ES 默认低/高/洪水水位 85% / 90% / 95%：85–89% 只告警、写入与 S2/S3 正常，≥90% 高水位才危险（不再分配分片）、≥95% 索引转只读（`review/replay-page-14.md`），别把盘跑满；③ 别在别人的栈上做级考核，要并行验收就用仓库副本 + 独立 compose 项目名 + 端口覆盖（见 `review/replay-page-14.md`、`review/replay-page-18.md`）。
+- **已知环境坑**（重放报告实测）：① 带裸 `uv run` 的 `make stage3` / `stage0-ui` / `stage6-ui`（脚本里没有 `--frozen`）或手敲 `uv run` 会按本机镜像源重写 `system/backend/uv.lock`（`lab reset` 管不到它）——`git status` 显示变脏再 `git checkout -- system/backend/uv.lock`；Makefile 直接调的 `stage*` 都已 `uv run --frozen`，不会脏（[page-15](page-15.md)、[page-19](page-19.md)、[page-21](page-21.md)）；② ES 默认低/高/洪水水位 85% / 90% / 95%：85–89% 只告警、写入与 S2/S3 正常，≥90% 高水位才危险（不再分配分片）、≥95% 索引转只读（`materials/review/replay-page-14.md`），别把盘跑满；③ 别在别人的栈上做级考核，要并行验收就用仓库副本 + 独立 compose 项目名 + 端口覆盖（见 `materials/review/replay-page-14.md`、`materials/review/replay-page-18.md`）。
 
 ## 1. 结构审计（任何环境可做）
-`python3 manual/shots/audit_book.py` 是离线只读审计：查 24 页 H1/六段、代码围栏成对、图片引用、敏感串、`manual/README.md` 坏链；只验结构、不验判据真假。期望末行（来源 `shots/audit_book.py`）：
+`python3 tutorial/shots/audit_book.py` 是离线只读审计：查 24 页 H1/六段、代码围栏成对、图片引用、敏感串、`tutorial/README.md` 坏链；只验结构、不验判据真假。期望末行（来源 `shots/audit_book.py`）：
 
 ```text
 页面：24/24 通过；README 坏链：0
@@ -18,12 +18,12 @@
 ## 2. L1 验收（page-00 – page-09，「造」）
 十页各造一个零件，判据就是各页「你应该看到」；逐页对账（数字/输出均取自各页）：
 - [p00](page-00.md) `make doctor` → `12/12 通过`；[p01](page-01.md) 容器 running、`SELECT VERSION()` 有输出且看不到 `dw`；[p02](page-02.md) 5 张表、`115`、华北 `19`。
-- [p03](page-03.md) `/health` → `{"ok":true}`；[p04](page-04.md) 两次请求返回一字不差；[p05](page-05.md) `["华北","销售额"]`；[p06](page-06.md) 打出 5 行带 JOIN 的 SELECT；[p07](page-07.md) `sales` = `41099.5`；[p08](page-08.md) 12 条 `progress` + 1 条 `result`；[p09](page-09.md) 浏览器 `8081` 问一句出 `41099.5`；L1 无「拆一刀」，另用[建成证明海报](completeness/poster-answer.png)对账（来源 `manual/README.md`）。
+- [p03](page-03.md) `/health` → `{"ok":true}`；[p04](page-04.md) 两次请求返回一字不差；[p05](page-05.md) `["华北","销售额"]`；[p06](page-06.md) 打出 5 行带 JOIN 的 SELECT；[p07](page-07.md) `sales` = `41099.5`；[p08](page-08.md) 12 条 `progress` + 1 条 `result`；[p09](page-09.md) 浏览器 `8081` 问一句出 `41099.5`；L1 无「拆一刀」，另用[建成证明海报](completeness/poster-answer.png)对账（来源 `tutorial/README.md`）。
 
 ## 3. L2 验收（page-10 – page-13，「换」真件）
 逐页对账（命令/数字取自各页「动手」「你应该看到」）：
-- [p10](page-10.md) 换真数据：清洗后 `405` 行 / `1136341.10`，naive `1144735.50`（差 `8,394.40`）；[p11](page-11.md) 换真契约：`backend/.venv/bin/python -m lab.app` 打出 5 行 SQL（与 p6 逐字一致），`(cd backend && .venv/bin/python -m app.schema_contract --check)` → `S1 PASS`。
-- [p12](page-12.md) 换真执行器：`backend/.venv/bin/python -m lab.db` → 金额行 `Decimal('1144735.50')`、上限 `1000 行`、非 SELECT 抛 `PermissionError`、慢查询抛 `OperationalError`；[p13](page-13.md) 换真部署：`make docker-up` → `docker compose ps` 5 行 healthy、`ps -a` 多一行 `Exited (0)`（init），`make docker-smoke` → `DOCKER SMOKE PASS`。
+- [p10](page-10.md) 换真数据：清洗后 `405` 行 / `1136341.10`，naive `1144735.50`（差 `8,394.40`）；[p11](page-11.md) 换真契约：`system/backend/.venv/bin/python -m lab.app` 打出 5 行 SQL（与 p6 逐字一致），`(cd system/backend && .venv/bin/python -m app.schema_contract --check)` → `S1 PASS`。
+- [p12](page-12.md) 换真执行器：`system/backend/.venv/bin/python -m lab.db` → 金额行 `Decimal('1144735.50')`、上限 `1000 行`、非 SELECT 抛 `PermissionError`、慢查询抛 `OperationalError`；[p13](page-13.md) 换真部署：`make docker-up` → `docker compose ps` 5 行 healthy、`ps -a` 多一行 `Exited (0)`（init），`make docker-smoke` → `DOCKER SMOKE PASS`。
 
 **级考核（第 13 页「拆一刀」：拆编排）**——不看页面做完没有，看拆完能不能说清「起得来 ≠ 部署好」：
 1. `make docker-down`（数据卷保留）。
@@ -36,21 +36,21 @@ init 没有成功退出（state=缺失, exit=?）
 DOCKER SMOKE FAIL: 120 秒内服务状态没齐
 ```
 
-4. 还原：`scripts/lab reset p13-before --yes`（末行 `现在工作区与快照 "p13-before" 完全一致。`）→ `make docker-up` → `make docker-smoke` 回到 `DOCKER SMOKE PASS`。命令与期望输出均取自 [page-13](page-13.md)「拆一刀」；还原后整座城留着跑，L3 要在这套栈上审。
+4. 还原：`toolbox/scripts/lab reset p13-before --yes`（末行 `现在工作区与快照 "p13-before" 完全一致。`）→ `make docker-up` → `make docker-smoke` 回到 `DOCKER SMOKE PASS`。命令与期望输出均取自 [page-13](page-13.md)「拆一刀」；还原后整座城留着跑，L3 要在这套栈上审。
 
 ## 4. L3 验收（page-14 – page-17，「审」不确定输出）
 逐页对账：
-- [p14](page-14.md) `backend/.venv/bin/python -m pytest backend/tests/recall -q` → `18 passed, 23 skipped`；`make stage3` → `S3 PASS`；`docker compose stop elasticsearch` 后 `POST /api/query` 仍回 `41099.5`，真检索黄金集 `18 passed, 23 errors`。
-- [p15](page-15.md) `backend/.venv/bin/python -m pytest backend/tests/generate -q` → `122 passed, 5 skipped`；`make stage4` → `基线：10/10 通过（拒答 2）` + `S4 PASS`（本机实测 38 秒）；[p16](page-16.md) `backend/.venv/bin/python -m pytest backend/tests/generate/test_guard.py -q` → `26 passed`，`(cd backend && .venv/bin/python -m app.scripts.failures --check)` → `S6 PASS`，`PYTHONPATH=backend backend/.venv/bin/python eval/probe_correction.py | tail -1` → `{"total": 20, "mismatch": 0}`；[p17](page-17.md) `backend/.venv/bin/python -m pytest backend/tests/agent/test_correct.py -q` → `14 passed`，`(cd backend && .venv/bin/python -m app.scripts.failures --check)` → `S6 PASS`，语料 `11` 条 `"retryable": true` / `9` 条 `"retryable": false`；拆一刀另有 `PYTHONPATH=backend backend/.venv/bin/python eval/probe_correction.py | tail -1` → `{"total": 20, "mismatch": 0}`。
+- [p14](page-14.md) `system/backend/.venv/bin/python -m pytest system/backend/tests/recall -q` → `18 passed, 23 skipped`；`make stage3` → `S3 PASS`；`docker compose stop elasticsearch` 后 `POST /api/query` 仍回 `41099.5`，真检索黄金集 `18 passed, 23 errors`。
+- [p15](page-15.md) `system/backend/.venv/bin/python -m pytest system/backend/tests/generate -q` → `122 passed, 5 skipped`；`make stage4` → `基线：10/10 通过（拒答 2）` + `S4 PASS`（本机实测 38 秒）；[p16](page-16.md) `system/backend/.venv/bin/python -m pytest system/backend/tests/generate/test_guard.py -q` → `26 passed`，`(cd system/backend && .venv/bin/python -m app.scripts.failures --check)` → `S6 PASS`，`PYTHONPATH=system/backend system/backend/.venv/bin/python system/eval/probe_correction.py | tail -1` → `{"total": 20, "mismatch": 0}`；[p17](page-17.md) `system/backend/.venv/bin/python -m pytest system/backend/tests/agent/test_correct.py -q` → `14 passed`，`(cd system/backend && .venv/bin/python -m app.scripts.failures --check)` → `S6 PASS`，语料 `11` 条 `"retryable": true` / `9` 条 `"retryable": false`；拆一刀另有 `PYTHONPATH=system/backend system/backend/.venv/bin/python system/eval/probe_correction.py | tail -1` → `{"total": 20, "mismatch": 0}`。
 
 **级考核（第 17 页「拆一刀」：关纠错）**——答案不是「红变绿」，而是「哪条判据抓到了、哪条没抓到」：
-1. 打开 `backend/app/agent/correct.py`，找到 `def propose_correction`，在 `policy = contract.correction` 后插 4 行（缩进 4 格）：立即 `return CorrectionProposal(`，参数 `attempted=False, ok=False, error=error, note="拆一刀：校正已关闭"`，再多一行 `)`（多行写法照 page-17 抄）。
+1. 打开 `system/backend/app/agent/correct.py`，找到 `def propose_correction`，在 `policy = contract.correction` 后插 4 行（缩进 4 格）：立即 `return CorrectionProposal(`，参数 `attempted=False, ok=False, error=error, note="拆一刀：校正已关闭"`，再多一行 `)`（多行写法照 page-17 抄）。
 2. 重跑三条判据（节选；秒数会变）：
 
 ```bash
-backend/.venv/bin/python -m pytest backend/tests/agent/test_correct.py -q
-(cd backend && PYTHONUNBUFFERED=1 .venv/bin/python -m app.scripts.failures --check) 2>&1 | tail -5
-PYTHONPATH=backend backend/.venv/bin/python eval/probe_correction.py | tail -1
+system/backend/.venv/bin/python -m pytest system/backend/tests/agent/test_correct.py -q
+(cd system/backend && PYTHONUNBUFFERED=1 .venv/bin/python -m app.scripts.failures --check) 2>&1 | tail -5
+PYTHONPATH=system/backend system/backend/.venv/bin/python system/eval/probe_correction.py | tail -1
 ```
 
 ```text
@@ -61,21 +61,21 @@ FAIL: 1 项不符合预期
 ```
 
 失败矩阵 9 个场景**只红 `corrected` 一格**，probe 的 20 条语料照绿——单元判据 + 失败矩阵抓到了，语料判据没抓到。
-3. 还原：`scripts/lab reset p17-before --yes` → `现在工作区与快照 "p17-before" 完全一致。`；再跑 `backend/.venv/bin/python -m pytest backend/tests/agent/test_correct.py -q | tail -1` → `14 passed in 0.11s`、`(cd backend && .venv/bin/python -m app.scripts.failures --check | tail -1)` → `S6 PASS`（命令与输出均取自 page-17）。
+3. 还原：`toolbox/scripts/lab reset p17-before --yes` → `现在工作区与快照 "p17-before" 完全一致。`；再跑 `system/backend/.venv/bin/python -m pytest system/backend/tests/agent/test_correct.py -q | tail -1` → `14 passed in 0.11s`、`(cd system/backend && .venv/bin/python -m app.scripts.failures --check | tail -1)` → `S6 PASS`（命令与输出均取自 page-17）。
 
 ## 5. L4 验收（page-18 – page-22，「守」事故与越权）
 逐页对账：
-- [p18](page-18.md) `(cd backend && .venv/bin/python -m app.scripts.security --verify-ro-account)` → 写操作被拒 `(1142, "UPDATE command denied…")` + `PASS: 该账号在 dw 上只有 SELECT`；可选 `make stage5-live` → `S5 LIVE PASS`。
-- [p19](page-19.md) `(cd backend && .venv/bin/python -m app.scripts.security --check)` → `36/36` 拒绝 + `11/11` 放行 + `8/8` 基线 + `S5 PASS`；`--corpus` → `语料：47 条，失败 0 条`。
-- [p20](page-20.md) `(cd backend && .venv/bin/python -m pytest tests/agent -q -k cancel)` → `6 passed, 108 deselected`；`(cd backend && .venv/bin/python -m app.scripts.record_sse --check)` → `S7 SSE RECORD PASS（14 个夹具与真实输出一致）`。
-- [p21](page-21.md) `/api/steps = 12`（条件步骤 `correct_sql`）、`/api/errors = 16`（3 类）；夹具合契约 `30 passed`；`(cd frontend && npm test)` → `40 passed (40)`。
-- [p22](page-22.md) `(cd backend && .venv/bin/python -m pytest -q)` → 无 `failed`（实测 `813 passed, 30 skipped`，数字会漂）；`(cd frontend && npm test)` → `40 passed (40)`；`make docker-smoke` → `DOCKER SMOKE PASS`。
+- [p18](page-18.md) `(cd system/backend && .venv/bin/python -m app.scripts.security --verify-ro-account)` → 写操作被拒 `(1142, "UPDATE command denied…")` + `PASS: 该账号在 dw 上只有 SELECT`；可选 `make stage5-live` → `S5 LIVE PASS`。
+- [p19](page-19.md) `(cd system/backend && .venv/bin/python -m app.scripts.security --check)` → `36/36` 拒绝 + `11/11` 放行 + `8/8` 基线 + `S5 PASS`；`--corpus` → `语料：47 条，失败 0 条`。
+- [p20](page-20.md) `(cd system/backend && .venv/bin/python -m pytest tests/agent -q -k cancel)` → `6 passed, 108 deselected`；`(cd system/backend && .venv/bin/python -m app.scripts.record_sse --check)` → `S7 SSE RECORD PASS（14 个夹具与真实输出一致）`。
+- [p21](page-21.md) `/api/steps = 12`（条件步骤 `correct_sql`）、`/api/errors = 16`（3 类）；夹具合契约 `30 passed`；`(cd system/frontend && npm test)` → `40 passed (40)`。
+- [p22](page-22.md) `(cd system/backend && .venv/bin/python -m pytest -q)` → 无 `failed`（实测 `813 passed, 30 skipped`，数字会漂）；`(cd system/frontend && npm test)` → `40 passed (40)`；`make docker-smoke` → `DOCKER SMOKE PASS`。
 
 **级考核（第 22 页「拆一刀」：抢窗口给 `dw_reader` 注入 GRANT ALL；命令与期望输出均取自 [page-22](page-22.md)「拆一刀」）**：
 1. 终端 B 先粘、回车（让循环替你等，实测窗口只有约 3 秒），再在终端 A 跑 `make docker-smoke`：
 
 ```bash
-source scripts/export-docker-env.sh
+source toolbox/scripts/export-docker-env.sh
 seen=0; end=$((SECONDS+60)); while [ "$SECONDS" -lt "$end" ]; do
   id="$(docker compose ps -aq init 2>/dev/null)"; [ -z "$id" ] && { sleep 0.1; continue; }
   s="$(docker inspect -f '{{.State.Status}}' "$id" 2>/dev/null)"; [ "$s" = running ] && seen=1
@@ -93,23 +93,23 @@ FAIL: 3 项问题
 DOCKER SMOKE FAIL: 只读账号验证未通过
 ```
 
-3. 还原回 PASS：`(cd backend && .venv/bin/python -m app.scripts.security --provision-ro-account)` → `只读账号就绪：'dw_reader'@'%' on dw (SELECT)`；再 `make docker-smoke` → `PASS: 该账号在 dw 上只有 SELECT` + `DOCKER SMOKE PASS`。答案：网有牙（第 7 步抓住）、定位精确（只红第 7 步）、边界清楚（跑之前就有的越权会被 init 修好，归 p18 单步判据管）。
+3. 还原回 PASS：`(cd system/backend && .venv/bin/python -m app.scripts.security --provision-ro-account)` → `只读账号就绪：'dw_reader'@'%' on dw (SELECT)`；再 `make docker-smoke` → `PASS: 该账号在 dw 上只有 SELECT` + `DOCKER SMOKE PASS`。答案：网有牙（第 7 步抓住）、定位精确（只红第 7 步）、边界清楚（跑之前就有的越权会被 init 修好，归 p18 单步判据管）。
 
 ## 6. L5 验收（page-23，「装」体验层）
 逐页对账（L5 只有一页）：
-- [p23](page-23.md) 按「动手」第 1 步起整栈：栈在跑就跳过；栈停过且 `docker images | grep shopkeeper` 能看到 `backend` / `frontend` 两行镜像就用 `docker compose up -d`（不重建、秒级），第一次/代码改过才 `make docker-up`（约 8 分钟，第 13 页）。之后浏览器打开 `http://127.0.0.1:8088`（默认端口；成熟版原版 `shopkeeper-agent` 由 `docker run` 的 nginx 容器提供，镜像取 `.env` 的 `NGINX_IMAGE`，失败先 `docker rm -f lab-mature` 清残留；别的进程占端口就换 `-p` 端口，如 8089）问一句 → 结果表 `41099.5`（成熟版无千分位；教学版同一数值显示 `41,099.5`）；同一问题在 `http://127.0.0.1:8080` 的教学版「从零重建 · 教学版」界面出同一个数（改过 `.env` 的 `FRONTEND_HOST_PORT` 用你的端口）；`(cd frontend && npm test)` → `40 passed (40)`（汇总行；末行是 `Duration`；测的是教学版脚手架，成熟版不带这套测试；该命令在 page-23「动手」第 3 步）。判据与 L1 第 9 页同一条（同一问题、同一个数），但入口已经是交付时的正式前端，不再是第 9 页那份手写 HTML。命令与期望输出以 [page-23](page-23.md)「动手」「你应该看到」为准。
+- [p23](page-23.md) 按「动手」第 1 步起整栈：栈在跑就跳过；栈停过且 `docker images | grep shopkeeper` 能看到 `backend` / `frontend` 两行镜像就用 `docker compose up -d`（不重建、秒级），第一次/代码改过才 `make docker-up`（约 8 分钟，第 13 页）。之后浏览器打开 `http://127.0.0.1:8088`（默认端口；成熟版原版 `shopkeeper-agent` 由 `docker run` 的 nginx 容器提供，镜像取 `.env` 的 `NGINX_IMAGE`，失败先 `docker rm -f lab-mature` 清残留；别的进程占端口就换 `-p` 端口，如 8089）问一句 → 结果表 `41099.5`（成熟版无千分位；教学版同一数值显示 `41,099.5`）；同一问题在 `http://127.0.0.1:8080` 的教学版「从零重建 · 教学版」界面出同一个数（改过 `.env` 的 `FRONTEND_HOST_PORT` 用你的端口）；`(cd system/frontend && npm test)` → `40 passed (40)`（汇总行；末行是 `Duration`；测的是教学版脚手架，成熟版不带这套测试；该命令在 page-23「动手」第 3 步）。判据与 L1 第 9 页同一条（同一问题、同一个数），但入口已经是交付时的正式前端，不再是第 9 页那份手写 HTML。命令与期望输出以 [page-23](page-23.md)「动手」「你应该看到」为准。
 
 **级考核（第 23 页「拆一刀」：把 8088 的成熟版换回第 9 页 17 行 HTML）**——验的不是「成熟版能跑」，而是「前端只是入口，不是承重墙」（命令与期望输出均取自 [page-23](page-23.md)「拆一刀」）：
 1. 停成熟版、整栈与 8080 教学版留着：`docker rm -f lab-mature`。
 2. 建 `lab-mature/index.html`（先 `mkdir -p lab-mature`）：`form + pre + 事件处理`骨架不变（骨架还是第 9 页那 17 行），只补 3 处接线——入口换 `POST /api/query`、`EventSource` 换 `fetch` 读流、结果行取 `rows[0][0]`（读流样板让整页到 29 行；L5 不在 SPEC 的 L1 行数预算内，完整内容照 [page-23](page-23.md)「拆一刀」第 2 步抄）。
-3. 用教学版镜像起 nginx 占 8088、挂这个页面（反代沿用镜像里的 `docker/nginx.conf`：`proxy_pass http://backend:8100`），并进 compose 网络——`backend` 才解析得到（不进网络回 502）。网络名是项目名派生：`compose.yaml` 第 1 行 `name: shopkeeper-rebuild` + `_default`（用 `-p` 或 `COMPOSE_PROJECT_NAME` 改过项目名就先 `docker network ls | grep default` 查）；8088 被占/容器重名先 `docker rm -f lab-mature` 再重跑（别的进程占着就换 `-p` 里的端口，如 8089）：`docker run -d --name lab-mature --network shopkeeper-rebuild_default -p 127.0.0.1:8088:80 -v "$PWD/lab-mature/index.html:/usr/share/nginx/html/index.html:ro" shopkeeper-rebuild/frontend:local`。
+3. 用教学版镜像起 nginx 占 8088、挂这个页面（反代沿用镜像里的 `system/docker/nginx.conf`：`proxy_pass http://backend:8100`），并进 compose 网络——`backend` 才解析得到（不进网络回 502）。网络名是项目名派生：`compose.yaml` 第 1 行 `name: shopkeeper-rebuild` + `_default`（用 `-p` 或 `COMPOSE_PROJECT_NAME` 改过项目名就先 `docker network ls | grep default` 查）；8088 被占/容器重名先 `docker rm -f lab-mature` 再重跑（别的进程占着就换 `-p` 里的端口，如 8089）：`docker run -d --name lab-mature --network shopkeeper-rebuild_default -p 127.0.0.1:8088:80 -v "$PWD/lab-mature/index.html:/usr/share/nginx/html/index.html:ro" shopkeeper-rebuild/frontend:local`。
 4. 浏览器 `http://127.0.0.1:8088` 强刷、问同一句 → `<pre>` 里先闪 `extract_keywords`、`generate_sql` 等步骤 id，约 6 秒后停在 `41099.5`；没有流程图、没有结果表——接口、契约、SQL、SSE 流都没变，变的只是入口载体。
 5. 还原：`docker rm -f lab-mature && rm -rf lab-mature` → 8088 打不开属预期，8080 教学版不受影响（重问一句 → `41,099.5`）。
 
 > 口径：界面只是入口（第 9 页「拆一刀」就是模板：删掉 nginx，主干仍活着）；L5 把这一刀升级到整栈——换掉成熟版这块装修，接口层与判据纹丝不动，才叫「装修不改变承重墙」。两次结果相同（成熟版 `41099.5`、17 行页面同一个数）、契约相同（23 条 `progress` + 1 条 `result`），差的只是「谁负责渲染」。
 
 ## 7. 已知限制（诚实）
-- **真 LLM 成功态不能稳定复现、不能当判据**：p17 页首与对账写明——v2 单次复现过（`deliverable/v2/evidence/v2-natural-correct-success.sse`），但触发取决于模型、不能保证每次复现；成功率只能写成「多次采样（`trials>=3`）+ 成功率 + 失败分类」，不许写「已修复」；本清单不验真模型。
+- **真 LLM 成功态不能稳定复现、不能当判据**：p17 页首与对账写明——v2 单次复现过（`materials/deliverable/v2/evidence/v2-natural-correct-success.sse`），但触发取决于模型、不能保证每次复现；成功率只能写成「多次采样（`trials>=3`）+ 成功率 + 失败分类」，不许写「已修复」；本清单不验真模型。
 - **可观测只有应用层**：p21 对账——没有 metrics、追踪、结构化请求日志、告警，`duration_ms` 只发给浏览器；不能回答 QPS / 错误率 / P99。
 - **重栈耗时**：`make docker-up` 首次约 8 分钟（p13），p22 要整栈；验收中途别重建镜像。
 - **端口占用**：默认端口被占就改 `.env` 的 `*_HOST_PORT`，别改 `compose.yaml`（p13）。
@@ -117,12 +117,12 @@ DOCKER SMOKE FAIL: 只读账号验证未通过
 ## 8. 失败时看哪
 | 级 / 范围 | 先看 |
 |---|---|
-| L1（p00–p09） | `review/walkthrough.md`、`review/replay-03-05.md`、`review/replay-06-09.md` |
-| L2（p10–p13） | `review/replay-page-10.md` … `review/replay-page-13.md` |
-| L3（p14–p17） | `review/replay-page-14.md` … `review/replay-page-17-v2.md`（p17 最新；v1 已过时） |
-| L4（p18–p22） | `review/replay-page-18.md` … `review/replay-page-22.md`（p18–p22 全有） |
-| L5（page-23） | page-23「对账」；`review/replay-page-23.md`（待重放） |
+| L1（p00–p09） | `materials/review/walkthrough.md`、`materials/review/replay-03-05.md`、`materials/review/replay-06-09.md` |
+| L2（p10–p13） | `materials/review/replay-page-10.md` … `materials/review/replay-page-13.md` |
+| L3（p14–p17） | `materials/review/replay-page-14.md` … `materials/review/replay-page-17-v2.md`（p17 最新；v1 已过时） |
+| L4（p18–p22） | `materials/review/replay-page-18.md` … `materials/review/replay-page-22.md`（p18–p22 全有） |
+| L5（page-23） | page-23「对账」；`materials/review/replay-page-23.md`（待重放） |
 | 环境 / 工具 / 奇怪报错 | `../error-proofread/README.md`（真机实测台账）、`../docs/DOCKER-DEPLOY.md` §1 |
-| 新重放报告 / 报告写法 | 按 [review/REPLAY-TEMPLATE.md](review/REPLAY-TEMPLATE.md) 六段模板 + 8 类必查清单写（新报告先复制模板） |
+| 新重放报告 / 报告写法 | 按 [materials/review/REPLAY-TEMPLATE.md](materials/review/REPLAY-TEMPLATE.md) 六段模板 + 8 类必查清单写（新报告先复制模板） |
 
 报告里标「先修」的条目是写页时已知的坑：先按报告复现，再判是页面 bug 还是环境问题；复现不了再回到对应页「对账」。

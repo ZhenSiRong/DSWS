@@ -2,15 +2,15 @@
 
 - **用途**：答辩 / 概览用的一张全景图 —— L1 造 10 件 + L2 换 4 件 + L3 审 4 件 + L4 守 5 件 + L5 装 1 件 = 24 件 = 24 页（P0–P23）。
 - **不进程页面**：只出图，不改 `page-00…page-23` 正文，也不替代任何页的验收判据。
-- **重跑**：`python3 manual/shots/render_city_map_24.py`（一条命令重出 `manual/images/city-map-24.png` + 单文件 `manual/city/city-map-24.html`；只读 `data-24.json`、`data.json`、`data-23.json`，不写其他文件）。
+- **重跑**：`python3 tutorial/shots/render_city_map_24.py`（一条命令重出 `tutorial/images/city-map-24.png` + 单文件 `tutorial/city/city-map-24.html`；只读 `data-24.json`、`data.json`、`data-23.json`，不写其他文件）。
 - **成图**：3200×2000 @2x（1600×1000 CSS，与旧图 `city-map-l1.png` / 23 版 `city-map-23.png` 同尺寸）。
-- **口径（D44 + D50）**：D44 定「造 / 换 / 审 / 守 = 10+4+4+5 = 23 页」；D50 在末尾追加第 23 页 = L5「装」体验层（1 页），全书 24 页 = 10+4+4+5+1。L5 主题「同一套承重墙，换更好的装修」：成熟版原版前端（`shopkeeper-agent` · React 19 + Tailwind 3.4 · dist 现成，nginx 容器 8088）只换入口载体，接口 / 契约 / SSE / 判据全不动，同一句问题仍出 `41099.5`；拆一刀 = 停成熟版容器、换回第 9 页的 17 行 HTML 占同一入口，判据仍绿；教学版（`frontend/` 重建版，8080）只作脚手架对照。旧 23 页页码 / 标题 / 正文不动。
+- **口径（D44 + D50）**：D44 定「造 / 换 / 审 / 守 = 10+4+4+5 = 23 页」；D50 在末尾追加第 23 页 = L5「装」体验层（1 页），全书 24 页 = 10+4+4+5+1。L5 主题「同一套承重墙，换更好的装修」：成熟版原版前端（`shopkeeper-agent` · React 19 + Tailwind 3.4 · dist 现成，nginx 容器 8088）只换入口载体，接口 / 契约 / SSE / 判据全不动，同一句问题仍出 `41099.5`；拆一刀 = 停成熟版容器、换回第 9 页的 17 行 HTML 占同一入口，判据仍绿；教学版（`system/frontend/` 重建版，8080）只作脚手架对照。旧 23 页页码 / 标题 / 正文不动。
 - **14 件改造层设施**（每件一条 `←` 改造关系与一条虚线接入线，箭头落在被改造的 L1 设施上）：
   - L2 换（蓝）：P10 真实供水管线 ← P2；P11 契约校准站 ← P6；P12 执行器车间 ← P7；P13 部署调度塔 ← P1（仓库屋顶）。
   - L3 审（橙）：P14 抽检站 ← P5；P15 生成审计室 ← P6；P16 校验门禁 ← P6→P7 之间；P17 纠错法庭 ← P8。
   - L4 守（红）：P18 门禁闸机 ← P1（守 P7 取货线）；P19 策略哨所 ← P6；P20 应急通道 ← P8；P21 监控塔 ← P3（屋顶 + P1/P9/传送带）；P22 回归演练场 ← P9。
   - L5 装（紫）：P23 成熟前端体验馆 ← P9 门户 + P4 窗外层（入口 / 契约不变）。同一栋楼、同一扇门，只把第 9 页的 17 行 HTML 换成成熟版原版前端（`docker compose up -d` 起栈 + nginx 容器 8088）；教学版 8080 是脚手架对照；画在门户区 P9 屋顶，不新增楼。
 - **读图**：蓝 = L2 换、橙 = L3 审、红 = L4 守、紫 = L5 装；虚线 = 改造接入线；菱形 = 接入落点；门户区右下「改造层登记处」有 14 条改造关系表与整图图注。
-- **单源**：`manual/city/data-24.json`（L1 10 件 + retrofit 14 件 + 5 级 levels + legend + `retrofits: [{level, page, from}]`）。改图只改它，再跑上面那条命令。
+- **单源**：`tutorial/city/data-24.json`（L1 10 件 + retrofit 14 件 + 5 级 levels + legend + `retrofits: [{level, page, from}]`）。改图只改它，再跑上面那条命令。
 - **旧版冻结（历史快照）**：`data-23.json` / `render_city_map_23.py` / `images/city-map-23.png` / `README-23.md` 是 D50 前的 23 页版本，**不再更新**；`data.json` / `city-map-l1.png` / `city-map.html` / `render_city_map.py` 是更早的 L1 单源，同样冻结。24 版脚本运行时逐字比对 `data-23.json`（P0–P22）与 `data.json`（L1 十件 / 四区 / 11 条道路），任一不一致就退出码 1。
 - **数据自检**：脚本比对 `data.json` + `data-23.json`、校验 24 页 / 14 条接入线 / 卡片不重叠 / P23 在门户区，再跑页面内置自检（DOM 坐标 / tooltip / 溢出）与成图自检（3200×2000 / 24 个 P 编号 DOM+OCR / 四色），任一不过退出码 1、不写成品。

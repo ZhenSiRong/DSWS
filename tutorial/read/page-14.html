@@ -9,18 +9,21 @@
 </head>
 <body>
 <main class="page">
-<p class="kicker">练本 · 阅读版（md 正典派生，改内容请改 manual/page-14.md）</p>
+<p class="kicker">练本 · 阅读版（md 正典派生，改内容请改 tutorial/page-14.md）</p>
 <h1>第 14 页 · 审检索：召回空了的答案，你凭什么信</h1>
 <blockquote>
 <p><strong>城市坐标 · L3 智慧城市 · 城市大脑的图书馆</strong>｜大脑答题前先查资料；资料库停了呢——答案还值不值得信。</p>
 <p><strong>前置</strong></p>
-<p><strong>整栈在跑</strong>：第 13 页的五个长驻服务 <code>docker compose ps</code> 里 <code>healthy</code>；<code>backend/.venv</code> 已由第 0 页 <code>make install</code> 建好。</p>
+<p><strong>整栈在跑</strong>：第 13 页的五个长驻服务 <code>docker compose ps</code> 里 <code>healthy</code>；<code>system/backend/.venv</code> 已由第 0 页 <code>make install</code> 建好。</p>
 <p><strong>不改代码</strong>：本页<strong>不改被跟踪的代码/契约</strong>——<code>lab save</code> 只在 <code>.lab/</code> 下写快照（已被 gitignore）。</p>
 <p><strong>在哪跑</strong>：命令都在仓库根目录、同一个终端里整段连续执行；<code>.env</code> 里改过 <code>FRONTEND_HOST_PORT</code> 的话，下面每条命令里的 8080 都换成你那个端口。</p>
 </blockquote>
 <h2>这一页构建什么</h2>
 <p>从“能查数”到“能审检索”：用 20 题黄金集给检索层立三条判据（该命中 / 不该出现 / 输出规模上限），再亲手停掉检索存储——查数照常成功（契约离线裁剪兜底），而黄金集整片变红。</p>
 <p><strong>审的顺序</strong>：先写下判据，再让机器去撞。</p>
+<blockquote>
+<p><strong>数字口径</strong>：第 13 章 compose 首灌 <code>system/fixtures/dw.sql</code>（演示集 115 单），所以本章起 <code>41099.5</code>/115 是演示集口径；第 10–12 章的真数据在 lab 快照/另一套库里，互不影响。</p>
+</blockquote>
 <p><img alt="第 14 页 · 召回空了的答案，你凭什么信：左边是黄金集与检索存储，右边是图书馆：书架停了，索引卡还能兜底" src="../images/page-14-visual.webp" /></p>
 <h2>猜一猜</h2>
 <p>动手前写下答案：</p>
@@ -32,19 +35,19 @@
 <p><strong>第 1 步：拍快照。</strong> 本页不改被跟踪的代码/契约，拍一张是兜底（<code>lab save</code> 只往 <code>.lab/</code> 写快照，该目录已被 gitignore）；同名快照会被拒，重做本页就换个名字：</p>
 <!-- verify: page14-lab-save -->
 
-<pre><code class="language-bash">scripts/lab save p14-before
+<pre><code class="language-bash">toolbox/scripts/lab save p14-before
 </code></pre>
 <p>回显 <code>已保存快照 "p14-before"：169 个文件。</code>（169 数的是你工作区里的文件，因环境而异）。</p>
-<p><strong>第 2 步：先跑离线判据（不需要任何服务；解释器来自第 0 页 <code>make install</code> 建好的 <code>backend/.venv</code>）。</strong></p>
+<p><strong>第 2 步：先跑离线判据（不需要任何服务；解释器来自第 0 页 <code>make install</code> 建好的 <code>system/backend/.venv</code>）。</strong></p>
 <!-- verify: page14-pytest-recall -->
 
-<pre><code class="language-bash">backend/.venv/bin/python -m pytest backend/tests/recall -q
+<pre><code class="language-bash">system/backend/.venv/bin/python -m pytest system/backend/tests/recall -q
 </code></pre>
-<p><strong>三组字段</strong>：黄金集是 <code>backend/tests/recall/golden.yaml</code> 里的 20 题，每题三组字段：<code>expected_*</code>（必须被召回）、<code>must_not</code>（不许出现）。</p>
-<p><strong>三条判据</strong>：<code>backend/tests/recall/test_golden.py</code> 还查 precision 下限和输出规模上限——允许额外候选，但不许把所有表/列/指标整片塞进上下文。这三条就是“召回算不算合格”的判据。</p>
+<p><strong>两组字段</strong>：黄金集是 <code>system/backend/tests/recall/golden.yaml</code> 里的 20 题，每题两组字段：<code>expected_*</code>（必须被召回；内部再分表/列/指标/取值四类）、<code>must_not</code>（不许出现）。</p>
+<p><strong>三条主判据 + 两条汇总下限</strong>：主判据是「该命中 / 不该出现 / 输出规模上限」；<code>test_golden.py</code> 还查 precision、recall 下限——允许额外候选，但不许把所有表/列/指标整片塞进上下文。</p>
 <p><strong>第 3 步：真跑 20 题。</strong> <code>source</code> 把 <code>.env</code> 里的端口和密码导给宿主 CLI（成功时无输出）。</p>
-<p><strong>没 source 会红</strong>：<strong>新终端或重跑前先重新 <code>source scripts/export-docker-env.sh</code></strong>（或回第 13 页的 <code>.env</code> 口径），没 source 会红 <code>S2 FAIL: 缺少环境变量 REBUILD_MYSQL_PASSWORD…</code> 并提示先 source。</p>
-<p><strong><code>make stage3</code> 干什么</strong>：会把“华北销售额”的召回结果写到 <code>/tmp/rebuild-s3-recall.yaml</code> 并打印前 40 行（<code>scripts/recall-demo.sh</code> 干的）。它要跑半分钟左右，别以为卡死。</p>
+<p><strong>没 source 会红</strong>：<strong>新终端或重跑前先重新 <code>source toolbox/scripts/export-docker-env.sh</code></strong>（或回第 13 页的 <code>.env</code> 口径），没 source 会红 <code>S2 FAIL: 缺少环境变量 REBUILD_MYSQL_PASSWORD…</code> 并提示先 source。</p>
+<p><strong><code>make stage3</code> 干什么</strong>：会把“华北销售额”的召回结果写到 <code>/tmp/rebuild-s3-recall.yaml</code> 并打印前 40 行（<code>toolbox/scripts/recall-demo.sh</code> 干的）。它要跑半分钟左右，别以为卡死。</p>
 <p><strong>栈被停过会红</strong>：红在第一条 <code>S2 FAIL: 读取 manifest 失败：(2003, "Can't connect to MySQL server on '127.0.0.1' ([Errno 111] Connection refused)")</code>。恢复分三档：</p>
 <ul>
 <li>只是容器被停：<code>docker compose start</code> 拉回来（不重建）。</li>
@@ -53,7 +56,7 @@
 </ul>
 <!-- verify: page14-export-env-stage3 -->
 
-<pre><code class="language-bash">source scripts/export-docker-env.sh
+<pre><code class="language-bash">source toolbox/scripts/export-docker-env.sh
 make stage3
 </code></pre>
 <h2>你应该看到</h2>
@@ -74,11 +77,11 @@ recall stats: query='华北销售额' keywords=3 es_roundtrips=1 qdrant_roundtri
 S3 PASS
 </code></pre>
 <p><img alt="第 14 页 · make stage3 真输出：S2 VERIFY PASS → 41 passed → 813 passed, 30 skipped → S3 PASS" src="../images/page-14-stage3.png" />
-<img alt="第 14 页 · 停掉 Elasticsearch 后：POST /api/query 仍回 41099.5；20 题黄金集 18 passed, 23 errors" src="../images/page-14-stop-es.png" /></p>
+<img alt="第 14 页 · 停掉 Elasticsearch 后：POST /api/query 仍回 41099.5；黄金集所在测试组 18 passed, 23 errors（共 41 条）" src="../images/page-14-stop-es.png" /></p>
 <h2>对账</h2>
 <ul>
 <li><strong>猜 1：不会失败</strong>——照常回一个数（拆一刀会真验）。<ul>
-<li><strong>走哪条路</strong>：主链路 <code>POST /api/query</code> 用的是 <code>backend/app/agent/orchestrator.py</code> 里默认的 <code>OfflineContextBuilder</code>。</li>
+<li><strong>走哪条路</strong>：主链路 <code>POST /api/query</code> 用的是 <code>system/backend/app/agent/orchestrator.py</code> 里默认的 <code>OfflineContextBuilder</code>。</li>
 <li><strong>读什么</strong>：8 个阶段只读契约（表粒度、字段角色、枚举值域），不打开 ES/Qdrant 连接。</li>
 </ul>
 </li>
@@ -114,7 +117,7 @@ S3 PASS
 </blockquote>
 <h2>拆一刀</h2>
 <p>本页的刀：把检索停掉，看哪些成功是契约兜底、哪些是机器硬撑。</p>
-<p><strong>动手前确认还在同一个终端、且已 <code>source scripts/export-docker-env.sh</code></strong>（新终端先补一次）。</p>
+<p><strong>动手前确认还在同一个终端、且已 <code>source toolbox/scripts/export-docker-env.sh</code></strong>（新终端先补一次）。</p>
 <p><strong>没 source 的红法</strong>：直接跑 pytest 会先红 <code>Failed: REBUILD_INTEGRATION=1 但服务不可用：{'mysql': False, …}</code>，那不是黄金集变红。</p>
 <ol>
 <li><strong>只停检索，别停整栈。</strong> <code>make docker-down</code> 会把库和入口一起停掉，下一页还要用；这里只停一座检索存储（停 Qdrant 效果一样——检索的验收依赖三样，少一样就整条不工作）：</li>
@@ -124,7 +127,8 @@ S3 PASS
 <pre><code class="language-bash">docker compose stop elasticsearch
 </code></pre>
 <ol start="2">
-<li><strong>再查一次数。</strong> 走第 13 页的前端入口（命令里的 <code>8080</code> 是 <code>.env</code> 默认值；第 13 页改过 <code>FRONTEND_HOST_PORT</code> 就换成你的端口——端口不对会回 404 <code>Router not found</code>，像接口坏了）：</li>
+<li><strong>再查一次数。</strong> 走第 13 页的前端入口（命令里的 <code>8080</code> 是 <code>.env</code> 默认值；第 13 页改过 <code>FRONTEND_HOST_PORT</code> 就换成你的端口——端口不对会回 404 <code>Router not found</code>，像接口坏了）：
+<strong>字段名注意</strong>：第 4–7 章的 lab 版收 <code>{"question":...}</code>；从第 13 章起的整栈收 <code>{"query":...}</code>。拿前半本的 curl 直接打 8080 会 422，不是服务坏了。</li>
 </ol>
 <!-- verify: page14-curl-query -->
 
@@ -138,7 +142,7 @@ S3 PASS
 </ol>
 <!-- verify: page14-pytest-recall-integration -->
 
-<pre><code class="language-bash">(cd backend &amp;&amp; REBUILD_INTEGRATION=1 .venv/bin/python -m pytest -q tests/recall)
+<pre><code class="language-bash">(cd system/backend &amp;&amp; REBUILD_INTEGRATION=1 .venv/bin/python -m pytest -q tests/recall)
 </code></pre>
 <pre><code class="language-text">18 passed, 23 errors in 0.58s
 Failed: REBUILD_INTEGRATION=1 但服务不可用：{'mysql': True, 'es': False, 'qdrant': True}；请先启动 MySQL/ES/Qdrant 并 make stage2
@@ -155,7 +159,7 @@ Failed: REBUILD_INTEGRATION=1 但服务不可用：{'mysql': True, 'es': False, 
 until docker compose ps elasticsearch | grep -q '(healthy)'; do sleep 2; done   # 无输出地退出 = 已 healthy
 </code></pre>
 <p><strong>回绿</strong>：再跑一次 <code>make stage3</code> 回到 <code>S3 PASS</code>（本页实测过）。</p>
-<p><strong>快照留着</strong>：本页没改被跟踪的代码/契约，<code>scripts/lab reset</code> 用不上，快照留给重做本页兜底：</p>
+<p><strong>快照留着</strong>：本页没改被跟踪的代码/契约，<code>toolbox/scripts/lab reset</code> 用不上，快照留给重做本页兜底：</p>
 <!-- verify: page14-stage3-regreen -->
 
 <pre><code class="language-bash">make stage3

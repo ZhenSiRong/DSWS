@@ -20,16 +20,16 @@ S7 的目标：**前端从契约生成，不从记忆硬编码**。路线图要 
 
 | 来源 | 位置 |
 |---|---|
-| 路线图 S7 | `packages/A020-电商问数智能体实战教程fixed-clean.zip` → `code/shopkeeper-agent/docs/REBUILD-ROADMAP.md` §5「S7 · 前端」 |
-| 13 条前端缺陷 F1–F13 | 同上 zip → `docs/audit-frontend-contract.md` §5.1 |
-| 后端配合项 B1–B4 | 同上 zip → `docs/audit-frontend-contract.md` §5.2 |
-| 空结果语义 FP-8 | 同上 zip → `docs/audit-silent-failure.md` |
+| 路线图 S7 | `materials/packages/A020-电商问数智能体实战教程fixed-clean.zip` → `code/shopkeeper-agent/docs/REBUILD-ROADMAP.md` §5「S7 · 前端」 |
+| 13 条前端缺陷 F1–F13 | 同上 zip → `materials/docs/audit-frontend-contract.md` §5.1 |
+| 后端配合项 B1–B4 | 同上 zip → `materials/docs/audit-frontend-contract.md` §5.2 |
+| 空结果语义 FP-8 | 同上 zip → `materials/docs/audit-silent-failure.md` |
 
 路线图 S7 的原文交付物 / 验收：
 
 ```
 交付物
-  - 事件类型联合（zod / TS 生成自 contracts/sse.schema.json）
+  - 事件类型联合（zod / TS 生成自 system/contracts/sse.schema.json）
   - 数字/字符串类型保真（Decimal 不再变字符串）
   - 空数组 → 显式"无数据"；全 null 列 → 显式标注
   - 步骤目录来自 API；conditional 步骤显示"未触发"
@@ -51,7 +51,7 @@ Demo：重录三支视频（正常 / 示例 / 失败），与旧版逐帧对比
 
 ### 2.1 后端：数字/字符串类型保真 ✅
 
-**新增 `backend/app/agent/values.py`**
+**新增 `system/backend/app/agent/values.py`**
 
 | 数据库类型 | 归一化前 | 归一化后 | JSON |
 |---|---|---|---|
@@ -68,13 +68,13 @@ Demo：重录三支视频（正常 / 示例 / 失败），与旧版逐帧对比
 - 遇到不认识的类型**不降级成字符串**。降级就是审计 B4 那个缺陷本身；宁可
   让整次问数变成 `INTERNAL_ERROR`，也不要给用户一份被悄悄改过类型的数据。
 
-**改动 `backend/app/agent/orchestrator.py`**
+**改动 `system/backend/app/agent/orchestrator.py`**
 
 - `_cell_type()`：`Decimal` 现在推成 `number`（之前落进 `string` 分支）。
 - `to_result_payload()`：**先从原始值推列类型，再归一化单元格**。顺序不能反——
   归一化之后 `date` 变成字符串，类型就推成 `string` 了，而契约说的是「这列本来是日期」。
 
-**改动 `backend/app/main.py`**
+**改动 `system/backend/app/main.py`**
 
 - `_sse()` 刻意**不传 `default=str`**（旧系统传了，于是 Decimal 静悄悄变字符串）。
   现在漏网的类型会炸成 `INTERNAL_ERROR`，而不是悄悄改类型。
@@ -85,20 +85,20 @@ Demo：重录三支视频（正常 / 示例 / 失败），与旧版逐帧对比
 
 ### 2.2 契约 → TypeScript 生成 ✅
 
-**新增 `backend/app/scripts/contracts_gen.py`**
+**新增 `system/backend/app/scripts/contracts_gen.py`**
 
 ```bash
-cd backend && uv run python -m app.scripts.contracts_gen          # 生成
-cd backend && uv run python -m app.scripts.contracts_gen --check  # 校验新鲜度
+cd system/backend && uv run python -m app.scripts.contracts_gen          # 生成
+cd system/backend && uv run python -m app.scripts.contracts_gen --check  # 校验新鲜度
 ```
 
 生成物（**都在仓库里，不要手改**）：
 
 | 文件 | 内容 | 谁用 |
 |---|---|---|
-| `frontend/src/generated/sse.ts` | 事件联合 + 派生别名 | 前端全部代码 |
-| `frontend/src/generated/sse.schema.json` | `contracts/sse.schema.json` 的副本 | 前端运行时校验 |
-| `frontend/src/generated/contract.json` | 步骤目录 + 错误码表 | 回放服务器（`frontend/tests/`） |
+| `system/frontend/src/generated/sse.ts` | 事件联合 + 派生别名 | 前端全部代码 |
+| `system/frontend/src/generated/sse.schema.json` | `system/contracts/sse.schema.json` 的副本 | 前端运行时校验 |
+| `system/frontend/src/generated/contract.json` | 步骤目录 + 错误码表 | 回放服务器（`system/frontend/tests/`） |
 
 **生成器的三条规矩**（改生成器前先读）：
 
@@ -120,13 +120,13 @@ cd backend && uv run python -m app.scripts.contracts_gen --check  # 校验新鲜
    export type CellValue = ResultDataRowValue;
    ```
 
-**前端**（`frontend/src/types.ts`）现在只做**转出**，事件相关的类型全部来自生成物。
+**前端**（`system/frontend/src/types.ts`）现在只做**转出**，事件相关的类型全部来自生成物。
 手写的只剩不在 SSE 契约里的东西：`StepDef` / `RunStatus` / `ErrorCodeSpec`
 （它们各有各的契约文件 `steps.yaml` / `errors.yaml`，由后端通过 API 下发）。
 
 ### 2.3 前端运行时校验 ✅
 
-**新增 `frontend/src/lib/json-schema.ts`**：一台**通用** JSON Schema 校验器
+**新增 `system/frontend/src/lib/json-schema.ts`**：一台**通用** JSON Schema 校验器
 （draft 2020-12 的子集），不含任何业务知识。契约数据来自
 `generated/sse.schema.json`——**契约仍然是唯一事实源**，这台机器只是通用引擎。
 
@@ -140,7 +140,7 @@ cd backend && uv run python -m app.scripts.contracts_gen --check  # 校验新鲜
 
 ### 2.4 前端事件处理：契约驱动 ✅
 
-**`frontend/src/lib/api.ts` 重写**
+**`system/frontend/src/lib/api.ts` 重写**
 
 - `parseAgentEvent(value)` 现在返回**三种**结局（不是两种）：
 
@@ -160,7 +160,7 @@ cd backend && uv run python -m app.scripts.contracts_gen --check  # 校验新鲜
   5xx → `SERVER_ERROR`「问数服务异常」、网络不可达 → `NETWORK_ERROR`。
   旧系统一律「无法连接问数接口。」
 
-**`frontend/src/App.tsx`**
+**`system/frontend/src/App.tsx`**
 
 - 事件处理改成 `switch (event.type)`，不再有「其余全当 error」的兜底。
 - 未知事件类型会记一笔并显示一条 `.notice`（`data-testid="unknown-type-notice"`）。
@@ -169,7 +169,7 @@ cd backend && uv run python -m app.scripts.contracts_gen --check  # 校验新鲜
 
 ### 2.5 结果表：F4 / F6 / F10 / F13 ✅
 
-**新增 `frontend/src/lib/result.ts`**（纯函数，可单测）
+**新增 `system/frontend/src/lib/result.ts`**（纯函数，可单测）
 
 | 函数 | 作用 |
 |---|---|
@@ -178,7 +178,7 @@ cd backend && uv run python -m app.scripts.contracts_gen --check  # 校验新鲜
 | `buildCopyPayload(data)` | 复制的是 **JSON**（`{columns, rows}`），数字就是数字 |
 | `looksLikePseudoError(data)` | 伪 SQL 行止损：单行 + 单列 + 列名像错误文案 + 值是文本 |
 
-**`frontend/src/components/ResultTable.tsx` 重写**
+**`system/frontend/src/components/ResultTable.tsx` 重写**
 
 - F4：`rows` 为空 → `.result-empty` 空态块（`data-testid="result-empty"`），
   整张表**不消失**。
@@ -190,20 +190,20 @@ cd backend && uv run python -m app.scripts.contracts_gen --check  # 校验新鲜
   旧系统复制 `JSON.stringify(rows)`，而它的行里混着 `{"销量": "10"}`——复制出去
   下游拿到的就是字符串。JSON 至少能把「这是数字」和「这是字符串」如实记下来。
 
-**新增 `frontend/src/components/PseudoErrorCard.tsx`**（F5 止损）
+**新增 `system/frontend/src/components/PseudoErrorCard.tsx`**（F5 止损）
 
-- 刻意**不编造错误码**：契约里的码只有一份（`contracts/errors.yaml`），前端硬编一个
+- 刻意**不编造错误码**：契约里的码只有一份（`system/contracts/errors.yaml`），前端硬编一个
   码出来等于又抄了一份契约。真正的路径上错误码由后端带着 `type:"error"` 发过来。
 - 卡片带 `data-pseudo-error="true"`，红框长相。
 - 判据刻意保守（宁可漏判，也别把真的 1 行 1 列的表误判成失败）。
 
 ### 2.6 SSE 夹具录制 ✅
 
-**新增 `backend/app/scripts/record_sse.py`**
+**新增 `system/backend/app/scripts/record_sse.py`**
 
 ```bash
-cd backend && uv run python -m app.scripts.record_sse           # 录制
-cd backend && uv run python -m app.scripts.record_sse --check   # 对账
+cd system/backend && uv run python -m app.scripts.record_sse           # 录制
+cd system/backend && uv run python -m app.scripts.record_sse --check   # 对账
 ```
 
 - 录的是**真的字节流**：走场景应用（`app.main.create_app`）的同一条 HTTP/SSE 管道，
@@ -213,7 +213,7 @@ cd backend && uv run python -m app.scripts.record_sse --check   # 对账
   除此以外一个字节都不改。
 - `--check` 重新录一遍并与仓库里的文件逐字比对 → 不一致就退出码 1。
 
-**`fixtures/sse/` 共 14 条夹具**：
+**`system/fixtures/sse/` 共 14 条夹具**：
 
 | id | 来源 | 用途 |
 |---|---|---|
@@ -247,7 +247,7 @@ cd backend && uv run python -m app.scripts.record_sse --check   # 对账
 
 ### 2.7 样式 ✅
 
-`frontend/src/styles.css` 新增：`.result-block`、`.result-note`、`.result-actions`、
+`system/frontend/src/styles.css` 新增：`.result-block`、`.result-note`、`.result-actions`、
 `.result-hint`、`.col-flag`、`.col-all-null`、`.cell-numeric-string`、`.notice`、
 `.error-card--failure`。
 
@@ -256,13 +256,13 @@ cd backend && uv run python -m app.scripts.record_sse --check   # 对账
 ## 3. 当前可验证状态
 
 ```
-cd backend && uv run pytest -q                    → 521 passed, 30 skipped
-cd backend && uv run python -m app.scripts.contracts_gen --check
+cd system/backend && uv run pytest -q                    → 521 passed, 30 skipped
+cd system/backend && uv run python -m app.scripts.contracts_gen --check
                                                   → S7 CONTRACT GEN PASS（3 个文件）
-cd backend && uv run python -m app.scripts.record_sse --check
+cd system/backend && uv run python -m app.scripts.record_sse --check
                                                   → S7 SSE RECORD PASS（14 个夹具）
-cd frontend && npm run test                       → 40 passed（26 + 14）
-cd frontend && npx tsc --noEmit                   → 零错误
+cd system/frontend && npm run test                       → 40 passed（26 + 14）
+cd system/frontend && npx tsc --noEmit                   → 零错误
 ```
 
 ---
@@ -272,13 +272,13 @@ cd frontend && npx tsc --noEmit                   → 零错误
 > 以下 4.1–4.6 的「未写 / 未改」是交接时的状态；现已全部完成。
 > 4.7 的两条 commit 已落在 `main` 上。
 
-### 4.1 回放服务器 `frontend/tests/replay-server.mjs`（**已完成**）
+### 4.1 回放服务器 `system/frontend/tests/replay-server.mjs`（**已完成**）
 
 一个 Node `http` 服务器，把录制好的夹具按 SSE 吐出来，让前端对着它跑。
 
 - 路由：
   - `GET /api/health` → `{"status":"ok","stage":"S7"}`
-  - `GET /api/steps` → 读 `frontend/src/generated/contract.json` 的 `steps`
+  - `GET /api/steps` → 读 `system/frontend/src/generated/contract.json` 的 `steps`
   - `GET /api/errors` → 读同一文件的 `errors`
   - `POST /api/query` → 按 query 里的 `场景:<id>` 找夹具，逐帧吐出去
   - `POST /api/cancel` → `{"cancelled": true}`
@@ -289,7 +289,7 @@ cd frontend && npx tsc --noEmit                   → 零错误
 - 响应头带 `X-Request-Id`。
 - 要能模拟 HTTP 错误：约定 `场景:http_500` / `场景:http_422` → 直接返回对应状态码。
 
-### 4.2 13 条 F 缺陷的浏览器用例 `frontend/tests/s7_frontend.mjs`（**已完成**）
+### 4.2 13 条 F 缺陷的浏览器用例 `system/frontend/tests/s7_frontend.mjs`（**已完成**）
 
 每个 F 一条断言。映射表（**照这张表写**）：
 
@@ -311,15 +311,15 @@ cd frontend && npx tsc --noEmit                   → 零错误
 
 > F13 的「复制内容本身」用 **Vitest 单测**断言（`buildCopyPayload`），浏览器里
 > 断言剪贴板不可靠（无头环境没有剪贴板权限）。这条已在
-> `frontend/src/lib/result.test.ts` 里写好了。
+> `system/frontend/src/lib/result.test.ts` 里写好了。
 
 > F6 的夹具已补：`record_sse.py` 的 `HANDWRITTEN` 里新增 `null_column`
 > （`columns: [{name:"地区",type:"string"},{name:"退款额",type:"null"}]`，
 > `rows: [["华北", null], ["华南", null]]`），夹具总数因此是 14 条。
 
-### 4.3 `scripts/stage7-ui.sh`（**已完成**）
+### 4.3 `toolbox/scripts/stage7-ui.sh`（**已完成**）
 
-照抄 `scripts/stage6-ui.sh` 的结构（隔离端口、按 pid 清理、**不要** `pkill`）：
+照抄 `toolbox/scripts/stage6-ui.sh` 的结构（隔离端口、按 pid 清理、**不要** `pkill`）：
 
 - 起回放服务器（Node，`node tests/replay-server.mjs --port 8103`）
 - 起前端（`VITE_DEV_PROXY_TARGET=http://127.0.0.1:8103 npm run dev -- --port 5276`）
@@ -330,17 +330,17 @@ cd frontend && npx tsc --noEmit                   → 零错误
 ```make
 stage7:
 	@echo "== S7 · 契约生成物新鲜度 =="
-	cd backend && uv run python -m app.scripts.contracts_gen --check
+	cd system/backend && uv run python -m app.scripts.contracts_gen --check
 	@echo "== S7 · SSE 夹具与真实输出一致 =="
-	cd backend && uv run python -m app.scripts.record_sse --check
+	cd system/backend && uv run python -m app.scripts.record_sse --check
 	@echo "== S7 · 前端契约测试 =="
-	cd backend && uv run pytest -q tests/frontend
+	cd system/backend && uv run pytest -q tests/frontend
 	@echo "== S7 · 前端协议单测 =="
-	cd frontend && npm run test
+	cd system/frontend && npm run test
 	@echo "== S7 · 前端类型检查 + 构建 =="
-	cd frontend && npm run build
+	cd system/frontend && npm run build
 	@echo "== S7 · 全部后端测试 =="
-	cd backend && uv run pytest -q
+	cd system/backend && uv run pytest -q
 	@echo "S7 PASS"
 
 stage7-ui:
@@ -351,7 +351,7 @@ stage7-ui:
 > 仓库的既有惯例是拆成 `stageN`（离线）+ `stageN-ui`（浏览器），S6 就是这么做的。
 > **照惯例拆**，并在文档里说明这个偏离。
 
-### 4.5 后端契约测试 `backend/tests/frontend/`（**已完成**）
+### 4.5 后端契约测试 `system/backend/tests/frontend/`（**已完成**）
 
 建议三个文件：
 
@@ -360,12 +360,12 @@ stage7-ui:
   - 生成物里**不出现**手写的枚举副本（`"failure" | "empty" | "cancelled"` 只在
     `ErrorEvent["class"]` 里定义，别处不许再抄）
   - 契约里出现生成器不认识的**约束**关键字 → 生成器报错（造一个假 schema 试）
-  - `sse.schema.json` 的 `error.class` 枚举 == `contracts/errors.yaml` 的 `classes`
+  - `sse.schema.json` 的 `error.class` 枚举 == `system/contracts/errors.yaml` 的 `classes`
 - `test_sse_fixtures.py`
-  - `fixtures/sse/*.json` 每一条帧都是合法 JSON
-  - 每一条帧都过 `contracts/sse.schema.json`（`jsonschema`）
-  - 帧里的 `step` 都在 `contracts/steps.yaml` 里
-  - 帧里的 `error.code` 都在 `contracts/errors.yaml` 里
+  - `system/fixtures/sse/*.json` 每一条帧都是合法 JSON
+  - 每一条帧都过 `system/contracts/sse.schema.json`（`jsonschema`）
+  - 帧里的 `step` 都在 `system/contracts/steps.yaml` 里
+  - 帧里的 `error.code` 都在 `system/contracts/errors.yaml` 里
   - 手写的夹具（`source: "handwritten"`）也要过契约
 - `test_type_fidelity.py`
   - `Decimal("10")` 经 `to_result_payload` 后是 `int` 10，`json.dumps` 出来是 `10` 不是 `"10"`
@@ -376,7 +376,7 @@ stage7-ui:
 ### 4.6 正式文档（**已完成**）
 
 - `README.md`：S7 章节（路线图 S7 那一节的展开）+ 进度表 S7 → ✅
-- `docs/SETUP-FROM-SCRATCH.md`：加 §2.10（S7）、阶段表、测试数、排障表、
+- `materials/docs/SETUP-FROM-SCRATCH.md`：加 §2.10（S7）、阶段表、测试数、排障表、
   已验证 / 未验证清单；§8 指向 S8
 - 数字要同步：`462 passed` → 加完前端契约测试后的实际数字
 
@@ -417,14 +417,14 @@ stage7-ui:
 5. **SSE 帧是 `data: {json}` 一行**，`_split_frames` 按 `\n\n` 切；最后一段可能没有结尾空行。
 6. **录制的取消夹具**：取消开关必须在**编排器构造之前**就拉下，否则会真的跑一遍
    上下文（`cancel.cancel()` 写在 factory 里，不是写在 runner 之后）。
-7. **回放服务器不能有 `pkill`**：只按自己记下的 pid 清理（`scripts/stage6-ui.sh` 是范本）。
+7. **回放服务器不能有 `pkill`**：只按自己记下的 pid 清理（`toolbox/scripts/stage6-ui.sh` 是范本）。
 8. **`--no-sandbox` 只在 Linux 加**：Windows 上加了没有意义，还关掉一层保护
-   （`frontend/tests/chrome.mjs` 的 `launchArgs()` 已经处理好）。
+   （`system/frontend/tests/chrome.mjs` 的 `launchArgs()` 已经处理好）。
 9. **中文输出在 git-bash 里是 GBK**：打印长中文段落会花掉。要看内容就写进文件用
    Read 工具读，不要直接 `cat` 到终端。
-10. **`pytest` 的 `ROOT` 层级**：`backend/tests/agent/*.py` 用 `parents[3]`，
-    `backend/tests/*.py` 用 `parents[2]`。
-11. **导入 conftest**：`backend/tests/` 下没有 `__init__.py`，要 `from conftest import ...`
+10. **`pytest` 的 `ROOT` 层级**：`system/backend/tests/agent/*.py` 用 `parents[3]`，
+    `system/backend/tests/*.py` 用 `parents[2]`。
+11. **导入 conftest**：`system/backend/tests/` 下没有 `__init__.py`，要 `from conftest import ...`
     （不是 `from .conftest import ...`）。
 
 ---
@@ -433,42 +433,42 @@ stage7-ui:
 
 ### 新增
 ```
-backend/app/agent/values.py                     单元格值归一化
-backend/app/scripts/contracts_gen.py            契约 → TS 生成器
-backend/app/scripts/record_sse.py               SSE 字节流录制器
-frontend/src/generated/sse.ts                   ★ 生成物
-frontend/src/generated/sse.schema.json          ★ 生成物
-frontend/src/generated/contract.json            ★ 生成物
-frontend/src/lib/json-schema.ts                 通用 JSON Schema 校验器
-frontend/src/lib/result.ts                      结果表语义分析
-frontend/src/lib/result.test.ts                 ★ 单测（14）
-frontend/src/components/PseudoErrorCard.tsx     F5 止损卡
-fixtures/sse/*.json                             14 条 SSE 夹具
-docs/S7-HANDOFF.md                              本文件
+system/backend/app/agent/values.py                     单元格值归一化
+system/backend/app/scripts/contracts_gen.py            契约 → TS 生成器
+system/backend/app/scripts/record_sse.py               SSE 字节流录制器
+system/frontend/src/generated/sse.ts                   ★ 生成物
+system/frontend/src/generated/sse.schema.json          ★ 生成物
+system/frontend/src/generated/contract.json            ★ 生成物
+system/frontend/src/lib/json-schema.ts                 通用 JSON Schema 校验器
+system/frontend/src/lib/result.ts                      结果表语义分析
+system/frontend/src/lib/result.test.ts                 ★ 单测（14）
+system/frontend/src/components/PseudoErrorCard.tsx     F5 止损卡
+system/fixtures/sse/*.json                             14 条 SSE 夹具
+materials/docs/S7-HANDOFF.md                              本文件
 ```
 
 ### 改动
 ```
-backend/app/agent/orchestrator.py               _cell_type / to_result_payload
-backend/app/main.py                             _sse 不再用 default=str
-frontend/src/types.ts                           改成转出生成物
-frontend/src/lib/api.ts                         契约驱动的事件解析 + HTTP 分级
-frontend/src/lib/sse.test.ts                    按新 API 重写（26）
-frontend/src/components/ResultTable.tsx         F4/F6/F10/F13
-frontend/src/App.tsx                            switch 事件处理（F3）+ 伪 SQL 止损
-frontend/src/styles.css                         新样式
+system/backend/app/agent/orchestrator.py               _cell_type / to_result_payload
+system/backend/app/main.py                             _sse 不再用 default=str
+system/frontend/src/types.ts                           改成转出生成物
+system/frontend/src/lib/api.ts                         契约驱动的事件解析 + HTTP 分级
+system/frontend/src/lib/sse.test.ts                    按新 API 重写（26）
+system/frontend/src/components/ResultTable.tsx         F4/F6/F10/F13
+system/frontend/src/App.tsx                            switch 事件处理（F3）+ 伪 SQL 止损
+system/frontend/src/styles.css                         新样式
 ```
 
 ### 尚未改动（接手时要动）
 ```
-backend/tests/frontend/                         ★ 新建
-backend/tests/agent/test_values.py              ★ 新建
-frontend/tests/replay-server.mjs                ★ 新建
-frontend/tests/s7_frontend.mjs                  ★ 新建
-frontend/package.json                           加 test:ui:s7
-scripts/stage7-ui.sh                            ★ 新建
+system/backend/tests/frontend/                         ★ 新建
+system/backend/tests/agent/test_values.py              ★ 新建
+system/frontend/tests/replay-server.mjs                ★ 新建
+system/frontend/tests/s7_frontend.mjs                  ★ 新建
+system/frontend/package.json                           加 test:ui:s7
+toolbox/scripts/stage7-ui.sh                            ★ 新建
 Makefile                                       加 stage7 / stage7-ui
-README.md / docs/SETUP-FROM-SCRATCH.md          ★ S7 章节
+README.md / materials/docs/SETUP-FROM-SCRATCH.md          ★ S7 章节
 ```
 
 ---

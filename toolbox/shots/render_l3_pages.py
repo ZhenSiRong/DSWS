@@ -4,7 +4,7 @@
 
 一条命令重跑全部图（在仓库根目录）：
 
-    python3 manual/shots/render_l3_pages.py
+    python3 tutorial/shots/render_l3_pages.py
 
 做四件事：
 
@@ -23,40 +23,40 @@
      → `stop elasticsearch` → `curl /api/query` 仍回 41099.5
      → 黄金集 `18 passed, 23 errors` → `start elasticsearch` 等回 healthy；
    - 第 15 页：`make baseline` 绿（10/10）→ 改**副本**契约的 GMV 公式 → 红（8/10）
-     → `scripts/lab reset p15-before --yes` → 再跑回绿；
+     → `toolbox/scripts/lab reset p15-before --yes` → 再跑回绿；
    - 第 16 页：`pytest test_guard.py` 26 passed → `failures --check` S6 PASS
      → `probe_correction` total 20 / mismatch 0 + 码分布；
    - 第 17 页：`pytest test_correct.py` 14 passed → `failures --check` S6 PASS
      → `corrected` 期望 result / 实际 result + 9·11 重试标记统计
      → 拆一刀（关掉纠正入口）→ pytest 5 failed / 失败矩阵 FAIL: 1 项 / 语料 mismatch 0
-     → `scripts/lab reset p17-before --yes` → 回绿。
+     → `toolbox/scripts/lab reset p17-before --yes` → 回绿。
 4. 渲染 6 张 3200×…（宽 3200 = 1600 CSS px @2x，高按内容自适应：内容+80px 留白，下限 600、上限 7200）深色终端图，并做图文
    一致性自检：页面「## 你应该看到」的样例块逐行对账（`…` 当通配符）、OCR 关键字
    抽检、禁止字符串（用户名 / 主机名 / 绝对路径 / 隔离端口）、PNG 尺寸。
 
 输出（只写这 6 个文件）：
 
-    manual/images/page-14-stage3.png     第 14 页 `make stage3` 的 S2/S3 输出
-    manual/images/page-14-stop-es.png    第 14 页停 ES 后：查数 41099.5 + 黄金集 23 errors
-    manual/images/page-15-baseline.png   第 15 页 `make baseline` 绿 / 拆一刀后红（两屏对照）
-    manual/images/page-16-guard.png      第 16 页 26 passed + S6 PASS + mismatch 0
-    manual/images/page-17-correct.png    第 17 页 14 passed + S6 PASS + 9/11 统计
-    manual/images/page-17-ablation.png   第 17 页拆一刀后的红（pytest / 矩阵 / 语料）
+    tutorial/images/page-14-stage3.png     第 14 页 `make stage3` 的 S2/S3 输出
+    tutorial/images/page-14-stop-es.png    第 14 页停 ES 后：查数 41099.5 + 黄金集 23 errors
+    tutorial/images/page-15-baseline.png   第 15 页 `make baseline` 绿 / 拆一刀后红（两屏对照）
+    tutorial/images/page-16-guard.png      第 16 页 26 passed + S6 PASS + mismatch 0
+    tutorial/images/page-17-correct.png    第 17 页 14 passed + S6 PASS + 9/11 统计
+    tutorial/images/page-17-ablation.png   第 17 页拆一刀后的红（pytest / 矩阵 / 语料）
 
 几条约定：
 
 - 页面命令里的 `docker compose` 在副本里执行时加 `-p shotsl3b`，`8080` 换成 18077；
   图里显示的仍是页面原文。临时容器 / 卷 / 网络跑完 `down -v` 清掉。
 - 仓库文件一个都不改：改契约、拆纠错代码只发生在 `/tmp/shots-l3b` 副本里，跑完用
-  副本里的 `scripts/lab reset` 还原；仓库 `backend/uv.lock` 若被改会 `git checkout --`。
+  副本里的 `toolbox/scripts/lab reset` 还原；仓库 `system/backend/uv.lock` 若被改会 `git checkout --`。
 - 依赖（本机已有，不新装）：docker、google-chrome、ImageMagick convert/identify、
-  rsync、仓库自带 `backend/.venv`；OCR 自检可选依赖 tesseract + Pillow（没装就跳过，
+  rsync、仓库自带 `system/backend/.venv`；OCR 自检可选依赖 tesseract + Pillow（没装就跳过，
   主对账用渲染前原文完成）。
 
 调试用（不参与正常流程）：
 
-    python3 manual/shots/render_l3_pages.py --keep            留 /tmp/shots-l3b 和栈
-    python3 manual/shots/render_l3_pages.py --render-only FILE 用捕获缓存只重渲染图
+    python3 tutorial/shots/render_l3_pages.py --keep            留 /tmp/shots-l3b 和栈
+    python3 tutorial/shots/render_l3_pages.py --render-only FILE 用捕获缓存只重渲染图
 """
 
 from __future__ import annotations
@@ -81,7 +81,7 @@ from pathlib import Path
 
 # ---------------------------------------------------------------- 常量
 
-HERE = Path(__file__).resolve().parent          # manual/shots
+HERE = Path(__file__).resolve().parent          # tutorial/shots
 REPO = HERE.parents[1]                          # 仓库根目录
 IMAGES = REPO / "manual" / "images"
 PAGE_MD = {
@@ -107,7 +107,7 @@ HOST_PORTS = {
     "FRONTEND_HOST_PORT": 18077,
 }
 DISPLAY_FRONTEND_PORT = 8080                    # 页面原文端口（渲染进图）
-EXEC_ENV_PREFIX = "source scripts/export-docker-env.sh"
+EXEC_ENV_PREFIX = "source toolbox/scripts/export-docker-env.sh"
 UV_OFFLINE = "1"                                # 副本里 uv run 不联网
 
 WINDOW_W_CSS = 1600                             # 窗宽 1600 CSS px
@@ -157,7 +157,7 @@ EMBED_LINES = {
 
 # ---------------------------------------------------------------- 复用 term_render
 
-sys.dont_write_bytecode = True                  # 不在 manual/shots 里写 __pycache__
+sys.dont_write_bytecode = True                  # 不在 tutorial/shots 里写 __pycache__
 sys.path.insert(0, str(HERE))
 import term_render as tr  # noqa: E402
 
@@ -361,7 +361,7 @@ def preflight() -> None:
     if missing:
         sys.exit(f"缺少依赖：{', '.join(missing)}（本脚本不装新依赖）")
     if not (REPO / "backend" / ".venv" / "bin" / "python").exists():
-        sys.exit("backend/.venv 不存在；先按第 0 页准备好环境")
+        sys.exit("system/backend/.venv 不存在；先按第 0 页准备好环境")
     if not (REPO / ".env").is_file():
         sys.exit("缺少 .env；先按第 13 页 `make docker-env` 生成")
     for image in (IMAGE_BACKEND, IMAGE_FRONTEND):
@@ -808,38 +808,38 @@ def cmd(text: str) -> dict:
 
 
 # 页面命令原文（渲染进图；执行时由 exec_cmd / with_env 换成隔离环境）
-CMD14_SOURCE_STAGE3 = "source scripts/export-docker-env.sh\nmake stage3"
+CMD14_SOURCE_STAGE3 = "source toolbox/scripts/export-docker-env.sh\nmake stage3"
 CMD14_CURL = (
     "curl -s -N -X POST http://127.0.0.1:8080/api/query "
     "-H 'Content-Type: application/json' -d '{\"query\":\"华北销售额\"}' "
     "| grep '\"type\": \"result\"'"
 )
-CMD14_RECALL_RED = "(cd backend && REBUILD_INTEGRATION=1 .venv/bin/python -m pytest -q tests/recall)"
-CMD14_RECALL_OFFLINE = "backend/.venv/bin/python -m pytest backend/tests/recall -q"
+CMD14_RECALL_RED = "(cd system/backend && REBUILD_INTEGRATION=1 .venv/bin/python -m pytest -q tests/recall)"
+CMD14_RECALL_OFFLINE = "system/backend/.venv/bin/python -m pytest system/backend/tests/recall -q"
 CMD15_BASELINE = "make baseline"
-CMD15_SAVE = "scripts/lab save p15-before"
-CMD15_RESET = "scripts/lab reset p15-before --yes"
-CMD16_GUARD = "backend/.venv/bin/python -m pytest backend/tests/generate/test_guard.py -q"
-CMD16_MATRIX = "(cd backend && .venv/bin/python -m app.scripts.failures --check)"
-CMD16_PROBE = "PYTHONPATH=backend backend/.venv/bin/python eval/probe_correction.py | tail -1"
+CMD15_SAVE = "toolbox/scripts/lab save p15-before"
+CMD15_RESET = "toolbox/scripts/lab reset p15-before --yes"
+CMD16_GUARD = "system/backend/.venv/bin/python -m pytest system/backend/tests/generate/test_guard.py -q"
+CMD16_MATRIX = "(cd system/backend && .venv/bin/python -m app.scripts.failures --check)"
+CMD16_PROBE = "PYTHONPATH=system/backend system/backend/.venv/bin/python system/eval/probe_correction.py | tail -1"
 CMD16_DIST = (
-    "grep -o '\"expect_code\": \"[A-Z_]*\"' eval/correction.jsonl "
+    "grep -o '\"expect_code\": \"[A-Z_]*\"' system/eval/correction.jsonl "
     "| awk -F'\"' '{print $4}' | sort | uniq -c | sort -rn"
 )
-CMD17_SAVE = "scripts/lab save p17-before"
-CMD17_RESET = "scripts/lab reset p17-before --yes"
-CMD17_PYTEST = "backend/.venv/bin/python -m pytest backend/tests/agent/test_correct.py -q"
-CMD17_MATRIX = "(cd backend && .venv/bin/python -m app.scripts.failures --check)"
+CMD17_SAVE = "toolbox/scripts/lab save p17-before"
+CMD17_RESET = "toolbox/scripts/lab reset p17-before --yes"
+CMD17_PYTEST = "system/backend/.venv/bin/python -m pytest system/backend/tests/agent/test_correct.py -q"
+CMD17_MATRIX = "(cd system/backend && .venv/bin/python -m app.scripts.failures --check)"
 CMD17_SCENARIOS = (
-    "(cd backend && .venv/bin/python -m app.scripts.failures --scenarios | grep corrected)"
+    "(cd system/backend && .venv/bin/python -m app.scripts.failures --scenarios | grep corrected)"
 )
 CMD17_COUNTS = (
-    "grep -o '\"retryable\": [a-z]*' eval/correction.jsonl | sort | uniq -c\n"
-    "grep -o '\"expect\": \"[a-z]*\"' eval/correction.jsonl | sort | uniq -c"
+    "grep -o '\"retryable\": [a-z]*' system/eval/correction.jsonl | sort | uniq -c\n"
+    "grep -o '\"expect\": \"[a-z]*\"' system/eval/correction.jsonl | sort | uniq -c"
 )
 CMD17_ABL_PYTEST = CMD17_PYTEST
 CMD17_ABL_MATRIX = (
-    "(cd backend && PYTHONUNBUFFERED=1 .venv/bin/python -m app.scripts.failures --check) "
+    "(cd system/backend && PYTHONUNBUFFERED=1 .venv/bin/python -m app.scripts.failures --check) "
     "2>&1 | tail -5"
 )
 CMD17_ABL_PROBE = CMD16_PROBE
@@ -919,7 +919,7 @@ def capture_with_retry(records: dict, key: str, display_cmd: str, work: Path,
 def capture_all(work: Path, records: dict, extra: list[str]) -> None:
     # ================================================== 第 14 页
     section("第 14 页 · 审检索（page-14.md）")
-    run_quiet(records, "14_save", "scripts/lab save p14-before", work, timeout=180)
+    run_quiet(records, "14_save", "toolbox/scripts/lab save p14-before", work, timeout=180)
     captures_run(records, "14_recall_offline", CMD14_RECALL_OFFLINE, work,
                  timeout=120)
 
@@ -1549,15 +1549,15 @@ def main(argv: list[str] | None = None) -> int:
             lock = REPO / "backend" / "uv.lock"
             tracked = subprocess.run(
                 ["git", "-C", str(REPO), "status", "--porcelain", "--",
-                 "backend/uv.lock"],
+                 "system/backend/uv.lock"],
                 capture_output=True, text=True, timeout=60,
             ).stdout.strip()
             if tracked:
                 subprocess.run(["git", "-C", str(REPO), "checkout", "--",
-                                "backend/uv.lock"], timeout=60)
-                say("  ✅ backend/uv.lock 被改过，已 git checkout -- 还原（仓库副本未动）")
+                                "system/backend/uv.lock"], timeout=60)
+                say("  ✅ system/backend/uv.lock 被改过，已 git checkout -- 还原（仓库副本未动）")
             else:
-                say("  ✅ backend/uv.lock 未被改动（命令都在 /tmp 副本里跑）")
+                say("  ✅ system/backend/uv.lock 未被改动（命令都在 /tmp 副本里跑）")
             user_after = docker_snapshot()
             if user_before == user_after:
                 say(f"  ✅ 用户栈未变（{len(user_before)} 个非 {PROJECT}- 容器前后一致）")

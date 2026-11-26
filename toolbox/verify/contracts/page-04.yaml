@@ -1,6 +1,6 @@
 # 第 4 页 · 加一个能收问题的接口 —— 教材可跟随性契约（仅 T0 静态）
 #
-# schema 与规则见 manual/verify/README.md。
+# schema 与规则见 tutorial/verify/README.md。
 # 本页要真起 8000 端口的 uvicorn、再开另一个终端连发 curl 真端口，块无法在 CI 离线跑，
 # 故 coverage: static：只查页面引用的文件还在、关键符号还命中，不执行任何命令
 # （不跑 docker / uvicorn / curl / make）。页面也不挂 verify 块注解。
@@ -10,10 +10,10 @@ coverage: static
 
 static:
   paths:
-    - manual/page-03.md              # 「用第 3 页那条命令重启」的定义处
-    - backend/pyproject.toml         # uvicorn 依赖来源
-    - manual/images/page-04-visual.webp
-    - manual/images/page-04-query-json.png
+    - tutorial/page-03.md              # 「用第 3 页那条命令重启」的定义处
+    - system/backend/pyproject.toml         # uvicorn 依赖来源
+    - tutorial/images/page-04-visual.webp
+    - tutorial/images/page-04-query-json.png
   symbols:
-    - {file: backend/pyproject.toml, pattern: '"uvicorn\[standard\]>=0\.32"'}
-    - {file: manual/page-03.md, pattern: 'uvicorn lab\.app:app'}
+    - {file: system/backend/pyproject.toml, pattern: '"uvicorn\[standard\]>=0\.32"'}
+    - {file: tutorial/page-03.md, pattern: 'uvicorn lab\.app:app'}

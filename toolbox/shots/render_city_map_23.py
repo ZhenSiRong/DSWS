@@ -4,20 +4,20 @@
 
 在仓库根目录一条命令重出图（只写一张 PNG，旧图旧数据一律不动）：
 
-    python3 manual/shots/render_city_map_23.py
+    python3 tutorial/shots/render_city_map_23.py
 
 读（唯一事实源）：
-    `manual/city/data-23.json`
+    `tutorial/city/data-23.json`
       canvas        1600×1000 CSS（@2x = 3200×2000，与旧图 city-map-l1.png 同尺寸）
       facilities    L1 十件设施（逐字等于 data.json：位置 / 尺寸 / 道路 / 图注内容全部复用）
       retrofits     13 件改造层设施（P10–P22，每件一条 level + page + from，以及 link_path
                     改造接入线；L2 蓝 / L3 橙 / L4 红）
       zones/citizen/roads/notes/granularity/levels/legend  L1 原样 + 新增「改造层」图例
       registry      门户区「改造层登记处」面板（13 条改造关系 + 整图图注）
-    只读比对 `manual/city/data.json`：L1 十件设施 / 四区 / 11 条道路必须逐字不变，否则报错。
+    只读比对 `tutorial/city/data.json`：L1 十件设施 / 四区 / 11 条道路必须逐字不变，否则报错。
 
 写：
-    `manual/images/city-map-23.png`  1600×1000 CSS @2x → 3200×2000
+    `tutorial/images/city-map-23.png`  1600×1000 CSS @2x → 3200×2000
 
 复用：优先 import `render_city_map.py`（旧图渲染脚本，不改它）——
   * 小工具 / 几何：esc、load_json、png_size、pos_size、flow_bbox、overlap、contains、
@@ -48,14 +48,14 @@ import sys
 import tempfile
 from pathlib import Path
 
-HERE = Path(__file__).resolve().parent                 # manual/shots
+HERE = Path(__file__).resolve().parent                 # tutorial/shots
 REPO = HERE.parents[1]
 CITY_DIR = REPO / "manual" / "city"
 DATA_PATH = CITY_DIR / "data-23.json"
 DATA_L1_PATH = CITY_DIR / "data.json"                  # 只读：证明 L1 原样
 IMAGES_DIR = REPO / "manual" / "images"
 OUT_PNG = IMAGES_DIR / "city-map-23.png"
-RERUN = "python3 manual/shots/render_city_map_23.py"
+RERUN = "python3 tutorial/shots/render_city_map_23.py"
 
 if str(HERE) not in sys.path:
     sys.path.insert(0, str(HERE))
@@ -618,7 +618,7 @@ __CSS__
     </div>
   </div>
   <footer id="ftr">
-    <div class="ftr-row ftr-r1"><span>数据源：<b>manual/city/data-23.json</b>（单源）· 一条命令重跑：<b>python3 manual/shots/render_city_map_23.py</b></span><span>旧图：<b>manual/images/city-map-l1.png</b>（L1-only，本图不改它）</span></div>
+    <div class="ftr-row ftr-r1"><span>数据源：<b>tutorial/city/data-23.json</b>（单源）· 一条命令重跑：<b>python3 tutorial/shots/render_city_map_23.py</b></span><span>旧图：<b>tutorial/images/city-map-l1.png</b>（L1-only，本图不改它）</span></div>
     <div class="ftr-row ftr-r2"><span>图注：同一片城区、同一套坐标 —— L1 十件设施原样保留，叠加 L2 换 4 / L3 审 4 / L4 守 5，共 23 件 = 23 页（P0–P22）。</span><span>改造关系表在门户区「改造层登记处」</span></div>
     <div class="ftr-row ftr-r3"><span class="hint">虚线 = 改造接入线：从改造层设施指向被改造的 L1 设施（如 <b>P11 契约校准站 ← P6 办事指南与规则室</b>）· 悬停看详情</span><span>答辩 / 概览用：不进程页面、不替代 page-00…page-22 验收</span></div>
   </footer>

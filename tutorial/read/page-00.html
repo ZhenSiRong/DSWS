@@ -9,7 +9,7 @@
 </head>
 <body>
 <main class="page">
-<p class="kicker">练本 · 阅读版（md 正典派生，改内容请改 manual/page-00.md）</p>
+<p class="kicker">练本 · 阅读版（md 正典派生，改内容请改 tutorial/page-00.md）</p>
 <h1>第 0 页 · 开课前准备</h1>
 <blockquote>
 <p><strong>城市坐标 · P0 市政配套 · 场地平整（交付物 ①）</strong>｜开工前先平场地、接水电：工具、依赖、三个端口备齐——这是全城第一件交付物，后面才有地方立楼。</p>
@@ -19,7 +19,7 @@
 <p>把克隆下来的仓库变成「能开始第 1 页」的状态：工具装齐、依赖装好、三个端口空着。这一页没有代码，也不讲业务概念，只补克隆后缺的东西。</p>
 <p><img alt="第 0 页 · 先体检，再开工：左边是真实工具（Docker/uv/Node+Make/curl/Git），右边是装修前验房——每件工具对应一个项目动作" src="../images/page-00-visual.webp" /></p>
 <h2>提前说明</h2>
-<p><strong>先确认起点</strong>：你已经克隆好仓库，终端停在<strong>仓库根目录</strong>（<code>ls</code> 能看到 <code>Makefile</code>、<code>backend/</code>、<code>fixtures/</code> 的那一层）。</p>
+<p><strong>先确认起点</strong>：你已经克隆好仓库，终端停在<strong>仓库根目录</strong>（<code>ls</code> 能看到 <code>Makefile</code>、<code>system/backend/</code>、<code>system/fixtures/</code> 的那一层）。</p>
 <p><strong>用 bash 敲</strong>：以下命令都在这一层敲（Windows 用 Git Bash 或 WSL；macOS 默认是 zsh，先敲一下 <code>bash</code>）。</p>
 <p><strong>安装</strong>好五样（安装方法见官方安装页）：</p>
 <ul>
@@ -36,12 +36,12 @@
 <p><strong>再装三件</strong>：<code>pipx install viztracer py-spy scalene</code>——隔离安装到 pipx 自己的环境，不污染项目 venv。</p>
 <p><strong>不装 pipx 也行</strong>：用 <code>uv tool install viztracer</code>（uv 直接装进工具环境）。</p>
 <p><strong>或建临时 venv</strong>：<code>uv venv /tmp/tools</code> 后 <code>uv pip install --python /tmp/tools/bin/python &lt;包名&gt;</code>。</p>
-<p><strong>p17 另有一步</strong>：要追项目自己的 pytest 时，另按该页第 5 步装进 <code>backend/.venv</code>。</p>
+<p><strong>p17 另有一步</strong>：要追项目自己的 pytest 时，另按该页第 5 步装进 <code>system/backend/.venv</code>。</p>
 <blockquote>
 <p><strong>注意</strong>：<code>make doctor</code> 不查宿主机 Python——只装了 <code>uv</code> 时，它管理的解释器不在系统 PATH 上。</p>
 <p><code>make docker-env</code> 会回退到 <code>uv python find</code>，若仍报错，装 Python 3.8+ 或先 <code>uv python install</code>。</p>
 </blockquote>
-<p><strong>三个被忽略的</strong>：<code>.env</code>、<code>backend/.venv</code>、<code>frontend/node_modules</code> 都被 <code>.gitignore</code> 忽略，克隆下来没有。</p>
+<p><strong>三个被忽略的</strong>：<code>.env</code>、<code>system/backend/.venv</code>、<code>system/frontend/node_modules</code> 都被 <code>.gitignore</code> 忽略，克隆下来没有。</p>
 <p><strong>怎么补</strong>：<code>.env</code> 不用你建（第 1 页会从 <code>.env.example</code> 读），后两个由 <code>make install</code> 生成，<strong>别手动 pip 装</strong>。</p>
 <h2>动手</h2>
 <p><strong>第 1 条 · 装依赖（必须在仓库根目录；第一次下载，再跑只要几秒，能重复跑）。</strong></p>
@@ -54,7 +54,7 @@
 <p><strong>想看明细</strong>：敲 <code>make doctor-v</code>（<code>-v</code> 会被 make 吃掉，所以是 <code>doctor-v</code>），看它到底查了什么、拿什么当判据。</p>
 <h2>你应该看到</h2>
 <p>第 1 条最长，真跑输出是（中间 62 行 <code>+ 包名==版本</code> 太长，只留两行）：</p>
-<pre><code class="language-text">cd backend &amp;&amp; uv sync --frozen
+<pre><code class="language-text">cd system/backend &amp;&amp; uv sync --frozen
 Using CPython 3.14.8
 Creating virtual environment at: .venv
 Prepared 62 packages in 12ms
@@ -62,7 +62,7 @@ Installed 62 packages in 41ms
  + annotated-doc==0.0.5
  + annotated-types==0.8.0
 …（其余安装清单略）
-cd frontend &amp;&amp; npm ci
+cd system/frontend &amp;&amp; npm ci
 added 118 packages, and audited 125 packages in 3s
 </code></pre>
 <p>第 2 条真跑输出是这四行——<strong>末行 <code>12/12 通过</code> 就是结论</strong>：</p>
@@ -84,10 +84,10 @@ added 118 packages, and audited 125 packages in 3s
 <li><code>✗ daemon</code>：装了但没跑起来——Docker Desktop 打开窗口；Linux 用 <code>sudo systemctl start docker</code>。</li>
 <li><strong>别被版本骗</strong>：<code>docker --version</code> 有输出<strong>不代表</strong> daemon 在跑。</li>
 <li><code>✗ uv</code> / <code>✗ node</code> / <code>✗ make</code> / <code>✗ curl</code>：对应工具没装，装完<strong>重开一个终端</strong>再试（老终端认不到新装的命令）。</li>
-<li><code>✗ Python</code>：<code>backend/.venv</code> 没造出来，多半是第 1 条失败了——先修 <code>make install</code>。</li>
-<li><strong>还不行就分开跑</strong>：网络问题重跑一次；再不行就分开跑 <code>cd backend &amp;&amp; uv sync --frozen</code> 和 <code>cd frontend &amp;&amp; npm ci</code>，看哪段先红。</li>
-<li><code>✗ uv 62 个包全兼容</code>：有包装不上或互相冲突，<code>cd backend &amp;&amp; uv sync --frozen</code> 会打印第一段红字，照它说缺什么。</li>
-<li><code>✗ npm 依赖无缺失</code>：跑 <code>cd frontend &amp;&amp; npm ci</code>（<strong>不要</strong>用 <code>npm install</code>，它会改写锁文件，后面的人装出来和你不一样）。</li>
+<li><code>✗ Python</code>：<code>system/backend/.venv</code> 没造出来，多半是第 1 条失败了——先修 <code>make install</code>。</li>
+<li><strong>还不行就分开跑</strong>：网络问题重跑一次；再不行就分开跑 <code>cd system/backend &amp;&amp; uv sync --frozen</code> 和 <code>cd system/frontend &amp;&amp; npm ci</code>，看哪段先红。</li>
+<li><code>✗ uv 62 个包全兼容</code>：有包装不上或互相冲突，<code>cd system/backend &amp;&amp; uv sync --frozen</code> 会打印第一段红字，照它说缺什么。</li>
+<li><code>✗ npm 依赖无缺失</code>：跑 <code>cd system/frontend &amp;&amp; npm ci</code>（<strong>不要</strong>用 <code>npm install</code>，它会改写锁文件，后面的人装出来和你不一样）。</li>
 <li><code>✗ 端口</code>：<code>ss -tlnp | grep -E ':(3307|8000|8081) '</code> 列出占用者，把 PID 那列找出来停掉。</li>
 <li><strong>看不到 PID</strong>：说明是 root 的进程（比如系统自带的 MySQL），加 <code>sudo</code> 再看：<code>sudo ss -tlnp | grep -E ':(3307|8000|8081) '</code>。</li>
 <li><strong>改端口要连带改</strong>：第 1 页写死 3307、第 3 页写死 8000、第 9 页写死 8081，改端口要连带改后面命令。</li>
@@ -100,7 +100,7 @@ added 118 packages, and audited 125 packages in 3s
 </blockquote>
 <h2>自己改一下</h2>
 <p>把 8000 占住，再跑一次 <code>make doctor</code>，看它怎么报错（这就是"判据可被第三方复核"的意思——不用作者在场，输出自己会说话）：</p>
-<pre><code class="language-bash">backend/.venv/bin/python -m http.server 8000 &amp;
+<pre><code class="language-bash">system/backend/.venv/bin/python -m http.server 8000 &amp;
 make doctor
 kill %1
 </code></pre>
@@ -108,9 +108,12 @@ kill %1
 <p>做完记得把后台进程停掉。</p>
 <p>（顺带解释：<code>make doctor</code> 的端口检查里，3307 是刻意选的——本机自带的 MySQL 常占着 3306，所以第 1 页用 3307。）</p>
 <h2>重来一遍（回到起点）</h2>
-<p>一轮做完会留下 <code>lab-mysql</code>、<code>lab-nginx</code> 两个容器、仓库根目录的 <code>lab/</code>、终端 1 里的 uvicorn；先按 <code>Ctrl+C</code> 停终端 1。</p>
+<blockquote>
+<p>这是 L1 整轮跑完后的回滚指南；第 0 章刚装环境时，下面的容器/进程还不存在。
+一轮做完会留下 <code>lab-mysql</code>、<code>lab-nginx</code> 两个容器、仓库根目录的 <code>lab/</code>、终端 1 里的 uvicorn；先按 <code>Ctrl+C</code> 停终端 1。</p>
+</blockquote>
 <p>再敲（别用 <code>docker system prune</code>——会误删本机别的栈）：</p>
-<pre><code class="language-bash">docker rm -f lab-nginx lab-mysql   # 数据随容器消失；重跑第 1 页起容器、再跑第 2 页重新导入 fixtures/dw.sql
+<pre><code class="language-bash">docker rm -f lab-nginx lab-mysql   # 数据随容器消失；重跑第 1 页起容器、再跑第 2 页重新导入 system/fixtures/dw.sql
 rm -rf lab
 docker ps -a --format '{{.Names}}' | grep '^lab-' || echo &quot;容器干净&quot;   # 验证 1
 ss -tln | grep -E ':(3307|8000|8081) ' || echo &quot;端口全空&quot;              # 验证 2
@@ -132,7 +135,7 @@ ss -tln | grep -E ':(3307|8000|8081) ' || echo &quot;端口全空&quot;         
 </tr>
 <tr>
 <td>第 7 页</td>
-<td><code>lab-nginx</code>，并把 <code>lab/app.py</code> 退回第 6 页的版本（重抄第 6 页代码；或先 <code>scripts/lab save</code> 再 <code>reset</code>——第 10 页起介绍）</td>
+<td><code>lab-nginx</code>，并把 <code>lab/app.py</code> 退回第 6 页的版本（重抄第 6 页代码；或先 <code>toolbox/scripts/lab save</code> 再 <code>reset</code>——第 10 页起介绍）</td>
 <td><code>lab-mysql</code>、<code>lab/</code></td>
 </tr>
 <tr>

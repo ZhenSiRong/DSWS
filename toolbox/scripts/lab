@@ -21,7 +21,7 @@
 set -u
 
 SELF_DIR="$(cd "$(dirname "$0")" && pwd)"
-ROOT="$(cd "$SELF_DIR/.." && pwd)"
+ROOT="$(cd "$SELF_DIR/../.." && pwd)"
 LAB_DIR="$ROOT/.lab"
 SNAP_DIR="$LAB_DIR/snapshots"
 

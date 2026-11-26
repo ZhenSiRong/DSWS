@@ -4,7 +4,7 @@
 
 - **用途**：答辩 / 概览用的一张全景图 —— L1 造 10 件 + L2 换 4 件 + L3 审 4 件 + L4 守 5 件 = 23 件 = 23 页（P0–P22）。
 - **不进程页面**：只出图，不改 `page-00…page-22` 正文，也不替代任何页的验收判据。
-- **重跑**：`python3 manual/shots/render_city_map_23.py`（一条命令重出 `manual/images/city-map-23.png`；只读 `data-23.json` 与旧 `data.json`，不写其他文件）。
+- **重跑**：`python3 tutorial/shots/render_city_map_23.py`（一条命令重出 `tutorial/images/city-map-23.png`；只读 `data-23.json` 与旧 `data.json`，不写其他文件）。
 - **成图**：3200×2000 @2x（1600×1000 CSS，与旧图 `city-map-l1.png` 实测同尺寸；任务书写 1800 与旧图实测不符，按「与旧图一致」取 2000）。
 - **与旧图的关系**：同一片城区、同一套坐标。L1 十件设施 / 四区 / 11 条道路逐字复用 `data.json`（渲染时只读比对，sha 不变）；旧图 `images/city-map-l1.png`、`city/city-map.html`、`city/data.json`、`render_city_map.py` 一律不动。
 - **与 D44 / D45 的关系**：D44 定「造 / 换 / 审 / 守 = 10+4+4+5 = 23 页」，本图按 D44 把 L2–L4 画成**横切系统叠加在同一座城**上，而不是另建一批设施；D45 定城市隐喻，粒度仍按 `GLOSSARY.md`：设施 = 运行单元、窗口 = 端点、办事员 = 函数、货架 = 库表、道路 / 管网 = 网络与数据流。
@@ -13,5 +13,5 @@
   - L3 审（橙）：P14 抽检站 ← P5；P15 生成审计室 ← P6；P16 校验门禁 ← P6→P7 之间；P17 纠错法庭 ← P8。
   - L4 守（红）：P18 门禁闸机 ← P1（守 P7 取货线）；P19 策略哨所 ← P6；P20 应急通道 ← P8；P21 监控塔 ← P3（屋顶 + P1/P9/传送带）；P22 回归演练场 ← P9。
 - **读图**：蓝 = L2 换、橙 = L3 审、红 = L4 守；虚线 = 改造接入线；菱形 = 接入落点；门户区右下「改造层登记处」有 13 条改造关系表与整图图注。
-- **单源**：`manual/city/data-23.json`（L1 10 件 + retrofit 13 件 + legend + `retrofits: [{level, page, from}]`）。改图只改它，再跑上面那条命令。
+- **单源**：`tutorial/city/data-23.json`（L1 10 件 + retrofit 13 件 + legend + `retrofits: [{level, page, from}]`）。改图只改它，再跑上面那条命令。
 - **数据自检**：脚本会逐字比对旧 `data.json`（L1 必须原样）、校验 23 页 / 13 条接入线 / 卡片不重叠，再跑页面内置自检与成图自检；任一不过就退出码 1、不写成品。

@@ -24,7 +24,7 @@
 
 ## 动手
 
-**要改的文件**还是 `lab/app.py`，三处。`pymysql` 已经在 `backend/.venv` 里（第 0 页 `make install` 装好的），不用再 `pip install`。
+**要改的文件**还是 `lab/app.py`，三处。`pymysql` 已经在 `system/backend/.venv` 里（第 0 页 `make install` 装好的），不用再 `pip install`。
 
 **改完先按 Ctrl+S 保存**，再回终端 1 重启；不保存就重启，服务跑的还是第 6 页的旧代码（症状见「对账」）。
 
@@ -71,7 +71,7 @@ def query(q: Query):
 回终端 1，按 Ctrl+C 停掉，再用**你第 3 页实际用的那条启动命令**重启（端口按你实际改过的；默认 `--port 8000`，下面 `curl` 里的 8000 也换成你的端口）：
 
 ```bash
-backend/.venv/bin/python -m uvicorn lab.app:app --port 8000
+system/backend/.venv/bin/python -m uvicorn lab.app:app --port 8000
 ```
 
 然后在终端 2 发一次请求：

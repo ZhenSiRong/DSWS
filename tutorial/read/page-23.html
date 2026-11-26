@@ -9,7 +9,7 @@
 </head>
 <body>
 <main class="page">
-<p class="kicker">练本 · 阅读版（md 正典派生，改内容请改 manual/page-23.md）</p>
+<p class="kicker">练本 · 阅读版（md 正典派生，改内容请改 tutorial/page-23.md）</p>
 <h1>第 23 页 · 装体验：从 17 行 HTML 到成熟版前端</h1>
 <blockquote>
 <p><strong>城市坐标 · L5 装修 · 换门面不换承重墙</strong>｜把入口换成成熟版前端，接口、契约、判据一个不动——装修不改承重墙。</p>
@@ -34,19 +34,19 @@
 </tr>
 <tr>
 <td>2</td>
-<td><strong><code>frontend/</code> 教学版重建前端</strong></td>
-<td>compose 默认的 <code>frontend</code> 服务（默认端口 8080），「从零重建 · 教学版」界面、<code>12 步</code> 步骤轨，自带 40 条协议测试——它是<strong>脚手架</strong>，把系统结构摆在明面上。</td>
+<td><strong><code>system/frontend/</code> 教学版重建前端</strong></td>
+<td>compose 默认的 <code>frontend</code> 服务（默认端口 8080），「从零重建 · 教学版」界面、<code>12 个节点（10 个阶段）</code> 步骤轨，自带 40 条协议测试——它是<strong>脚手架</strong>，把系统结构摆在明面上。</td>
 </tr>
 <tr>
 <td>3</td>
 <td><strong>成熟版原版 <code>shopkeeper-agent</code></strong></td>
-<td>交付时的样子（<code>deliverable/v2/original-frontend/</code>，React 19 + Tailwind 3.4.17 的构建产物 <code>dist/</code>）。</td>
+<td>交付时的样子（<code>materials/deliverable/v2/original-frontend/</code>，React 19 + Tailwind 3.4.17 的构建产物 <code>dist/</code>）。</td>
 </tr>
 </tbody>
 </table>
 <p><img alt="第 23 页 · 装修不换承重墙：左边是三种前端入口，右边是装修队：换门面，承重墙不动" src="../images/page-23-visual.webp" /></p>
 <h2>猜一猜</h2>
-<p>动手前写下答案（都允许猜错）：① 成熟版和教学版是不是两套接口？把成熟版挂到同一个后端上，后端要不要配一份新的？② 换成成熟版之后，契约（<code>contracts/</code>）要不要改？</p>
+<p>动手前写下答案（都允许猜错）：① 成熟版和教学版是不是两套接口？把成熟版挂到同一个后端上，后端要不要配一份新的？② 换成成熟版之后，契约（<code>system/contracts/</code>）要不要改？</p>
 <h2>动手</h2>
 <p><strong>第 1 步：起整栈。</strong> 栈在跑就跳过（判据见第 13 页：五个长驻服务 <code>healthy</code>、<code>init</code> 退出 0）。</p>
 <p><strong>先判断镜像在不在</strong>：<code>docker images | grep shopkeeper</code> 有 <code>backend</code>、<code>frontend</code> 两行 → 栈停过只是没起，用 <code>docker compose up -d</code>（不重建，秒级）；第一次或代码真改过 → <code>make docker-up</code>（= <code>up -d --build</code>，约 8 分钟，第 13 页）：</p>
@@ -63,8 +63,8 @@ docker compose up -d              # 镜像在：只起容器，不重建（秒�
   -v &quot;$PWD/deliverable/v2/original-frontend/nginx.conf:/etc/nginx/conf.d/default.conf:ro&quot; \
   &quot;$(grep '^NGINX_IMAGE=' .env | cut -d= -f2)&quot;
 </code></pre>
-<p><strong>第 3 步：跑教学版脚手架的测试。</strong> 这条判据测的是 <code>frontend/</code> 教学版；成熟版是构建产物 <code>dist/</code>，不带这套测试，也别在 <code>deliverable/v2/original-frontend/</code> 里跑。在仓库根目录跑（括号是子 shell，跑完还在根目录）：</p>
-<pre><code class="language-bash">(cd frontend &amp;&amp; npm test)
+<p><strong>第 3 步：跑教学版脚手架的测试。</strong> 这条判据测的是 <code>system/frontend/</code> 教学版；成熟版是构建产物 <code>dist/</code>，不带这套测试，也别在 <code>materials/deliverable/v2/original-frontend/</code> 里跑。在仓库根目录跑（括号是子 shell，跑完还在根目录）：</p>
+<pre><code class="language-bash">(cd system/frontend &amp;&amp; npm test)
 </code></pre>
 <p><strong>第 4 步：对照着问。</strong> 浏览器开 <code>http://127.0.0.1:8088</code>（成熟版）和 <code>http://127.0.0.1:8080</code>（教学版，默认端口；改过 <code>.env</code> 的 <code>FRONTEND_HOST_PORT</code> 用你的端口），两边都问「华北销售额」。</p>
 <h2>你应该看到</h2>
@@ -79,8 +79,8 @@ npm test：Tests  40 passed (40)（末行是 Duration）
 <h2>对账</h2>
 <ul>
 <li><strong>猜 1：不是两套接口，后端一份都不用改。</strong><ul>
-<li>成熟版前端只认 <code>POST /api/query</code>（<code>deliverable/v2/original-frontend/src/lib/agentApi.ts</code>）：</li>
-<li>同一条 SSE 流、同一套事件（happy 路径 23 条 <code>progress</code> + 1 条 <code>result</code>）、同一份 <code>contracts/</code>。</li>
+<li>成熟版前端只认 <code>POST /api/query</code>（<code>materials/deliverable/v2/original-frontend/src/lib/agentApi.ts</code>）：</li>
+<li>同一条 SSE 流、同一套事件（happy 路径 23 条 <code>progress</code> + 1 条 <code>result</code>）、同一份 <code>system/contracts/</code>。</li>
 <li>它的 <code>dist/</code> 里有一层薄适配：把契约的 <code>{columns, rows}</code> 渲染成自己的结果表、把 S7 的 step id 映成 12 个中文节点名——换算在浏览器里做，网络上一个字节没变。</li>
 </ul>
 </li>
@@ -93,7 +93,7 @@ npm test：Tests  40 passed (40)（末行是 Duration）
 <li>8088 打不开 / <code>Conflict</code>：先看是不是同名容器残留——<code>docker rm -f lab-mature</code> 后重跑第 2 步；若是别的进程占着 8088（<code>ss -tlnp | grep 8088</code> 有输出），<code>rm</code> 没用，把第 2 步 <code>-p</code> 里的 8088 换成空端口（如 8089）重跑，浏览器地址同步改。</li>
 <li>8088 回 <code>502</code>：容器没进 compose 网络（用了默认 bridge），或项目名改过、<code>shopkeeper-rebuild_default</code> 不存在——<code>docker network ls | grep default</code> 查实际网络名。</li>
 <li>8080 连不上：教学版栈没起，或端口改过——按第 13 页查 <code>FRONTEND_HOST_PORT</code>；<strong>别改 <code>compose.yaml</code></strong>。</li>
-<li>结果不是 <code>41099.5</code>：数据库不是 <code>fixtures/dw.sql</code> 的演示集——<code>make docker-reset</code>（删数据卷、破坏性）→ <code>make docker-up</code> 重新 init（第 13 页），再问一句。</li>
+<li>结果不是 <code>41099.5</code>：数据库不是 <code>system/fixtures/dw.sql</code> 的演示集——<code>make docker-reset</code>（删数据卷、破坏性）→ <code>make docker-up</code> 重新 init（第 13 页），再问一句。</li>
 </ul>
 <h2>拆一刀</h2>
 <p>L5 的级考核：把 8088 的成熟版换成第 9 页的 17 行 HTML，看承重墙倒不倒。<strong>第 1 步：停成熟版。</strong> 容器删掉，整栈与 8080 教学版都不动：</p>
@@ -132,7 +132,7 @@ function ask(question) {
 }
 &lt;/script&gt;
 </code></pre>
-<p><strong>第 3 步：用教学版镜像的 nginx 占 8088，挂这个页面。</strong> 反代配置（教学版镜像里的 <code>docker/nginx.conf</code>）沿用那一套，只把静态页换成刚写的 <code>index.html</code>；网络名同「动手」第 2 步（项目名改过先 <code>docker network ls | grep default</code>）：</p>
+<p><strong>第 3 步：用教学版镜像的 nginx 占 8088，挂这个页面。</strong> 反代配置（教学版镜像里的 <code>system/docker/nginx.conf</code>）沿用那一套，只把静态页换成刚写的 <code>index.html</code>；网络名同「动手」第 2 步（项目名改过先 <code>docker network ls | grep default</code>）：</p>
 <pre><code class="language-bash">docker run -d --name lab-mature --network shopkeeper-rebuild_default -p 127.0.0.1:8088:80 \
   -v &quot;$PWD/lab-mature/index.html:/usr/share/nginx/html/index.html:ro&quot; \
   shopkeeper-rebuild/frontend:local

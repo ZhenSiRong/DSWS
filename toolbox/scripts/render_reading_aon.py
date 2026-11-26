@@ -4,11 +4,11 @@
 
 一条命令重跑（在仓库根目录）：
 
-    python3 scripts/render_reading_aon.py               # 核对 CPM + 渲染 + PNG 自检
-    python3 scripts/render_reading_aon.py --width 3000  # 更宽的图（文字更大）
+    python3 toolbox/scripts/render_reading_aon.py               # 核对 CPM + 渲染 + PNG 自检
+    python3 toolbox/scripts/render_reading_aon.py --width 3000  # 更宽的图（文字更大）
 
 源文件（唯一内容源，只改它）：
-    humen-desicions/reading-layer-aon.mmd → humen-desicions/reading-layer-aon.png
+    materials/humen-desicions/reading-layer-aon.mmd → materials/humen-desicions/reading-layer-aon.png
 
 它做四件事：
 
@@ -18,14 +18,14 @@
    「关键路径」「总工期」「浮动」、class crit/norm/review 与 linkStyle 橙/灰箭头。
    本图有两条并行关键支路（B20/B19 同浮动 0），关键路径按「节点集合 + 驱动边」对账，
    不强行选一条单链。工期是估算值、不是验收时限（R0 已完成，工期 0 是实测口径）。
-2. **渲染**：mmd 原样交给仓库内 mermaid@11 离线副本（design/assets/mermaid.min.js）
+2. **渲染**：mmd 原样交给仓库内 mermaid@11 离线副本（materials/design/assets/mermaid.min.js）
    自动布局渲染——classDef/linkStyle 直接生效，图与源文件不会两套样式漂移。
 3. **截图**：google-chrome 无头按自然尺寸 @2x 超采样截图，裁白边、缩到约定宽度。
 4. **自检**：PNG 宽度 / 非空白 / 关键路径橙描边 / 关键浅橙底 / 普通灰底 / 复核绿底，
    有效字号不低于 10px，图上不得出现本机用户名 / 绝对路径。
 
 依赖：本机已有的 python3 / google-chrome / ImageMagick(identify/convert)，仓库内 mermaid 副本。
-不新增依赖；不改 manual/ 任何页面与旧图（本图是规划图，不是练本插图）。
+不新增依赖；不改 tutorial/ 任何页面与旧图（本图是规划图，不是练本插图）。
 """
 
 from __future__ import annotations
@@ -427,7 +427,7 @@ def check_png(png: Path, width: int) -> tuple[int, int]:
 
 def main() -> int:
     ap = argparse.ArgumentParser(
-        description="把阅读层铺开 AON（humen-desicions/reading-layer-aon.mmd）渲染成 PNG")
+        description="把阅读层铺开 AON（materials/humen-desicions/reading-layer-aon.mmd）渲染成 PNG")
     ap.add_argument("--width", type=int, default=DEFAULT_WIDTH,
                     help=f"输出 PNG 宽度（默认 {DEFAULT_WIDTH}px；最小 2000）")
     ap.add_argument("--out", type=Path, default=OUT, help="输出 PNG 路径")

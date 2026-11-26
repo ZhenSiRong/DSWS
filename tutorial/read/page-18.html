@@ -9,14 +9,14 @@
 </head>
 <body>
 <main class="page">
-<p class="kicker">练本 · 阅读版（md 正典派生，改内容请改 manual/page-18.md）</p>
+<p class="kicker">练本 · 阅读版（md 正典派生，改内容请改 tutorial/page-18.md）</p>
 <h1>第 18 页 · 守账号：只读账号真的写不了吗</h1>
 <blockquote>
 <p><strong>城市坐标 · L4 城市安防 · 门禁</strong>｜只读账号是真的只读：给它一把只能看、不能写的钥匙。</p>
 <p><strong>前置</strong>：至少 <code>mysql</code> 在跑且 healthy（<code>docker compose ps</code>）——本页全部判据只需要数据库，整栈都在时可顺带做第 13 页 <code>docker-smoke</code> 第 7 步。</p>
 <p><strong>环境</strong>：<code>.env</code> 已由 <code>make docker-env</code> 生成；本页不重建镜像、不改代码。L4（守）从这一页开始。</p>
 <p><strong>在哪跑</strong>：命令都在仓库根目录、同一个终端里整段连续执行；括号是子 shell，跑完你还在仓库根目录。</p>
-<p><strong>第 0 页两样就绪</strong>：<code>backend/.venv</code> 由第 0 页 <code>make install</code> 生成（本页 <code>.venv/bin/python</code> 靠它），宿主 <code>uv</code> 由第 0 页先装好（第 5 步 <code>uv run</code> 靠它）；缺了先回第 0 页（<code>.venv</code> 也可 <code>cd backend &amp;&amp; uv sync --frozen</code> 补）。</p>
+<p><strong>第 0 页两样就绪</strong>：<code>system/backend/.venv</code> 由第 0 页 <code>make install</code> 生成（本页 <code>.venv/bin/python</code> 靠它），宿主 <code>uv</code> 由第 0 页先装好（第 5 步 <code>uv run</code> 靠它）；缺了先回第 0 页（<code>.venv</code> 也可 <code>cd system/backend &amp;&amp; uv sync --frozen</code> 补）。</p>
 </blockquote>
 <h2>这一页构建什么</h2>
 <p>把“只读”从一条<strong>约定</strong>搬进<strong>数据库权限</strong>：开通一个在 <code>dw</code> 上只有 <code>SELECT</code> 的账号 <code>dw_reader</code>，再让门禁亲手证明它写不了。做完你得到一个能力边界——应用层的提示词、校验、策略全部失效，数据库也只会让它读。心智模型：<strong>只读要从“约定”变成“能力边界”。</strong></p>
@@ -28,7 +28,7 @@
 </ol>
 <h2>动手</h2>
 <p><strong>第 1 步：拍快照。</strong> 本页拆的是数据库权限、不是文件，但先拍一张——待会儿用它证明“文件快照救不了数据库”（同名快照会被拒，重做本页就换个名字；<strong>换了名字就把下文所有 <code>p18-before</code> 一并替换</strong>，旧快照留在 <code>.lab/snapshots/</code> 不影响本页结论）：</p>
-<pre><code class="language-bash">scripts/lab save p18-before
+<pre><code class="language-bash">toolbox/scripts/lab save p18-before
 </code></pre>
 <p><strong>第 2 步：让当前终端拿到密码。</strong> 开通要两把密码：MySQL root 的（建账号）和 <code>dw_reader</code> 的（设密码）。</p>
 <p><strong>密码在哪</strong>：只在 <code>.env</code> 里（第 13 页 <code>make docker-env</code> 生成；<code>.env</code> 被 <code>.gitignore</code> 忽略，<code>.env.example</code> 里只有 <code>change-me-ro</code> 占位——明文密码不进仓库）。</p>
@@ -39,13 +39,13 @@
 <li>拆一刀里那条 <code>mysql</code> 命令则会先让你 <code>Enter password:</code> 再报 <code>ERROR 1045 (28000): Access denied for user 'root'@'localhost' (using password: NO)</code>。</li>
 </ul>
 <p><strong>结论</strong>：都只是没 <code>source</code>，不是库/密码坏了：</p>
-<pre><code class="language-bash">source scripts/export-docker-env.sh
+<pre><code class="language-bash">source toolbox/scripts/export-docker-env.sh
 </code></pre>
 <p><strong>第 3 步：开通只读账号。</strong> 第 13 页的 <code>init</code> 已经开通过一次，这里再开一次：语句是“先 <code>DROP USER IF EXISTS</code> 再 <code>CREATE USER</code>”，所以权限集合永远恰好是 <code>SELECT</code>，不会攒下旧授权。这条命令也是下面“拆一刀”的还原命令：</p>
-<pre><code class="language-bash">(cd backend &amp;&amp; .venv/bin/python -m app.scripts.security --provision-ro-account)
+<pre><code class="language-bash">(cd system/backend &amp;&amp; .venv/bin/python -m app.scripts.security --provision-ro-account)
 </code></pre>
 <p><strong>第 4 步：跑判据。</strong> 门禁做两件事：读 <code>SHOW GRANTS</code>，再<strong>真的执行</strong>一条 <code>UPDATE ... WHERE 1=0</code>——匹配 0 行，但数据库要先检查 <code>UPDATE</code> 权限；被拒绝且错误码是 <code>1142</code> 才算 PASS。退出码就是结论（0 = 通过）：</p>
-<pre><code class="language-bash">(cd backend &amp;&amp; .venv/bin/python -m app.scripts.security --verify-ro-account)
+<pre><code class="language-bash">(cd system/backend &amp;&amp; .venv/bin/python -m app.scripts.security --verify-ro-account)
 </code></pre>
 <p><strong>第 5 步（可选）：<code>make stage5-live</code>。</strong> 前提：上面的 <code>source</code> 还在同一个终端里、MySQL 在跑；本机约 2 秒（环境已装好时；第一次装依赖会久得多）。它重复开通 + 验证，再跑 <code>--demo</code> 两屏对比（旧系统 <code>didilili</code> 的 <code>ALL PRIVILEGES</code> 真删掉探针表，新系统在连库前拒绝），末行 <code>S5 LIVE PASS</code>。不跑不影响本页判据。</p>
 <pre><code class="language-bash">make stage5-live
@@ -99,7 +99,7 @@ S5 LIVE PASS
 <p><strong>换成 <code>dw_reader</code> 后实测</strong>：<code>UPDATE</code>、<code>DROP</code>、跨库读 <code>mysql.user</code> 全部 <code>1142</code>，而 <code>SELECT COUNT(*) FROM fact_order</code> 正常返回 115。</p>
 <p><strong>边界</strong>：它不证明“读得对/读得少”（那是检索与策略的职责），只证明<strong>写不了</strong>。</p>
 <ul>
-<li><strong>门禁怎么验、哪里也在验。</strong> 判据就在 <code>backend/tests/security/test_account.py</code>（10 条）里，连“写失败但不是权限错误不能算通过”都有测试。</li>
+<li><strong>门禁怎么验、哪里也在验。</strong> 判据就在 <code>system/backend/tests/security/test_account.py</code>（10 条）里，连“写失败但不是权限错误不能算通过”都有测试。</li>
 </ul>
 <p><strong>第 13 页也在验</strong>：<code>make docker-smoke</code> 第 7 步（<code>== 7/8 只读账号验证 ==</code> → <code>PASS: 该账号在 dw 上只有 SELECT</code>）跑的就是同一条 <code>--verify-ro-account</code>，只是换成在 <code>backend</code> 容器里跑。</p>
 <p><strong>密码不落屏</strong>：CLI 把 <code>IDENTIFIED BY '…'</code> 打成 <code>***</code>。</p>
@@ -108,10 +108,10 @@ S5 LIVE PASS
 </blockquote>
 <h2>拆一刀</h2>
 <p>把“能力边界”拆掉：给 <code>dw_reader</code> 加一句数据库级全权，重跑同一条门禁，看它红在哪。</p>
-<p><strong>下面这段沿用第 2 步 <code>source</code> 过的那个终端；如果新开了终端，先 <code>source scripts/export-docker-env.sh</code></strong>。</p>
+<p><strong>下面这段沿用第 2 步 <code>source</code> 过的那个终端；如果新开了终端，先 <code>source toolbox/scripts/export-docker-env.sh</code></strong>。</p>
 <p><strong>没 <code>source</code> 的症状</strong>：<code>$REBUILD_MYSQL_ROOT_PASSWORD</code> 是空的，<code>mysql</code> 会先让你 <code>Enter password:</code> 再报 <code>ERROR 1045 (28000): Access denied … (using password: NO)</code>，看着像库/密码坏了，其实只是没 <code>source</code>。</p>
 <pre><code class="language-bash">docker compose exec -T mysql mysql -uroot -p&quot;$REBUILD_MYSQL_ROOT_PASSWORD&quot; -e &quot;GRANT ALL ON dw.* TO 'dw_reader'@'%'&quot;
-(cd backend &amp;&amp; .venv/bin/python -m app.scripts.security --verify-ro-account)
+(cd system/backend &amp;&amp; .venv/bin/python -m app.scripts.security --verify-ro-account)
 </code></pre>
 <p><code>mysql: [Warning] Using a password on the command line interface can be insecure.</code> 是客户端的例行提醒，不是失败。</p>
 <p>门禁变红，退出码 1。</p>
@@ -125,14 +125,14 @@ FAIL: 3 项问题
   - 账号没有 SELECT 权限：['GRANT USAGE ON *.* TO `dw_reader`@`%`', 'GRANT ALL PRIVILEGES ON `dw`.* TO `dw_reader`@`%`']
   - 写操作被放行（权限配置有误）
 </code></pre>
-<p><strong>关键坑：<code>scripts/lab reset</code> 救不了这个。</strong> <code>lab</code> 快照只收文件，数据库权限不在里面——拆完跑 <code>scripts/lab diff p18-before</code>，它会说“工作区与快照完全一致”，可门禁还是红的。</p>
+<p><strong>关键坑：<code>toolbox/scripts/lab reset</code> 救不了这个。</strong> <code>lab</code> 快照只收文件，数据库权限不在里面——拆完跑 <code>toolbox/scripts/lab diff p18-before</code>，它会说“工作区与快照完全一致”，可门禁还是红的。</p>
 <p>手动还原<strong>推荐用下面第一段代码里的 <code>--provision-ro-account</code></strong>（一句重建账号，权限集合回到 <code>SELECT</code>）。</p>
 <p><strong>备选 REVOKE</strong>：第二段只用于理解“去掉 ALL、补回 SELECT”两件事，一条命令里同时有双引号、单引号和分号，从正文复制极易断，请整行复制。两段二选一，推荐第一段：</p>
-<pre><code class="language-bash">(cd backend &amp;&amp; .venv/bin/python -m app.scripts.security --provision-ro-account)
-(cd backend &amp;&amp; .venv/bin/python -m app.scripts.security --verify-ro-account)
+<pre><code class="language-bash">(cd system/backend &amp;&amp; .venv/bin/python -m app.scripts.security --provision-ro-account)
+(cd system/backend &amp;&amp; .venv/bin/python -m app.scripts.security --verify-ro-account)
 </code></pre>
 <pre><code class="language-bash">docker compose exec -T mysql mysql -uroot -p&quot;$REBUILD_MYSQL_ROOT_PASSWORD&quot; -e &quot;REVOKE ALL PRIVILEGES, GRANT OPTION FROM 'dw_reader'@'%'; GRANT SELECT ON dw.* TO 'dw_reader'@'%'&quot;
-(cd backend &amp;&amp; .venv/bin/python -m app.scripts.security --verify-ro-account)
+(cd system/backend &amp;&amp; .venv/bin/python -m app.scripts.security --verify-ro-account)
 </code></pre>
 <p>跑完推荐的第一段，末行回到 <code>PASS: 该账号在 dw 上只有 SELECT</code>。这次拆一刀的答案：<strong>静态判据和动态判据都抓到了，但“文件快照”没抓到——数据库状态必须手动还原。</strong></p>
 <p><strong>不还原的后果</strong>：分单步和整跑看——单步 <code>--verify-ro-account</code>（本页第 4 步那条）会一直红，脏权限还在。</p>

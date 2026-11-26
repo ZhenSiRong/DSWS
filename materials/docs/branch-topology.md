@@ -8,7 +8,7 @@
 |---|---|---|
 | 发布锚点 | `main` | 指向最新已发布 tag（当前 `v1.1.0` = `5305072`）；每次发版 fast-forward 到新 tag，不直接在 main 上开发 |
 | 集成线 | `continue-iterate` | 日常开发与合并都在这里；发版时 fast-forward 到 `main` 并打 tag |
-| 一次性分支 | `task/*`、`orca/*`、`design/*`、`reorg/*` | 从集成线切出，合并/放弃后立即删除；不再保留旧 worktree |
+| 一次性分支 | `task/*`、`orca/*`、`materials/design/*`、`reorg/*` | 从集成线切出，合并/放弃后立即删除；不再保留旧 worktree |
 | 本地备份线 | `backup/*` | 只存在本地，不推送；确认 WIP 处理完后删除 |
 
 ## 历史规则
@@ -21,7 +21,7 @@
 ## 本次清理记录（2026-11-25）
 
 - 删除本地 29 个已合并/已归档分支；worktree 从 24 个降到 2 个（`DSWS-design` = main，`DSWS-design-lab` = continue-iterate）。
-- 远端删除 4 个陈旧分支：`In-C`、`design/atlas`、`backup/main-before-cleanup-20261106`、`orca/fix-correct-sql-cb`。
+- 远端删除 4 个陈旧分支：`In-C`、`materials/design/atlas`、`backup/main-before-cleanup-20261106`、`orca/fix-correct-sql-cb`。
 - 推送：`continue-iterate` `5305072..cabc02b`，`main` `4711132..5305072`（均 fast-forward，无 force）。
 - 全部分支/提交已备份到仓库外：`../DSWS-archive/2026-11-25/git-topology/dsws-all-refs-*.bundle`。
 - 未提交 WIP 保留在两个本地 backup 分支 + 归档目录，待用户 review 后再决定提交/删除。

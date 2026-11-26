@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT"
 
 fail() {
@@ -21,7 +21,7 @@ fail() {
 # 某些 Windows 环境只有 python。判定标准是"真的能跑"，不是"名字在 PATH 上"——
 # Windows 上 Microsoft Store 的 python3 转发器存在但一执行就退 49，
 # 挑中它会让这里变成"360 秒后报 /api/health 未就绪"，把方向指错。
-# 详见 scripts/find-python.sh。
+# 详见 toolbox/scripts/find-python.sh。
 #
 # 这两项检查排在 .env 之前：解释器根本跑不起来的时候，报"缺少 .env"
 # 会把人引到错误的方向——make docker-env 同样要解释器，照着提示做
@@ -48,7 +48,7 @@ fi
 if grep -Eiq \
   '^[[:space:]]*(export[[:space:]]+)?(MYSQL_ROOT_PASSWORD|MYSQL_PASSWORD|REBUILD_DW_RO_PASSWORD)[[:space:]]*=[[:space:]]*"?change-me' \
   .env; then
-  fail ".env 里还是模板的占位密码（change-me-*）：这份部署的密码是公开的，谁都能连上库；先跑 python scripts/generate_docker_env.py 换掉它"
+  fail ".env 里还是模板的占位密码（change-me-*）：这份部署的密码是公开的，谁都能连上库；先跑 python toolbox/scripts/generate_docker_env.py 换掉它"
 fi
 
 echo "== 1/8 启动 stack（含一次性 init） =="
@@ -162,7 +162,7 @@ if ! grep -q '^# configuration file ' "$NGINX_CONF_FILE"; then
   fail "拿到的不是 nginx -T 的完整输出（没有 '# configuration file' 头）：多半是取到一半就断了，不能拿它当证据"
 fi
 
-# 检查逻辑在 scripts/smoke_checks.py 里：SSE 必须用裸 socket 测，
+# 检查逻辑在 toolbox/scripts/smoke_checks.py 里：SSE 必须用裸 socket 测，
 # 只有裸 socket 看得到 HTTP 分片的边界和到达时刻；而且它不能用 assert
 # 写——`python -O` 会把 assert 剥掉，验收脚本就永远「通过」了。
 #
@@ -175,7 +175,7 @@ SSE_OUTPUT="$("$PYTHON" "$ROOT/scripts/smoke_checks.py" sse "$BASE" \
 printf '%s\n' "$SSE_OUTPUT"
 
 echo "== 6/8 nginx 的 /api/ 代理确实关着缓冲 =="
-# 判断在 scripts/smoke_checks.py 里：grep 扫的是**整份** nginx -T 输出，
+# 判断在 toolbox/scripts/smoke_checks.py 里：grep 扫的是**整份** nginx -T 输出，
 # 配置里任何地方出现过 "proxy_buffering off;" 就算过——把 /api/ 的缓冲
 # 改成 on、而另一个 location（比如 /static/）留着 off，那一条照样"通过"，
 # SSE 实际已经被攒成整包。要判的是处理 /api/ 请求的那个 location 的**生效值**

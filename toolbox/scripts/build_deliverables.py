@@ -94,12 +94,14 @@ def build_design() -> None:
 def build_source() -> None:
     cat = OUT / "source-code"
     copy(ROOT / "Makefile", cat / "Makefile")
+    copy(ROOT / "compose.yaml", cat / "compose.yaml")
+    copy(ROOT / "compose.lab-ui.yaml", cat / "compose.lab-ui.yaml")
     copy(ROOT / ".env.example", cat / ".env.example")
     copy(ROOT / "system" / "README.md", cat / "SYSTEM-README.md")
     copy(ROOT / "system", cat / "system", IGNORE_SOURCE)
     manifest(cat, "源代码 · 电商问数智能体", [
         "`system/`：backend / frontend / contracts / fixtures / docker / deploy / compose",
-        "根 `Makefile` + `.env.example`：按原仓库路径可直接跑",
+        "根 `Makefile` + `compose.yaml` + `.env.example`：按原仓库路径可直接跑",
         "已排除 .venv / node_modules / 缓存 / .env；首次运行按 TRAPS/README 装依赖",
     ])
 
@@ -140,9 +142,9 @@ def main() -> int:
     (OUT / "README.md").write_text(
         "# PRD 三类交付物\n\n"
         "| 目录 | 内容 | 单独打包 |\n|---|---|---|\n"
-        "| `design-doc/` | 78 页设计文档 + 30 图精选（32 页） | `packages/design-doc.zip` |\n"
-        "| `source-code/` | `system/` + Makefile + `.env.example` | `packages/source-code.zip` |\n"
-        "| `tutorial-doc/` | 24 章教程 md + 成书 HTML/PDF | `packages/tutorial-doc.zip` |\n\n"
+        "| `design-doc/` | 78 页设计文档 + 30 图精选（32 页） | `materials/packages/design-doc.zip` |\n"
+        "| `source-code/` | `system/` + Makefile + `.env.example` | `materials/packages/source-code.zip` |\n"
+        "| `tutorial-doc/` | 24 章教程 md + 成书 HTML/PDF | `materials/packages/tutorial-doc.zip` |\n\n"
         "生成：`make deliverables`；三个目录互不依赖，可分别拷走/压缩。\n",
         encoding="utf-8",
     )

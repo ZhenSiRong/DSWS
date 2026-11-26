@@ -1,8 +1,8 @@
 # 练本写作规范（SPEC）
 
-> 依据：`humen-desicions/09-ablation-course.md` D20–D25；术语以根目录 `GLOSSARY.md` 为准。
-> 交付：`manual/page-01.md` … `manual/page-09.md`，一页一个文件。
-> 范围：本文件只约束 L1 九页（`manual/page-01.md` … `manual/page-09.md`）；p00 为前置页另计，全书 24 页 = p00 + L1 九页 + p10–p22（L2–L4）+ page-23（L5「装」体验层，D50）；p00 与 p10–p23 不在本文件范围，其判据与模板见 `manual/ACCEPTANCE.md` 及 `humen-desicions/09-ablation-course.md` D46/D47。
+> 依据：`materials/humen-desicions/09-ablation-course.md` D20–D25；术语以根目录 `GLOSSARY.md` 为准。
+> 交付：`tutorial/page-01.md` … `tutorial/page-09.md`，一页一个文件。
+> 范围：本文件只约束 L1 九页（`tutorial/page-01.md` … `tutorial/page-09.md`）；p00 为前置页另计，全书 24 页 = p00 + L1 九页 + p10–p22（L2–L4）+ page-23（L5「装」体验层，D50）；p00 与 p10–p23 不在本文件范围，其判据与模板见 `tutorial/ACCEPTANCE.md` 及 `materials/humen-desicions/09-ablation-course.md` D46/D47。
 
 ## 读者
 
@@ -30,16 +30,16 @@
 | 页 | 造什么 | 页末应见 | 关键约束 |
 |---|---|---|---|
 | 1 | 创建 MySQL 容器（**空库**） | `SELECT VERSION()` 有输出；`SHOW DATABASES` 里**没有** `dw` | 容器名 `lab-mysql`；**必须** `-p 127.0.0.1:3307:3306`；**不加** `-v` 挂载；镜像从 `.env.example` 读 |
-| 2 | 导入 `fixtures/dw.sql`（建表灌数据） | `SHOW TABLES` 5 行；`COUNT(*) = 115`；华北 19 | `docker exec -i … < fixtures/dw.sql`，**`-i` 必加**（少了静默不导入） |
-| 3 | 最小 HTTP 服务（FastAPI） | `curl /health` → `{"ok":true}` | 端口 **8000**；`python -m uvicorn`；依赖用已有的 `backend/.venv` |
+| 2 | 导入 `system/fixtures/dw.sql`（建表灌数据） | `SHOW TABLES` 5 行；`COUNT(*) = 115`；华北 19 | `docker exec -i … < system/fixtures/dw.sql`，**`-i` 必加**（少了静默不导入） |
+| 3 | 最小 HTTP 服务（FastAPI） | `curl /health` → `{"ok":true}` | 端口 **8000**；`python -m uvicorn`；依赖用已有的 `system/backend/.venv` |
 | 4 | `/api/query` 硬编码返回 | `curl -X POST` → 固定 JSON | 不连库 |
 | 5 | 从问题里抽关键词 | `["华北","销售额"]` | 纯字符串规则，不许用 LLM |
-| 6 | 契约字典 + 拼 SQL | `print` 出那条带 JOIN 的 SELECT | 契约从 `contracts/` 读或内联简化版 |
+| 6 | 契约字典 + 拼 SQL | `print` 出那条带 JOIN 的 SELECT | 契约从 `system/contracts/` 读或内联简化版 |
 | 7 | 真执行 SQL | **`41099.5`** | 用 `pymysql` 连 `127.0.0.1:3307`；只读账号可用 root 读 |
 | 8 | 改成 SSE 流式 | 12 条 `progress` 逐条出现 | `StreamingResponse` + `text/event-stream` |
 | 9 | 加一层 nginx 反代 + 一个页面 | 浏览器打 `8081` 问一句出结果 | nginx 容器 `lab-nginx`；`proxy_buffering off` |
 
-**数据红线**：第 7 页的结果必须是 `41099.5`（华北销售额）。若你跑出别的数，说明数据没按 `fixtures/dw.sql` 灌进来，必须修到对为止。
+**数据红线**：第 7 页的结果必须是 `41099.5`（华北销售额）。若你跑出别的数，说明数据没按 `system/fixtures/dw.sql` 灌进来，必须修到对为止。
 
 ## 验证要求（不可跳过）
 
@@ -50,13 +50,13 @@
 
 ## 交付与报告
 
-- 只写你负责的页：`manual/page-0X.md`（不碰别人的页，不碰 `SPEC.md`）。
+- 只写你负责的页：`tutorial/page-0X.md`（不碰别人的页，不碰 `SPEC.md`）。
 - 回报格式：① 写了哪几页；② 每页"验证命令 → 真实输出"摘要；③ 与 SPEC 的偏差（没有就写"无"）；④ 你不确定的地方。
 
 ## 运行截图（每页必须）
 
-- 每页「## 你应该看到」里必须有 **1 张运行截图**，路径 `images/page-0X-<slug>.png`（相对 `manual/`）。
-- 图由 `manual/shots/` 下的脚本**真跑命令**后渲染生成，**禁止手绘/PS**；重跑一条命令即可复现。
+- 每页「## 你应该看到」里必须有 **1 张运行截图**，路径 `images/page-0X-<slug>.png`（相对 `tutorial/`）。
+- 图由 `tutorial/shots/` 下的脚本**真跑命令**后渲染生成，**禁止手绘/PS**；重跑一条命令即可复现。
 - 第 8 页 2 张（流式中途 / 最终结果）；第 9 页 2 张（浏览器成功 / 删掉 nginx 后报错）。
 - 版式：深色背景、等宽字体、窗宽固定、提示符 `$`；**不得出现用户名、主机名、绝对路径**。
 
@@ -83,6 +83,6 @@
 
 ## 代码展示（体验层规矩）
 
-- 正文讲解**只留关键 3–5 行**（讲清"这一段在干什么"）；完整可运行文件按页放 `manual/appendix/code.md`，正文用一句"完整文件见附录 §页N"指过去。
-- **附录尚未生成时，以页面内完整代码块为准**（当前 `manual/appendix/` 未建，第 1–5 页的 ≤40 行完整块就是权威来源）；附录落地后正文再收回 3–5 行。
+- 正文讲解**只留关键 3–5 行**（讲清"这一段在干什么"）；完整可运行文件按页放 `tutorial/appendix/code.md`，正文用一句"完整文件见附录 §页N"指过去。
+- **附录尚未生成时，以页面内完整代码块为准**（当前 `tutorial/appendix/` 未建，第 1–5 页的 ≤40 行完整块就是权威来源）；附录落地后正文再收回 3–5 行。
 - 讲解段不许重复贴整段 40 行代码——同一份完整块一页只出现一次，注意力要从"字符什么意思"回到"我造出了什么"。

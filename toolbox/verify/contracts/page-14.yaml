@@ -1,6 +1,6 @@
 # 第 14 页 · 审检索 —— 教材可跟随性契约（T0 / T1）
 #
-# schema 与规则见 manual/verify/README.md。
+# schema 与规则见 tutorial/verify/README.md。
 # 要点：每个 ```bash 块在页面里用 <!-- verify: <marker> --> 注解绑定到下面的块；
 #       cmd 必须与页面块内容一致（归一化后），任何一边改了另一边没改 → T0 FAIL。
 #       offline 块由 T1 真执行并断言关键行；manual 块只做同步校验、不执行。
@@ -14,14 +14,14 @@ blocks:
     kind: manual
     reason: 会往 .lab/snapshots/ 写白名单文件快照，且同名快照会被拒绝；有副作用，不适合无人值守重复执行
     cmd: |
-      scripts/lab save p14-before
+      toolbox/scripts/lab save p14-before
 
   # ---- 动手 第 2 步：20 题黄金集离线判据（离线，秒级）----
   - id: page14-pytest-recall
     marker: page14-pytest-recall
     kind: offline
     cmd: |
-      backend/.venv/bin/python -m pytest backend/tests/recall -q
+      system/backend/.venv/bin/python -m pytest system/backend/tests/recall -q
     expect:
       exit: 0
       contains: ["18 passed, 23 skipped"]   # 不存秒数：in 0.44s 会因机器而变
@@ -35,7 +35,7 @@ blocks:
     kind: manual
     reason: source 只是导出环境变量，但同一块接着的 make stage3 要 MySQL/ES/Qdrant 整栈在跑、走真实检索并写 /tmp/rebuild-s3-recall.yaml，约半分钟；CI 干净仓库没有这套栈
     cmd: |
-      source scripts/export-docker-env.sh
+      source toolbox/scripts/export-docker-env.sh
       make stage3
 
   # ---- 拆一刀 1：停检索存储（改运行中的栈）----
@@ -60,7 +60,7 @@ blocks:
     kind: manual
     reason: REBUILD_INTEGRATION=1 要 MySQL/ES/Qdrant 整栈在跑；页内期望的 18 passed, 23 errors 还是「停掉 ES」之后的消融态，干净仓库/CI 复现不出，硬跑只会红
     cmd: |
-      (cd backend && REBUILD_INTEGRATION=1 .venv/bin/python -m pytest -q tests/recall)
+      (cd system/backend && REBUILD_INTEGRATION=1 .venv/bin/python -m pytest -q tests/recall)
 
   # ---- 拆一刀 4：拉回检索并等 healthy（改运行中的栈 + 轮询）----
   - id: page14-start-elasticsearch
@@ -81,14 +81,14 @@ blocks:
 
 static:
   paths:
-    - backend/tests/recall
-    - backend/tests/recall/golden.yaml
-    - backend/tests/recall/test_golden.py
-    - backend/app/agent/orchestrator.py
-    - scripts/export-docker-env.sh
-    - scripts/recall-demo.sh
+    - system/backend/tests/recall
+    - system/backend/tests/recall/golden.yaml
+    - system/backend/tests/recall/test_golden.py
+    - system/backend/app/agent/orchestrator.py
+    - toolbox/scripts/export-docker-env.sh
+    - toolbox/scripts/recall-demo.sh
   symbols:
-    - {file: backend/app/agent/orchestrator.py, pattern: "OfflineContextBuilder"}
-    - {file: backend/tests/recall/test_golden.py, pattern: "_must_not_check"}
-    - {file: backend/tests/recall/test_golden.py, pattern: "test_golden_aggregate_recall_and_precision"}
-    - {file: scripts/recall-demo.sh, pattern: "华北销售额"}
+    - {file: system/backend/app/agent/orchestrator.py, pattern: "OfflineContextBuilder"}
+    - {file: system/backend/tests/recall/test_golden.py, pattern: "_must_not_check"}
+    - {file: system/backend/tests/recall/test_golden.py, pattern: "test_golden_aggregate_recall_and_precision"}
+    - {file: toolbox/scripts/recall-demo.sh, pattern: "华北销售额"}

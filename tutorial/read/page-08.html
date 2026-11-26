@@ -9,7 +9,7 @@
 </head>
 <body>
 <main class="page">
-<p class="kicker">练本 · 阅读版（md 正典派生，改内容请改 manual/page-08.md）</p>
+<p class="kicker">练本 · 阅读版（md 正典派生，改内容请改 tutorial/page-08.md）</p>
 <h1>第 8 页 · 让答案一条条推送出来（SSE）</h1>
 <blockquote>
 <p><strong>城市坐标 · P8 传送带（交付物 ⑩）</strong>｜把取到的货一条条传回窗口：不再是砸一坨，而是 12 条 <code>progress</code> 边走边报。</p>
@@ -18,7 +18,7 @@
 <h2>这一页构建什么</h2>
 <p><strong>同一个服务再加一条流式通道</strong> <code>GET /api/stream?q=...</code>：把一次查询拆成 12 条 <code>progress</code> 事件（每个步骤一条），最后再发 1 条 <code>result</code>，内容类型是 <code>text/event-stream</code>。</p>
 <p><strong>旧入口不动</strong>：第 7 页的 <code>POST /api/query</code> 保留不动——一个“憋到最后一次给”，一个“干一步报一步”，你正好对照。</p>
-<p><strong>步骤名有出处</strong>：这 12 个步骤名不是现编的，<code>contracts/steps.yaml</code> 里就声明了这 12 个节点。</p>
+<p><strong>步骤名有出处</strong>：这 12 个步骤名不是现编的，<code>system/contracts/steps.yaml</code> 里就声明了这 12 个节点。</p>
 <p><img alt="第 8 页 · 让答案一条条推送出来（SSE）：左边是事件流，右边是传送带：一件一件送出来，最后才给结果" src="../images/page-08-visual.webp" /></p>
 <h2>猜一猜</h2>
 <p>动手前写下答案：</p>
@@ -87,7 +87,7 @@ data: {&quot;type&quot;: &quot;result&quot;, &quot;data&quot;: {&quot;rows&quot;
 <li><strong>两条入口共用同一个 <code>run_sql</code>。</strong></li>
 <li><strong>404 = 没保存 / 上一页没生效</strong>：重启后 <code>GET /api/stream</code> 回 <code>{"detail":"Not Found"}</code>、<code>/health</code> 却正常，说明 <code>stream</code> 那段没进内存——多半是改完没 Ctrl+S 就重启，跑的仍是第 7 页代码。</li>
 <li><strong>修法</strong>：保存后再重启一次。</li>
-<li><strong>真实契约里 <code>result</code> 还带 <code>columns</code></strong>（字段名和类型，画表格要用），见 <code>contracts/sse.schema.json</code>；这一页只发 <code>rows</code>，够第 9 页用。</li>
+<li><strong>真实契约里 <code>result</code> 还带 <code>columns</code></strong>（字段名和类型，画表格要用），见 <code>system/contracts/sse.schema.json</code>；这一页只发 <code>rows</code>，够第 9 页用。</li>
 </ul>
 <blockquote>
 <p><strong>你现在拥有</strong>：一条把一次查询拆成 12 条 <code>progress</code> + 1 条 <code>result</code>、逐条推送的 SSE 流；它是第 9 页浏览器页面的数据源，只改“什么时候给你”，不改“给你什么”。</p>

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# 教师/CI 夹具：不是学生入口；学生工具见 manual/appendix/gui-debugging.md
+# 教师/CI 夹具：不是学生入口；学生工具见 tutorial/appendix/gui-debugging.md
 """附录 · VizTracer 实测：把一次离线问数录成浏览器可看的时间线。
 
 只跑**真代码路径**（与第 21 页 pdb 演示同一批函数）：
@@ -9,7 +9,7 @@
     → propose_correction 的三个触发条件（无校正器 / 不可重试 / 全满足）
     → 二次 validate_sql → FakeExecutor 的边界
 
-只替换两样外部依赖，**复用 `manual/shots/pdb_step_demo.py` 的夹具**：
+只替换两样外部依赖，**复用 `tutorial/shots/pdb_step_demo.py` 的夹具**：
     - 模型：pdb_step_demo.FakeGenerator，返回固定 JSON 文本，文本仍走真的
       `parse_model_payload` 解析；
     - 数据库：pdb_step_demo.FakeExecutor 返回固定行，不连 MySQL。
@@ -19,11 +19,11 @@
     uv venv /tmp/vizenv --python 3.14
     uv pip install --python /tmp/vizenv/bin/python viztracer
     PYTHONPATH=/tmp/vizenv/lib/python3.14/site-packages \\
-        backend/.venv/bin/python manual/shots/trace_viztracer.py
+        system/backend/.venv/bin/python tutorial/shots/trace_viztracer.py
 
 产物（证据留痕，不提交）：
-    manual/review/viztracer/trace.json     viztracer 原始 trace
-    manual/review/viztracer/timeline.html  单文件离线时间线（浏览器直接打开）
+    tutorial/review/viztracer/trace.json     viztracer 原始 trace
+    tutorial/review/viztracer/timeline.html  单文件离线时间线（浏览器直接打开）
 
 timeline.html 用 viztracer 自带的 ReportBuilder 把 trace.json 内联进 HTML；
 本版 vizviewer 只有本地服务器模式（`vizviewer trace.json`），没有 --output，
@@ -52,7 +52,7 @@ except ImportError:  # pragma: no cover - 给学生的报错提示
         "  uv venv /tmp/vizenv --python 3.14\n"
         "  uv pip install --python /tmp/vizenv/bin/python viztracer\n"
         "  PYTHONPATH=/tmp/vizenv/lib/python3.14/site-packages \\\n"
-        "      backend/.venv/bin/python manual/shots/trace_viztracer.py"
+        "      system/backend/.venv/bin/python tutorial/shots/trace_viztracer.py"
     )
 
 # 夹具就在 pdb_step_demo.py 里：同一组输入、同一个假模型、同一个假执行器。

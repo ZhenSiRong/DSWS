@@ -1,4 +1,4 @@
-"""`scripts/smoke_checks.py` 的行为测试。
+"""`toolbox/scripts/smoke_checks.py` 的行为测试。
 
 这个文件是 docker 验收脚本的"检查"部分。两个坑：
 
@@ -26,8 +26,8 @@ from pathlib import Path
 
 import pytest
 
-ROOT = Path(__file__).resolve().parents[2]
-SCRIPT = ROOT / "scripts" / "smoke_checks.py"
+REPO = Path(__file__).resolve().parents[3]
+SCRIPT = REPO / "toolbox" / "scripts" / "smoke_checks.py"
 
 
 def _load_module():
@@ -1009,7 +1009,7 @@ def test_the_acceptance_checker_has_no_assert_statements() -> None:
     """验收判据里不许有 Python 的 assert 语句（`-O` 会把它剥掉）。
 
     这条规则说的是 **Python 的 assert 语句**，所以要看的是
-    ``scripts/smoke_checks.py``。原来这条测试去看的是 shell 脚本——
+    ``toolbox/scripts/smoke_checks.py``。原来这条测试去看的是 shell 脚本——
     shell 里永远不会有 Python 的 assert，于是这条测试什么都拦不住：
     有人往 ``check_services`` 里塞一个 assert，它照样绿。
     """
@@ -1025,7 +1025,7 @@ def test_the_acceptance_checker_has_no_assert_statements() -> None:
 
 def test_the_smoke_script_has_no_bare_asserts() -> None:
     """shell 脚本里也不许藏着 `python -c "assert ..."` 这种写法。"""
-    script = (ROOT / "scripts" / "docker-smoke.sh").read_text(encoding="utf-8")
+    script = (ROOT.parent / "toolbox" / "scripts" / "docker-smoke.sh").read_text(encoding="utf-8")
     offenders = []
     for number, line in enumerate(script.splitlines(), start=1):
         code = line.split("#", 1)[0]

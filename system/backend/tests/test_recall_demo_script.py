@@ -28,7 +28,7 @@ import yaml
 from shellkit import fake_program, run_in_sh, to_shell_path, usable_sh
 
 ROOT = Path(__file__).resolve().parents[2]
-DEMO = ROOT / "scripts" / "recall-demo.sh"
+DEMO = ROOT.parent / "toolbox" / "scripts" / "recall-demo.sh"
 GOLDEN = ROOT / "backend" / "tests" / "recall" / "golden.yaml"
 
 SH = usable_sh()

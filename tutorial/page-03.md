@@ -18,11 +18,11 @@
 
 ## 动手
 
-**先备环境**：没有 `backend/.venv` 的话先回第 0 页跑 `make install`。
+**先备环境**：没有 `system/backend/.venv` 的话先回第 0 页跑 `make install`。
 
-**仓库根执行**：所有命令都在**仓库根目录**敲（`ls` 能看到 `backend`、`fixtures` 的那一层）。
+**仓库根执行**：所有命令都在**仓库根目录**敲（`ls` 能看到 `system/backend`、`system/fixtures` 的那一层）。
 
-**不装新东西**：Python 用仓库里现成的 `backend/.venv/bin/python`，它已经装好 fastapi 和 uvicorn，**不要再用 pip 装新东西**。
+**不装新东西**：Python 用仓库里现成的 `system/backend/.venv/bin/python`，它已经装好 fastapi 和 uvicorn，**不要再用 pip 装新东西**。
 
 1. 在仓库根目录新建文件夹 `lab`，在 `lab` 里新建文件 `app.py`，把下面整段**粘贴**进去（口语常说“粘进去”）、保存：
 
@@ -41,7 +41,7 @@ def health():
 2. 在终端 1 敲：
 
 ```bash
-backend/.venv/bin/python -m uvicorn lab.app:app --port 8000
+system/backend/.venv/bin/python -m uvicorn lab.app:app --port 8000
 ```
 
 **端口被占**：如果报 `ERROR:    [Errno 98] error while attempting to bind on address ('127.0.0.1', 8000): address already in use`，说明 `8000` 被别的程序占了。

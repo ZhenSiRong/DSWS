@@ -4,11 +4,11 @@
 
 在仓库根目录一条命令重跑：
 
-    python3 manual/shots/build_explorer.py                      # 生成 explorer.html + 静态 / DOM 自检
-    python3 manual/shots/build_explorer.py --shots              # 另出 4 张验证截图（v2-01/02/03 + v3-01）
-    python3 manual/shots/build_explorer.py --shots --shot v3-01 # 只重出城市地图那张截图
+    python3 tutorial/shots/build_explorer.py                      # 生成 explorer.html + 静态 / DOM 自检
+    python3 tutorial/shots/build_explorer.py --shots              # 另出 4 张验证截图（v2-01/02/03 + v3-01）
+    python3 tutorial/shots/build_explorer.py --shots --shot v3-01 # 只重出城市地图那张截图
 
-依据 `humen-desicions/09-ablation-course.md` 的 **D39 / D40 / D41 / D42 / D43**（物料清单视图）
+依据 `materials/humen-desicions/09-ablation-course.md` 的 **D39 / D40 / D41 / D42 / D43**（物料清单视图）
 与 **D44 / D45**（城市地图视图）：
 D39 中分视图（左材料总览、右可多开卡片）；D40 编辑入口只在卡片上、总览只读派生；
 D41 状态粒度下沉到「一格一状态」；D42 行=交付物、格=检验点（1–3 个、命令+期望输出）；
@@ -18,13 +18,13 @@ D44 四级 + D50 追加 L5 装 = 五种工程动作（造→换→审→守→�
 
 它做六件事：
 
-1. **读单源**：物料清单只读 `manual/completeness/v2/data.json`（12 件交付物 × 24 个检验点）；
-   城市地图只读 `manual/city/data.json`（4 区 / 10 设施 P0–P9，P2→P1、P4–P8→P3 真楼嵌套 /
+1. **读单源**：物料清单只读 `tutorial/completeness/v2/data.json`（12 件交付物 × 24 个检验点）；
+   城市地图只读 `tutorial/city/data.json`（4 区 / 10 设施 P0–P9，P2→P1、P4–P8→P3 真楼嵌套 /
    11 条道路 / 23 页标题 / 12 件交付物编号），交付物名字逐字取 v2 data；
-   五阶段口径统一到 `manual/city/data-24.json` 的 `levels`（D50 正典；level / theme / pages / count / desc
-   的唯一事实源）；`manual/city/stages-city.json` 存在时只补城市说法 name / subtitle，其
+   五阶段口径统一到 `tutorial/city/data-24.json` 的 `levels`（D50 正典；level / theme / pages / count / desc
+   的唯一事实源）；`tutorial/city/stages-city.json` 存在时只补城市说法 name / subtitle，其
    level / action / theme / pages 必须与 levels 逐字一致，不存在时 name 用 D44 文字回退；
-   页标题运行期从 `manual/page-0X.md` 的 H1 读（不手写）。
+   页标题运行期从 `tutorial/page-0X.md` 的 H1 读（不手写）。
 2. **数据一致性自检**：v2 12 件 / 每件 1–3 个检验点 / 合计 24 / id 唯一 / 依赖无环 /
    页与行号可解析；城市 4 区非空 / 10 设施 P0–P9 / parent 合法（存在、同区、只一层、父级是楼）/
    12 件交付物各一次 / 10 页页标题与 md H1 逐字一致 / 五阶段 5 段。
@@ -66,7 +66,7 @@ import sys
 import tempfile
 from pathlib import Path
 
-HERE = Path(__file__).resolve().parent          # manual/shots
+HERE = Path(__file__).resolve().parent          # tutorial/shots
 REPO = HERE.parents[1]                          # 仓库根目录
 MANUAL = REPO / "manual"
 DATA_PATH = MANUAL / "completeness" / "v2" / "data.json"
@@ -426,10 +426,10 @@ def read_page_title(page_id: str) -> str:
 def build_city_stages(city_data: dict) -> tuple[list[dict], str]:
     """城市五阶段条（只读，不参与勾选）。口径统一（避免两份单源漂移）：
 
-    - **level / theme / pages / count / desc 一律以 `manual/city/data-24.json` 的 `levels` 为准**
+    - **level / theme / pages / count / desc 一律以 `tutorial/city/data-24.json` 的 `levels` 为准**
       （D50 后全书 24 页五级的正典单源；count = 本阶段页数，第一段显示 0/设施数 = 还没造）。
-      冻结的 `manual/city/data.json` 只供 L1 几何，其 levels（前 4 级）必须与 24 单源逐字一致。
-    - `manual/city/stages-city.json` 只补「城市说法」：name（阶段城市名）与 subtitle；
+      冻结的 `tutorial/city/data.json` 只供 L1 几何，其 levels（前 4 级）必须与 24 单源逐字一致。
+    - `tutorial/city/stages-city.json` 只补「城市说法」：name（阶段城市名）与 subtitle；
       按 level 代码匹配（可部分覆盖，L5 缺省时回退），其 level / action / theme / pages
       必须与 levels 逐字一致，不一致直接报错，不做静默覆盖。
       （stages-city.json 的 badges.label 是「12 件交付物」口径，与本条「N 页」口径不同，见下。）
@@ -469,7 +469,7 @@ def build_city_stages(city_data: dict) -> tuple[list[dict], str]:
     city_subs: dict[str, str] = {}
     source = "D44 文字（stages-city.json 不存在）"
     if CITY_STAGES_PATH.exists():
-        source = "manual/city/stages-city.json"
+        source = "tutorial/city/stages-city.json"
         raw_doc = load_json(CITY_STAGES_PATH, "城市五阶段（城市名 / 副标题）")
         raw_stages = raw_doc.get("stages")
         if not isinstance(raw_stages, list):
@@ -691,9 +691,9 @@ def build_city_model(data: dict, city_data: dict) -> dict:
         "one_liner": city_data.get("one_liner"),
         "note": city_data.get("note"),
         "sources": {
-            "city": "manual/city/data.json（4 区 / 10 设施 / 真楼嵌套 / page_id ↔ 页码）",
-            "titles": "manual/page-00.md – page-09.md 的 H1（运行期读取，不手写）",
-            "artifacts": "manual/completeness/v2/data.json 的 1–12 件交付物（名字逐字取它）",
+            "city": "tutorial/city/data.json（4 区 / 10 设施 / 真楼嵌套 / page_id ↔ 页码）",
+            "titles": "tutorial/page-00.md – page-09.md 的 H1（运行期读取，不手写）",
+            "artifacts": "tutorial/completeness/v2/data.json 的 1–12 件交付物（名字逐字取它）",
             "stages": stages_source,
         },
         "zones": zone_models,
@@ -1144,7 +1144,7 @@ a.pg:hover{background:var(--ink);color:#fff;}
   <nav class="aon" id="aon" aria-label="AON 流水导航（只定位，不勾选）">
     <div class="aon-head">
       <span class="aon-title">AON 流水 · 位置导航</span>
-      <span class="aon-note">A0–A9 活动名 / 顺序取自 manual/flow.mmd · 点它只高亮左侧零件行，<b>不参与勾选</b></span>
+      <span class="aon-note">A0–A9 活动名 / 顺序取自 tutorial/flow.mmd · 点它只高亮左侧零件行，<b>不参与勾选</b></span>
     </div>
     <div class="aon-body">__AON_NAV__</div>
   </nav>
@@ -1256,7 +1256,7 @@ a.pg:hover{background:var(--ink);color:#fff;}
   if (!E2E_ART) { E2E_ART = ARTS[ARTS.length - 1]; }
   var TOTAL_CHECKS = ARTS.reduce(function (sum, art) { return sum + art.checkpoints.length; }, 0);
 
-  // 城市地图（4 区 / 10 设施 ↔ 10 页）：数据由生成器从 manual/city/data.json + page-0X.md 的 H1
+  // 城市地图（4 区 / 10 设施 ↔ 10 页）：数据由生成器从 tutorial/city/data.json + page-0X.md 的 H1
   // + v2 data 的交付物名 + D44+D50 五阶段文字合成后内联；页标题不在这里手写。
   var CITY = JSON.parse(document.getElementById('city-data').textContent);
   var CITY_ZONES = CITY.zones || [];
@@ -2325,7 +2325,7 @@ def check_html(text: str, data: dict, city_model: dict) -> dict:
         if not str(stage.get("sub") or "").strip():
             fail("城市五阶段第 %d 段缺说明文字" % (idx + 1))
     if embedded_city.get("stages_source") not in (
-            "D44 文字（stages-city.json 不存在）", "manual/city/stages-city.json"):
+            "D44 文字（stages-city.json 不存在）", "tutorial/city/stages-city.json"):
         fail("stages_source 标记异常：%r" % embedded_city.get("stages_source"))
 
     for needle in ("城市地图", "data-city-fac=", "data-city-page=", "data-city-zone=",
@@ -3304,10 +3304,10 @@ def build(shots_enabled: bool, shot_only: str | None = None) -> None:
     if shots_enabled:
         generate_shots(text, shot_only)
     else:
-        print("  提示：加 --shots 可重出 4 张验证截图（manual/review/explorer-shots/"
+        print("  提示：加 --shots 可重出 4 张验证截图（tutorial/review/explorer-shots/"
               "v2-01 / v2-02 / v2-03 / v3-01）")
     print("完成：一个文件即可离线双击打开，不发起任何网络请求。"
-          "（重跑：python3 manual/shots/build_explorer.py%s）"
+          "（重跑：python3 tutorial/shots/build_explorer.py%s）"
           % (" --shots" if not shots_enabled else ""))
 
 
@@ -3315,7 +3315,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         description="由 v2 单源 data.json + city/data.json 生成《建成证明》可交互原型 explorer.html")
     parser.add_argument("--shots", action="store_true",
-                        help="同时生成 4 张验证截图到 manual/review/explorer-shots/")
+                        help="同时生成 4 张验证截图到 tutorial/review/explorer-shots/")
     parser.add_argument("--shot", metavar="PREFIX", default=None,
                         help="配合 --shots，只重出文件名以该前缀开头的截图（如 v3-01）")
     args = parser.parse_args(argv)

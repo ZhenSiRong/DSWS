@@ -1,6 +1,6 @@
 # AGENTS · 仓库 steering（导航指针，不是教程）
 
-> 四类存放见 `PROJECT-MAP.md`：`tutorial/`（教程正典）/ `toolbox/`（制作工具）/ `system/`（示例系统）/ `materials/`（设计研究证据）。根目录旧路径是兼容软链。
+> 四类存放见 `PROJECT-MAP.md`：`tutorial/`（教程正典）/ `toolbox/`（制作工具）/ `system/`（示例系统）/ `materials/`（设计研究证据）。根目录不再保留兼容软链；所有路径直接用四类真实目录。
 
 - 写/改页面：先读 `tutorial/SPEC.md`（六段模板与硬预算）和 `tutorial/TRAPS.md`（重放实测的环境陷阱）。
 - 环境回滚：`materials/docs/lab.md`（`lab save/diff/reset` 只回文件）；页面模板与 DoD：`materials/humen-desicions/09-ablation-course.md` D46/D47。

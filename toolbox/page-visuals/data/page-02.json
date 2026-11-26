@@ -5,9 +5,9 @@
   "layout": "entity_metaphor",
   "left_cards": [
     {
-      "name": "fixtures/dw.sql",
+      "name": "system/fixtures/dw.sql",
       "role": "建库、建表、灌数据全写在一个文件里",
-      "judge": "docker exec -i … < fixtures/dw.sql"
+      "judge": "docker exec -i … < system/fixtures/dw.sql"
     },
     {
       "name": "5 张表",

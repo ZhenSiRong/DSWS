@@ -1,8 +1,8 @@
 # 真模型纠错实测证据（`deepseek-flash` · 隔离栈 · 24 次真实请求）
 
-> 日期：2026-11-20 07:05:26–07:08:41（Asia/Shanghai）。探针 `eval/live_probe.py` + `eval/correction_live.jsonl`（8 题 × `--trials 3` = **24 次真实 `POST /api/query`**），exit 0，总耗时 **194.78s**。
+> 日期：2026-11-20 07:05:26–07:08:41（Asia/Shanghai）。探针 `system/eval/live_probe.py` + `system/eval/correction_live.jsonl`（8 题 × `--trials 3` = **24 次真实 `POST /api/query`**），exit 0，总耗时 **194.78s**。
 > 环境：仓库根起隔离栈 `-p p17live`，端口 mysql `13317` / ES `19217` / qdrant `16317` / backend `18117` / frontend `18097`（额外 `FRONTEND_BIND=127.0.0.1`）。容器内 `HttpLlmGenerator.from_env().name` = **`http-llm`**，模型 `deepseek-flash`（`https://api.deepseek.com/v1`）。
-> 栈状态：init `Exited (0)`（日志末行 `DOCKER INIT PASS`）；`curl /api/health` → `200 {"status":"ok","stage":"S7"}`；backend healthy。原始报告：`manual/review/llm-live-report.json`。
+> 栈状态：init `Exited (0)`（日志末行 `DOCKER INIT PASS`）；`curl /api/health` → `200 {"status":"ok","stage":"S7"}`；backend healthy。原始报告：`tutorial/review/llm-live-report.json`。
 
 ## 8 题 × 3 次分类
 
@@ -36,8 +36,8 @@ docker compose -p p17live up -d mysql elasticsearch qdrant       # 等三者 hea
 docker compose -p p17live exec -T elasticsearch curl -s -XPUT 'http://127.0.0.1:9200/_cluster/settings' \
   -H 'Content-Type: application/json' -d '{"persistent":{"cluster.routing.allocation.disk.threshold_enabled":false}}'
 docker compose -p p17live up -d init backend frontend            # init 须 Exited (0)，backend 须 healthy
-backend/.venv/bin/python eval/live_probe.py --target http://127.0.0.1:18117 --trials 3
-cp eval/live-report.json manual/review/llm-live-report.json && git checkout -- eval/live-report.json
+system/backend/.venv/bin/python system/eval/live_probe.py --target http://127.0.0.1:18117 --trials 3
+cp system/eval/live-report.json tutorial/review/llm-live-report.json && git checkout -- system/eval/live-report.json
 docker compose -p p17live down -v
 ```
 

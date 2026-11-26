@@ -64,10 +64,10 @@ if __name__ == "__main__":
 然后在仓库根目录跑（**不用起服务**，终端 1 那个服务开着也不影响）：
 
 ```bash
-backend/.venv/bin/python -m lab.app
+system/backend/.venv/bin/python -m lab.app
 ```
 
-**对照原文件**：`CONTRACT` 是 `contracts/schema.contract.yaml` 的浓缩版，你可以打开原文件对照。
+**对照原文件**：`CONTRACT` 是 `system/contracts/schema.contract.yaml` 的浓缩版，你可以打开原文件对照。
 
 **三处对应**：`fact_order.region_id` 指向 `dim_region.region_id`（外键），`销售额` 的口径是 `SUM(fact_order.order_amount)`，`华北` 是 `dim_region.region_name` 的一个取值。
 

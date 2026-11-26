@@ -3,8 +3,8 @@ meta:
   repo: /home/zhensirong/VM-Share/DSWS-design-lab
   updated_at: 2026-11-24T22:38+08:00
   render:
-    doc: humen-desicions/14-progress-gantt.md
-    png: humen-desicions/progress-gantt.png
+    doc: materials/humen-desicions/14-progress-gantt.md
+    png: materials/humen-desicions/progress-gantt.png
 tasks:
 - id: s1
   title: grill 选型 12/13（各三轮）
@@ -23,10 +23,10 @@ tasks:
   provenance: null
   evidence:
   - kind: file
-    path: humen-desicions/12-md-editor.md
+    path: materials/humen-desicions/12-md-editor.md
     criterion: 落定
   - kind: file
-    path: humen-desicions/13-html-rebuild.md
+    path: materials/humen-desicions/13-html-rebuild.md
     criterion: 落定
   milestone: false
   review:
@@ -59,7 +59,7 @@ tasks:
     path: GLOSSARY.md
     criterion: 重构版
   - kind: file
-    path: docs/adr/0001-dual-canon.md
+    path: materials/docs/adr/0001-dual-canon.md
     criterion: ''
   milestone: false
   review:
@@ -86,7 +86,7 @@ tasks:
   provenance: null
   evidence:
   - kind: file
-    path: humen-desicions/progress-gantt.png
+    path: materials/humen-desicions/progress-gantt.png
     criterion: ''
   milestone: false
   review:
@@ -218,10 +218,10 @@ tasks:
     -s manual-c1
   evidence:
   - kind: file
-    path: scripts/read-serve.sh
+    path: toolbox/scripts/read-serve.sh
     criterion: uv run --with livereload
   - kind: cmd
-    run: bash -n scripts/read-serve.sh
+    run: bash -n toolbox/scripts/read-serve.sh
     criterion: ''
   milestone: false
   review:
@@ -275,16 +275,16 @@ tasks:
     -s manual-g1
   evidence:
   - kind: file
-    path: manual/rebuild/editor.html
+    path: tutorial/rebuild/editor.html
     criterion: grapesjs.init
   - kind: cmd
-    run: grep -c 'bm.add(' manual/rebuild/editor.html
+    run: grep -c 'bm.add(' tutorial/rebuild/editor.html
     criterion: '8'
   - kind: file
-    path: manual/rebuild/rebuild.css
+    path: tutorial/rebuild/rebuild.css
     criterion: rb-callout
   - kind: file
-    path: manual/rebuild/vendor/grapes.min.js
+    path: tutorial/rebuild/vendor/grapes.min.js
     criterion: ''
   milestone: false
   review:
@@ -313,16 +313,16 @@ tasks:
     -s manual-g2
   evidence:
   - kind: file
-    path: manual/rebuild/page-17.rebuild.html
+    path: tutorial/rebuild/page-17.rebuild.html
     criterion: 派生基线
   - kind: cmd
-    run: grep -c 'class="rb-code"' manual/rebuild/page-17.rebuild.html
+    run: grep -c 'class="rb-code"' tutorial/rebuild/page-17.rebuild.html
     criterion: '12'
   - kind: file
-    path: manual/rebuild/rebuild.js
+    path: tutorial/rebuild/rebuild.js
     criterion: clipboard
   - kind: cmd
-    run: grep -c 'scripts/lab reset p17-before --yes' manual/rebuild/page-17.rebuild.html
+    run: grep -c 'toolbox/scripts/lab reset p17-before --yes' tutorial/rebuild/page-17.rebuild.html
     criterion: '1'
   milestone: false
   review:
@@ -406,7 +406,7 @@ tasks:
     report: null
     at: 2026-11-24T15:18+08:00
     overridden: true
-    override_reason: 夜间 kimi 批 + root 复核：audit 24/24、verify T0 PASS、保护区 0 异常；报告 manual/review/reading-layer-batch-A-report.md
+    override_reason: 夜间 kimi 批 + root 复核：audit 24/24、verify T0 PASS、保护区 0 异常；报告 tutorial/review/reading-layer-batch-A-report.md
 - id: r2
   title: A13/A18 并行支路
   group: reading-layer
@@ -432,7 +432,7 @@ tasks:
     report: null
     at: 2026-11-24T15:18+08:00
     overridden: true
-    override_reason: 夜间 kimi 批 + root 复核：audit 24/24、verify T0 PASS、保护区 0 异常；报告 manual/review/reading-layer-batch-A-report.md
+    override_reason: 夜间 kimi 批 + root 复核：audit 24/24、verify T0 PASS、保护区 0 异常；报告 tutorial/review/reading-layer-batch-A-report.md
 - id: r3
   title: B 批 5 页
   group: reading-layer
@@ -458,7 +458,7 @@ tasks:
     report: null
     at: 2026-11-24T15:18+08:00
     overridden: true
-    override_reason: 夜间 kimi 批 + root 复核：audit 24/24、verify T0 PASS、保护区 0 异常；报告 manual/review/reading-layer-batch-B-report.md
+    override_reason: 夜间 kimi 批 + root 复核：audit 24/24、verify T0 PASS、保护区 0 异常；报告 tutorial/review/reading-layer-batch-B-report.md
 - id: r4
   title: C 快通 12 页
   group: reading-layer
@@ -484,9 +484,9 @@ tasks:
     report: null
     at: 2026-11-24T15:18+08:00
     overridden: true
-    override_reason: 夜间 kimi 批 + root 复核：audit 24/24、verify T0 PASS、保护区 0 异常；报告 manual/review/reading-layer-batch-C1-report.md
+    override_reason: 夜间 kimi 批 + root 复核：audit 24/24、verify T0 PASS、保护区 0 异常；报告 tutorial/review/reading-layer-batch-C1-report.md
 - id: v1
-  title: verify 核心：scripts/verify.py + p17 契约与注解（T0/T1）
+  title: verify 核心：toolbox/scripts/verify.py + p17 契约与注解（T0/T1）
   group: verify-line
   depends_on: []
   status: done
@@ -505,7 +505,7 @@ tasks:
   review:
     verdict: pass
     reviewer: null
-    report: manual/review/review-v1-verify-core.md
+    report: tutorial/review/review-v1-verify-core.md
     at: 2026-11-23T23:38+08:00
     overridden: false
     override_reason: null
@@ -533,10 +533,10 @@ tasks:
     report: null
     at: 2026-11-23T23:38+08:00
     overridden: true
-    override_reason: root 实施接线：Makefile verify/accept、pre-commit T0、GitHub Actions、docs/checks；已实测
-      make verify/audit/pre-commit/T2 L3-L4
+    override_reason: root 实施接线：Makefile toolbox/verify/accept、pre-commit T0、GitHub Actions、materials/docs/checks；已实测
+      make toolbox/verify/audit/pre-commit/T2 L3-L4
 - id: v3
-  title: T2 级考核脚本：scripts/acceptance/level-*.sh + make accept-*
+  title: T2 级考核脚本：toolbox/scripts/acceptance/level-*.sh + make accept-*
   group: verify-line
   depends_on: []
   status: done
@@ -560,7 +560,7 @@ tasks:
     overridden: true
     override_reason: root 复跑：level-l3/l4 PASS、level-l1/2/5 栈未起 SKIP=2；bash -n 全过
 - id: v4
-  title: 术语与 ADR：GLOSSARY 四词 + ADR 0002 + docs/verify-line.md
+  title: 术语与 ADR：GLOSSARY 四词 + ADR 0002 + materials/docs/verify-line.md
   group: verify-line
   depends_on: []
   status: done
@@ -604,10 +604,10 @@ tasks:
     run: make verify
     criterion: T1 PASS
   - kind: cmd
-    run: python3 manual/shots/audit_book.py
+    run: python3 tutorial/shots/audit_book.py
     criterion: 页面：24/24 通过；README 坏链：0
   - kind: cmd
-    run: python3 scripts/tests/test_verify.py
+    run: python3 toolbox/scripts/tests/test_verify.py
     criterion: OK
   review:
     verdict: pass

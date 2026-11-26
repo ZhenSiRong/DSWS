@@ -7,15 +7,15 @@
   "kicker": "D44 横切系统 × D45 城市隐喻 × D50 体验层 · 同一片城区 / 同一套坐标 · L1 造 10 件 + 改造层 14 件 = 24 页",
   "one_liner": "不是另建一座城：L1 把骨架造出来，L2 换真件、L3 审机器、L4 守防线、L5 装门面，都叠加在同一座城的同一套坐标上。",
   "image": "images/city-map-24.png",
-  "rerun": "python3 manual/shots/render_city_map_24.py",
+  "rerun": "python3 tutorial/shots/render_city_map_24.py",
   "note": "单源：本文件。L1 十件设施 / 四区 / 11 条道路逐字复制 data.json；P0–P22 的 13 件改造层设施逐字复制 data-23.json（渲染脚本运行时逐字比对，23 页版冻结为历史快照）；新增 P23 = L5 装（体验层），被改造对象是 P9 门户 + P4 窗外层，画在门户区、不新增楼。画布 1600×1000 CSS @2x = 3200×2000，与旧图同尺寸。",
   "sources": {
-    "geometry": "manual/city/data.json（L1 十件设施 / 四区 / 11 条道路 / 市民，只读比对，不改）",
-    "previous": "manual/city/data-23.json（23 页版本历史快照，只读：L1 十件 + 改造层 P10–P22 逐字保留）",
-    "pages": "manual/page-10.md … page-23.md（H1 与「你应该看到」定设施命名与判据）",
-    "actions": "humen-desicions/09-ablation-course.md D44：L1 造（纵向）+ L2 换 / L3 审 / L4 守（横向横切系统）；D50：L5 装 = 体验层，成熟版原版前端换掉第 9 页 17 行 HTML，入口 / 契约不变",
+    "geometry": "tutorial/city/data.json（L1 十件设施 / 四区 / 11 条道路 / 市民，只读比对，不改）",
+    "previous": "tutorial/city/data-23.json（23 页版本历史快照，只读：L1 十件 + 改造层 P10–P22 逐字保留）",
+    "pages": "tutorial/page-10.md … page-23.md（H1 与「你应该看到」定设施命名与判据）",
+    "actions": "materials/humen-desicions/09-ablation-course.md D44：L1 造（纵向）+ L2 换 / L3 审 / L4 守（横向横切系统）；D50：L5 装 = 体验层，成熟版原版前端换掉第 9 页 17 行 HTML，入口 / 契约不变",
     "metaphor": "GLOSSARY.md「城市隐喻」（D45）：设施 = 运行单元、道路/管网 = 网络与数据流、市民 = 用户",
-    "stages": "manual/city/stages-city.json（四阶段口径与 12 件接线点，本图不镜像它，只借横切系统的说法）"
+    "stages": "tutorial/city/stages-city.json（四阶段口径与 12 件接线点，本图不镜像它，只借横切系统的说法）"
   },
   "canvas": {
     "w": 1600,
@@ -768,7 +768,7 @@
       "lines": [
         "fact_order 115 行；华北 19 单（region_id = R004）",
         "金额口径：SUM(fact_order.order_amount)",
-        "入库：docker exec -i … < fixtures/dw.sql（-i 必加）"
+        "入库：docker exec -i … < system/fixtures/dw.sql（-i 必加）"
       ],
       "rect": {
         "x": 44,
@@ -840,7 +840,7 @@
       "layer": "地下管网层",
       "name": "真实供水管线",
       "kind": "管线",
-      "soft": "fixtures/dw-real.sql → dw（410 行真数据）",
+      "soft": "system/fixtures/dw-real.sql → dw（410 行真数据）",
       "goal": "把演示数据换成本域真数据，再重建元知识",
       "short": "真数据进得来",
       "foot": "410 行 · S1/S2 PASS",
@@ -892,7 +892,7 @@
       "layer": "街区站",
       "name": "契约校准站",
       "kind": "校准站",
-      "soft": "contracts/ 四份契约 = 唯一事实源",
+      "soft": "system/contracts/ 四份契约 = 唯一事实源",
       "goal": "改契约 → 重生成 → 查新鲜度",
       "short": "契约不再内联",
       "foot": "四份契约 · S7 CONTRACT GEN PASS",

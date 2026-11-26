@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """task.py —— 任务生命周期 chokepoint CLI（台账唯一合法写入口）
 
-真相源：workflows/ledger.yaml。规格见 workflows/task-lifecycle.md。
+真相源：toolbox/workflows/ledger.yaml。规格见 toolbox/workflows/task-lifecycle.md。
 门禁与 git 解耦：每次 start/done 都触发，不依赖 commit。
 
 命令：
@@ -223,7 +223,7 @@ def write_review_request(task: dict, reviewer: str) -> Path:
         f"1. 丙：上面每条证据/判据是否真成立（声明→现场）。\n"
         f"2. 乙：页面/文档改动是否正确（练本页、规划文档）。\n"
         f"3. 甲：代码改动是否有严重错误（按需）。\n\n"
-        f"## 产出\n把结论写进 `workflows/reviews/{task['id']}.md`，"
+        f"## 产出\n把结论写进 `toolbox/workflows/reviews/{task['id']}.md`，"
         f"**最后一非空行**必须是 `VERDICT: pass` 或 `VERDICT: blocker`（blocker 时上文列具体问题）。\n",
         encoding="utf-8",
     )
@@ -314,8 +314,8 @@ def cmd_done(args) -> int:
         print(f"… {args.id} review 已派 Orca worker（{reviewer}）")
     print(f"⏸ {args.id} REVIEW REQUIRED（reviewer={reviewer}）")
     print(f"  brief: {req}")
-    print(f"  审完写报告 workflows/reviews/{args.id}.md（末行 VERDICT: pass|blocker），再跑：")
-    print(f"    python3 scripts/task.py verdict {args.id}")
+    print(f"  审完写报告 toolbox/workflows/reviews/{args.id}.md（末行 VERDICT: pass|blocker），再跑：")
+    print(f"    python3 toolbox/scripts/task.py verdict {args.id}")
     return 2
 
 
@@ -438,7 +438,7 @@ def cmd_show(args) -> int:
 # --------------------------------------------------------------------------- #
 # board（ledger → 单文件静态 HTML + meta；人类入口，与甘特并列投影）
 # --------------------------------------------------------------------------- #
-BOARD_DEFAULT = "workflows/board.html"
+BOARD_DEFAULT = "toolbox/workflows/board.html"
 STATUS_LABEL = ("todo", "doing", "done")
 
 BOARD_CSS = """
@@ -595,7 +595,7 @@ def esc(value: object) -> str:
 
 
 def board_path(data: dict, override: str | None = None) -> Path:
-    """看板路径：--out > meta.render.board > workflows/board.html。
+    """看板路径：--out > meta.render.board > toolbox/workflows/board.html。
 
     相对路径一律相对仓库根（与 meta.render.doc/png 同口径），不写进产物。
     """
@@ -858,7 +858,7 @@ def gen_board_html(data: dict, board: Path, generated_iso: str) -> str:
 <div class="empty" id="empty" hidden>没有匹配的任务。</div>
 </main>
 <footer>
-  <span>由 <code>scripts/task.py board</code> 生成</span>
+  <span>由 <code>toolbox/scripts/task.py board</code> 生成</span>
   <span>数据源 <code>{esc(ledger_rel)}</code></span>
   <span>身份指纹 <code>{footer_meta}</code></span>
   <span>台账是唯一真相源，手改本页无效</span>
@@ -1047,7 +1047,7 @@ def find_mermaid_js() -> Path:
     for c in cands:
         if c.exists():
             return c
-    raise SystemExit("缺本地 mermaid.min.js（设 MERMAID_JS 或放 assets/mermaid.min.js）")
+    raise SystemExit("缺本地 mermaid.min.js（设 MERMAID_JS 或放 materials/assets/mermaid.min.js）")
 
 
 def cmd_render(args) -> int:
@@ -1086,12 +1086,12 @@ SECTION_GROUP = {
     "阅读层（暂停待恢复）": "reading-layer",
 }
 DONE_EVIDENCE = {
-    "s1": [{"kind": "file", "path": "humen-desicions/12-md-editor.md", "criterion": "落定"},
-           {"kind": "file", "path": "humen-desicions/13-html-rebuild.md", "criterion": "落定"}],
+    "s1": [{"kind": "file", "path": "materials/humen-desicions/12-md-editor.md", "criterion": "落定"},
+           {"kind": "file", "path": "materials/humen-desicions/13-html-rebuild.md", "criterion": "落定"}],
     "s2": [{"kind": "file", "path": "GLOSSARY.md", "criterion": "复核编辑器"},
            {"kind": "file", "path": "GLOSSARY.md", "criterion": "重构版"},
-           {"kind": "file", "path": "docs/adr/0001-dual-canon.md", "criterion": ""}],
-    "s3": [{"kind": "file", "path": "humen-desicions/progress-gantt.png", "criterion": ""}],
+           {"kind": "file", "path": "materials/docs/adr/0001-dual-canon.md", "criterion": ""}],
+    "s3": [{"kind": "file", "path": "materials/humen-desicions/progress-gantt.png", "criterion": ""}],
     "s4": [{"kind": "cmd", "run": "git config core.hooksPath", "criterion": ".githooks"}],
 }
 
@@ -1144,8 +1144,8 @@ def cmd_migrate(args) -> int:
             t["blocked_reason"] = "等用户裁决（原 crit）"
         tasks.append(t)
     data = {"meta": {"host": host(), "repo": str(REPO), "updated_at": now(),
-                     "render": {"doc": "humen-desicions/14-progress-gantt.md",
-                                "png": "humen-desicions/progress-gantt.png"}},
+                     "render": {"doc": "materials/humen-desicions/14-progress-gantt.md",
+                                "png": "materials/humen-desicions/progress-gantt.png"}},
             "tasks": tasks}
     if has_cycle(tasks):
         raise SystemExit("迁移检测到依赖环，请检查 14 文档")

@@ -41,11 +41,12 @@ import yaml
 from app.cli import enable_utf8_stdio
 
 REBUILD_ROOT = Path(__file__).resolve().parents[2]
+REPO_ROOT = REBUILD_ROOT.parent
 CONTRACT_PATH = REBUILD_ROOT / "contracts" / "schema.contract.yaml"
 DDL_PATH = REBUILD_ROOT / "fixtures" / "dw.sql"
 LEGACY_META_PATH = REBUILD_ROOT / "fixtures" / "legacy" / "meta_config.yaml"
 FEATURE_LIST_PATH = REBUILD_ROOT / "fixtures" / "legacy" / "feature-list.md"
-DOC_PATH = REBUILD_ROOT / "docs" / "SCHEMA-CONTRACT.md"
+DOC_PATH = REPO_ROOT / "materials" / "docs" / "SCHEMA-CONTRACT.md"
 
 # 旧系统夹具必须命中的代码。少一个就说明检查器退化了。
 EXPECTED_LEGACY_CODES = (
@@ -1634,8 +1635,8 @@ def render_doc(contract: dict[str, Any], ddl: Ddl) -> str:
     lines.append("# Schema 契约（自动生成）")
     lines.append("")
     lines.append("> 由 `python -m app.schema_contract --write-doc` 生成，请勿手改。")
-    lines.append("> 语义事实源：`contracts/schema.contract.yaml`；")
-    lines.append("> 物理结构与数据：`fixtures/dw.sql`（内存 SQLite 加载，不需要 MySQL）。")
+    lines.append("> 语义事实源：`system/contracts/schema.contract.yaml`；")
+    lines.append("> 物理结构与数据：`system/fixtures/dw.sql`（内存 SQLite 加载，不需要 MySQL）。")
     lines.append("")
     lines.append("## 数据集")
     lines.append("")
@@ -1745,7 +1746,7 @@ def render_doc(contract: dict[str, Any], ddl: Ddl) -> str:
     lines.append("## 负向夹具（必须红）")
     lines.append("")
     lines.append(
-        "这些是旧系统 `fixtures/legacy/*` 的真实缺陷。它们**不是**事实源；"
+        "这些是旧系统 `system/fixtures/legacy/*` 的真实缺陷。它们**不是**事实源；"
         "检查器必须持续把它们检出来，否则说明防线退化。"
     )
     lines.append("")
@@ -1759,7 +1760,7 @@ def render_doc(contract: dict[str, Any], ddl: Ddl) -> str:
     lines.append("## 复现")
     lines.append("")
     lines.append("```bash")
-    lines.append("cd backend")
+    lines.append("cd system/backend")
     lines.append("uv run python -m app.schema_contract --check")
     lines.append("uv run python -m app.schema_contract --check-legacy   # 预期退出码 1")
     lines.append("uv run python -m app.schema_contract --write-doc")
@@ -1845,10 +1846,10 @@ def main(argv: Sequence[str] | None = None) -> int:
 
             print("== 3/3 文档新鲜度 ==")
             if not _doc_is_fresh(contract, ddl):
-                print(f"FAIL: {DOC_PATH.relative_to(REBUILD_ROOT)} 已过期")
+                print(f"FAIL: {DOC_PATH.relative_to(REPO_ROOT)} 已过期")
                 print("     运行 --write-doc 重新生成")
                 return 1
-            print(f"PASS: {DOC_PATH.relative_to(REBUILD_ROOT)} 与契约一致")
+            print(f"PASS: {DOC_PATH.relative_to(REPO_ROOT)} 与契约一致")
             print("S1 PASS")
             return 0
 
@@ -1881,14 +1882,14 @@ def main(argv: Sequence[str] | None = None) -> int:
         if args.write_doc:
             DOC_PATH.parent.mkdir(parents=True, exist_ok=True)
             DOC_PATH.write_text(render_doc(contract, ddl), encoding="utf-8")
-            print(f"WROTE: {DOC_PATH.relative_to(REBUILD_ROOT)}")
+            print(f"WROTE: {DOC_PATH.relative_to(REPO_ROOT)}")
             return 0
 
         if args.check_doc:
             if _doc_is_fresh(contract, ddl):
-                print(f"PASS: {DOC_PATH.relative_to(REBUILD_ROOT)} 与契约一致")
+                print(f"PASS: {DOC_PATH.relative_to(REPO_ROOT)} 与契约一致")
                 return 0
-            print(f"FAIL: {DOC_PATH.relative_to(REBUILD_ROOT)} 已过期")
+            print(f"FAIL: {DOC_PATH.relative_to(REPO_ROOT)} 已过期")
             return 1
     finally:
         ddl.close()

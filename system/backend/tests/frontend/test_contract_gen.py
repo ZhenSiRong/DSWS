@@ -24,7 +24,7 @@ def test_generated_files_are_fresh() -> None:
         actual = Path(path).read_text(encoding="utf-8")
         assert actual == expected, (
             f"{path} 与契约不同步。请运行："
-            "cd backend && uv run python -m app.scripts.contracts_gen"
+            "cd system/backend && uv run python -m app.scripts.contracts_gen"
         )
 
 

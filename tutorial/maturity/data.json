@@ -20,9 +20,9 @@
     }
   },
   "source_refs": {
-    "skeleton": "manual/page-00.md … page-09.md：每页「动手」里的实现 + 「你应该看到」的真跑输出",
-    "mature": "contracts/ · backend/app/ · frontend/src/ · compose.yaml / scripts/docker-smoke.sh；README 的 S0–S8 阶段表",
-    "shared": "manual/completeness/v2/data.json：本文件 12 件的编号 / 名字 / 位置 / 页码逐字沿用（渲染脚本会逐项比对）"
+    "skeleton": "tutorial/page-00.md … page-09.md：每页「动手」里的实现 + 「你应该看到」的真跑输出",
+    "mature": "system/contracts/ · system/backend/app/ · system/frontend/src/ · compose.yaml / toolbox/scripts/docker-smoke.sh；README 的 S0–S8 阶段表",
+    "shared": "tutorial/completeness/v2/data.json：本文件 12 件的编号 / 名字 / 位置 / 页码逐字沿用（渲染脚本会逐项比对）"
   },
   "counts": {
     "artifacts": 12,
@@ -69,7 +69,7 @@
     "健康检查"
   ],
   "tag_glossary": {
-    "契约库": "contracts/ 唯一事实源，前后端从契约派生",
+    "契约库": "system/contracts/ 唯一事实源，前后端从契约派生",
     "检索": "ES 列/值/指标 + Qdrant 向量召回",
     "LLM": "生成器可切真 LLM；LangGraph 12 节点编排",
     "校验": "validate_sql：sqlglot AST 静态校验",
@@ -90,11 +90,11 @@
       "id": "env",
       "name": "开发机环境（工具 + venv + 端口）",
       "kind": "工具 + venv + 端口",
-      "location": "本机 · `docker` / `uv` / `node` / `make` / `curl` + `backend/.venv`；3307 / 8000 / 8081 空着",
+      "location": "本机 · `docker` / `uv` / `node` / `make` / `curl` + `system/backend/.venv`；3307 / 8000 / 8081 空着",
       "pages": [
         "page-00"
       ],
-      "skeleton": "本机装 `docker`/`uv`/`node`/`make`/`curl`，`make install` 建 `backend/.venv`；`make doctor` 一次判工具/依赖/3307·8000·8081 端口（12/12）。",
+      "skeleton": "本机装 `docker`/`uv`/`node`/`make`/`curl`，`make install` 建 `system/backend/.venv`；`make doctor` 一次判工具/依赖/3307·8000·8081 端口（12/12）。",
       "mature": "`compose.yaml` 编排五服务 + 一次性 `init`，`.env` 由脚本生成不入库；`make docker-smoke` 8 步验收。",
       "delta": "手工装好的一台开发机 → 一条命令重建的声明式栈",
       "tags": [
@@ -103,7 +103,7 @@
       ],
       "evidence": {
         "skeleton": "page-00.md:17-55（make install / make doctor 的 12/12）",
-        "mature": "README S0–S8 · compose.yaml · scripts/docker-smoke.sh"
+        "mature": "README S0–S8 · compose.yaml · toolbox/scripts/docker-smoke.sh"
       }
     },
     {
@@ -116,7 +116,7 @@
         "page-01"
       ],
       "skeleton": "`docker run -d --name lab-mysql -p 127.0.0.1:3307:3306` 起空库；就绪靠 `until docker logs … grep 'port: 3306'` 轮询。",
-      "mature": "compose 的 `mysql:8.0` 服务（首次启动自动执行 `fixtures/dw.sql`）+ `healthcheck`；`init` 等三存储健康后开通只读账号、校验 S2 元知识。",
+      "mature": "compose 的 `mysql:8.0` 服务（首次启动自动执行 `system/fixtures/dw.sql`）+ `healthcheck`；`init` 等三存储健康后开通只读账号、校验 S2 元知识。",
       "delta": "手敲 docker run + 日志轮询 → 声明式服务 + 健康检查门控",
       "tags": [
         "编排",
@@ -136,16 +136,16 @@
       "pages": [
         "page-02"
       ],
-      "skeleton": "`fixtures/dw.sql` 里 5 段手写 `CREATE TABLE`（`fact_order` + 4 张维表），类型/外键/口径只在 SQL 文本里。",
-      "mature": "`contracts/schema.contract.yaml` 把 5 表 / 24 列 / 6 指标的 grain、measures、value_domain 写成契约；`--check` 对 DDL 与真实值校验。",
+      "skeleton": "`system/fixtures/dw.sql` 里 5 段手写 `CREATE TABLE`（`fact_order` + 4 张维表），类型/外键/口径只在 SQL 文本里。",
+      "mature": "`system/contracts/schema.contract.yaml` 把 5 表 / 24 列 / 6 指标的 grain、measures、value_domain 写成契约；`--check` 对 DDL 与真实值校验。",
       "delta": "手写 DDL → 可被机器校验的 Schema 契约",
       "tags": [
         "契约库",
         "校验"
       ],
       "evidence": {
-        "skeleton": "page-02.md:20-23 · fixtures/dw.sql（5 段 CREATE TABLE）",
-        "mature": "contracts/schema.contract.yaml · backend/app/schema_contract.py"
+        "skeleton": "page-02.md:20-23 · system/fixtures/dw.sql（5 段 CREATE TABLE）",
+        "mature": "system/contracts/schema.contract.yaml · system/backend/app/schema_contract.py"
       }
     },
     {
@@ -153,11 +153,11 @@
       "id": "dw-data",
       "name": "数据 115 行",
       "kind": "数据行",
-      "location": "`dw.fact_order`（由 `fixtures/dw.sql` 灌入）",
+      "location": "`dw.fact_order`（由 `system/fixtures/dw.sql` 灌入）",
       "pages": [
         "page-02"
       ],
-      "skeleton": "`fixtures/dw.sql` 一次灌 115 行种子（`dim_region` 6 行等），验收靠 `COUNT(*)` 手数 115 / 华北 19。",
+      "skeleton": "`system/fixtures/dw.sql` 一次灌 115 行种子（`dim_region` 6 行等），验收靠 `COUNT(*)` 手数 115 / 华北 19。",
       "mature": "契约声明 `expected_fact_rows: 115`、`total_amount: 279159.5`、日期只到 2025-Q1；S3 20 题黄金集把期望表/列/指标/取值钉成回归基线。",
       "delta": "人工数行 → 契约钉死行数/总额/日期域 + 黄金集钉死召回",
       "tags": [
@@ -166,8 +166,8 @@
         "回归"
       ],
       "evidence": {
-        "skeleton": "page-02.md:35-64（COUNT(*)=115、华北 19）· fixtures/dw.sql",
-        "mature": "contracts/schema.contract.yaml dataset · backend/tests/recall/golden.yaml"
+        "skeleton": "page-02.md:35-64（COUNT(*)=115、华北 19）· system/fixtures/dw.sql",
+        "mature": "system/contracts/schema.contract.yaml dataset · system/backend/tests/recall/golden.yaml"
       }
     },
     {
@@ -188,7 +188,7 @@
       ],
       "evidence": {
         "skeleton": "page-03.md:20-63（lab/app.py + uvicorn 启动 + /health）",
-        "mature": "backend/app/main.py · contracts/errors.yaml · docker/Dockerfile"
+        "mature": "system/backend/app/main.py · system/contracts/errors.yaml · system/docker/Dockerfile"
       }
     },
     {
@@ -201,7 +201,7 @@
         "page-04"
       ],
       "skeleton": "`POST /api/query` 回写死的 JSON：`question` 永远是「华北销售额」，`keywords`/`sql`/`rows` 是空壳，换问题一字不变。",
-      "mature": "`POST /api/query` 走 LangGraph 12 节点流水线；SSE 按 `contracts/sse.schema.json` 发 `progress`/`result`/`error`，另有 `POST /api/cancel`。",
+      "mature": "`POST /api/query` 走 LangGraph 12 节点流水线；SSE 按 `system/contracts/sse.schema.json` 发 `progress`/`result`/`error`，另有 `POST /api/cancel`。",
       "delta": "写死回包 → 契约定义的三种事件，流必以 result 或 error 收尾",
       "tags": [
         "契约库",
@@ -209,7 +209,7 @@
       ],
       "evidence": {
         "skeleton": "page-04.md:21-68（硬编码 JSON，两次一字不差）",
-        "mature": "contracts/sse.schema.json · backend/app/agent/graph.py · main.py"
+        "mature": "system/contracts/sse.schema.json · system/backend/app/agent/graph.py · main.py"
       }
     },
     {
@@ -229,7 +229,7 @@
       ],
       "evidence": {
         "skeleton": "page-05.md:22-58（REGIONS/METRICS + extract_keywords）",
-        "mature": "backend/app/recall/ · README S2/S3 · contracts/schema.contract.yaml"
+        "mature": "system/backend/app/recall/ · README S2/S3 · system/contracts/schema.contract.yaml"
       }
     },
     {
@@ -251,7 +251,7 @@
       ],
       "evidence": {
         "skeleton": "page-06.md:20-44（CONTRACT + build_sql + __main__）",
-        "mature": "contracts/prompts/ · backend/app/generate/ · backend/app/agent/correct.py"
+        "mature": "system/contracts/prompts/ · system/backend/app/generate/ · system/backend/app/agent/correct.py"
       }
     },
     {
@@ -273,7 +273,7 @@
       ],
       "evidence": {
         "skeleton": "page-07.md:22-39（pymysql.connect / run_sql）",
-        "mature": "contracts/sql.policy.yaml · backend/app/security/"
+        "mature": "system/contracts/sql.policy.yaml · system/backend/app/security/"
       }
     },
     {
@@ -286,7 +286,7 @@
         "page-08"
       ],
       "skeleton": "`GET /api/stream` 把 12 个假步骤名逐条 yield，每步 `time.sleep(0.15)` 假装干活；最后才真跑 SQL 发 result，不能取消。",
-      "mature": "SSE 按 `contracts/steps.yaml` 的 12 节点推送；`correct_sql` 条件步骤显式发 skipped；`POST /api/cancel` 把流收尾为 `cancelled`。",
+      "mature": "SSE 按 `system/contracts/steps.yaml` 的 12 节点推送；`correct_sql` 条件步骤显式发 skipped；`POST /api/cancel` 把流收尾为 `cancelled`。",
       "delta": "假步骤 sleep 0.15 → 真节点事件 + 条件跳过 + 取消收敛",
       "tags": [
         "取消",
@@ -294,7 +294,7 @@
       ],
       "evidence": {
         "skeleton": "page-08.md:23-52（STEPS + time.sleep(0.15) + stream）",
-        "mature": "contracts/steps.yaml · backend/app/agent/cancel.py · main.py"
+        "mature": "system/contracts/steps.yaml · system/backend/app/agent/cancel.py · main.py"
       }
     },
     {
@@ -315,7 +315,7 @@
       ],
       "evidence": {
         "skeleton": "page-09.md:28-64（default.conf + index.html 9 行 JS）",
-        "mature": "frontend/src/generated/ · frontend/src/components/ · contracts/errors.yaml"
+        "mature": "system/frontend/src/generated/ · system/frontend/src/components/ · system/contracts/errors.yaml"
       }
     },
     {
@@ -337,9 +337,9 @@
       ],
       "evidence": {
         "skeleton": "page-09.md:92-105（删 nginx 拆一刀）· page-08.md:63-70",
-        "mature": "scripts/docker-smoke.sh · fixtures/sse/ · fixtures/failures/"
+        "mature": "toolbox/scripts/docker-smoke.sh · system/fixtures/sse/ · system/fixtures/failures/"
       }
     }
   ],
-  "rerun": "python3 manual/shots/render_maturity_compare.py"
+  "rerun": "python3 tutorial/shots/render_maturity_compare.py"
 }

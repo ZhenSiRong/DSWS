@@ -4,14 +4,14 @@
 
 在仓库根目录一条命令重跑（同时出两张图）：
 
-    python3 manual/shots/render_completeness.py
+    python3 tutorial/shots/render_completeness.py
 
 输出：
 
-    manual/completeness/poster-blank.png    空白可打印版：槽位方框 ▢、矩阵格与证据列留空，供学生勾/涂
-    manual/completeness/poster-answer.png   答案版：A0–A9 全 ■，矩阵填 ■/—，末列写第 0–9 页判据
+    tutorial/completeness/poster-blank.png    空白可打印版：槽位方框 ▢、矩阵格与证据列留空，供学生勾/涂
+    tutorial/completeness/poster-answer.png   答案版：A0–A9 全 ■，矩阵填 ■/—，末列写第 0–9 页判据
 
-依据 `humen-desicions/09-ablation-course.md` 的 **D38**：
+依据 `materials/humen-desicions/09-ablation-course.md` 的 **D38**：
 C4 的 L1 上下文 / L2 容器 / L3 组件三层 + L0（环境、数据）底部地基横条；
 每层一张「责任 × 证据」矩阵；三态图例 ▢ / ◧ / ■；完备判据三条
 （每行 ≥ 1 个 ■、每列 ≥ 1 个 ■、跨层边都通且有端到端证据）。
@@ -28,7 +28,7 @@ C4 的 L1 上下文 / L2 容器 / L3 组件三层 + L0（环境、数据）底�
    用户名 / 绝对路径（`/home/`、`/Users/`、`zhensirong` 等）。
 
 字体：本机已装 `Noto Sans CJK SC`（中文字形）与 `DejaVu Sans`（▢/◧/■ 几何符号），
-CSS 显式写字体栈，不联网、不装新依赖。证据全部取自 `manual/page-00…09.md`
+CSS 显式写字体栈，不联网、不装新依赖。证据全部取自 `tutorial/page-00…09.md`
 的「你应该看到」（真跑输出），不在本脚本里另造数值。
 
 依赖：本机已有的 python3 / google-chrome / Noto Sans CJK SC。
@@ -45,7 +45,7 @@ import sys
 import tempfile
 from pathlib import Path
 
-HERE = Path(__file__).resolve().parent        # manual/shots
+HERE = Path(__file__).resolve().parent        # tutorial/shots
 REPO = HERE.parents[1]                        # 仓库根目录
 OUT_DIR = REPO / "manual" / "completeness"
 CHROME = "google-chrome"
@@ -64,7 +64,7 @@ DASH = "—"
 # ------------------------------------------------------------------ 内容数据
 
 # 四张矩阵：行 = 该层节点（责任），列 = 该层必须提供的能力；最后一列证据。
-# 证据全部对应 manual/page-0X.md「你应该看到」的真跑输出。
+# 证据全部对应 tutorial/page-0X.md「你应该看到」的真跑输出。
 MATRICES = [
     {
         "key": "l1",

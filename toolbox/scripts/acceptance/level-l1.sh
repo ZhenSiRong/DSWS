@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-# scripts/acceptance/level-l1.sh —— T2 验收线 L1（manual/ACCEPTANCE.md §2，page-00 – page-09）。
+# toolbox/scripts/acceptance/level-l1.sh —— T2 验收线 L1（tutorial/ACCEPTANCE.md §2，page-00 – page-09）。
 #
 # 自动（只读/安全，不需要起停任何东西）：
 #   1. make doctor（page-00 的 12/12：工具/依赖/端口；make 不可用则退回关键检查）
-#   2. python3 manual/shots/audit_book.py（24/24 通过；README 坏链 0）
+#   2. python3 tutorial/shots/audit_book.py（24/24 通过；README 坏链 0）
 #   3. T2 教学栈 /api/health 只读探活（栈没起 = SKIP，退出码 2）
 # MANUAL（只打印，不执行）：p01–p09 逐页判据 + 建成证明海报；手工 lab 栈。
 #
-# 用法：bash scripts/acceptance/level-l1.sh（任意 cwd；Makefile 目标 accept-l1）。
+# 用法：bash toolbox/scripts/acceptance/level-l1.sh（任意 cwd；Makefile 目标 accept-l1）。
 
 set -euo pipefail
 
@@ -28,7 +28,7 @@ key_tools_gate() {
     fi
   done
   if [ -z "$missing" ]; then
-    ok '关键工具预检（docker/uv/node/curl 都在 PATH 上）'
+    ok '关键工具预检（system/docker/uv/node/curl 都在 PATH 上）'
   else
     fail '关键工具预检' "缺：${missing# }（page-00 前置，装好后重跑）"
   fi
@@ -41,7 +41,7 @@ manuals() {
   manual 'p03–p06 服务与检索：/health 回 {"ok":true}；两次请求一字不差；["华北","销售额"]；5 行带 JOIN 的 SELECT。'
   manual 'p07–p08 生成与执行：sales = 41099.5；12 条 progress + 1 条 result。'
   manual 'p09 浏览器入口：127.0.0.1:8081 问一句出 41099.5；L1 无「拆一刀」。'
-  manual 'L1 另用 manual/completeness/poster-answer.png 对账（12 件 × 24 检验点）。'
+  manual 'L1 另用 tutorial/completeness/poster-answer.png 对账（12 件 × 24 检验点）。'
   manual 'p01/p03/p09 的 lab-mysql / uvicorn / lab-nginx 是手工栈（3307/8000/8081）：T2 脚本不碰它们，做完按 page-00 收尾。'
 }
 
@@ -62,7 +62,7 @@ if command -v make >/dev/null 2>&1 && [ -f "$ROOT/Makefile" ]; then
       ;;
   esac
 else
-  log '找不到 make / Makefile；退回关键检查（docker/uv/node/curl）'
+  log '找不到 make / Makefile；退回关键检查（system/docker/uv/node/curl）'
   key_tools_gate
 fi
 

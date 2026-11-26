@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# 教师/CI 夹具：不是学生入口；学生工具见 manual/appendix/gui-debugging.md
+# 教师/CI 夹具：不是学生入口；学生工具见 tutorial/appendix/gui-debugging.md
 """离线 pdb 单步演示（第 21 页补图用）。
 
 只跑**真代码路径**：
@@ -8,18 +8,18 @@
     → propose_correction（触发条件 + 校正 + 契约校验）
     → validate_sql（二次校验）→ run_sql 的边界
 
-只替换两样外部依赖（与 `backend/tests/agent/conftest.py` 同一套思路）：
+只替换两样外部依赖（与 `system/backend/tests/agent/conftest.py` 同一套思路）：
     - 模型：假生成器返回一段固定 JSON **文本**，文本仍走真的
       `parse_model_payload` 解析；
     - 数据库：假执行器返回固定行，不连 MySQL。
 不读 .env、不连网络、不启容器、不碰 ES / Qdrant。
 
-跑法（在仓库根目录，用现成的 backend/.venv，Python 3.14）：
+跑法（在仓库根目录，用现成的 system/backend/.venv，Python 3.14）：
 
-    backend/.venv/bin/python -m pdb manual/shots/pdb_step_demo.py
+    system/backend/.venv/bin/python -m pdb tutorial/shots/pdb_step_demo.py
 
-进 pdb 后按 `manual/review/pdb-step-runbook.md` 的断点命令敲，
-或直接跑 `python3 manual/shots/render_pdb_step.py` 自动重录 transcript。
+进 pdb 后按 `tutorial/review/pdb-step-runbook.md` 的断点命令敲，
+或直接跑 `python3 tutorial/shots/render_pdb_step.py` 自动重录 transcript。
 想手动随手单步，也可以在 main() 开头取消注释 `breakpoint()`。
 
 脚本会打印 `=== NODE validate_sql ===` 之类的分段标记；
@@ -48,7 +48,7 @@ from app.generate.guard import check_sql  # noqa: E402
 from app.generate.provider import parse_model_payload  # noqa: E402
 from app.security.executor import ExecutionResult  # noqa: E402
 
-#: 与 `backend/tests/agent/conftest.py` 的 QUERY / UNKNOWN_COLUMN_SQL /
+#: 与 `system/backend/tests/agent/conftest.py` 的 QUERY / UNKNOWN_COLUMN_SQL /
 #: GOOD_SQL 逐字一致——这样图和 pytest 断言的是同一组输入。
 QUERY = "华北销售额"
 

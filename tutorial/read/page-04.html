@@ -9,7 +9,7 @@
 </head>
 <body>
 <main class="page">
-<p class="kicker">练本 · 阅读版（md 正典派生，改内容请改 manual/page-04.md）</p>
+<p class="kicker">练本 · 阅读版（md 正典派生，改内容请改 tutorial/page-04.md）</p>
 <h1>第 4 页 · 加一个能收问题的接口</h1>
 <blockquote>
 <p><strong>城市坐标 · P4 对外服务窗口（交付物 ⑥）</strong>｜服务中心临街开一个收件窗口：收下问题，先回一张固定回执。</p>
@@ -55,7 +55,7 @@ def query(q: Query):
 <ol start="2">
 <li>回终端 1 按 Ctrl+C 停掉旧服务，再用第 3 页那条命令原样重启：</li>
 </ol>
-<pre><code class="language-bash">backend/.venv/bin/python -m uvicorn lab.app:app --port 8000
+<pre><code class="language-bash">system/backend/.venv/bin/python -m uvicorn lab.app:app --port 8000
 </code></pre>
 <ol start="3">
 <li>在终端 2 连着发两个请求，第二个故意换个问题（地址里的端口沿用你第 3 页实际启动的那个，默认 <code>8000</code>）：</li>

@@ -6,15 +6,15 @@
 
 在仓库根目录一条命令重跑：
 
-    python3 manual/shots/stream_gif.py
+    python3 tutorial/shots/stream_gif.py
 
 输出（只新增这一个文件，不动已有 PNG）：
 
-    manual/images/page-08-stream.gif   约 5.6 秒循环，含末尾结果停留约 2.7 秒
+    tutorial/images/page-08-stream.gif   约 5.6 秒循环，含末尾结果停留约 2.7 秒
 
 它做四件事（复用 web_shots.py / term_render.py 的思路，不改原脚本）：
 
-1. 在 /tmp 建临时工作区：软链 `backend/`（复用仓库 venv），拷入 `fixtures/dw.sql`
+1. 在 /tmp 建临时工作区：软链 `system/backend/`（复用仓库 venv），拷入 `system/fixtures/dw.sql`
    和 `.env.example`，写 `lab/app.py`（复用 term_render.py 的 APP_PAGE_08，即第 3–8 页
    产物的最终形态）。
 2. 起两层环境（容器名带 shots- 前缀，与用户自己的 lab-* 栈隔离）：
@@ -37,7 +37,7 @@
   - GIF 尺寸 / 帧数 / 字节数打印出来，目标 ≤ 2MB。
 
 依赖（本机已装，不新装）：docker、python pty/select（标准库）、google-chrome、
-ImageMagick、tesseract；仓库的 `backend/.venv`。
+ImageMagick、tesseract；仓库的 `system/backend/.venv`。
 端口只用 3307 / 8000，不碰用户的 dsws-lab-ui-* 栈（18081 等）。
 """
 
@@ -63,7 +63,7 @@ from pathlib import Path
 
 # ---------------------------------------------------------------- 常量
 
-HERE = Path(__file__).resolve().parent          # manual/shots
+HERE = Path(__file__).resolve().parent          # tutorial/shots
 REPO = HERE.parents[1]                          # 仓库根目录
 IMAGES = REPO / "manual" / "images"
 
@@ -83,7 +83,7 @@ GIF_DELAY = 8            # 8/100 秒 = 12.5fps
 INITIAL_HOLD_CS = 160    # 开头「只有命令行、还没输出」停留 1.6s
 TARGET_TOTAL_CS = 560    # 整条循环约 5.6s（5–8s 区间内）
 
-# 第 8 页「动手」里那条命令，与 manual/page-08.md 逐字一致。
+# 第 8 页「动手」里那条命令，与 tutorial/page-08.md 逐字一致。
 CURL_STREAM = ("curl -sN -G 'http://127.0.0.1:8000/api/stream' "
                "--data-urlencode 'q=华北销售额'")
 
@@ -233,7 +233,7 @@ class UvicornServer:
 
     @property
     def command(self) -> str:
-        return f"backend/.venv/bin/python -m uvicorn lab.app:app --host 0.0.0.0 --port {API_PORT}"
+        return f"system/backend/.venv/bin/python -m uvicorn lab.app:app --host 0.0.0.0 --port {API_PORT}"
 
     def start(self, timeout: float = 60.0) -> None:
         self.lines = []
@@ -350,7 +350,7 @@ def start_mysql(work: Path) -> None:
         return proc.returncode == 0 and proc.stdout.strip() == "115"
 
     try:
-        wait_until("MySQL 灌完 fixtures/dw.sql（fact_order = 115）", data_ready,
+        wait_until("MySQL 灌完 system/fixtures/dw.sql（fact_order = 115）", data_ready,
                    timeout=300, interval=1.0)
     except RuntimeError:
         logs = subprocess.run(
@@ -669,7 +669,7 @@ def main() -> int:
         say("")
         say("── 环境 1/2：MySQL 容器 shots-web-mysql（127.0.0.1:3307）──")
         start_mysql(work)
-        say("    ✅ fact_order = 115（fixtures/dw.sql 已灌入）")
+        say("    ✅ fact_order = 115（system/fixtures/dw.sql 已灌入）")
 
         say("")
         say("── 环境 2/2：uvicorn 8000（第 8 页的服务）──")
@@ -777,7 +777,7 @@ def main() -> int:
                         timeout=60).stdout.splitlines()[0]
         say(f"  {ident.strip()}")
         say(f"  {GIF.stat().st_size / 1024:.0f} KB（上限 {GIF_MAX_BYTES // 1024} KB）")
-        say(f"用时 {time.monotonic() - started:.1f}s；重跑：python3 manual/shots/stream_gif.py")
+        say(f"用时 {time.monotonic() - started:.1f}s；重跑：python3 tutorial/shots/stream_gif.py")
         return 0
     except KeyboardInterrupt:
         say("\n被 Ctrl+C 中断，开始清理……")

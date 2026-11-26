@@ -10,7 +10,7 @@
 ## 启动
 
 ```bash
-cd frontend
+cd system/frontend
 pnpm install
 pnpm dev
 ```

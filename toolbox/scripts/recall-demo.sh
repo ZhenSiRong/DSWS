@@ -7,17 +7,17 @@
 # 输出，不经过 Windows 命令行这一层。
 #
 # 这个问题是 tests/recall/golden.yaml 里的第一题——
-# backend/tests/test_recall_demo_script.py 守着两者一致。
+# system/backend/tests/test_recall_demo_script.py 守着两者一致。
 #
-# 用法：sh scripts/recall-demo.sh <输出文件>
+# 用法：sh toolbox/scripts/recall-demo.sh <输出文件>
 
 set -u
 
-ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 OUT="${1:-}"
 
 if [ -z "$OUT" ]; then
-  echo "用法: sh scripts/recall-demo.sh <输出文件>" >&2
+  echo "用法: sh toolbox/scripts/recall-demo.sh <输出文件>" >&2
   exit 2
 fi
 

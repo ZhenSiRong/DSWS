@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# 教师/CI 夹具：不是学生入口；学生工具见 manual/appendix/gui-debugging.md
+# 教师/CI 夹具：不是学生入口；学生工具见 tutorial/appendix/gui-debugging.md
 """trace_query.py —— 【v1 · 已退役，保留作参考】进程内跑 runner 录 SSE + settrace。
 
 > 第 17 页现行方案（左栏=真前端截图 / 右栏=同一跑的行级轨迹）见
-> manual/shots/trace_server.py + render_exec_trace.py，runbook 见
-> manual/review/exec-trace-runbook.md。本文件只作历史参考，产物已不再被页面引用。
+> tutorial/shots/trace_server.py + render_exec_trace.py，runbook 见
+> tutorial/review/exec-trace-runbook.md。本文件只作历史参考，产物已不再被页面引用。
 
 在 backend 容器内**进程内**真跑一次问数，同时录下两侧数据。
 
@@ -14,10 +14,10 @@
 右边（代码）：`sys.settrace` 的行级轨迹，**只追 4 个文件**（其余文件一律放行
              `return None`，不记一行）：
 
-    backend/app/agent/graph.py       12 节点图：谁在跑、条件边往哪走
-    backend/app/agent/correct.py     一次校正：提示词槽位、校正器调用、结论
-    backend/app/generate/guard.py    S4 静态校验：AST 逐条断言
-    backend/app/security/policy.py   S5 安全策略：白名单 / 单语句 / LIMIT
+    system/backend/app/agent/graph.py       12 节点图：谁在跑、条件边往哪走
+    system/backend/app/agent/correct.py     一次校正：提示词槽位、校正器调用、结论
+    system/backend/app/generate/guard.py    S4 静态校验：AST 逐条断言
+    system/backend/app/security/policy.py   S5 安全策略：白名单 / 单语句 / LIMIT
 
 记录内容：`file:lineno`、`function`、时间戳、按名字筛选的关键局部变量
 （sql / sql_before / sql_after / error / code / attempts / max_attempts /
@@ -72,10 +72,10 @@ VAR_MAX_CHARS = 120
 
 #: 只追这四个文件。路径是**仓库相对路径**（容器里根是 /app）。
 TARGET_FILES: tuple[str, ...] = (
-    "backend/app/agent/graph.py",
-    "backend/app/agent/correct.py",
-    "backend/app/generate/guard.py",
-    "backend/app/security/policy.py",
+    "system/backend/app/agent/graph.py",
+    "system/backend/app/agent/correct.py",
+    "system/backend/app/generate/guard.py",
+    "system/backend/app/security/policy.py",
 )
 
 #: 关键局部变量名（按任务口径筛选；不在这里的值一个都不记）。

@@ -1,6 +1,6 @@
 # 第 15 页 · 审生成 —— 教材可跟随性契约（T0 / T1）
 #
-# schema 与规则见 manual/verify/README.md。
+# schema 与规则见 tutorial/verify/README.md。
 # 要点：每个 ```bash 块在页面里用 <!-- verify: <marker> --> 注解绑定到下面的块；
 #       cmd 必须与页面块内容一致（归一化后），任何一边改了另一边没改 → T0 FAIL。
 #       offline 块由 T1 真执行并断言关键行；manual 块只做同步校验、不执行。
@@ -14,14 +14,14 @@ blocks:
     kind: manual
     reason: 会往 .lab/snapshots/ 写白名单文件快照，且同名快照会被拒绝；有副作用，不适合无人值守重复执行
     cmd: |
-      scripts/lab save p15-before
+      toolbox/scripts/lab save p15-before
 
   # ---- 动手 第 2 步：生成层 122 条测试（离线，秒级）----
   - id: page15-pytest-generate
     marker: page15-pytest-generate
     kind: offline
     cmd: |
-      backend/.venv/bin/python -m pytest backend/tests/generate -q
+      system/backend/.venv/bin/python -m pytest system/backend/tests/generate -q
     expect:
       exit: 0
       contains: ["122 passed, 5 skipped"]
@@ -41,7 +41,7 @@ blocks:
   - id: page15-baseline-ablation
     marker: page15-baseline-ablation
     kind: manual
-    reason: 页内紧随的期望输出（两行 FAIL + 基线 8/10）依赖学生先改坏 contracts/schema.contract.yaml 里 GMV 的 formula；CI 干净仓库跑出来是 10/10、没有 FAIL，复现不出该态。命令本身也走 uv run
+    reason: 页内紧随的期望输出（两行 FAIL + 基线 8/10）依赖学生先改坏 system/contracts/schema.contract.yaml 里 GMV 的 formula；CI 干净仓库跑出来是 10/10、没有 FAIL，复现不出该态。命令本身也走 uv run
     cmd: |
       make baseline
 
@@ -49,23 +49,23 @@ blocks:
   - id: page15-lab-reset-restore
     marker: page15-lab-reset-restore
     kind: manual
-    reason: scripts/lab reset 会按快照回滚工作区文件（破坏性，依赖第 1 步的快照名 p15-before），随后 make baseline 走 uv run；不能作为无人值守验收动作
+    reason: toolbox/scripts/lab reset 会按快照回滚工作区文件（破坏性，依赖第 1 步的快照名 p15-before），随后 make baseline 走 uv run；不能作为无人值守验收动作
     cmd: |
-      scripts/lab reset p15-before --yes
+      toolbox/scripts/lab reset p15-before --yes
       make baseline
 
 static:
   paths:
-    - backend/tests/generate
-    - backend/tests/generate/baseline.yaml
-    - backend/app/generate/deterministic.py
-    - backend/app/generate/guard.py
-    - contracts/schema.contract.yaml
-    - scripts/lab
+    - system/backend/tests/generate
+    - system/backend/tests/generate/baseline.yaml
+    - system/backend/app/generate/deterministic.py
+    - system/backend/app/generate/guard.py
+    - system/contracts/schema.contract.yaml
+    - toolbox/scripts/lab
     - Makefile
   symbols:
     - {file: Makefile, pattern: "^stage4:"}
     - {file: Makefile, pattern: "^baseline:"}
-    - {file: contracts/schema.contract.yaml, pattern: "name: GMV"}
-    - {file: backend/tests/generate/baseline.yaml, pattern: "id: b01"}
-    - {file: backend/app/generate/deterministic.py, pattern: "def generate_sql"}
+    - {file: system/contracts/schema.contract.yaml, pattern: "name: GMV"}
+    - {file: system/backend/tests/generate/baseline.yaml, pattern: "id: b01"}
+    - {file: system/backend/app/generate/deterministic.py, pattern: "def generate_sql"}

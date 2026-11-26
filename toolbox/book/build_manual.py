@@ -367,7 +367,7 @@ def cover_block(date: str, head: str) -> str:
 
 def build_html(out: Path, embed: bool, page_map: dict | None = None) -> tuple[str, dict[str, Path], list[tuple[int, str]]]:
     out.mkdir(parents=True, exist_ok=True)
-    image_dir = "assets/images"
+    image_dir = "materials/assets/images"
     images: dict[str, Path] = {}
     pages: list[tuple[int, str]] = []
     blocks = []
@@ -467,7 +467,7 @@ def main() -> None:
     ap.add_argument("--out", type=Path, default=DEFAULT_OUT)
     ap.add_argument("--html", action="store_true", help="只生成 HTML")
     ap.add_argument("--pdf", action="store_true", help="只生成 PDF")
-    ap.add_argument("--no-embed", action="store_true", help="HTML 不内嵌图片（生成 assets/ 目录）")
+    ap.add_argument("--no-embed", action="store_true", help="HTML 不内嵌图片（生成 materials/assets/ 目录）")
     ap.add_argument("--print-html", action="store_true", help="只生成给 PDF 用的 .print.html + assets（不渲染 PDF）")
     ap.add_argument("--page-map", type=Path, help="page-map.json（附录 A：手册章→PDF 页对照）")
     args = ap.parse_args()

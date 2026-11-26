@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""render_aoa.py —— 把双代号（AOA/ADM）对照图源 `manual/flow-aoa.mmd` 渲染成
-`manual/images/flow-aoa.png`，供 `manual/README.md` 末尾的对照附录使用。
+"""render_aoa.py —— 把双代号（AOA/ADM）对照图源 `tutorial/flow-aoa.mmd` 渲染成
+`tutorial/images/flow-aoa.png`，供 `tutorial/README.md` 末尾的对照附录使用。
 
 一条命令重跑（在仓库根目录）：
 
-    python3 manual/shots/render_aoa.py
+    python3 tutorial/shots/render_aoa.py
 
 它和 `render_flow.py` 同一套技术（mermaid CDN + 无头 Chrome + ImageMagick trim），
 但独立成文件，只服务 AOA 图；**不改** `render_flow.py`、`flow.mmd`、`flow-aon.png`。
 
 它做五件事：
 
-1. **核对图源**：读 `manual/flow-aoa.mmd`，要求 `flowchart LR`、10 个活动 A0–A9
+1. **核对图源**：读 `tutorial/flow-aoa.mmd`，要求 `flowchart LR`、10 个活动 A0–A9
    各出现且只出现一次、工期与 AON/CPM 表一致、**0 条虚活动**（出现 `-.->` 直接报错）、
    10 个事件圆圈 e1–e10（每个事件一个编号）、节点里只放事件编号。
 2. **重算 CPM**：不信任图上的颜色，按箭线上的工期独立算一遍 AOA 的 CPM——正推事件
@@ -45,7 +45,7 @@ import tempfile
 import urllib.request
 from pathlib import Path
 
-HERE = Path(__file__).resolve().parent      # manual/shots
+HERE = Path(__file__).resolve().parent      # tutorial/shots
 REPO = HERE.parents[1]                      # 仓库根目录
 MMD = REPO / "manual" / "flow-aoa.mmd"
 OUT = REPO / "manual" / "images" / "flow-aoa.png"
@@ -494,7 +494,7 @@ def ocr_activity_labels(png: Path) -> list[str]:
 
 def main() -> int:
     ap = argparse.ArgumentParser(
-        description="把 manual/flow-aoa.mmd 渲染成 manual/images/flow-aoa.png")
+        description="把 tutorial/flow-aoa.mmd 渲染成 tutorial/images/flow-aoa.png")
     ap.add_argument("--width", type=int, default=DEFAULT_WIDTH,
                     help=f"输出 PNG 宽度（默认 {DEFAULT_WIDTH}px）")
     ap.add_argument("--out", type=Path, default=OUT, help="输出 PNG 路径")

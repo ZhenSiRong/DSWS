@@ -5,7 +5,7 @@
 > - 任务：复查刚做完的 Docker 容器化改造，把查出来的问题修掉。
 > - 分支：`fix/docker-containerization-review`（从 `main` 的 `c0a49e1` 拉出，**1 个 commit**）。
 > - 全量后端测试：**782 passed / 31 skipped**（68.43 s，退出码 0）。
-> - 重建式验收：`bash scripts/docker-smoke.sh` → **DOCKER SMOKE PASS**（退出码 0，8 步全过）。
+> - 重建式验收：`bash toolbox/scripts/docker-smoke.sh` → **DOCKER SMOKE PASS**（退出码 0，8 步全过）。
 > - 线上 Docker 栈仍在跑，五服务 healthy、`init` exited 0、数据卷完好；`backend`/`init`
 >   已按当前源码重建，`frontend` 构建命中缓存（本轮没有改前端源码）。
 >
@@ -57,30 +57,30 @@ HEAD：a51f434（容器化复查修复，共 43 个文件）
 该 commit 包含这些**新增文件**：
 
 ```
-backend/tests/recall/test_clients.py
-backend/tests/security/test_security_cli.py
-backend/tests/shellkit.py                      # 脚本测试的公共工具
-backend/tests/test_build_config.py
-backend/tests/test_docker_env_script.py
-backend/tests/test_docker_reset_script.py
-backend/tests/test_docker_smoke_script.py
-backend/tests/test_export_docker_env_script.py
-backend/tests/test_line_endings.py
-backend/tests/test_makefile_portability.py
-backend/tests/test_meta_store.py
-backend/tests/test_python_interpreter.py
-backend/tests/test_recall_demo_script.py
-backend/tests/test_smoke_checks.py
-scripts/banners.txt
+system/backend/tests/recall/test_clients.py
+system/backend/tests/security/test_security_cli.py
+system/backend/tests/shellkit.py                      # 脚本测试的公共工具
+system/backend/tests/test_build_config.py
+system/backend/tests/test_docker_env_script.py
+system/backend/tests/test_docker_reset_script.py
+system/backend/tests/test_docker_smoke_script.py
+system/backend/tests/test_export_docker_env_script.py
+system/backend/tests/test_line_endings.py
+system/backend/tests/test_makefile_portability.py
+system/backend/tests/test_meta_store.py
+system/backend/tests/test_python_interpreter.py
+system/backend/tests/test_recall_demo_script.py
+system/backend/tests/test_smoke_checks.py
+toolbox/scripts/banners.txt
 ```
 
-已改动（部分）文件：`backend/app/build/config.py`、`backend/app/build/meta_store.py`、
-`backend/app/recall/clients.py`、`backend/app/scripts/security.py`、
-`backend/app/security/demo.py`、`compose.yaml`、`Makefile`、`.env.example`、
-`.dockerignore`、`.gitattributes`、`README.md`、`docs/DOCKER-DEPLOY.md`、
-`docs/SETUP-FROM-SCRATCH.md`、`docs/superpowers/plans/2026-10-26-docker-deployment.md`、
-`scripts/{docker-reset,docker-smoke,export-docker-env,find-python,generate_docker_env,
-smoke_checks,stage0-ui,stage6-ui,stage7-ui}.*`、`scripts/recall-demo.sh`、`scripts/say.sh`。
+已改动（部分）文件：`system/backend/app/build/config.py`、`system/backend/app/build/meta_store.py`、
+`system/backend/app/recall/clients.py`、`system/backend/app/scripts/security.py`、
+`system/backend/app/security/demo.py`、`compose.yaml`、`Makefile`、`.env.example`、
+`.dockerignore`、`.gitattributes`、`README.md`、`materials/docs/DOCKER-DEPLOY.md`、
+`materials/docs/SETUP-FROM-SCRATCH.md`、`materials/docs/superpowers/plans/2026-10-26-docker-deployment.md`、
+`toolbox/scripts/{docker-reset,docker-smoke,export-docker-env,find-python,generate_docker_env,
+smoke_checks,stage0-ui,stage6-ui,stage7-ui}.*`、`toolbox/scripts/recall-demo.sh`、`toolbox/scripts/say.sh`。
 
 ---
 
@@ -91,22 +91,22 @@ smoke_checks,stage0-ui,stage6-ui,stage7-ui}.*`、`scripts/recall-demo.sh`、`scr
 
 | 编号 | 严重度 | 问题 | 处置 | 落点 |
 |---|---|---|---|---|
-| A1 | Critical | 正则 location（`~` / `~*`）在解析 nginx 配置时被**静默丢弃** → 判定落到错误的那个 location 上 → 验收报 PASS，但 `/api/` 实际被缓冲 | ✅ 修（重写 location 匹配：精确 `=` → 最长前缀（`^~` 短路）→ 首个匹配的正则 → 最长前缀） | `scripts/smoke_checks.py` |
-| A2 | Important | 只含指令的 `include`（如 `proxy_params`）被丢掉，它贡献的顶层指令没进继承链 | ✅ 修 | `scripts/smoke_checks.py::_splice_includes` |
-| A3 | Important | 失败时抛 traceback 而不是给判定结论——用户看到的是崩溃，不是"为什么不合格" | ✅ 修（改成中文结论 + 退出码） | `scripts/smoke_checks.py` |
-| A5 | Important | "验收脚本不许用 `assert`" 那条测试**查错了文件**，等于没守 | ✅ 修（改成 AST 扫描 `ast.Assert`，并加"守护本身不是空转"的用例） | `backend/tests/test_smoke_checks.py` |
-| A7 | Important | 响应很大但被攒成整包时，会被误判成"流式"（分片数不是判据） | ✅ 修（判定只看到达时刻；"流式"结论还要和 nginx 生效配置交叉验证，矛盾就判不通过） | `scripts/smoke_checks.py` |
-| A8 | Important | 相对路径 `include`、单引号不闭合、PCRE 独有语法（如原子组 `(?>...)`）等边界没处理 | ✅ 修（相对 include 按 nginx 的实际拼接规则匹配；nginx 只认 `"` 作引号；PCRE-only 语法 → **判不出来就判不通过**，绝不判通过） | `scripts/smoke_checks.py` |
-| A6 | Important | `nginx -T` 的退出码被 `\|\| true` + `2>/dev/null` 吞掉，半份输出会被当成"生效配置"当证据 | ✅ 修（退出码必须为 0，且输出里必须有 `# configuration file` 头，否则判不通过） | `scripts/docker-smoke.sh` |
-| B1 | Important | `export-docker-env.sh` 用 `${VAR+set}`（**定义过**）判定"shell 优先"，但 Compose 是另一个进程，只看得到**已 export** 的变量 → 宿主 CLI 和容器可能读到不同的值，而告警还写着"与 docker compose 一致" | ✅ 修（改用 `declare -p` + `declare -x` 判定 exported；告警分成三条：.env 覆盖 / 已导出按 shell 取 / 未导出单独告警） | `scripts/export-docker-env.sh` |
-| B2 | Important | 没有测试覆盖"定义了但没 export"的情况 | ✅ 补测试（含 `${name-default}` 与 `${name:-default}`） | `backend/tests/test_export_docker_env_script.py` |
-| B3 | Important | 没有任何测试断言 demo 用的到底是哪个账号 | ✅ 补断言（`seen["user"]` / `seen["database"]`） | `backend/tests/security/test_security_cli.py` |
-| B4 | Minor | `docker-reset.sh` 措辞含糊；而且**提示里列的卷名**和**真正被删的卷名**可能不是同一批（脚本没把项目名显式交给 Compose） | ✅ 修（`docker compose --project-name "$PROJECT" down -v`，项目名优先级与 Compose 一致：环境变量 > `.env` > `compose.yaml` 的 `name:`；提示写明"容器和网络也一起没了"） | `scripts/docker-reset.sh` |
-| B5 | Minor | `.env` 是"先删旧的、再建新的"——两步之间崩了，磁盘上**一个 `.env` 都不剩**，而那份文件里有用户的 LLM API Key（重生成不了） | ✅ 修（`mkstemp`（0600）+ `os.replace` 原子替换，旧的在新内容整个就位前一直在） | `scripts/generate_docker_env.py` |
-| B6 | Minor | `.env.example` 的占位密码 `change-me-*` 能满足 Compose 的 `${VAR:?}`（只查非空）→ 验收给一份"公开密码"的部署盖章 | ✅ 修（验收前扫 `.env`，命中 `change-me` 直接判不通过） | `scripts/docker-smoke.sh` |
-| B7 | Minor | `find-python.sh` 只看"名字在 PATH 上"，不看"版本够不够"——2.7 / 3.6 跑得起来却跑不了脚本（`Path.unlink(missing_ok=True)` 是 3.8 才有的） | ✅ 修（按 `sys.version_info >= (3, 8)` 挑解释器；太老的跳过，报错里点名它的版本） | `scripts/find-python.sh` |
-| B9 | Minor | `backend/app/scripts/security.py` 里有一句 `assert`——`python -O` 会把它剥掉，同一件事变成 traceback 而不是"被拒绝" | ✅ 修（改成显式分支 + 退出码） | `backend/app/scripts/security.py` |
-| 文档 | — | 文档写"shell 值优先"，与代码实际的"**已 export 的** shell 值才优先"对不上；`SETUP-FROM-SCRATCH.md` 还错称 helper 会 export `MYSQL_PASSWORD`（它刻意不 export） | ✅ 改 | `docs/DOCKER-DEPLOY.md`、`docs/SETUP-FROM-SCRATCH.md`、`README.md`、`scripts/export-docker-env.sh` 头注释 |
+| A1 | Critical | 正则 location（`~` / `~*`）在解析 nginx 配置时被**静默丢弃** → 判定落到错误的那个 location 上 → 验收报 PASS，但 `/api/` 实际被缓冲 | ✅ 修（重写 location 匹配：精确 `=` → 最长前缀（`^~` 短路）→ 首个匹配的正则 → 最长前缀） | `toolbox/scripts/smoke_checks.py` |
+| A2 | Important | 只含指令的 `include`（如 `proxy_params`）被丢掉，它贡献的顶层指令没进继承链 | ✅ 修 | `toolbox/scripts/smoke_checks.py::_splice_includes` |
+| A3 | Important | 失败时抛 traceback 而不是给判定结论——用户看到的是崩溃，不是"为什么不合格" | ✅ 修（改成中文结论 + 退出码） | `toolbox/scripts/smoke_checks.py` |
+| A5 | Important | "验收脚本不许用 `assert`" 那条测试**查错了文件**，等于没守 | ✅ 修（改成 AST 扫描 `ast.Assert`，并加"守护本身不是空转"的用例） | `system/backend/tests/test_smoke_checks.py` |
+| A7 | Important | 响应很大但被攒成整包时，会被误判成"流式"（分片数不是判据） | ✅ 修（判定只看到达时刻；"流式"结论还要和 nginx 生效配置交叉验证，矛盾就判不通过） | `toolbox/scripts/smoke_checks.py` |
+| A8 | Important | 相对路径 `include`、单引号不闭合、PCRE 独有语法（如原子组 `(?>...)`）等边界没处理 | ✅ 修（相对 include 按 nginx 的实际拼接规则匹配；nginx 只认 `"` 作引号；PCRE-only 语法 → **判不出来就判不通过**，绝不判通过） | `toolbox/scripts/smoke_checks.py` |
+| A6 | Important | `nginx -T` 的退出码被 `\|\| true` + `2>/dev/null` 吞掉，半份输出会被当成"生效配置"当证据 | ✅ 修（退出码必须为 0，且输出里必须有 `# configuration file` 头，否则判不通过） | `toolbox/scripts/docker-smoke.sh` |
+| B1 | Important | `export-docker-env.sh` 用 `${VAR+set}`（**定义过**）判定"shell 优先"，但 Compose 是另一个进程，只看得到**已 export** 的变量 → 宿主 CLI 和容器可能读到不同的值，而告警还写着"与 docker compose 一致" | ✅ 修（改用 `declare -p` + `declare -x` 判定 exported；告警分成三条：.env 覆盖 / 已导出按 shell 取 / 未导出单独告警） | `toolbox/scripts/export-docker-env.sh` |
+| B2 | Important | 没有测试覆盖"定义了但没 export"的情况 | ✅ 补测试（含 `${name-default}` 与 `${name:-default}`） | `system/backend/tests/test_export_docker_env_script.py` |
+| B3 | Important | 没有任何测试断言 demo 用的到底是哪个账号 | ✅ 补断言（`seen["user"]` / `seen["database"]`） | `system/backend/tests/security/test_security_cli.py` |
+| B4 | Minor | `docker-reset.sh` 措辞含糊；而且**提示里列的卷名**和**真正被删的卷名**可能不是同一批（脚本没把项目名显式交给 Compose） | ✅ 修（`docker compose --project-name "$PROJECT" down -v`，项目名优先级与 Compose 一致：环境变量 > `.env` > `compose.yaml` 的 `name:`；提示写明"容器和网络也一起没了"） | `toolbox/scripts/docker-reset.sh` |
+| B5 | Minor | `.env` 是"先删旧的、再建新的"——两步之间崩了，磁盘上**一个 `.env` 都不剩**，而那份文件里有用户的 LLM API Key（重生成不了） | ✅ 修（`mkstemp`（0600）+ `os.replace` 原子替换，旧的在新内容整个就位前一直在） | `toolbox/scripts/generate_docker_env.py` |
+| B6 | Minor | `.env.example` 的占位密码 `change-me-*` 能满足 Compose 的 `${VAR:?}`（只查非空）→ 验收给一份"公开密码"的部署盖章 | ✅ 修（验收前扫 `.env`，命中 `change-me` 直接判不通过） | `toolbox/scripts/docker-smoke.sh` |
+| B7 | Minor | `find-python.sh` 只看"名字在 PATH 上"，不看"版本够不够"——2.7 / 3.6 跑得起来却跑不了脚本（`Path.unlink(missing_ok=True)` 是 3.8 才有的） | ✅ 修（按 `sys.version_info >= (3, 8)` 挑解释器；太老的跳过，报错里点名它的版本） | `toolbox/scripts/find-python.sh` |
+| B9 | Minor | `system/backend/app/scripts/security.py` 里有一句 `assert`——`python -O` 会把它剥掉，同一件事变成 traceback 而不是"被拒绝" | ✅ 修（改成显式分支 + 退出码） | `system/backend/app/scripts/security.py` |
+| 文档 | — | 文档写"shell 值优先"，与代码实际的"**已 export 的** shell 值才优先"对不上；`SETUP-FROM-SCRATCH.md` 还错称 helper 会 export `MYSQL_PASSWORD`（它刻意不 export） | ✅ 改 | `materials/docs/DOCKER-DEPLOY.md`、`materials/docs/SETUP-FROM-SCRATCH.md`、`README.md`、`toolbox/scripts/export-docker-env.sh` 头注释 |
 
 **未处置（有意留下，接手的人可以自行决定）**
 
@@ -123,7 +123,7 @@ smoke_checks,stage0-ui,stage6-ui,stage7-ui}.*`、`scripts/recall-demo.sh`、`scr
 
 ### 4.1 验收脚本：nginx 生效配置不能再被"半份输出"骗过（A1/A2/A3/A5/A6/A7/A8）
 
-`scripts/smoke_checks.py` 现在按 nginx 的**真实匹配顺序**选 location：
+`toolbox/scripts/smoke_checks.py` 现在按 nginx 的**真实匹配顺序**选 location：
 
 ```
 精确 = → 最长前缀匹配（^~ 命中则短路，不再看正则）→ 第一个匹配的正则 location（按配置顺序）
@@ -136,7 +136,7 @@ smoke_checks,stage0-ui,stage6-ui,stage7-ui}.*`、`scripts/recall-demo.sh`、`scr
 - PCRE-only 语法（原子组等）→ `_NginxUndecidable` → **判不通过**（判不出来 ≠ 通过）。
 - "流式"结论要和 nginx 生效配置交叉验证：配置说开着缓冲，就不能判流式。
 
-`scripts/docker-smoke.sh` 取配置的方式（**证据要完整**）：
+`toolbox/scripts/docker-smoke.sh` 取配置的方式（**证据要完整**）：
 
 ```bash
 if ! docker compose exec -T frontend nginx -T >"$NGINX_CONF_FILE" 2>"$NGINX_ERR"; then
@@ -179,7 +179,7 @@ esac
 
 ### 4.3 `.env` 原子写（B5）
 
-`scripts/generate_docker_env.py`：
+`toolbox/scripts/generate_docker_env.py`：
 
 ```python
 handle, temp_name = tempfile.mkstemp(dir=str(path.parent), prefix=f".{path.name}.", suffix=".tmp")
@@ -203,7 +203,7 @@ docker compose --project-name "$PROJECT" down -v
 
 ### 4.5 解释器版本门（B7）
 
-`scripts/find-python.sh`：先试 `python3` 再试 `python`；判定标准是
+`toolbox/scripts/find-python.sh`：先试 `python3` 再试 `python`；判定标准是
 `sys.version_info >= (3, 8)`（退出码带结论，stdout 丢掉）。太老的跳过，
 报错里点名它是什么版本：
 
@@ -211,7 +211,7 @@ docker compose --project-name "$PROJECT" down -v
 找到的 Python 版本太老（需要 3.8 或更高）： python(3.6)
 ```
 
-`scripts/docker-smoke.sh` 不再吞掉这个诊断——它说得出"版本太老（3.6）"这种具体原因，
+`toolbox/scripts/docker-smoke.sh` 不再吞掉这个诊断——它说得出"版本太老（3.6）"这种具体原因，
 而验收脚本自己的消息只能说出大方向，照着大方向装完还是同样的错，方向就指错了。
 
 ---
@@ -221,7 +221,7 @@ docker compose --project-name "$PROJECT" down -v
 ### 5.1 全量后端测试
 
 ```bash
-cd backend && uv run --no-sync python -m pytest -q
+cd system/backend && uv run --no-sync python -m pytest -q
 ```
 
 ```
@@ -256,7 +256,7 @@ cd backend && uv run --no-sync python -m pytest -q
 ### 6.1 完整 `make docker-smoke`
 
 ```bash
-bash scripts/docker-smoke.sh
+bash toolbox/scripts/docker-smoke.sh
 ```
 
 已在用户确认后执行：**DOCKER SMOKE PASS，退出码 0**，8 步全过。
@@ -280,9 +280,9 @@ bash scripts/docker-smoke.sh
 ### 7.1 先跑一遍，确认接手时的状态没漂
 
 ```bash
-cd backend && uv run --no-sync python -m pytest -q      # 期望 782 passed / 31 skipped
+cd system/backend && uv run --no-sync python -m pytest -q      # 期望 782 passed / 31 skipped
 cd .. && docker compose config --quiet                  # 期望无输出、退出码 0
-bash scripts/find-python.sh                            # 期望打印一个 >= 3.8 的解释器路径
+bash toolbox/scripts/find-python.sh                            # 期望打印一个 >= 3.8 的解释器路径
 ```
 
 ### 7.2 提交（已完成）
@@ -297,7 +297,7 @@ bash scripts/find-python.sh                            # 期望打印一个 >= 3
 ### 7.3 重建式验收（已完成）
 
 ```bash
-bash scripts/docker-smoke.sh     # 已执行：DOCKER SMOKE PASS，退出码 0
+bash toolbox/scripts/docker-smoke.sh     # 已执行：DOCKER SMOKE PASS，退出码 0
 ```
 
 ---
@@ -320,10 +320,10 @@ bash scripts/docker-smoke.sh     # 已执行：DOCKER SMOKE PASS，退出码 0
    紧挨着的引号会被吃掉）；中文放在 `.sh` / `.txt` 文件里由 shell 在运行时读。
 8. **验收/CLI 代码不能用 `assert` 写**——`python -O` 会把它剥掉，检查会永远"通过"；
    用退出码和显式分支。
-9. **Windows/Git Bash 的坑**：`uv run --no-sync` 只能在 `backend/` 目录里跑；
+9. **Windows/Git Bash 的坑**：`uv run --no-sync` 只能在 `system/backend/` 目录里跑；
    MSYS `bash.exe` 启动时会把自己的 `/usr/bin` 插到 PATH 最前面（PATH 顺序控制不住
    查找，只能在 shell 内部 `export PATH=...`）；MSYS 会跳过 `C:/...` 形式的 PATH 项
-   （要用 `/c/...`）；`backend/tests/shellkit.py` 里有 `usable_sh()` /
+   （要用 `/c/...`）；`system/backend/tests/shellkit.py` 里有 `usable_sh()` /
    `to_shell_path()` / `fake_program()` / `run_in_sh()` 这些现成工具。
 
 ---
@@ -347,8 +347,8 @@ bash scripts/docker-smoke.sh     # 已执行：DOCKER SMOKE PASS，退出码 0
 
 | 文档 | 内容 |
 |---|---|
-| `docs/DOCKER-DEPLOY.md` | 部署手册（本次已同步：前置条件、验收闸门、取值规则、重置语义、排障表） |
-| `docs/SETUP-FROM-SCRATCH.md` | 从零搭建手册（本次已同步取值规则与"不要 `down -v`"） |
-| `docs/S7-HANDOFF.md` | 上一阶段（S7 前端收口）的交接文档，格式参照 |
-| `docs/superpowers/specs/2026-10-26-docker-deployment-design.md` | 容器化设计稿 |
-| `docs/superpowers/plans/2026-10-26-docker-deployment.md` | 容器化实施计划 |
+| `materials/docs/DOCKER-DEPLOY.md` | 部署手册（本次已同步：前置条件、验收闸门、取值规则、重置语义、排障表） |
+| `materials/docs/SETUP-FROM-SCRATCH.md` | 从零搭建手册（本次已同步取值规则与"不要 `down -v`"） |
+| `materials/docs/S7-HANDOFF.md` | 上一阶段（S7 前端收口）的交接文档，格式参照 |
+| `materials/docs/superpowers/specs/2026-10-26-docker-deployment-design.md` | 容器化设计稿 |
+| `materials/docs/superpowers/plans/2026-10-26-docker-deployment.md` | 容器化实施计划 |

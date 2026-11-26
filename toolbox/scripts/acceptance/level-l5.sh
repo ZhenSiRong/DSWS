@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
-# scripts/acceptance/level-l5.sh —— T2 验收线 L5（manual/ACCEPTANCE.md §6，page-23）。
+# toolbox/scripts/acceptance/level-l5.sh —— T2 验收线 L5（tutorial/ACCEPTANCE.md §6，page-23）。
 #
 # 自动（只读/安全）：
 #   1. preflight_stack：5 个长驻服务 running/healthy（只读 docker compose ps）
-#   2. cd frontend && npm test（40 passed；缺 node_modules 记可选 SKIP+WARN）
+#   2. cd system/frontend && npm test（40 passed；缺 node_modules 记可选 SKIP+WARN）
 #   3. 成熟版入口 8088 只读探活（没起 = 可选 SKIP，不阻塞）
 #   4. 教学版 POST /api/query（只读查询，≤30 秒）结果含 41099.5 / 41,099.5
 # MANUAL（只打印，不执行）：浏览器判据；p23 级考核「把 8088 换回 17 行 HTML」+ 还原。
 #
-# 用法：bash scripts/acceptance/level-l5.sh（任意 cwd；Makefile 目标 accept-l5）。
+# 用法：bash toolbox/scripts/acceptance/level-l5.sh（任意 cwd；Makefile 目标 accept-l5）。
 
 set -euo pipefail
 
@@ -70,7 +70,7 @@ case "$CAPTURE_RC" in
     ;;
   28)
     fail '教学版 POST /api/query（≤30 秒）' \
-      '30 秒内没拿到结果：先看栈健康、数据库是否为 fixtures/dw.sql 演示集（page-13/page-23）'
+      '30 秒内没拿到结果：先看栈健康、数据库是否为 system/fixtures/dw.sql 演示集（page-13/page-23）'
     ;;
   *)
     fail '教学版 POST /api/query（≤30 秒）' \

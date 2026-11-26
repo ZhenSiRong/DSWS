@@ -1,8 +1,8 @@
 # 23 页「问题 + 方案」标题草案（D45 · 城市隐喻）
 
 > 这是**标题草案**：确认后再改十页正文 H1；正文、SPEC、completeness、maturity 一律不动。
-> 依据：`humen-desicions/09-ablation-course.md` D44（造 → 换 → 审 → 守，10+4+4+5 = 23 页）与 D45（标题统一「问题 + 方案」，先出样例再全量替换）；设施 / 道路单源见 [data.json](data.json)，城市地图见 [city-map.html](city-map.html) 与 [成图](../images/city-map-l1.png)。
-> 级的口径：L1 造 = 从无到有；L2 换 = 真的假不了；L3 审 = 机器靠不靠谱；L4 守 = 出了事兜不兜得住。本表由 `python3 manual/shots/render_city_map.py` 从 data.json 生成，改标题只改 data.json。
+> 依据：`materials/humen-desicions/09-ablation-course.md` D44（造 → 换 → 审 → 守，10+4+4+5 = 23 页）与 D45（标题统一「问题 + 方案」，先出样例再全量替换）；设施 / 道路单源见 [data.json](data.json)，城市地图见 [city-map.html](city-map.html) 与 [成图](../images/city-map-l1.png)。
+> 级的口径：L1 造 = 从无到有；L2 换 = 真的假不了；L3 审 = 机器靠不靠谱；L4 守 = 出了事兜不兜得住。本表由 `python3 tutorial/shots/render_city_map.py` 从 data.json 生成，改标题只改 data.json。
 
 | 页码 | 级 | 问题 | 方案 | 判据摘要 |
 |---|---|---|---|---|
@@ -16,8 +16,8 @@
 | P7 | L1 造 | SQL 拼好了，谁去仓库真取货？ | pymysql 把 SQL 交给 MySQL:3307 执行 | `rows[0].sales` 是不带引号的数字 `41099.5` |
 | P8 | L1 造 | 答案一口气砸下来，中间在干什么看不见？ | 12 条 progress 一条条推，最后 1 条 result | `curl -N` 数到 12 条 `progress` + 1 条 `result`，`sales = 41099.5` |
 | P9 | L1 造 | 市民怎么从城门口走到服务中心？ | 8081 反代 8000，页面用 EventSource 接流 | 浏览器 8081 点「问一句」停在 `41099.5`；删掉 nginx 主干仍活 |
-| P10 | L2 换 | 只有演示数据，凭什么说真的假不了？ | 把自己的数据域换进 fixtures/dw.sql，同步契约的行数 / 总额 / 日期域，再重建元知识 | `make stage1` → `S1 PASS`；`make stage2` → `S2 PASS`（dry-run→fresh→verify→幂等） |
-| P11 | L2 换 | 契约内联在页面里，改一处别处不知道，真的假不了吗？ | 换成 contracts/ 四份契约当唯一事实源：改契约 → 重生成 → 查新鲜度 | `contracts_gen --check` → `S7 CONTRACT GEN PASS`（3 个文件与契约一致） |
+| P10 | L2 换 | 只有演示数据，凭什么说真的假不了？ | 把自己的数据域换进 system/fixtures/dw.sql，同步契约的行数 / 总额 / 日期域，再重建元知识 | `make stage1` → `S1 PASS`；`make stage2` → `S2 PASS`（dry-run→fresh→verify→幂等） |
+| P11 | L2 换 | 契约内联在页面里，改一处别处不知道，真的假不了吗？ | 换成 system/contracts/ 四份契约当唯一事实源：改契约 → 重生成 → 查新鲜度 | `contracts_gen --check` → `S7 CONTRACT GEN PASS`（3 个文件与契约一致） |
 | P12 | L2 换 | root 直连的 pymysql 太裸，真的假不了吗？ | 换成只读执行器：策略先行 → 执行 → DECIMAL / DATE 归一化 → 自动 LIMIT / 超时 | `pytest -q tests/security/test_executor.py tests/agent/test_values.py` → `31 passed` |
 | P13 | L2 换 | 手工 docker run 换台机器就散了，真的假不了吗？ | 换成 compose 六服务 + 一键 smoke：健康门控、一次性 init、nginx 关缓冲 | `make docker-up` → `make docker-smoke` → `DOCKER SMOKE PASS`（8 步 + init 幂等） |
 | P14 | L3 审 | 召回空了，机器靠不靠谱凭什么由它说了算？ | 用 20 题检索黄金集预注册三条判据（该命中 / 不该出现 / 规模上限），再停 ES 看哪些题变红 | `make stage3` → `S3 PASS`；离线 `pytest -q tests/recall` → `18 passed, 23 skipped`；停 ES 后线上答案照旧 |

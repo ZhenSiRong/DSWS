@@ -6,12 +6,12 @@
   "kicker": "D44 造 / 换 / 审 / 守 · 横切系统口径（不按件数分级） · D45 城市隐喻 · 12 件设施 × 四阶段",
   "thesis": "同一片城区、同一套坐标：L1 造骨架 → L2 换真数据与真部署 → L3 审生成与校验 → L4 守安全与可观测；级与级的差别是横切系统，不是又一批件。",
   "image": "images/city-4stages.png",
-  "rerun": "python3 manual/shots/render_city_stages.py",
+  "rerun": "python3 tutorial/shots/render_city_stages.py",
   "sources": {
-    "geometry": "manual/city/data.json（四区 / 十件设施 / 12 件交付物 / 11 条道路；四格共用同一片城区、同一坐标基准，渲染脚本只读不改）",
-    "actions": "humen-desicions/09-ablation-course.md D44：L1 造（纵向，一件一件造骨架）；L2 换、L3 审、L4 守（横向，各是一套横切系统 × 接线点）",
+    "geometry": "tutorial/city/data.json（四区 / 十件设施 / 12 件交付物 / 11 条道路；四格共用同一片城区、同一坐标基准，渲染脚本只读不改）",
+    "actions": "materials/humen-desicions/09-ablation-course.md D44：L1 造（纵向，一件一件造骨架）；L2 换、L3 审、L4 守（横向，各是一套横切系统 × 接线点）",
     "metaphor": "GLOSSARY.md 末尾「城市隐喻」粒度表（D45）：设施 = 运行单元、道路/管网 = 网络与数据流、市民 = 用户",
-    "deprecated": "manual/maturity/stages.json 与 house-4stages.png 是旧房子口径，仅存档对照，不进本图"
+    "deprecated": "tutorial/maturity/stages.json 与 house-4stages.png 是旧房子口径，仅存档对照，不进本图"
   },
   "legend": [
     {
@@ -46,7 +46,7 @@
     }
   ],
   "city": {
-    "source": "manual/city/data.json",
+    "source": "tutorial/city/data.json",
     "canvas": [
       1600,
       1000
@@ -137,13 +137,13 @@
           "no": 1,
           "name": "数据",
           "page": "P10",
-          "what": "把自己的数据域换进 fixtures/dw.sql，同步契约的行数 / 总额 / 日期域，再重建元知识（make stage1 → S1 PASS）。"
+          "what": "把自己的数据域换进 system/fixtures/dw.sql，同步契约的行数 / 总额 / 日期域，再重建元知识（make stage1 → S1 PASS）。"
         },
         {
           "no": 2,
           "name": "契约",
           "page": "P11",
-          "what": "契约从页面内联换成 contracts/ 四份唯一事实源：改契约 → 重生成 → 查新鲜度（contracts_gen --check）。"
+          "what": "契约从页面内联换成 system/contracts/ 四份唯一事实源：改契约 → 重生成 → 查新鲜度（contracts_gen --check）。"
         },
         {
           "no": 3,

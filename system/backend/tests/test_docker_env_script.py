@@ -19,7 +19,7 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
-SCRIPT = ROOT / "scripts" / "generate_docker_env.py"
+SCRIPT = ROOT.parent / "toolbox" / "scripts" / "generate_docker_env.py"
 
 
 @pytest.fixture(scope="module")

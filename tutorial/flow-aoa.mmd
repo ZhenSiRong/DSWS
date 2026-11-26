@@ -3,7 +3,7 @@
 %% 10 个事件 e1–e10、10 条实箭线、0 条虚活动：串并联形状，汇聚点 e6 同时收 A2 与 A6，无需虚活动
 %% 关键路径：A0 → A3 → A4 → A5 → A6 → A7 → A8 → A9，总工期 61 分钟
 %% 非关键：A1、A2（串行到 e6，总浮动各 22 分钟）
-%% 渲染成 PNG：python3 manual/shots/render_aoa.py（同一份源文件供 README 附录与答辩共用）
+%% 渲染成 PNG：python3 tutorial/shots/render_aoa.py（同一份源文件供 README 附录与答辩共用）
 flowchart LR
     e1((1)) -->|"A0 10"| e2((2))
     e2 -->|"A3 5"| e3((3))

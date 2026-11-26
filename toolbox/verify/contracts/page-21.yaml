@@ -1,6 +1,6 @@
 # 第 21 页 · 守可观测 —— 教材可跟随性契约（T0 / T1）
 #
-# schema 与规则见 manual/verify/README.md。
+# schema 与规则见 tutorial/verify/README.md。
 # 要点：每个 ```bash 块在页面里用 <!-- verify: <marker> --> 注解绑定到下面的块；
 #       cmd 必须与页面块内容一致（归一化后），任何一边改了另一边没改 → T0 FAIL。
 #       offline 块由 T1 真执行并断言关键行；manual 块只做同步校验、不执行。
@@ -12,10 +12,10 @@ blocks:
   - id: p21-lab-save
     marker: page21-lab-save
     kind: manual
-    reason: 块首 scripts/lab save 会往 .lab/snapshots/ 写白名单文件快照，且同名快照会被拒；有副作用，不能无人值守重复执行（后半段 TestClient 虽不启服务，但整块仍以 lab save 开头）
+    reason: 块首 toolbox/scripts/lab save 会往 .lab/snapshots/ 写白名单文件快照，且同名快照会被拒；有副作用，不能无人值守重复执行（后半段 TestClient 虽不启服务，但整块仍以 lab save 开头）
     cmd: |
-      scripts/lab save p21-before
-      (cd backend && .venv/bin/python -c "
+      toolbox/scripts/lab save p21-before
+      (cd system/backend && .venv/bin/python -c "
       import json
       from fastapi.testclient import TestClient
       from app.scenarios.app import create_scenario_app
@@ -33,7 +33,7 @@ blocks:
     marker: page21-record-sse
     kind: offline
     cmd: |
-      (cd backend && .venv/bin/python -m app.scripts.record_sse --check)
+      (cd system/backend && .venv/bin/python -m app.scripts.record_sse --check)
     expect:
       exit: 0
       contains: ["S7 SSE RECORD PASS（14 个夹具与真实输出一致）"]
@@ -45,16 +45,16 @@ blocks:
   - id: p21-protocol-tests
     marker: page21-protocol-tests
     kind: manual
-    reason: 第二条 (cd frontend && npm test) 要 frontend/node_modules（缺了得先 npm ci，要联网）；CI 只装 backend 依赖、干净仓库没有 node_modules，整块跑不了。第一条 pytest 本身离线，但契约按整块绑定，不能拆开只跑前半
+    reason: 第二条 (cd system/frontend && npm test) 要 system/frontend/node_modules（缺了得先 npm ci，要联网）；CI 只装 backend 依赖、干净仓库没有 node_modules，整块跑不了。第一条 pytest 本身离线，但契约按整块绑定，不能拆开只跑前半
     cmd: |
-      (cd backend && .venv/bin/python -m pytest tests/frontend/test_sse_fixtures.py -q)
-      (cd frontend && npm test)
+      (cd system/backend && .venv/bin/python -m pytest tests/frontend/test_sse_fixtures.py -q)
+      (cd system/frontend && npm test)
 
   # ---- 动手 第 4 步（可选）：make stage7 六段门禁（npm build + uv run）----
   - id: p21-stage7
     marker: page21-stage7
     kind: manual
-    reason: make stage7 含 npm run test/build（要 node_modules）与 uv run --frozen（要 uv 和已同步的 backend 依赖），还会写 frontend/dist/，页面标注约 54 秒；CI 干净仓库没有 node_modules，不能无人值守重复执行
+    reason: make stage7 含 npm run test/build（要 node_modules）与 uv run --frozen（要 uv 和已同步的 backend 依赖），还会写 system/frontend/dist/，页面标注约 54 秒；CI 干净仓库没有 node_modules，不能无人值守重复执行
     cmd: |
       make stage7
 
@@ -64,35 +64,35 @@ blocks:
     kind: manual
     reason: 这段在「拆一刀」之后执行，页内期望是消融态（退出码 1 / 10 条夹具不同步），依赖学生本机先删掉 record_sse.py 的 _normalize 两个分支；CI 干净仓库跑出来是 PASS，复现不出该判据，故只做命令同步、不自动执行
     cmd: |
-      (cd backend && .venv/bin/python -m app.scripts.record_sse --check)
+      (cd system/backend && .venv/bin/python -m app.scripts.record_sse --check)
 
   # ---- 拆一刀后还原：lab reset 是破坏性回滚（依赖第 1 步快照）----
   - id: p21-lab-reset-restore
     marker: page21-lab-reset-restore
     kind: manual
-    reason: scripts/lab reset 会按快照回滚工作区文件（破坏性），且依赖第 1 步拍下的快照名；不能作为无人值守验收动作
+    reason: toolbox/scripts/lab reset 会按快照回滚工作区文件（破坏性），且依赖第 1 步拍下的快照名；不能作为无人值守验收动作
     cmd: |
-      scripts/lab reset p21-before --yes
-      (cd backend && .venv/bin/python -m app.scripts.record_sse --check | tail -1)
+      toolbox/scripts/lab reset p21-before --yes
+      (cd system/backend && .venv/bin/python -m app.scripts.record_sse --check | tail -1)
 
 static:
   paths:
-    - backend/app/scripts/record_sse.py
-    - backend/app/scenarios/app.py
-    - backend/app/agent/graph.py
-    - backend/tests/frontend/test_sse_fixtures.py
-    - backend/tests/test_s6_langgraph.py
-    - contracts/steps.yaml
-    - fixtures/sse/happy.json
-    - fixtures/sse/llm_refusal.json
-    - frontend/package.json
+    - system/backend/app/scripts/record_sse.py
+    - system/backend/app/scenarios/app.py
+    - system/backend/app/agent/graph.py
+    - system/backend/tests/frontend/test_sse_fixtures.py
+    - system/backend/tests/test_s6_langgraph.py
+    - system/contracts/steps.yaml
+    - system/fixtures/sse/happy.json
+    - system/fixtures/sse/llm_refusal.json
+    - system/frontend/package.json
   symbols:
-    - {file: backend/app/scripts/record_sse.py, pattern: "def _normalize"}
-    - {file: backend/app/scripts/record_sse.py, pattern: "FIXED_DURATION_MS = 12.5"}
-    - {file: backend/app/scripts/record_sse.py, pattern: 'detail\.pop\("request_id", None\)'}
-    - {file: backend/app/scenarios/app.py, pattern: "def create_scenario_app"}
-    - {file: backend/tests/frontend/test_sse_fixtures.py, pattern: "def test_frames_follow_contract"}
-    - {file: backend/tests/test_s6_langgraph.py, pattern: 'assert len\(nodes\) == 12'}
-    - {file: backend/app/agent/graph.py, pattern: 'StateGraph\(AgentState\)'}
-    - {file: contracts/steps.yaml, pattern: 'nodes: \[correct_sql\]'}
-    - {file: frontend/package.json, pattern: '"test": "vitest run"'}
+    - {file: system/backend/app/scripts/record_sse.py, pattern: "def _normalize"}
+    - {file: system/backend/app/scripts/record_sse.py, pattern: "FIXED_DURATION_MS = 12.5"}
+    - {file: system/backend/app/scripts/record_sse.py, pattern: 'detail\.pop\("request_id", None\)'}
+    - {file: system/backend/app/scenarios/app.py, pattern: "def create_scenario_app"}
+    - {file: system/backend/tests/frontend/test_sse_fixtures.py, pattern: "def test_frames_follow_contract"}
+    - {file: system/backend/tests/test_s6_langgraph.py, pattern: 'assert len\(nodes\) == 12'}
+    - {file: system/backend/app/agent/graph.py, pattern: 'StateGraph\(AgentState\)'}
+    - {file: system/contracts/steps.yaml, pattern: 'nodes: \[correct_sql\]'}
+    - {file: system/frontend/package.json, pattern: '"test": "vitest run"'}

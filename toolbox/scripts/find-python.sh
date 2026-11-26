@@ -21,7 +21,7 @@
 # 却跑不了这些脚本，用户看到的是一句 SyntaxError 或 AttributeError，
 # 指向的是脚本，而不是"你的 Python 太老了"。
 #
-# 用法：PY="$(sh scripts/find-python.sh)" || { echo "..." >&2; exit 1; }
+# 用法：PY="$(sh toolbox/scripts/find-python.sh)" || { echo "..." >&2; exit 1; }
 
 set -u
 

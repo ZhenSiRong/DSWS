@@ -2,7 +2,7 @@
 
 ## 1. 目标
 
-把 `design/book/chapters/` 的 6 章原稿做成一本 **03-editorial 风格、可被低思考强度学生独立执行** 的开发教材。
+把 `materials/design/book/chapters/` 的 6 章原稿做成一本 **03-editorial 风格、可被低思考强度学生独立执行** 的开发教材。
 
 验收标准不是「图好看」，而是：
 
@@ -13,7 +13,7 @@
 
 ## 2. 非目标 / 边界
 
-- 不重建旧书 `design/book/book.html` 与 `design/book/pdf/dsws-design-atlas.pdf`。
+- 不重建旧书 `materials/design/book/book.html` 与 `materials/design/book/pdf/dsws-design-atlas.pdf`。
 - 既有 32 张技术架构图本轮不重绘；技术图保持 Mermaid/Graphviz/SVG，不强行漫画化。
 - 试点期不 commit；所有改动可回退。
 - 不把「模型生成」当作事实源；事实必须回到代码、契约、文档或命令输出。
@@ -88,7 +88,7 @@ flowchart TD
 
 学生验收的详细流程见 `02-flow-student.mmd`。关键约束：
 
-- **只给 PDF**：学生只能读 `design/book-editorial/pdf/dev-book.pdf`，不得读 `design/book/chapters/`、`figures/*.md`、审计 JSON。
+- **只给 PDF**：学生只能读 `materials/design/book-editorial/pdf/dev-book.pdf`，不得读 `materials/design/book/chapters/`、`figures/*.md`、审计 JSON。
 - **独立 worktree**：学生命令在单独 worktree 里执行，避免污染主工作区。
 - **低思考强度**：优先 CodeBuddy + Hy3，`--effort low`；再跑一次 `--effort medium` 做对照。
 - **任务可判定**：任务必须来自 PDF 的目录/章节，有明确完成标志和可复现命令。

@@ -5,7 +5,7 @@
 > 前置：第 0 页备好环境；本页接 L1 留下的 `lab/app.py`（第 8 页那份；L1 = 第 0–9 页盖出来的骨架版）。不用启动服务，也不用连 MySQL。
 ## 这一页构建什么
 
-把第 6 页手抄进 `lab/app.py` 的 `CONTRACT = {...}` 字典删掉，改成从 `contracts/schema.contract.yaml` 加载：手抄字典是**副本**，契约文件是**唯一事实源**。
+把第 6 页手抄进 `lab/app.py` 的 `CONTRACT = {...}` 字典删掉，改成从 `system/contracts/schema.contract.yaml` 加载：手抄字典是**副本**，契约文件是**唯一事实源**。
 
 **行为不变**：`build_sql` 改成按契约的指标别名/公式和地区全集生成 SQL，拼出的 5 行必须和第 6 页逐字一样——换了来源，行为不变。
 
@@ -55,14 +55,14 @@ def _metric_formula(keyword: str) -> str | None:
     metric = next(k for k in keywords if _metric_formula(k))
     sql = f"""SELECT dim_region.region_name, {_metric_formula(metric)} AS sales
 ```
-在仓库根目录跑这两条（第二条的 `cd backend` 不能省：在仓库根跑 `-m app.schema_contract` 会报 `No module named 'app'`）：
+在仓库根目录跑这两条（第二条的 `cd system/backend` 不能省：在仓库根跑 `-m app.schema_contract` 会报 `No module named 'app'`）：
 
 ```bash
-backend/.venv/bin/python -m lab.app
-(cd backend && .venv/bin/python -m app.schema_contract --check)
+system/backend/.venv/bin/python -m lab.app
+(cd system/backend && .venv/bin/python -m app.schema_contract --check)
 ```
 
-注意第二条外面的括号：`cd backend` 在子 shell 里执行，不会把你当前目录带走，跑完你仍停在仓库根目录——后面「拆一刀」的命令照原样敲就行。
+注意第二条外面的括号：`cd system/backend` 在子 shell 里执行，不会把你当前目录带走，跑完你仍停在仓库根目录——后面「拆一刀」的命令照原样敲就行。
 
 ## 你应该看到
 
@@ -99,8 +99,8 @@ S1 PASS
 
 ## 拆一刀
 
-1. 先拍快照：`scripts/lab save p11-before`（名字只能用字母、数字、点、下划线、短横线，且必须以字母或数字开头；中文会被拒）。
-2. 打开 `contracts/schema.contract.yaml`，把 `region_name` 的 `values: [华南, 华东, 西南, 华北, 华中]` 改成 `values: [华南, 华东, 西南, 华中]`，Ctrl+S，再跑 `backend/.venv/bin/python -m lab.app`。
+1. 先拍快照：`toolbox/scripts/lab save p11-before`（名字只能用字母、数字、点、下划线、短横线，且必须以字母或数字开头；中文会被拒）。
+2. 打开 `system/contracts/schema.contract.yaml`，把 `region_name` 的 `values: [华南, 华东, 西南, 华北, 华中]` 改成 `values: [华南, 华东, 西南, 华中]`，Ctrl+S，再跑 `system/backend/.venv/bin/python -m lab.app`。
 
 **会红什么**：`"华北"` 在契约里查不到了，`next()` 空手而归，抛 `StopIteration`、退出码 1。
 
@@ -112,6 +112,6 @@ Traceback (most recent call last):
     region = next(k for k in keywords if k in _region_values())
 StopIteration
 ```
-3. 还原：`scripts/lab reset p11-before --yes`，末行是 `现在工作区与快照 "p11-before" 完全一致。`；再跑一次 `backend/.venv/bin/python -m lab.app`，5 行 SQL 回来，`WHERE dim_region.region_name = '华北'` 还在第 4 行。
+3. 还原：`toolbox/scripts/lab reset p11-before --yes`，末行是 `现在工作区与快照 "p11-before" 完全一致。`；再跑一次 `system/backend/.venv/bin/python -m lab.app`，5 行 SQL 回来，`WHERE dim_region.region_name = '华北'` 还在第 4 行。
 
 **一句结论**：唯一事实源被改坏，程序当着你面报错；没有唯一事实源，改坏一处，另一处替你继续跑——这就是本页要的反面。

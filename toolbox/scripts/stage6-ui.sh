@@ -17,7 +17,7 @@
 
 set -euo pipefail
 
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 API_PORT="${API_PORT:-8102}"
 WEB_PORT="${WEB_PORT:-5275}"
 LOG_ROOT="${TMPDIR:-/tmp}"

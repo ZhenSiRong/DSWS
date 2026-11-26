@@ -1,19 +1,19 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""render_page_shots.py —— 配置驱动的通用页面运行截图框架（练本 manual/shots）。
+"""render_page_shots.py —— 配置驱动的通用页面运行截图框架（练本 tutorial/shots）。
 
-    python3 manual/shots/render_page_shots.py page-19       # 跑一页
-    python3 manual/shots/render_page_shots.py --all         # 跑 captures/ 全部配置
-    python3 manual/shots/render_page_shots.py 19 --dry-run  # 只打印步骤
+    python3 tutorial/shots/render_page_shots.py page-19       # 跑一页
+    python3 tutorial/shots/render_page_shots.py --all         # 跑 captures/ 全部配置
+    python3 tutorial/shots/render_page_shots.py 19 --dry-run  # 只打印步骤
 
-配置在 manual/shots/captures/<page>.json（schema 见 SHOTS-FRAMEWORK.md）：顶层
+配置在 tutorial/shots/captures/<page>.json（schema 见 SHOTS-FRAMEWORK.md）：顶层
 page/title/output/stack/embed/ocr_keywords + panels；panel = 一块终端窗口
 （heading + commands[] + expect_lines[]，display=all 显示全部输出、matched 只显示
 命中的真实行做节选）。commands 是页面原文命令，也可用 {run, show} 对象（run=执行
 替身，show=false 只跑不显示）；expect_lines 是页面「你应该看到」里必须有、且 … 当
 通配的行——逐行对账即页面 ↔ 真跑输出的逐字自检。
 
-流程：rsync /tmp 副本（排除 .git/node_modules/.venv，软链 backend/.venv）→ 按 stack
+流程：rsync /tmp 副本（排除 .git/node_modules/.venv，软链 system/backend/.venv）→ 按 stack
 起隔离栈（full: compose -p + .env 端口覆盖，等健康后跑页、跑完 down -v；mysql: 临时
 容器 rm -f；none: 离线页）→ PTY 真跑页面命令 → 复用 term_render 的 CSS/字体渲染
 深色终端版式 → 无头 Chrome @2x 截图 → 自检（逐行对账/OCR/禁止串/尺寸/页面嵌入）。
@@ -27,7 +27,7 @@ import argparse, getpass, json, os, pty, re, select, shutil, signal
 import socket, struct, subprocess, sys, tempfile, termios, time
 from pathlib import Path
 
-HERE = Path(__file__).resolve().parent          # manual/shots
+HERE = Path(__file__).resolve().parent          # tutorial/shots
 REPO = HERE.parents[1]                          # 仓库根目录
 TMP_ROOT = Path("/tmp/shots-page-framework")    # 副本工作区根（跑完删）
 WINDOW_W_CSS, DEVICE_SCALE = 1600, 2            # @2x → PNG 宽 3200
@@ -39,7 +39,7 @@ FULL_PORTS = {"MYSQL_HOST_PORT": 13337, "ES_HOST_PORT": 19237,
               "FRONTEND_HOST_PORT": 18077}
 ANSI_RE = re.compile(r"\x1b\[[0-9;?]*[A-Za-z]|\x1b\][^\x07]*\x07|\x1b[=>]")
 
-sys.dont_write_bytecode = True                  # 不在 manual/shots 里写 __pycache__
+sys.dont_write_bytecode = True                  # 不在 tutorial/shots 里写 __pycache__
 sys.path.insert(0, str(HERE))
 import term_render as tr  # noqa: E402
 
@@ -87,7 +87,7 @@ def load_config(path: Path) -> dict:
     cfg = json.loads(path.read_text(encoding="utf-8"))
     cfg["_path"] = str(path)
     cfg.setdefault("page", path.stem); cfg.setdefault("title", cfg["page"])
-    cfg.setdefault("output", f"manual/images/{cfg['page']}.png")
+    cfg.setdefault("output", f"tutorial/images/{cfg['page']}.png")
     cfg.setdefault("work_dir", str(TMP_ROOT / f"work-{cfg['page']}"))
     st = cfg.setdefault("stack", {}); st.setdefault("mode", "none")
     if st["mode"] not in ("none", "mysql", "full"):
@@ -147,7 +147,7 @@ def prepare_workspace(cfg: dict) -> Path:
     cmd = ["rsync", "-a"]
     for item in (".git", ".lab", "node_modules", "__pycache__", ".pytest_cache",
                  ".mypy_cache", ".ruff_cache", ".venv", ".env", "design", "packages",
-                 "manual/images", "atlas"):
+                 "tutorial/images", "atlas"):
         cmd += ["--exclude", item]
     subprocess.run(cmd + [str(REPO) + "/", str(work) + "/"], check=True, timeout=600)
     venv = work / "backend" / ".venv"
@@ -465,7 +465,7 @@ def preflight(cfg: dict) -> None:
     if missing := [tool for tool in need if shutil.which(tool) is None]:
         raise RuntimeError(f"缺少依赖：{', '.join(missing)}（本框架不装新依赖）")
     if not (REPO / "backend" / ".venv" / "bin" / "python").exists():
-        raise RuntimeError("backend/.venv 不存在；先按第 0 页准备好环境")
+        raise RuntimeError("system/backend/.venv 不存在；先按第 0 页准备好环境")
     if cfg["stack"]["mode"] == "full" and not (REPO / ".env").is_file():
         raise RuntimeError("缺少 .env；先按第 13 页 `make docker-env` 生成")
     busy = []
@@ -487,7 +487,7 @@ def run_one(path: Path) -> tuple[bool, bool]:
     try:
         preflight(cfg)
         work = prepare_workspace(cfg)
-        say(f"  工作区={work}（副本，软链 backend/.venv；跑完删）")
+        say(f"  工作区={work}（副本，软链 system/backend/.venv；跑完删）")
         stack = stack_start(cfg, work)
         runs = []
         with tempfile.TemporaryDirectory(prefix=f"shots-{cfg['page']}-") as tmp:
@@ -522,7 +522,7 @@ def plan_lines(cfg: dict) -> list[str]:
              f"  输出    ：{rel(resolve(cfg['output']))}"
              f"（{WINDOW_W_CSS * DEVICE_SCALE}×≥{MIN_PNG_H} px @2x）",
              f"  工作区  ：副本 → {cfg['work_dir']}（rsync 排除 .git/node_modules/.venv，"
-             "软链 backend/.venv）"]
+             "软链 system/backend/.venv）"]
     if st["mode"] == "none":
         lines.append("  隔离栈  ：none（离线页，不启动容器）")
     elif st["mode"] == "mysql":

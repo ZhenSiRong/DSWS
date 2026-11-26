@@ -9,10 +9,10 @@ coverage: static
 
 static:
   paths:
-    - contracts/schema.contract.yaml   # 页面「契约里写着」的出处
-    - fixtures/dw.sql                  # 表结构与 115 行演示数据
+    - system/contracts/schema.contract.yaml   # 页面「契约里写着」的出处
+    - system/fixtures/dw.sql                  # 表结构与 115 行演示数据
     - Makefile
   symbols:
-    - {file: contracts/schema.contract.yaml, pattern: 'name: fact_order'}
-    - {file: contracts/schema.contract.yaml, pattern: 'expected_fact_rows: 115'}
-    - {file: fixtures/dw.sql, pattern: 'CREATE TABLE fact_order'}
+    - {file: system/contracts/schema.contract.yaml, pattern: 'name: fact_order'}
+    - {file: system/contracts/schema.contract.yaml, pattern: 'expected_fact_rows: 115'}
+    - {file: system/fixtures/dw.sql, pattern: 'CREATE TABLE fact_order'}

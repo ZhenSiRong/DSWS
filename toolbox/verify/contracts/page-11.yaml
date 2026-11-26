@@ -9,12 +9,12 @@ coverage: static
 
 static:
   paths:
-    - backend/app/schema_contract.py   # 第 3 步 --check 的实现
-    - contracts/schema.contract.yaml   # SQL 生成器的输入契约
-    - fixtures/dw.sql
-    - docs/SCHEMA-CONTRACT.md
+    - system/backend/app/schema_contract.py   # 第 3 步 --check 的实现
+    - system/contracts/schema.contract.yaml   # SQL 生成器的输入契约
+    - system/fixtures/dw.sql
+    - materials/docs/SCHEMA-CONTRACT.md
   symbols:
-    - {file: backend/app/schema_contract.py, pattern: 'def main\('}
-    - {file: backend/app/schema_contract.py, pattern: 'S1 PASS'}
-    - {file: contracts/schema.contract.yaml, pattern: 'value_domain:'}
-    - {file: docs/SCHEMA-CONTRACT.md, pattern: 'contracts/schema\.contract\.yaml'}
+    - {file: system/backend/app/schema_contract.py, pattern: 'def main\('}
+    - {file: system/backend/app/schema_contract.py, pattern: 'S1 PASS'}
+    - {file: system/contracts/schema.contract.yaml, pattern: 'value_domain:'}
+    - {file: materials/docs/SCHEMA-CONTRACT.md, pattern: 'system/contracts/schema\.contract\.yaml'}

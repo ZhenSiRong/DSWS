@@ -1915,7 +1915,7 @@
     if (draft) { applyDraft(draft); showDraftBar(draft); }
     rebuildPanel();
 
-    /* 供 scripts/ 下的离线固化与验证脚本驱动。编辑器不加载时不存在，
+    /* 供 toolbox/scripts/ 下的离线固化与验证脚本驱动。编辑器不加载时不存在，
        导出的 HTML 也不含此脚本，因此不会污染产物。 */
     window.__layerEditor = {
       fullHTML, explodedHTML, positionCSS, snapshot, download, downloadExploded, undo, toast,

@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# scripts/tests/test_lab.sh —— scripts/lab 的纯 shell 回归测试
+# toolbox/scripts/tests/test_lab.sh —— toolbox/scripts/lab 的纯 shell 回归测试
 #
 # 原则：
 #   * 不碰真实仓库：在 mktemp 临时目录里造一棵最小树，把真脚本拷进去跑；
 #   * 纯 shell + 核心工具（find/diff/cp/sha256sum|shasum），不需要 pytest/venv；
 #   * 每条断言自己打印 ✔/✘，最后汇总；失败时保留临时目录供排查。
 #
-# 用法：bash scripts/tests/test_lab.sh
+# 用法：bash toolbox/scripts/tests/test_lab.sh
 
 set -u
 
@@ -130,7 +130,7 @@ else
   exit 1
 fi
 
-assert_file "scripts/lab 存在" "$LAB_SRC"
+assert_file "toolbox/scripts/lab 存在" "$LAB_SRC"
 
 mkdir -p "$TREE/scripts" "$TREE/contracts" "$TREE/lab/__pycache__" \
   "$TREE/backend/app/__pycache__" \
@@ -197,7 +197,7 @@ assert_no_file "list 不创建 .lab/" "$TREE/.lab"
 
 run "$LAB" nope
 assert_fail "未知命令失败"
-assert_contains "未知命令给下一步" "scripts/lab help"
+assert_contains "未知命令给下一步" "toolbox/scripts/lab help"
 
 run "$LAB"
 assert_ok "lab 不带参数打印帮助"
@@ -215,13 +215,13 @@ assert_contains "save 报跳过的不存在路径" "已跳过"
 
 SNAP="$TREE/.lab/snapshots/s0"
 TREE_DIR="$SNAP/tree"
-assert_file "快照存了 contracts/schema.contract.yaml" "$TREE_DIR/contracts/schema.contract.yaml"
+assert_file "快照存了 system/contracts/schema.contract.yaml" "$TREE_DIR/contracts/schema.contract.yaml"
 assert_file "快照存了 compose.yaml" "$TREE_DIR/compose.yaml"
-assert_file "快照存了 backend/app/x.py" "$TREE_DIR/backend/app/x.py"
+assert_file "快照存了 system/backend/app/x.py" "$TREE_DIR/backend/app/x.py"
 assert_file "快照存了 lab/app.py（学生代码在保护范围内）" "$TREE_DIR/lab/app.py"
 assert_file "manifest.json 存在" "$SNAP/manifest.json"
 
-assert_no_file ".env 未入快照（contracts/）" "$TREE_DIR/contracts/.env"
+assert_no_file ".env 未入快照（system/contracts/）" "$TREE_DIR/contracts/.env"
 assert_no_file ".env 未入快照（仓库根）" "$TREE_DIR/.env"
 assert_no_file "lab/__pycache__ 未入快照" "$TREE_DIR/lab/__pycache__/cache.pyc"
 assert_no_file "__pycache__ 未入快照" "$TREE_DIR/backend/app/__pycache__/x.pyc"
@@ -239,7 +239,7 @@ if grep -qF '"path": "lab", "kind": "dir", "present": true, "files": 1' "$SNAP/m
 else
   ng "manifest 没记录 lab 白名单目录"
 fi
-if grep -qF '"path": "frontend/src", "kind": "dir", "present": false' "$SNAP/manifest.json"; then
+if grep -qF '"path": "system/frontend/src", "kind": "dir", "present": false' "$SNAP/manifest.json"; then
   ok "manifest 记录不存在的白名单路径"
 else
   ng "manifest 没记录不存在的白名单路径"
@@ -280,7 +280,7 @@ assert_contains "带空格名字给规则" "非法字符"
 # ---------------------------------------------------------------------------
 section "3. diff：新增 / 修改 / 删除"
 
-# 修改：契约加一行；删除：backend/app/x.py；新增：contracts/new.contract.yaml
+# 修改：契约加一行；删除：system/backend/app/x.py；新增：system/contracts/new.contract.yaml
 printf '# 拆一刀：删掉 name 字段\n' >> "$TREE/contracts/schema.contract.yaml"
 rm -f "$TREE/backend/app/x.py"
 printf 'contract: new\n' > "$TREE/contracts/new.contract.yaml"
@@ -293,17 +293,17 @@ cp "$TREE/contracts/schema.contract.yaml" "$TMP/modified-schema.yaml"
 run "$LAB" diff s0
 assert_ok "diff 成功"
 assert_contains "diff 报新增" "新增（快照里没有，工作区有）"
-assert_contains "diff 列出新增文件" "contracts/new.contract.yaml"
+assert_contains "diff 列出新增文件" "system/contracts/new.contract.yaml"
 assert_contains "diff 报修改" "修改（内容不同）"
-assert_contains "diff 列出修改文件" "contracts/schema.contract.yaml"
+assert_contains "diff 列出修改文件" "system/contracts/schema.contract.yaml"
 assert_contains "diff 报删除" "删除（快照里有，工作区没有）"
-assert_contains "diff 列出删除文件" "backend/app/x.py"
+assert_contains "diff 列出删除文件" "system/backend/app/x.py"
 assert_contains "diff 有统一 diff 头" "+++"
 assert_contains "diff 显示新增内容" "+contract: new"
 assert_contains "diff 显示删除内容" "-def add(a, b):"
 assert_not_contains "diff 无视 .env" ".env"
 assert_not_contains "diff 无视 __pycache__" "__pycache__"
-assert_contains "diff 末尾给 reset 提示" "scripts/lab reset s0 --yes"
+assert_contains "diff 末尾给 reset 提示" "toolbox/scripts/lab reset s0 --yes"
 
 # ---------------------------------------------------------------------------
 # 4. reset 无 --yes：拒绝 + 一个文件都不动
@@ -316,7 +316,7 @@ assert_contains "拒绝时说明没动文件" "没有 --yes，一个文件都没
 assert_contains "计划里有删除" "删除（快照里没有"
 assert_contains "计划里有写回" "写回"
 assert_contains "计划里有覆盖" "覆盖"
-assert_contains "拒绝时给确认命令" "scripts/lab reset s0 --yes"
+assert_contains "拒绝时给确认命令" "toolbox/scripts/lab reset s0 --yes"
 assert_snapshot_count "拒绝时没拍安全快照" 1
 
 assert_sha_eq "拒绝后修改的文件没被还原" "$TMP/modified-schema.yaml" "$TREE/contracts/schema.contract.yaml"
@@ -339,11 +339,11 @@ assert_sha_eq "被删除的 x.py 还原到快照 sha" "$TMP/orig/x.py" "$TREE/ba
 assert_sha_eq "未被改动的 compose.yaml 保持不变" "$TMP/orig/compose.yaml" "$TREE/compose.yaml"
 assert_no_file "多余的新增文件被删除" "$TREE/contracts/new.contract.yaml"
 
-assert_file "排除项 contracts/.env 仍在" "$TREE/contracts/.env"
+assert_file "排除项 system/contracts/.env 仍在" "$TREE/contracts/.env"
 if grep -qF 'SECRET=changed' "$TREE/contracts/.env"; then
-  ok "排除项 contracts/.env 内容未被 reset 改回"
+  ok "排除项 system/contracts/.env 内容未被 reset 改回"
 else
-  ng "排除项 contracts/.env 被 reset 动了"
+  ng "排除项 system/contracts/.env 被 reset 动了"
 fi
 assert_file "排除项根 .env 仍在" "$TREE/.env"
 assert_file "排除项 __pycache__ 未被删除" "$TREE/backend/app/__pycache__/x.pyc"
@@ -410,11 +410,11 @@ section "8. 错误信息要能指下一步"
 
 run "$LAB" diff nope
 assert_fail "diff 不存在的快照失败"
-assert_contains "diff 不存在时提示 list" "scripts/lab list"
+assert_contains "diff 不存在时提示 list" "toolbox/scripts/lab list"
 
 run "$LAB" reset nope --yes
 assert_fail "reset 不存在的快照失败"
-assert_contains "reset 不存在时提示 save" "scripts/lab save nope"
+assert_contains "reset 不存在时提示 save" "toolbox/scripts/lab save nope"
 
 mkdir -p "$TREE/.lab/snapshots/broken"
 run "$LAB" diff broken
@@ -428,11 +428,11 @@ assert_contains "不认识的选项给出支持列表" "只支持 --yes"
 
 run "$LAB" reset
 assert_fail "reset 缺名字失败"
-assert_contains "reset 缺名字给例子" "scripts/lab reset"
+assert_contains "reset 缺名字给例子" "toolbox/scripts/lab reset"
 
 run "$LAB" diff
 assert_fail "diff 缺名字失败"
-assert_contains "diff 缺名字给例子" "scripts/lab diff"
+assert_contains "diff 缺名字给例子" "toolbox/scripts/lab diff"
 
 # ---------------------------------------------------------------------------
 # 9. lab/ 学生代码也在保护范围（本页拆一刀的主战场）

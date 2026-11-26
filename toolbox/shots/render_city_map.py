@@ -4,10 +4,10 @@
 
 在仓库根目录一条命令重跑（重建 HTML、标题草案、PNG 三个产物）：
 
-    python3 manual/shots/render_city_map.py
+    python3 tutorial/shots/render_city_map.py
 
 读（唯一事实源）：
-    `manual/city/data.json`
+    `tutorial/city/data.json`
       canvas     1600×1000 CSS 画布
       zones      四区：市政配套区 / 仓储区 / 服务区 / 门户区（= L0 地基 / 数据层 / 服务层 / 入口层）
       facilities 10 件设施（方向 C「真楼嵌套」，用户 2026-11-19 确认）：
@@ -21,12 +21,12 @@
                  仓库 → 传送带 → 门户 → 市民），每条有 from / to / label / via
       titles     23 页标题草案 P0–P22（L1 = 地图设施的问题 + 方案；L2–L4 = 换 / 审 / 守的动作升级）
 写：
-    `manual/city/city-map.html`     俯视规划图风格的可交互地图（悬停 tooltip、点击高亮相连道路）
-    `manual/city/titles-v2.md`      23 行标题草案（Markdown 表，≤60 行）
-    `manual/images/city-map-l1.png` 1600×1000 CSS @2x → 3200×2000 静态成图
+    `tutorial/city/city-map.html`     俯视规划图风格的可交互地图（悬停 tooltip、点击高亮相连道路）
+    `tutorial/city/titles-v2.md`      23 行标题草案（Markdown 表，≤60 行）
+    `tutorial/images/city-map-l1.png` 1600×1000 CSS @2x → 3200×2000 静态成图
 
 依据：
-    `humen-desicions/09-ablation-course.md` D44（四级 = 造 / 换 / 审 / 守；10+4+4+5 = 23 页）
+    `materials/humen-desicions/09-ablation-course.md` D44（四级 = 造 / 换 / 审 / 守；10+4+4+5 = 23 页）
     与 D45（城市 = 多座设施 + 管网；标题统一「问题 + 方案」，先出样例再全量替换）；
     粒度严格按 `GLOSSARY.md` 的「城市隐喻」表：设施 = 运行单元、窗口 = 端点、
     办事员 = 函数、货架 = 库表、道路 = 网络，不许把窗口画成楼。
@@ -64,7 +64,7 @@ import tempfile
 from collections import Counter
 from pathlib import Path
 
-HERE = Path(__file__).resolve().parent          # manual/shots
+HERE = Path(__file__).resolve().parent          # tutorial/shots
 REPO = HERE.parents[1]                          # 仓库根目录
 CITY_DIR = REPO / "manual" / "city"
 DATA_PATH = CITY_DIR / "data.json"
@@ -78,7 +78,7 @@ CHROME = "/usr/bin/google-chrome"
 DESIGN_W, DESIGN_H = 1600, 1000                 # CSS 设计画布
 SCALE = 2
 OUT_W, OUT_H = DESIGN_W * SCALE, DESIGN_H * SCALE  # 3200×2000
-RERUN = "python3 manual/shots/render_city_map.py"
+RERUN = "python3 tutorial/shots/render_city_map.py"
 
 CIRCLED = "①②③④⑤⑥⑦⑧⑨⑩⑪⑫"
 PROGRESS_TICKS = 12                             # 第 8 页 SSE 的 12 条 progress
@@ -575,7 +575,7 @@ def validate_data(data: dict) -> dict:
     cnt = Counter(t["level"] for t in titles)
     need(dict(cnt) == LEVEL_COUNTS, f"标题级配比应为 {LEVEL_COUNTS}，实为 {dict(cnt)}")
     for i in range(10):
-        need((PAGES_DIR / f"page-{i:02d}.md").exists(), f"L1 正文 manual/page-{i:02d}.md 不存在")
+        need((PAGES_DIR / f"page-{i:02d}.md").exists(), f"L1 正文 tutorial/page-{i:02d}.md 不存在")
 
     if errs:
         print("✗ data.json 自检失败：", file=sys.stderr)
@@ -1135,7 +1135,7 @@ path.utility { stroke: #A97C3F; stroke-width: 2.3; stroke-dasharray: 7 5.5; }
     </div>
   </div>
   <footer id="ftr">
-    <div class="ftr-row ftr-r1"><span>数据源：<b>manual/city/data.json</b>（单源）· 一条命令重跑：<b>python3 manual/shots/render_city_map.py</b></span><span>23 页标题草案：<b>manual/city/titles-v2.md</b>（确认后再改正文 H1）</span></div>
+    <div class="ftr-row ftr-r1"><span>数据源：<b>tutorial/city/data.json</b>（单源）· 一条命令重跑：<b>python3 tutorial/shots/render_city_map.py</b></span><span>23 页标题草案：<b>tutorial/city/titles-v2.md</b>（确认后再改正文 H1）</span></div>
     <div class="ftr-row ftr-r2"><span>图注：__LEGEND_LONG__</span></div>
     <div class="ftr-row ftr-r3"><span class="hint">悬停设施看「城市名 ↔ 软件名」· <b>点击设施高亮相连道路</b>（再点一次或 Esc 取消）</span><span>本图只画 L1（P0–P9）；L2–L4 的横切系统不进这张图</span></div>
   </footer>
@@ -1380,12 +1380,12 @@ def build_titles_md(data: dict) -> str:
         "# 23 页「问题 + 方案」标题草案（D45 · 城市隐喻）",
         "",
         "> 这是**标题草案**：确认后再改十页正文 H1；正文、SPEC、completeness、maturity 一律不动。",
-        "> 依据：`humen-desicions/09-ablation-course.md` D44（造 → 换 → 审 → 守，10+4+4+5 = 23 页）"
+        "> 依据：`materials/humen-desicions/09-ablation-course.md` D44（造 → 换 → 审 → 守，10+4+4+5 = 23 页）"
         "与 D45（标题统一「问题 + 方案」，先出样例再全量替换）；设施 / 道路单源见 "
         "[data.json](data.json)，城市地图见 [city-map.html](city-map.html) 与 "
         "[成图](../images/city-map-l1.png)。",
         "> 级的口径：L1 造 = 从无到有；L2 换 = 真的假不了；L3 审 = 机器靠不靠谱；"
-        "L4 守 = 出了事兜不兜得住。本表由 `python3 manual/shots/render_city_map.py` "
+        "L4 守 = 出了事兜不兜得住。本表由 `python3 tutorial/shots/render_city_map.py` "
         "从 data.json 生成，改标题只改 data.json。",
         "",
         "| 页码 | 级 | 问题 | 方案 | 判据摘要 |",

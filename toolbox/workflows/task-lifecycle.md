@@ -23,13 +23,13 @@
 - **Push right**：review 推迟到 `done` 那一刻才介入——先把活干完、证据备齐，再一次性请人/请审，
   不在中途反复打断。
 - **Brief**：review 呈现给人的是**一行 `VERDICT: pass|blocker` + 报告链接**
-  （`workflows/reviews/<id>.md`），不是原始 diff。人读 brief，不读草稿。
+  （`toolbox/workflows/reviews/<id>.md`），不是原始 diff。人读 brief，不读草稿。
 
 ---
 
-## 2. 真相源：`workflows/ledger.yaml`
+## 2. 真相源：`toolbox/workflows/ledger.yaml`
 
-**唯一持久真相源**，可 git 提交、跨会话/跨 Orca Run 长存。**唯一合法写入口 = `scripts/task.py` CLI**
+**唯一持久真相源**，可 git 提交、跨会话/跨 Orca Run 长存。**唯一合法写入口 = `toolbox/scripts/task.py` CLI**
 （chokepoint）。手改 YAML 视为非法，由 `task.py check` 兜底揪出。
 
 ```yaml
@@ -54,12 +54,12 @@ tasks:
     session_id: <orca dispatch id>   # worker-start --json 回填；manual 时记实际会话标识
     provenance: "Zhensirong-thinkpad@~/VM-Share/DSWS-design-lab-G3&opencode2 -s <id>"
     evidence:                        # done 钉证据（承接 check_progress 的声明→现场）
-      - { kind: file, path: manual/rebuild/editor.html, criterion: 存在且含 8 块注册 }
-      - { kind: cmd,  run: "python3 manual/shots/audit_book.py", criterion: exit 0 且 24/24 }
+      - { kind: file, path: tutorial/rebuild/editor.html, criterion: 存在且含 8 块注册 }
+      - { kind: cmd,  run: "python3 tutorial/shots/audit_book.py", criterion: exit 0 且 24/24 }
     review:
       verdict: null                  # pass | blocker | null
       reviewer: codebuddy            # 跨模型 agent；兜底 builtin-codereview
-      report: workflows/reviews/G3.md
+      report: toolbox/workflows/reviews/G3.md
       at: null
       overridden: false              # --force 越过 review 时 true
       override_reason: null
@@ -93,7 +93,7 @@ tasks:
 
 ---
 
-## 4. CLI chokepoint：`scripts/task.py`
+## 4. CLI chokepoint：`toolbox/scripts/task.py`
 
 唯一写入口。吸收 `check_progress.py`（已转为兼容转发壳，旧入口仍可用）；渲染复用
 `render_progress_gantt.py` 抽出的 `render_to_png()`（见 §9/§10）。依赖：**PyYAML**（唯一第三方
@@ -113,7 +113,7 @@ tasks:
 | `show <id>` | 单任务详情 | 含 provenance/review/evidence |
 | `check [--quick]` | 一致性校验(§9) | 漂移退码 1；`--quick` 跳过 audit_book |
 | `render` | 投影甘特(§8) | ledger→mermaid→PNG→meta |
-| `board [--out PATH] [--no-check]` | 投影浏览器看板(§8.1) | ledger→单文件 HTML+meta；默认 `workflows/board.html`（或 `meta.render.board`）；`--no-check` 跳过写后身份自检 |
+| `board [--out PATH] [--no-check]` | 投影浏览器看板(§8.1) | ledger→单文件 HTML+meta；默认 `toolbox/workflows/board.html`（或 `meta.render.board`）；`--no-check` 跳过写后身份自检 |
 | `migrate-from-gantt` | 一次性迁移(§10) | 从 14 文档灌入现有任务 |
 
 **chokepoint 强制力**：所有门禁在 CLI 内执行，**与 git 解耦**——每次 start/done 都触发，
@@ -144,17 +144,17 @@ tasks:
 `done <id>` 触发独立 review，**blocker 阻断 done**。实现为**两段式**（因内置 CodeReview 是 IDE
 子代理，Python 脚本无法直接派发它；CLI 只管状态闸口，review 智能可插拔）：
 
-**第一段 `done`**：status 必须 doing → 写 review brief 到 `workflows/reviews/<id>.request.md`
+**第一段 `done`**：status 必须 doing → 写 review brief 到 `toolbox/workflows/reviews/<id>.request.md`
 （含 worktree/branch/声明证据/审查顺序）→ 置 `review.verdict=pending`、选 reviewer → **退码 2**，
 打印「该派谁审、审完跑 `task.py verdict <id>`」。Orca 可用时同时 `worker-start --spec-file <request>
 --agent <reviewer> --worktree <task.worktree>` 派 worker 审。`--force --reason R` 跳过这一切直接 done。
 
-**第二段 `verdict`**：读 `workflows/reviews/<id>.md` 末行 `VERDICT:` 定案。
+**第二段 `verdict`**：读 `toolbox/workflows/reviews/<id>.md` 末行 `VERDICT:` 定案。
 
 1. **选 reviewer（跨模型独立）**：从 `{opencode2, codebuddy, qoder}` 选 **≠ task.agent** 者；
    Orca 不可用 → `reviewer=builtin-codereview`（由主会话派 CodeReview subagent 审 worktree diff）。
 2. **审什么（丙→乙→甲）**：① done 的**证据/判据真成立吗**（声明→现场）；② 页面/文档改动；③ 代码改动（按需）。
-3. **结论格式**：reviewer 写 `workflows/reviews/<id>.md`，**最后一非空行**必须 `VERDICT: pass|blocker`。
+3. **结论格式**：reviewer 写 `toolbox/workflows/reviews/<id>.md`，**最后一非空行**必须 `VERDICT: pass|blocker`。
 4. **判定**：pass→done+ended_at+review 落盘（退码 0）；blocker→**留 doing**+review.verdict=blocker（退码 1，打印报告路径=brief）；
    `--force`→done+overridden=true+override_reason（**永远留痕**）。
 
@@ -176,10 +176,10 @@ tasks:
 1. 读 ledger → 生成 mermaid gantt：`section`=group；每条任务一行，
    `done`→`done`、`doing`→`active`、`todo`→普通；`depends_on`→`after <dep>`；
    milestone（如 g4）保留 `milestone`。todayMarker 跟系统日期。
-2. 把生成的 mermaid 写回 `meta.render.doc`（本仓库=`humen-desicions/14-progress-gantt.md`；
-   独立工具默认 `workflows/gantt.md`）的 ```mermaid``` 块（**生成物**）。PNG 路径同理走 `meta.render.png`。
-3. 复用现有离线渲染管线（本地 `design/assets/mermaid.min.js` + google-chrome headless + ImageMagick trim）
-   出 `humen-desicions/progress-gantt.png`。**gantt 配置必须 `useMaxWidth:false` + `useWidth:1600`**
+2. 把生成的 mermaid 写回 `meta.render.doc`（本仓库=`materials/humen-desicions/14-progress-gantt.md`；
+   独立工具默认 `toolbox/workflows/gantt.md`）的 ```mermaid``` 块（**生成物**）。PNG 路径同理走 `meta.render.png`。
+3. 复用现有离线渲染管线（本地 `materials/design/assets/mermaid.min.js` + google-chrome headless + ImageMagick trim）
+   出 `materials/humen-desicions/progress-gantt.png`。**gantt 配置必须 `useMaxWidth:false` + `useWidth:1600`**
    （否则 SVG 塌缩到 340x183、放大模糊——已踩过的坑）。
 4. 写 `progress-gantt.png.meta` = **ledger.yaml 的 sha256**（身份对账，不用 mtime）。
 
@@ -189,7 +189,7 @@ tasks:
 两者并列；**甘特暂时只有 mermaid 源 + PNG 这一种形态，不做甘特 HTML；board 是任务视图，不替代甘特**：
 
 - **用途**：给不泡终端的人、投屏、截图汇报。产出单文件静态 HTML，`file://` 双击即看，不用起服务。
-- **默认路径**：`meta.render.board`，未配置则 `workflows/board.html`；同目录写 `board.html.meta`
+- **默认路径**：`meta.render.board`，未配置则 `toolbox/workflows/board.html`；同目录写 `board.html.meta`
   （JSON：`ledger_sha256` / `generated_at` / `task_count`）。
 - **内容**：头部仓库 basename、分支（`git rev-parse` 尽力）、生成时间、台账 sha 前 12 位、`updated_at`；
   汇总条 todo/doing/done、blocked-by、里程碑；按 `group` 分区表格（状态徽章、标题+里程碑、
@@ -244,12 +244,12 @@ tasks:
 历史 done 项时间戳用 git 证据时间近似，`approx:true`。
 
 **文件改动清单**：
-- 新建 `workflows/ledger.yaml`、`workflows/reviews/`（懒建）、`scripts/task.py`。
-- `scripts/check_progress.py`、`scripts/render_progress_gantt.py` → 由 task.py 吸收；
+- 新建 `toolbox/workflows/ledger.yaml`、`toolbox/workflows/reviews/`（懒建）、`toolbox/scripts/task.py`。
+- `toolbox/scripts/check_progress.py`、`toolbox/scripts/render_progress_gantt.py` → 由 task.py 吸收；
   保留为薄壳转发（`check_progress.py --quick` → `task.py check --quick`）以不破坏现有 hook/Makefile，
   或直接改 hook/Makefile 指向 task.py（二选一，实现时取后者更干净）。
 - `.githooks/pre-commit` 第 4 项、`Makefile` audit 第 5 项 → 改调 `task.py check --quick`。
-- `humen-desicions/14-progress-gantt.md` mermaid 块 → 标为生成物，由 `task.py render` 写。
+- `materials/humen-desicions/14-progress-gantt.md` mermaid 块 → 标为生成物，由 `task.py render` 写。
 - `AGENTS.md` 硬规则 3 增补（见 §11）。
 - `NOTES.md` 记录新术语（任务台账/chokepoint/review 门禁/worktree 绑定/依赖闸）。
 
@@ -260,7 +260,7 @@ tasks:
 1. **CLI chokepoint（主）**：start/done 门禁在每次调用时执行，**不依赖 commit**。这是"不许跳步"的真正强制力。
 2. **pre-commit hook（兜底）**：`task.py check --quick` 揪手改 YAML/忘 render 的漂移，挡进历史前。
 3. **AGENTS 硬规则 3 增补（纪律）**：
-   > 先落盘再收尾——结论先写回文件。**任务状态变更只经 `scripts/task.py`；任务在 worktree 内推进；
+   > 先落盘再收尾——结论先写回文件。**任务状态变更只经 `toolbox/scripts/task.py`；任务在 worktree 内推进；
    > done 必过 review（或 `--force` 留痕）；收尾跑 `task.py check` + `render`。**
 
 ---

@@ -2,11 +2,11 @@
 
 > ⚠️ **这份计划已经实施完毕，是历史记录，不是当前实现的说明。**
 >
-> 实际落地的文件以仓库里的为准：`compose.yaml`、`docker/backend.Dockerfile`、
-> `docker/frontend.Dockerfile`、`docker/nginx.conf`、
-> `backend/app/scripts/docker_init.py`、`scripts/docker-smoke.sh`、
-> `scripts/generate_docker_env.py`、`scripts/export-docker-env.sh`。
-> 面向使用者的说明在 [`docs/DOCKER-DEPLOY.md`](../../DOCKER-DEPLOY.md)。
+> 实际落地的文件以仓库里的为准：`compose.yaml`、`system/docker/backend.Dockerfile`、
+> `system/docker/frontend.Dockerfile`、`system/docker/nginx.conf`、
+> `system/backend/app/scripts/docker_init.py`、`toolbox/scripts/docker-smoke.sh`、
+> `toolbox/scripts/generate_docker_env.py`、`toolbox/scripts/export-docker-env.sh`。
+> 面向使用者的说明在 [`materials/docs/DOCKER-DEPLOY.md`](../../DOCKER-DEPLOY.md)。
 >
 > 实施过程中与本计划不一致的地方（**以实现为准**）：
 >
@@ -14,25 +14,25 @@
 > - `compose.yaml` 多了 qdrant 的 healthcheck（镜像里没有 curl / wget，
 >   用 `bash` 的 `/dev/tcp` 打 `/readyz`），ES 的 healthcheck 改成断言
 >   JSON 里的 `status` 字段；
-> - `scripts/docker-smoke.sh` 重写过：SSE 检查改用裸 socket 看 HTTP 分片的
+> - `toolbox/scripts/docker-smoke.sh` 重写过：SSE 检查改用裸 socket 看 HTTP 分片的
 >   **到达时刻**（分片个数不能当判据——被代理攒起来一次性发出的响应也会被
 >   拆成好几个分片，"分片 ≥ 2"照样过）；整个响应快到 200 ms 内就结束时判为
 >   "分辨不出是否流式"，不据此判失败，重试 3 次；并且失败时会把 `init` 的
 >   日志打出来；
 > - `.env.example` / `compose.yaml` 多了 `FRONTEND_BIND`；
 > - 仓库根多了 `.gitattributes`（Windows 上 bash 脚本不能带 CRLF）；
-> - `backend/app/build/config.py` 去掉了硬编码的密码兜底值——
+> - `system/backend/app/build/config.py` 去掉了硬编码的密码兜底值——
 >   缺凭据要显式报错，而不是拿一个写进仓库的口令去连库。
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** 把前端、后端、MySQL、Elasticsearch、Qdrant 和一次性初始化任务打包进单机 Docker Compose，一条命令完成部署、导入 `fixtures/dw.sql`、创建 `dw_reader` 并构建 S2 元知识。
+**Goal:** 把前端、后端、MySQL、Elasticsearch、Qdrant 和一次性初始化任务打包进单机 Docker Compose，一条命令完成部署、导入 `system/fixtures/dw.sql`、创建 `dw_reader` 并构建 S2 元知识。
 
 **Architecture:** Compose 启动三个存储后，由一个复用 backend 镜像的 `init` 一次性容器等待依赖、开通只读账号并校验/按需重建 S2 元知识；`init` 成功退出后 backend 才启动，frontend 由 Nginx 托管构建产物并反向代理 `/api`。所有应用代码烘焙进镜像，运行期不挂载源码；密钥只来自 `.env`，backend 只拿只读账号密码。
 
 **Tech Stack:** Docker Compose v2、Python 3.12 + uv、FastAPI/Uvicorn、React 19 + Vite 6、Nginx 1.27、MySQL 8.0、Elasticsearch 8.15.3、Qdrant v1.12.4。
 
-**Spec:** `docs/superpowers/specs/2026-10-26-docker-deployment-design.md`
+**Spec:** `materials/docs/superpowers/specs/2026-10-26-docker-deployment-design.md`
 
 ## Global Constraints
 
@@ -43,7 +43,7 @@
 - backend 固定单 worker：`CancelRegistry` 是进程内状态，不能横向扩容。
 - 初始化幂等：先 `build_meta_knowledge --verify`，失败才 `--fresh`，fresh 后必须再 verify。
 - 只操作 `*_rebuild` 目标；不修改旧系统；不执行 `down -v` 除非用户明确要求。
-- `frontend/src/generated/` 是生成物，不得手改。
+- `system/frontend/src/generated/` 是生成物，不得手改。
 - SSE 经过 Nginx 必须关闭缓冲：`proxy_buffering off`、`proxy_cache off`、HTTP/1.1、`Connection ""`、长读超时。
 - MySQL 8 默认 `caching_sha2_password`，backend 依赖必须包含 `cryptography`。
 - 不主动 commit / push；只有用户明确要求时才提交。
@@ -54,31 +54,31 @@
 
 | 文件 | 职责 |
 |---|---|
-| `backend/app/scripts/docker_init.py` | init 容器入口：等待依赖 → 开通/校验只读账号 → 校验/重建 S2 |
-| `backend/tests/test_docker_init.py` | init 编排的单元测试（不连真实存储） |
-| `scripts/generate_docker_env.py` | 从 `.env.example` 生成带随机密码的 `.env` |
-| `scripts/docker-smoke.sh` | 端到端验收：五服务 + health + 12 步 + 真实查询 + 账号/元知识 + init 幂等 |
-| `docker/backend.Dockerfile` | backend/init 共用镜像，非 root、单 worker |
-| `docker/frontend.Dockerfile` | Node 构建 + Nginx 运行镜像 |
-| `docker/nginx.conf` | SPA 回退、`/api` 反向代理、SSE 配置 |
+| `system/backend/app/scripts/docker_init.py` | init 容器入口：等待依赖 → 开通/校验只读账号 → 校验/重建 S2 |
+| `system/backend/tests/test_docker_init.py` | init 编排的单元测试（不连真实存储） |
+| `toolbox/scripts/generate_docker_env.py` | 从 `.env.example` 生成带随机密码的 `.env` |
+| `toolbox/scripts/docker-smoke.sh` | 端到端验收：五服务 + health + 12 步 + 真实查询 + 账号/元知识 + init 幂等 |
+| `system/docker/backend.Dockerfile` | system/backend/init 共用镜像，非 root、单 worker |
+| `system/docker/frontend.Dockerfile` | Node 构建 + Nginx 运行镜像 |
+| `system/docker/nginx.conf` | SPA 回退、`/api` 反向代理、SSE 配置 |
 | `compose.yaml` | 五长驻服务 + `init` 一次性任务、卷、健康检查、依赖 |
 | `.env.example` | 部署配置模板；密码为占位值 |
-| `.dockerignore` | 排除开发产物与密钥，保留 `contracts/`、`fixtures/` |
-| `docs/DOCKER-DEPLOY.md` | 部署、运维、排障手册 |
+| `.dockerignore` | 排除开发产物与密钥，保留 `system/contracts/`、`system/fixtures/` |
+| `materials/docs/DOCKER-DEPLOY.md` | 部署、运维、排障手册 |
 | `Makefile` | `docker-env/up/down/logs/smoke/reset` |
 | `README.md` | Docker 快速开始与约束更新 |
-| `docs/SETUP-FROM-SCRATCH.md` | 把旧 compose 路径改为仓库根 `compose.yaml` |
-| `backend/pyproject.toml`、`backend/uv.lock` | 增加 `cryptography` |
+| `materials/docs/SETUP-FROM-SCRATCH.md` | 把旧 compose 路径改为仓库根 `compose.yaml` |
+| `system/backend/pyproject.toml`、`system/backend/uv.lock` | 增加 `cryptography` |
 
 ---
 
 ### Task 1: init 编排逻辑与 MySQL 8 驱动依赖
 
 **Files:**
-- Create: `backend/app/scripts/docker_init.py`
-- Create: `backend/tests/test_docker_init.py`
-- Modify: `backend/pyproject.toml`
-- Modify: `backend/uv.lock`
+- Create: `system/backend/app/scripts/docker_init.py`
+- Create: `system/backend/tests/test_docker_init.py`
+- Modify: `system/backend/pyproject.toml`
+- Modify: `system/backend/uv.lock`
 
 **Interfaces:**
 - Consumes: `app.build.config.BuildConfig.from_env()`、`app.cli.enable_utf8_stdio()`。
@@ -90,7 +90,7 @@
 
 - [ ] **Step 1: Write the failing tests**
 
-Create `backend/tests/test_docker_init.py`:
+Create `system/backend/tests/test_docker_init.py`:
 
 ```python
 """Docker init 编排的单元测试（不连接真实存储）。"""
@@ -164,7 +164,7 @@ def test_initialize_stops_on_rebuild_failure() -> None:
 Run:
 
 ```bash
-cd backend && uv run pytest -q tests/test_docker_init.py
+cd system/backend && uv run pytest -q tests/test_docker_init.py
 ```
 
 Expected: FAIL with `ModuleNotFoundError: No module named 'app.scripts.docker_init'`.
@@ -174,20 +174,20 @@ Expected: FAIL with `ModuleNotFoundError: No module named 'app.scripts.docker_in
 Run:
 
 ```bash
-cd backend && uv add cryptography
+cd system/backend && uv add cryptography
 ```
 
 Expected: `pyproject.toml` gains a `cryptography>=...` dependency and `uv.lock` is updated. Then run:
 
 ```bash
-cd backend && uv sync --frozen
+cd system/backend && uv sync --frozen
 ```
 
 Expected: exit 0.
 
 - [ ] **Step 4: Implement the init module**
 
-Create `backend/app/scripts/docker_init.py`:
+Create `system/backend/app/scripts/docker_init.py`:
 
 ```python
 """Docker 初始化：等待依赖 → 开通只读账号 → 校验/重建 S2 元知识。
@@ -346,7 +346,7 @@ if __name__ == "__main__":
 Run:
 
 ```bash
-cd backend && uv run pytest -q tests/test_docker_init.py
+cd system/backend && uv run pytest -q tests/test_docker_init.py
 ```
 
 Expected: `3 passed`.
@@ -356,7 +356,7 @@ Expected: `3 passed`.
 Run:
 
 ```bash
-cd backend && uv run pytest -q
+cd system/backend && uv run pytest -q
 ```
 
 Expected: all tests pass (baseline is `521 passed / 30 skipped`; the new file adds 3 passing tests).
@@ -371,13 +371,13 @@ Report the changed files and test counts. Do **not** commit unless the user expl
 
 **Files:**
 - Create: `.env.example`
-- Create: `scripts/generate_docker_env.py`
+- Create: `toolbox/scripts/generate_docker_env.py`
 - Modify: `.gitignore`
 
 **Interfaces:**
 - Consumes: `.env.example` at repository root.
 - Produces:
-  - `python scripts/generate_docker_env.py [--force] [--dry-run]`
+  - `python toolbox/scripts/generate_docker_env.py [--force] [--dry-run]`
   - generated `.env` with random values for `MYSQL_ROOT_PASSWORD`, `MYSQL_PASSWORD`, `REBUILD_DW_RO_PASSWORD`; all other keys copied from `.env.example`.
 
 - [ ] **Step 1: Write `.env.example`**
@@ -423,7 +423,7 @@ REBUILD_LLM_TIMEOUT=30
 
 - [ ] **Step 2: Implement the generator**
 
-Create `scripts/generate_docker_env.py`:
+Create `toolbox/scripts/generate_docker_env.py`:
 
 ```python
 #!/usr/bin/env python3
@@ -532,7 +532,7 @@ Modify `.gitignore` by adding these lines after the `# 本地` block:
 Run:
 
 ```bash
-python scripts/generate_docker_env.py --dry-run > /tmp/rebuild-env.preview
+python toolbox/scripts/generate_docker_env.py --dry-run > /tmp/rebuild-env.preview
 python - <<'PY'
 from pathlib import Path
 
@@ -560,17 +560,17 @@ Run:
 
 ```bash
 tmpdir="$(mktemp -d)"
-python scripts/generate_docker_env.py --output "$tmpdir/.env"
+python toolbox/scripts/generate_docker_env.py --output "$tmpdir/.env"
 test -f "$tmpdir/.env"
 
-if python scripts/generate_docker_env.py --output "$tmpdir/.env" \
+if python toolbox/scripts/generate_docker_env.py --output "$tmpdir/.env" \
     2>"$tmpdir/refusal.err"; then
   echo "expected refusal did not happen" >&2
   exit 1
 fi
 grep -q "已存在" "$tmpdir/refusal.err"
 
-python scripts/generate_docker_env.py --output "$tmpdir/.env" --force
+python toolbox/scripts/generate_docker_env.py --output "$tmpdir/.env" --force
 rm -rf "$tmpdir"
 echo "env guard PASS"
 ```
@@ -583,10 +583,10 @@ Report the generated preview and changed files. Do not commit.
 
 ---
 
-### Task 3: backend/init 镜像
+### Task 3: system/backend/init 镜像
 
 **Files:**
-- Create: `docker/backend.Dockerfile`
+- Create: `system/docker/backend.Dockerfile`
 - Create: `.dockerignore`
 
 **Interfaces:**
@@ -605,10 +605,10 @@ Report the generated preview and changed files. Do not commit.
 Run:
 
 ```bash
-docker build -f docker/backend.Dockerfile -t shopkeeper-rebuild/backend:test .
+docker build -f system/docker/backend.Dockerfile -t shopkeeper-rebuild/backend:test .
 ```
 
-Expected: FAIL with `failed to read dockerfile: ... docker/backend.Dockerfile: no such file or directory`.
+Expected: FAIL with `failed to read dockerfile: ... system/docker/backend.Dockerfile: no such file or directory`.
 
 - [ ] **Step 2: Create `.dockerignore`**
 
@@ -621,30 +621,30 @@ Create `.dockerignore`:
 .env.*
 !.env.example
 
-backend/.venv
-backend/.pytest_cache
-backend/tests
+system/backend/.venv
+system/backend/.pytest_cache
+system/backend/tests
 **/__pycache__
 **/*.py[cod]
 
-frontend/node_modules
-frontend/dist
-frontend/tests
+system/frontend/node_modules
+system/frontend/dist
+system/frontend/tests
 
 docs
 scripts
 *.log
 .DS_Store
 
-# 构建需要保留：contracts/、fixtures/、backend/app/、backend/pyproject.toml、backend/uv.lock
+# 构建需要保留：system/contracts/、system/fixtures/、system/backend/app/、system/backend/pyproject.toml、system/backend/uv.lock
 ```
 
 - [ ] **Step 3: Create the backend Dockerfile**
 
-Create `docker/backend.Dockerfile`:
+Create `system/docker/backend.Dockerfile`:
 
 ```dockerfile
-# syntax=docker/dockerfile:1.7
+# syntax=system/docker/dockerfile:1.7
 
 ARG PYTHON_IMAGE=python:3.12-slim
 ARG UV_IMAGE=ghcr.io/astral-sh/uv:0.8.22
@@ -660,11 +660,11 @@ ENV UV_DEFAULT_INDEX=${UV_INDEX_URL} \
     UV_LINK_MODE=copy
 
 WORKDIR /build
-COPY backend/pyproject.toml backend/uv.lock ./
+COPY system/backend/pyproject.toml system/backend/uv.lock ./
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-dev --no-install-project
 
-COPY backend/app ./app
+COPY system/backend/app ./app
 
 FROM ${PYTHON_IMAGE} AS runtime
 
@@ -699,7 +699,7 @@ Run:
 docker build \
   --build-arg PYTHON_IMAGE=docker.m.daocloud.io/library/python:3.12-slim \
   --build-arg UV_IMAGE=ghcr.io/astral-sh/uv:0.8.22 \
-  -f docker/backend.Dockerfile \
+  -f system/docker/backend.Dockerfile \
   -t shopkeeper-rebuild/backend:test .
 ```
 
@@ -712,7 +712,7 @@ docker build \
   --build-arg PYTHON_IMAGE=docker.m.daocloud.io/library/python:3.12-slim \
   --build-arg UV_IMAGE=ghcr.io/astral-sh/uv:0.8.22 \
   --build-arg UV_INDEX_URL=https://mirrors.aliyun.com/pypi/simple \
-  -f docker/backend.Dockerfile \
+  -f system/docker/backend.Dockerfile \
   -t shopkeeper-rebuild/backend:test .
 ```
 
@@ -745,8 +745,8 @@ Report image size and the three checks. Do not commit.
 ### Task 4: frontend 镜像与 Nginx SSE 配置
 
 **Files:**
-- Create: `docker/frontend.Dockerfile`
-- Create: `docker/nginx.conf`
+- Create: `system/docker/frontend.Dockerfile`
+- Create: `system/docker/nginx.conf`
 
 **Interfaces:**
 - Produces image `shopkeeper-rebuild/frontend:local`.
@@ -758,14 +758,14 @@ Report image size and the three checks. Do not commit.
 Run:
 
 ```bash
-docker build -f docker/frontend.Dockerfile -t shopkeeper-rebuild/frontend:test .
+docker build -f system/docker/frontend.Dockerfile -t shopkeeper-rebuild/frontend:test .
 ```
 
-Expected: FAIL with `failed to read dockerfile: ... docker/frontend.Dockerfile: no such file or directory`.
+Expected: FAIL with `failed to read dockerfile: ... system/docker/frontend.Dockerfile: no such file or directory`.
 
 - [ ] **Step 2: Create the Nginx config**
 
-Create `docker/nginx.conf`:
+Create `system/docker/nginx.conf`:
 
 ```nginx
 server {
@@ -807,10 +807,10 @@ server {
 
 - [ ] **Step 3: Create the frontend Dockerfile**
 
-Create `docker/frontend.Dockerfile`:
+Create `system/docker/frontend.Dockerfile`:
 
 ```dockerfile
-# syntax=docker/dockerfile:1.7
+# syntax=system/docker/dockerfile:1.7
 
 ARG NODE_IMAGE=node:20-alpine
 ARG NGINX_IMAGE=nginx:1.27-alpine
@@ -820,15 +820,15 @@ FROM ${NODE_IMAGE} AS build
 ARG NPM_REGISTRY=https://registry.npmjs.org
 WORKDIR /app
 
-COPY frontend/package.json frontend/package-lock.json ./
+COPY system/frontend/package.json system/frontend/package-lock.json ./
 RUN npm ci --registry="${NPM_REGISTRY}"
 
-COPY frontend/ ./
+COPY system/frontend/ ./
 RUN npm run build
 
 FROM ${NGINX_IMAGE} AS runtime
 
-COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
+COPY system/docker/nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /app/dist /usr/share/nginx/html
 
 EXPOSE 80
@@ -843,7 +843,7 @@ docker build \
   --build-arg NODE_IMAGE=docker.m.daocloud.io/library/node:20-alpine \
   --build-arg NGINX_IMAGE=docker.m.daocloud.io/library/nginx:1.27-alpine \
   --build-arg NPM_REGISTRY=https://registry.npmmirror.com \
-  -f docker/frontend.Dockerfile \
+  -f system/docker/frontend.Dockerfile \
   -t shopkeeper-rebuild/frontend:test .
 ```
 
@@ -880,7 +880,7 @@ Report build result and checks. Do not commit.
 ### Task 5: Compose 五服务 + init + 端到端 smoke
 
 **Files:**
-- Create: `scripts/docker-smoke.sh`
+- Create: `toolbox/scripts/docker-smoke.sh`
 - Create: `compose.yaml`
 
 **Interfaces:**
@@ -891,7 +891,7 @@ Report build result and checks. Do not commit.
 
 - [ ] **Step 1: Write the smoke script first**
 
-Create `scripts/docker-smoke.sh`:
+Create `toolbox/scripts/docker-smoke.sh`:
 
 ```bash
 #!/usr/bin/env bash
@@ -992,7 +992,7 @@ echo "DOCKER SMOKE PASS"
 Make it executable:
 
 ```bash
-chmod +x scripts/docker-smoke.sh scripts/generate_docker_env.py
+chmod +x toolbox/scripts/docker-smoke.sh toolbox/scripts/generate_docker_env.py
 ```
 
 - [ ] **Step 2: Run the smoke script to verify it fails before Compose exists**
@@ -1000,7 +1000,7 @@ chmod +x scripts/docker-smoke.sh scripts/generate_docker_env.py
 Run:
 
 ```bash
-test -f .env || python scripts/generate_docker_env.py
+test -f .env || python toolbox/scripts/generate_docker_env.py
 ./scripts/docker-smoke.sh
 ```
 
@@ -1016,7 +1016,7 @@ name: shopkeeper-rebuild
 
 x-backend-build: &backend-build
   context: .
-  dockerfile: docker/backend.Dockerfile
+  dockerfile: system/docker/backend.Dockerfile
   args:
     PYTHON_IMAGE: ${PYTHON_IMAGE:?}
     UV_IMAGE: ${UV_IMAGE:?}
@@ -1143,7 +1143,7 @@ services:
     image: shopkeeper-rebuild/frontend:local
     build:
       context: .
-      dockerfile: docker/frontend.Dockerfile
+      dockerfile: system/docker/frontend.Dockerfile
       args:
         NODE_IMAGE: ${NODE_IMAGE:?}
         NGINX_IMAGE: ${NGINX_IMAGE:?}
@@ -1205,7 +1205,7 @@ terminal (or the harness task running it) before continuing.
 Run:
 
 ```bash
-test -f .env || python scripts/generate_docker_env.py
+test -f .env || python toolbox/scripts/generate_docker_env.py
 ./scripts/docker-smoke.sh
 ```
 
@@ -1218,7 +1218,7 @@ docker compose down -v
 ./scripts/docker-smoke.sh
 ```
 
-Expected: fresh MySQL imports `fixtures/dw.sql`; `init` creates `dw_reader`, builds S2, exits 0; backend starts; smoke passes.
+Expected: fresh MySQL imports `system/fixtures/dw.sql`; `init` creates `dw_reader`, builds S2, exits 0; backend starts; smoke passes.
 
 - [ ] **Step 7: Verify a second `init` does not rebuild**
 
@@ -1241,12 +1241,12 @@ Report `docker compose ps`, smoke output summary, and init idempotency result. D
 
 **Files:**
 - Modify: `Makefile`
-- Create: `docs/DOCKER-DEPLOY.md`
+- Create: `materials/docs/DOCKER-DEPLOY.md`
 - Modify: `README.md`
-- Modify: `docs/SETUP-FROM-SCRATCH.md`
+- Modify: `materials/docs/SETUP-FROM-SCRATCH.md`
 
 **Interfaces:**
-- Consumes: `compose.yaml`, `.env.example`, `scripts/generate_docker_env.py`, `scripts/docker-smoke.sh`.
+- Consumes: `compose.yaml`, `.env.example`, `toolbox/scripts/generate_docker_env.py`, `toolbox/scripts/docker-smoke.sh`.
 - Produces Make targets:
   - `docker-env` — create `.env` only if absent
   - `docker-up` — `docker compose up -d --build`
@@ -1267,11 +1267,11 @@ Append this block at the end of `Makefile`:
 
 ```make
 # ---------------------------------------------------------------------------
-# Docker 部署（单机 Compose；详见 docs/DOCKER-DEPLOY.md）
+# Docker 部署（单机 Compose；详见 materials/docs/DOCKER-DEPLOY.md）
 # ---------------------------------------------------------------------------
 
 docker-env:
-	@test -f .env || python scripts/generate_docker_env.py
+	@test -f .env || python toolbox/scripts/generate_docker_env.py
 
 docker-up: docker-env
 	docker compose up -d --build
@@ -1307,7 +1307,7 @@ Expected: each prints the expected commands; `docker-reset` prints the confirmat
 
 - [ ] **Step 3: Create the deployment guide**
 
-Create `docs/DOCKER-DEPLOY.md`:
+Create `materials/docs/DOCKER-DEPLOY.md`:
 
 ```markdown
 # Docker 部署
@@ -1414,7 +1414,7 @@ make docker-reset   # 输入 yes 才执行 down -v
 | `Access denied for user 'dw_reader'` | init 没跑完或密码已轮换 | `docker compose logs init`；重新执行 `init` |
 | ES 容器反复退出（Linux） | `vm.max_map_count` 太小 | `sudo sysctl -w vm.max_map_count=262144` |
 | 8080 被占用 | 宿主机端口冲突 | 在 `.env` 改 `FRONTEND_HOST_PORT` |
-| 页面能开但 SSE 不流式 | Nginx 缓冲 | 确认 `docker/nginx.conf` 的 `proxy_buffering off`；重建 frontend |
+| 页面能开但 SSE 不流式 | Nginx 缓冲 | 确认 `system/docker/nginx.conf` 的 `proxy_buffering off`；重建 frontend |
 | `S2 FAIL: ... unknown analyzer [ik_max_word]` | 官方 ES 没有 IK | S2 会自动回退 `standard`；若仍失败看 init 日志 |
 | 查询一直 `INTERNAL_ERROR` | init 未成功，或只读账号不可用 | 先看 `docker compose ps` 与 `docker compose logs init` |
 
@@ -1422,7 +1422,7 @@ make docker-reset   # 输入 yes 才执行 down -v
 
 - backend 固定单 worker：取消注册表是进程内状态，不能多副本。
 - ES 单节点、关闭鉴权，只适合单机；不要暴露到公网。
-- `fixtures/dw.sql` 是当前数据源；替换真实数据不在本部署范围内。
+- `system/fixtures/dw.sql` 是当前数据源；替换真实数据不在本部署范围内。
 - 不提供镜像仓库推送、多节点编排或高可用。
 ```
 
@@ -1433,7 +1433,7 @@ Modify `README.md`:
 1. In the top link list, add:
 
 ```markdown
-- Docker 部署：[`docs/DOCKER-DEPLOY.md`](docs/DOCKER-DEPLOY.md)
+- Docker 部署：[`materials/docs/DOCKER-DEPLOY.md`](materials/docs/DOCKER-DEPLOY.md)
 ```
 
 2. After the `快速开始` code block and before the Windows note, add:
@@ -1450,7 +1450,7 @@ curl http://127.0.0.1:8080/api/health
 make docker-smoke    # 完整验收
 ```
 
-详见 [`docs/DOCKER-DEPLOY.md`](docs/DOCKER-DEPLOY.md)。
+详见 [`materials/docs/DOCKER-DEPLOY.md`](materials/docs/DOCKER-DEPLOY.md)。
 ```
 
 3. Replace the S2 command block：
@@ -1484,7 +1484,7 @@ with:
 
 - [ ] **Step 5: Update the setup guide's old compose path**
 
-Modify `docs/SETUP-FROM-SCRATCH.md`:
+Modify `materials/docs/SETUP-FROM-SCRATCH.md`:
 
 1. Replace the standalone quick-start block:
 
@@ -1567,13 +1567,13 @@ with：
 8. Replace the row：
 
 ```markdown
-| `make stage5-live` 连不上 3306 | MySQL 没起 | 按 2.4 只启动 mysql；`dw` 库要由 `fixtures/dw.sql` 装载 |
+| `make stage5-live` 连不上 3306 | MySQL 没起 | 按 2.4 只启动 mysql；`dw` 库要由 `system/fixtures/dw.sql` 装载 |
 ```
 
 with：
 
 ```markdown
-| `make stage5-live` 连不上 3306 | MySQL 没起 | 按 2.4 启动 mysql；首次启动会由 entrypoint 导入 `fixtures/dw.sql` |
+| `make stage5-live` 连不上 3306 | MySQL 没起 | 按 2.4 启动 mysql；首次启动会由 entrypoint 导入 `system/fixtures/dw.sql` |
 ```
 
 - [ ] **Step 7: Verify docs commands and links**
@@ -1583,10 +1583,10 @@ Run:
 ```bash
 make -n docker-up
 make -n docker-smoke
-test -f docs/DOCKER-DEPLOY.md
+test -f materials/docs/DOCKER-DEPLOY.md
 grep -q "Docker 一键部署" README.md
-grep -q "docs/DOCKER-DEPLOY.md" README.md
-grep -q "compose.yaml" docs/SETUP-FROM-SCRATCH.md
+grep -q "materials/docs/DOCKER-DEPLOY.md" README.md
+grep -q "compose.yaml" materials/docs/SETUP-FROM-SCRATCH.md
 ```
 
 Expected: all commands exit 0.
@@ -1667,7 +1667,7 @@ Do not commit or push unless the user explicitly asks.
 
 ## Self-Review Notes
 
-- Spec coverage: five services + init → Task 5; backend/frontend images → Tasks 3/4;
+- Spec coverage: five services + init → Task 5; system/backend/frontend images → Tasks 3/4;
   secrets → Task 2; MySQL import + `dw_reader` → Tasks 1/5; S2 idempotency → Task 1;
   Nginx SSE → Task 4; tests → Tasks 1/5/7; docs → Task 6.
 - Placeholder scan: no `TBD`/`TODO`; every code file has a complete draft.

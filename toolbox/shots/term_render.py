@@ -4,20 +4,20 @@
 
 一条命令重跑全部图（在仓库根目录）：
 
-    python3 manual/shots/term_render.py
+    python3 tutorial/shots/term_render.py
 
 只重跑其中几页（例如只重生成第 3 页的图，不动其他页）：
 
-    python3 manual/shots/term_render.py page-03
+    python3 tutorial/shots/term_render.py page-03
 
 它做四件事：
 
-1. 在 /tmp 建一个**临时工作区**：软链 `backend/`（用仓库里现成的 venv），
-   拷入 `fixtures/dw.sql` 和 `.env.example`，写入每页 `lab/app.py`。
+1. 在 /tmp 建一个**临时工作区**：软链 `system/backend/`（用仓库里现成的 venv），
+   拷入 `system/fixtures/dw.sql` 和 `.env.example`，写入每页 `lab/app.py`。
    页面命令里全是相对路径，在临时工作区里逐字执行，所以图里不会出现
    `/home/...` 这类绝对路径。
 2. 按**页序**在真 shell 里跑每页「动手」的命令：第 1 页创建 MySQL 容器（3307）
-   并复用，第 2 页把 `fixtures/dw.sql` 导入该容器，第 3 页起每页用新代码重启
+   并复用，第 2 页把 `system/fixtures/dw.sql` 导入该容器，第 3 页起每页用新代码重启
    uvicorn（8000），curl 的输出逐条捕获（不手抄）。第 3 页在 curl 之后再等
    uvicorn 追加访问日志，把 curl 触发的那一行也放进「终端 1」。
 3. 把捕获到的「命令 + 输出」拼成深色终端版式的 HTML，用
@@ -26,12 +26,12 @@
 4. 把每页真跑输出与本页「## 你应该看到」的样例逐行对账（PID、耗时这类
    每次不同的数字按通配处理），并检查内容里没有用户名/主机名/绝对路径。
 
-输出：`manual/images/page-0X-*.png`。跑完自动 `docker rm -f lab-mysql`、
+输出：`tutorial/images/page-0X-*.png`。跑完自动 `docker rm -f lab-mysql`、
 杀掉 uvicorn、删掉临时工作区，不留残余。只跑某几页时，只碰这几页要用的
 端口和容器（例如 `page-03` 只检查 8000，不碰 MySQL 和容器）。
 
 依赖（本机已装，不新装）：docker、google-chrome、ImageMagick convert/identify、
-仓库自带的 `backend/.venv`。端口：MySQL 3307、API 8000。
+仓库自带的 `system/backend/.venv`。端口：MySQL 3307、API 8000。
 """
 
 from __future__ import annotations
@@ -52,7 +52,7 @@ from pathlib import Path
 
 # ---------------------------------------------------------------- 常量
 
-HERE = Path(__file__).resolve().parent          # manual/shots
+HERE = Path(__file__).resolve().parent          # tutorial/shots
 REPO = HERE.parents[1]                          # 仓库根目录
 IMAGES = REPO / "manual" / "images"
 
@@ -66,8 +66,8 @@ CONTAINER = "lab-mysql"  # 第 1 页 --name lab-mysql（页面命令写死，必
 
 MYSQL_WARN = "mysql: [Warning] Using a password on the command line interface can be insecure."
 
-UVICORN = "backend/.venv/bin/python -m uvicorn lab.app:app --port 8000"
-PY_APP = "backend/.venv/bin/python -m lab.app"
+UVICORN = "system/backend/.venv/bin/python -m uvicorn lab.app:app --port 8000"
+PY_APP = "system/backend/.venv/bin/python -m lab.app"
 
 DOCKER_RUN = "\n".join(
     [
@@ -89,8 +89,8 @@ EXEC_VERSION_DBS = (
     '-e "SELECT VERSION(); SHOW DATABASES;"'
 )
 
-# 第 2 页：把 fixtures/dw.sql 导入空库（-i 让容器标准输入保持打开）
-IMPORT_DW = "docker exec -i lab-mysql mysql -uroot -plabpass < fixtures/dw.sql"
+# 第 2 页：把 system/fixtures/dw.sql 导入空库（-i 让容器标准输入保持打开）
+IMPORT_DW = "docker exec -i lab-mysql mysql -uroot -plabpass < system/fixtures/dw.sql"
 
 EXEC_TABLES = (
     'docker exec lab-mysql mysql -uroot -plabpass -N -B dw -e "SHOW TABLES;"'
@@ -130,7 +130,7 @@ CURL_QUERY_3 = (
 CURL_STREAM = "curl -sN -G 'http://127.0.0.1:8000/api/stream' --data-urlencode 'q=华北销售额'"
 
 # ---------------------------------------------------------------- 每页 lab/app.py
-# 与 manual/page-03.md … page-08.md 的代码逐字一致；第 6–8 页是按页面说明
+# 与 tutorial/page-03.md … page-08.md 的代码逐字一致；第 6–8 页是按页面说明
 # 在上一页文件上插入/替换后的完整文件（跑的是页面最终形态）。
 
 APP_PAGE_03 = '''\

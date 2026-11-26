@@ -5,10 +5,10 @@
 不重录，只在成片上按时间轴叠加，保留现有剪辑。
 
 用法：
-    python3 deliverable/v2/make_demo_overlay.py
+    python3 materials/deliverable/v2/make_demo_overlay.py
 产物：
-    deliverable/v2/demo-overlay.ass
-    deliverable/v2/DSWS-v2-original-ui-demo.annotated.mp4
+    materials/deliverable/v2/demo-overlay.ass
+    materials/deliverable/v2/DSWS-v2-original-ui-demo.annotated.mp4
 """
 from __future__ import annotations
 

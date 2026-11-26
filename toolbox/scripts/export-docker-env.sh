@@ -2,7 +2,7 @@
 # 把仓库根 .env 里的 Compose 凭据导出成宿主 CLI 使用的 REBUILD_* 变量。
 #
 # 用法（在仓库根目录执行；必须 source，不能直接执行）：
-#   source scripts/export-docker-env.sh
+#   source toolbox/scripts/export-docker-env.sh
 #
 # 成功时完全静默（只有取值对不上时会在 stderr 上告警）；任何信息都不包含密码值。
 #
@@ -34,12 +34,12 @@
 #    shell 里那份旧值会挡住 Compose 读新的 .env。
 
 if [ "${BASH_SOURCE[0]}" = "$0" ]; then
-  printf '用法：source scripts/export-docker-env.sh（必须用 source 运行，不能直接执行）\n' >&2
+  printf '用法：source toolbox/scripts/export-docker-env.sh（必须用 source 运行，不能直接执行）\n' >&2
   exit 1
 fi
 
 _export_docker_env_root="$(
-  cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd
+  cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd
 )" || return 1
 _export_docker_env_file="$_export_docker_env_root/.env"
 

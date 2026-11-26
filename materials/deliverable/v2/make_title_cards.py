@@ -2,10 +2,10 @@
 """生成验收版片头/片尾卡片（纸感，与正片一致）。
 
 用法：
-    python3 deliverable/v2/make_title_cards.py
+    python3 materials/deliverable/v2/make_title_cards.py
 产物：
-    deliverable/v2/intro-card.png
-    deliverable/v2/outro-card.png
+    materials/deliverable/v2/intro-card.png
+    materials/deliverable/v2/outro-card.png
 """
 from __future__ import annotations
 

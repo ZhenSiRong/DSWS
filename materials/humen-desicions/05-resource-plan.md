@@ -25,7 +25,7 @@
 | 浏览器 | `google-chrome` 已装 | 截图/录屏可用 |
 | 视频 | `ffmpeg` 已装 | 录后处理可用 |
 | Playwright | **未安装**（npx 拉不到包） | 需装 `playwright-core`，用系统 Chrome，不下载浏览器 |
-| Python | `backend/.venv`（含 langgraph 1.2.19）、`design/style-lab/.venv`（WeasyPrint 70） | 两套环境已就绪，别重建 |
+| Python | `system/backend/.venv`（含 langgraph 1.2.19）、`materials/design/style-lab/.venv`（WeasyPrint 70） | 两套环境已就绪，别重建 |
 | uv 缓存 | 1.2G | 离线可跑，别清 |
 | Docker | 本地有，远程 5051 也在用 | 构建优先在远程，省本地内存 |
 | DeepSeek Key | `~/.bashrc` 里的 `DEEPSEEK_API_KEY`（当前进程未导出） | 产品路径专用 |
@@ -121,7 +121,7 @@
 | 对象 | 做法 | 省下什么 |
 |---|---|---|
 | `uv` | 保留 1.2G 缓存，`uv run --offline` | 每次建环境的时间与网络 |
-| `backend/.venv` | 已含 langgraph，不重建 | 数分钟 |
+| `system/backend/.venv` | 已含 langgraph，不重建 | 数分钟 |
 | `style-lab/.venv` | WeasyPrint 70 固定 | 版本排障 |
 | PDF 文本 | `pdftotext` 落盘一次，之后只 `grep` | 避免重复解析 7MB |
 | 插图 | content JSON 幂等；通过后不再生成 | Lite 配额 |

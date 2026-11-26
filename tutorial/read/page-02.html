@@ -9,23 +9,23 @@
 </head>
 <body>
 <main class="page">
-<p class="kicker">练本 · 阅读版（md 正典派生，改内容请改 manual/page-02.md）</p>
+<p class="kicker">练本 · 阅读版（md 正典派生，改内容请改 tutorial/page-02.md）</p>
 <h1>第 2 页 · 导入 dw.sql：建表灌数据</h1>
 <blockquote>
 <p><strong>城市坐标 · P2 仓库分区与入库通道（交付物 ③④）</strong>｜给仓库隔出 5 个分区、把 115 行货入库：从此问一句有货可取。</p>
 </blockquote>
 <h2>这一页构建什么</h2>
-<p>把 <code>fixtures/dw.sql</code> 导入第 1 页那个容器：一条命令把建库、建表、灌数据全做完（口语常说“灌数据”）。页末你自己用 SQL 数出表几张、订单几行、华北几单，才算验收。</p>
+<p>把 <code>system/fixtures/dw.sql</code> 导入第 1 页那个容器：一条命令把建库、建表、灌数据全做完（口语常说“灌数据”）。页末你自己用 SQL 数出表几张、订单几行、华北几单，才算验收。</p>
 <p><img alt="第 2 页 · 先把仓库搭好：左边是 5 张表与 115 行货，右边是仓库货架与叉车——一条命令把 dw.sql 灌进去" src="../images/page-02-visual.webp" /></p>
 <h2>猜一猜</h2>
 <p>先写下答案，再动手。</p>
 <p>第 1 条命令把 <code>dw.sql</code> 里几百行 <code>CREATE</code> / <code>INSERT</code> 送进 MySQL。终端会<strong>逐条打印</strong>每张表、每行数据，还是<strong>什么都不打印</strong>？导入完再数一次：<code>SELECT COUNT(*) FROM fact_order</code> 会回几？（0 / 115 / 其他数字）</p>
 <h2>动手</h2>
-<p>第 1 页的 <code>lab-mysql</code> 要先创建好、正在运行；报 <code>No such container: lab-mysql</code> 就回第 1 页重跑。以下命令仍在<strong>仓库根目录</strong>执行（<code>fixtures/dw.sql</code> 在这里）。</p>
+<p>第 1 页的 <code>lab-mysql</code> 要先创建好、正在运行；报 <code>No such container: lab-mysql</code> 就回第 1 页重跑。以下命令仍在<strong>仓库根目录</strong>执行（<code>system/fixtures/dw.sql</code> 在这里）。</p>
 <p><strong>第 1 条：导入 <code>dw.sql</code>。</strong></p>
-<pre><code class="language-bash">docker exec -i lab-mysql mysql -uroot -plabpass &lt; fixtures/dw.sql
+<pre><code class="language-bash">docker exec -i lab-mysql mysql -uroot -plabpass &lt; system/fixtures/dw.sql
 </code></pre>
-<p><code>-i</code> 让容器的标准输入保持打开，<code>&lt; fixtures/dw.sql</code> 是<strong>宿主机</strong> shell 的重定向（第 1 页讲过）：文件内容从你的终端接进容器的 <code>mysql</code>，容器里的 <code>mysql</code> 把它当脚本逐句执行。<strong>少了 <code>-i</code> 会静默失败</strong>：<code>mysql</code> 读到空输入，不建表也不报错，退出码还是 0。</p>
+<p><code>-i</code> 让容器的标准输入保持打开，<code>&lt; system/fixtures/dw.sql</code> 是<strong>宿主机</strong> shell 的重定向（第 1 页讲过）：文件内容从你的终端接进容器的 <code>mysql</code>，容器里的 <code>mysql</code> 把它当脚本逐句执行。<strong>少了 <code>-i</code> 会静默失败</strong>：<code>mysql</code> 读到空输入，不建表也不报错，退出码还是 0。</p>
 <p><strong>第 2 条：看库里的表。</strong></p>
 <pre><code class="language-bash">docker exec lab-mysql mysql -uroot -plabpass -N -B dw -e &quot;SHOW TABLES;&quot;
 </code></pre>
@@ -58,7 +58,7 @@ ORD20250114001  北京市 华北  75
 <ul>
 <li>猜“会逐条打印”：不对。<code>mysql</code> 批量读脚本时不回显执行过程；除密码 <code>Warning</code> 外一行输出都没有。所以“没输出”不是没执行，<strong>必须自己查表、数行数</strong>（第 2、3 条）才算验完。</li>
 <li>猜 0：先看第 1 条是不是漏了 <code>-i</code>——那会“成功”退出但什么都没导入；如果文件路径写错，宿主机 shell 会直接报 <code>No such file or directory</code>。</li>
-<li>猜 115：对。这个数由 <code>fixtures/dw.sql</code> 里 <code>fact_order</code> 的 <code>INSERT</code> 决定；115 行里华北（<code>region_id</code> 为 <code>R004</code>）19 单。</li>
+<li>猜 115：对。这个数由 <code>system/fixtures/dw.sql</code> 里 <code>fact_order</code> 的 <code>INSERT</code> 决定；115 行里华北（<code>region_id</code> 为 <code>R004</code>）19 单。<strong>115 只是 <code>fact_order</code> 单数</strong>；5 张表合计 246 行（<code>dim_date</code> 90 等），别拿 115 去对全库行数。</li>
 <li>5 张表和 <code>dw</code> 库不是 MySQL 送的：<code>dw.sql</code> 开头 <code>CREATE DATABASE</code>，后面 5 段 <code>CREATE TABLE</code>；第 2 条列出的表名就来自这 5 段。</li>
 <li>第 3 条最后三行能出现“华北”两个字，靠的是 <code>JOIN dim_region r ON f.region_id = r.region_id</code>：订单里只有编号 <code>R004</code>，“华北”是从区域表连过去取到的。JOIN 条件写错，你会看到一行都没有。</li>
 <li>最后三行只出 3 单，不是华北只有 3 单——<code>LIMIT 3</code> 只限制显示；华北一共 19 单，第二段 SQL 已经数过。</li>

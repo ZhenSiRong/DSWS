@@ -5,7 +5,7 @@
   "kicker": "12 件交付物 · 同一户型 · 同一视角 · 4 级成熟度",
   "house": {
     "view": "正面剖视（同一栋、同一户型、同一视角，四个阶段并排，只增不删）",
-    "source": "manual/maturity/data.json 的 12 件（编号 / 名字 / location / skeleton / mature 逐字沿用）",
+    "source": "tutorial/maturity/data.json 的 12 件（编号 / 名字 / location / skeleton / mature 逐字沿用）",
     "mapping": {
       "1": "环境 = 地基 / 场地",
       "2": "容器 = 墙体",
@@ -79,14 +79,14 @@
           "id": "mysql-container",
           "name": "容器 `lab-mysql`",
           "label": "compose 声明式服务 + healthcheck 就绪门控",
-          "mechanism": "compose 的 `mysql:8.0` 服务（首次启动自动执行 `fixtures/dw.sql`）+ `healthcheck`；`init` 等三存储健康后开通只读账号、校验 S2 元知识。"
+          "mechanism": "compose 的 `mysql:8.0` 服务（首次启动自动执行 `system/fixtures/dw.sql`）+ `healthcheck`；`init` 等三存储健康后开通只读账号、校验 S2 元知识。"
         },
         {
           "no": 3,
           "id": "dw-tables",
           "name": "库 `dw` + 5 张表",
           "label": "契约库 = 唯一事实源：5 表 / 24 列 / 6 指标",
-          "mechanism": "`contracts/schema.contract.yaml` 把 5 表 / 24 列 / 6 指标的 grain、measures、value_domain 写成契约；`--check` 对 DDL 与真实值校验。"
+          "mechanism": "`system/contracts/schema.contract.yaml` 把 5 表 / 24 列 / 6 指标的 grain、measures、value_domain 写成契约；`--check` 对 DDL 与真实值校验。"
         },
         {
           "no": 4,
@@ -121,7 +121,7 @@
           "id": "api-query",
           "name": "端点 `POST /api/query`",
           "label": "契约定义 SSE 三事件 + 取消端点",
-          "mechanism": "`POST /api/query` 走 LangGraph 12 节点流水线；SSE 按 `contracts/sse.schema.json` 发 `progress`/`result`/`error`，另有 `POST /api/cancel`。"
+          "mechanism": "`POST /api/query` 走 LangGraph 12 节点流水线；SSE 按 `system/contracts/sse.schema.json` 发 `progress`/`result`/`error`，另有 `POST /api/cancel`。"
         },
         {
           "no": 7,
@@ -164,7 +164,7 @@
           "id": "stream-endpoint",
           "name": "端点 `GET /api/stream`",
           "label": "真节点事件 + 条件跳过 + 取消收敛",
-          "mechanism": "SSE 按 `contracts/steps.yaml` 的 12 节点推送；`correct_sql` 条件步骤显式发 skipped；`POST /api/cancel` 把流收尾为 `cancelled`。"
+          "mechanism": "SSE 按 `system/contracts/steps.yaml` 的 12 节点推送；`correct_sql` 条件步骤显式发 skipped；`POST /api/cancel` 把流收尾为 `cancelled`。"
         },
         {
           "no": 11,
@@ -190,9 +190,9 @@
     "mechanisms": 12
   },
   "sources": {
-    "artifacts": "manual/maturity/data.json",
-    "maturity": "README S0–S8 阶段表 · contracts/ · backend/app/ · frontend/src/ · scripts/docker-smoke.sh",
+    "artifacts": "tutorial/maturity/data.json",
+    "maturity": "README S0–S8 阶段表 · system/contracts/ · system/backend/app/ · system/frontend/src/ · toolbox/scripts/docker-smoke.sh",
     "reuse": "12 件的编号 / 名字 / location / skeleton / mature 逐字沿用 data.json，不重写；本文件只补「哪一阶段长出」和机制短标签。"
   },
-  "rerun": "python3 manual/shots/render_maturity_house.py"
+  "rerun": "python3 tutorial/shots/render_maturity_house.py"
 }

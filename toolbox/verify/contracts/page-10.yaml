@@ -1,6 +1,6 @@
 # 第 10 页 · 换真数据 —— 教材可跟随性契约（T0 / T1）
 #
-# schema 与规则见 manual/verify/README.md。
+# schema 与规则见 tutorial/verify/README.md。
 # 要点：每个 ```bash 块在页面里用 <!-- verify: <marker> --> 注解绑定到下面的块；
 #       cmd 必须与页面块内容一致（归一化后），任何一边改了另一边没改 → T0 FAIL。
 #       offline 块由 T1 真执行并断言关键行；manual 块只做同步校验、不执行。
@@ -14,7 +14,7 @@ blocks:
     kind: manual
     reason: 会往 .lab/snapshots/ 写白名单文件快照，且同名快照会被拒绝、复跑必须换名；有副作用，不能作为无人值守的 T1 动作
     cmd: |
-      scripts/lab save p10-before
+      toolbox/scripts/lab save p10-before
 
   # ---- 动手 第 2 步：把 dw 库换成真数据（docker + 破坏性写入）----
   - id: p10-load-real
@@ -22,7 +22,7 @@ blocks:
     kind: manual
     reason: 要连第 1、2 页起好的 lab-mysql 容器（docker exec），并会 DROP/重建 dw 库、把数据整份换成 410 行真数据——依赖本地栈且有破坏性写入，离线 CI 跑不了
     cmd: |
-      docker exec -i lab-mysql mysql -uroot -plabpass --default-character-set=utf8mb4 < fixtures/dw-real.sql
+      docker exec -i lab-mysql mysql -uroot -plabpass --default-character-set=utf8mb4 < system/fixtures/dw-real.sql
 
   # ---- 动手 第 3 步：真数据对账（依赖上一步的库与数据）----
   - id: p10-checks
@@ -30,14 +30,14 @@ blocks:
     kind: manual
     reason: 要连运行中的 lab-mysql 并读取上一步导入的 dw-real 数据（docker exec mysql）；CI 没有这套栈和数据，读不到对账结果
     cmd: |
-      docker exec -i lab-mysql mysql -uroot -plabpass --default-character-set=utf8mb4 < fixtures/dw-real.checks.sql
+      docker exec -i lab-mysql mysql -uroot -plabpass --default-character-set=utf8mb4 < system/fixtures/dw-real.checks.sql
 
-  # ---- 动手 第 4 步：跑门禁（离线，只读 fixtures/dw.sql + 内存 SQLite）----
+  # ---- 动手 第 4 步：跑门禁（离线，只读 system/fixtures/dw.sql + 内存 SQLite）----
   - id: p10-schema-contract
     marker: p10-schema-contract
     kind: offline
     cmd: |
-      (cd backend && .venv/bin/python -m app.schema_contract --check)
+      (cd system/backend && .venv/bin/python -m app.schema_contract --check)
     expect:
       exit: 0
       contains:
@@ -53,23 +53,23 @@ blocks:
   - id: p10-restore-demo
     marker: p10-restore-demo
     kind: manual
-    reason: docker exec 会覆盖 dw 库、重灌回 fixtures/dw.sql 的 115 行演示数据，且要求 lab-mysql 容器在运行；有副作用，离线 CI 既没有栈也不该改数据库
+    reason: docker exec 会覆盖 dw 库、重灌回 system/fixtures/dw.sql 的 115 行演示数据，且要求 lab-mysql 容器在运行；有副作用，离线 CI 既没有栈也不该改数据库
     cmd: |
-      docker exec -i lab-mysql mysql -uroot -plabpass < fixtures/dw.sql
+      docker exec -i lab-mysql mysql -uroot -plabpass < system/fixtures/dw.sql
 
 static:
   paths:
-    - fixtures/dw.sql
-    - fixtures/dw-real.sql
-    - fixtures/dw-real.checks.sql
-    - fixtures/dw-real.expected.json
-    - contracts/schema.contract.yaml
-    - backend/app/schema_contract.py
-    - scripts/lab
+    - system/fixtures/dw.sql
+    - system/fixtures/dw-real.sql
+    - system/fixtures/dw-real.checks.sql
+    - system/fixtures/dw-real.expected.json
+    - system/contracts/schema.contract.yaml
+    - system/backend/app/schema_contract.py
+    - toolbox/scripts/lab
   symbols:
-    - {file: backend/app/schema_contract.py, pattern: 'DDL_PATH = REBUILD_ROOT / "fixtures" / "dw.sql"'}
-    - {file: backend/app/schema_contract.py, pattern: "不需要 MySQL/Docker"}
-    - {file: contracts/schema.contract.yaml, pattern: "expected_fact_rows: 115"}
-    - {file: fixtures/dw-real.sql, pattern: "SET NAMES utf8mb4"}
-    - {file: fixtures/dw-real.expected.json, pattern: '"as_of_date": 20261119'}
+    - {file: system/backend/app/schema_contract.py, pattern: 'DDL_PATH = REBUILD_ROOT / "fixtures" / "dw.sql"'}
+    - {file: system/backend/app/schema_contract.py, pattern: "不需要 MySQL/Docker"}
+    - {file: system/contracts/schema.contract.yaml, pattern: "expected_fact_rows: 115"}
+    - {file: system/fixtures/dw-real.sql, pattern: "SET NAMES utf8mb4"}
+    - {file: system/fixtures/dw-real.expected.json, pattern: '"as_of_date": 20261119'}
 

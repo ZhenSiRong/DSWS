@@ -1,53 +1,53 @@
-# 教材可跟随性验收线（`manual/verify/`）
+# 教材可跟随性验收线（`tutorial/verify/`）
 
 > 一句话：页面里写给学生敲的命令、路径、关键输出，和仓库里的代码/证据**用契约绑死**；
 > 任何一边改了另一边没改，验收就会红。防止教材修订后「跟做断层」。
 
-本目录只放**契约**与规则，执行器是 `scripts/verify.py`。
+本目录只放**契约**与规则，执行器是 `toolbox/scripts/verify.py`。
 
 ## 两级验收（T0 / T1）
 
 | 级别 | 入口 | 目标耗时 | 做什么 | 不做什么 |
 |---|---|---|---|---|
-| **T0** | `python3 scripts/verify.py --fast` | < 2s | 契约解析/字段校验；页面注解 ↔ 契约**双向同步**；静态存在性（路径 / 符号）；证据文件存在 | **不执行任何命令** |
-| **T1** | `python3 scripts/verify.py`（默认） | < 2min | T0 + 按顺序**真执行** `kind: offline` 命令，断言 exit / 关键行 / 正则；证据过期检查 | 不执行 `kind: manual` |
+| **T0** | `python3 toolbox/scripts/verify.py --fast` | < 2s | 契约解析/字段校验；页面注解 ↔ 契约**双向同步**；静态存在性（路径 / 符号）；证据文件存在 | **不执行任何命令** |
+| **T1** | `python3 toolbox/scripts/verify.py`（默认） | < 2min | T0 + 按顺序**真执行** `kind: offline` 命令，断言 exit / 关键行 / 正则；证据过期检查 | 不执行 `kind: manual` |
 | T2 | （另一条线：按级考核脚本） | — | 级考核的整体复跑 | 不在本目录范围 |
 
 推荐接法：提交前护栏调 `--fast`（T0），本地/整栈验收调默认（T1）。
 具体接入口（`Makefile` 目标、`.githooks/pre-commit`）由各自文件维护，本目录只提供
-`scripts/verify.py` 与契约。
+`toolbox/scripts/verify.py` 与契约。
 
 ## 目录与文件
 
 ```
-scripts/verify.py                     # 执行器（T0/T1 核心 v1）
-scripts/tests/test_verify.py          # 执行器单测（归一化 / 同步 / 静态 / expect 校验）
-manual/verify/README.md               # 本文件：schema 与规则
-manual/verify/contracts/page-17.yaml  # 第 17 页契约（参考样例）
-manual/page-17.md                     # 对应页面：bash 围栏前写 <!-- verify: <marker> -->
+toolbox/scripts/verify.py                     # 执行器（T0/T1 核心 v1）
+toolbox/scripts/tests/test_verify.py          # 执行器单测（归一化 / 同步 / 静态 / expect 校验）
+tutorial/verify/README.md               # 本文件：schema 与规则
+tutorial/verify/contracts/page-17.yaml  # 第 17 页契约（参考样例）
+tutorial/page-17.md                     # 对应页面：bash 围栏前写 <!-- verify: <marker> -->
 ```
 
 ## 用法与退出码
 
 ```bash
-python3 scripts/verify.py                 # T1：T0 + 执行 offline 块
-python3 scripts/verify.py --fast          # T0：只做静态验收（pre-commit 用）
-python3 scripts/verify.py --strict        # 证据缺失（T0）/ 过期（T1）从 warn 变 fail
-python3 scripts/verify.py --page page-17  # 只验收一页（也接受 17）
-python3 scripts/verify.py --list          # 列契约（不验收）
-python3 scripts/verify.py --json          # 机器可读汇总（stdout 只有 JSON）
+python3 toolbox/scripts/verify.py                 # T1：T0 + 执行 offline 块
+python3 toolbox/scripts/verify.py --fast          # T0：只做静态验收（pre-commit 用）
+python3 toolbox/scripts/verify.py --strict        # 证据缺失（T0）/ 过期（T1）从 warn 变 fail
+python3 toolbox/scripts/verify.py --page page-17  # 只验收一页（也接受 17）
+python3 toolbox/scripts/verify.py --list          # 列契约（不验收）
+python3 toolbox/scripts/verify.py --json          # 机器可读汇总（stdout 只有 JSON）
 ```
 
 退出码统一为：**0 通过 / 1 验收失败 / 2 契约或配置错误**。
-`manual/verify/contracts/` 不存在或没有任何 `*.yaml` 时退出 0，并提示「无契约」。
+`tutorial/verify/contracts/` 不存在或没有任何 `*.yaml` 时退出 0，并提示「无契约」。
 
 依赖：执行器与单测都用**宿主 `python3`**（`PyYAML`，本机 6.0.1）；
-只有 T1 执行契约命令时才调用 `backend/.venv/bin/...`，`--fast` 不碰 venv、不碰网络。
+只有 T1 执行契约命令时才调用 `system/backend/.venv/bin/...`，`--fast` 不碰 venv、不碰网络。
 
 `--list` 输出示例（节选）：
 
 ```
-契约（1 个，目录 manual/verify/contracts）
+契约（1 个，目录 tutorial/verify/contracts）
   page-17  第 17 页 · 审纠错：一次重试能修好什么、修不好什么  blocks=8（offline=4 / manual=4）  ...
     - p17-pytest-correct  offline
     - p17-lab-save  manual  # 会往 .lab/snapshots/ 写白名单文件快照 ...
@@ -61,8 +61,8 @@ python3 scripts/verify.py --json          # 机器可读汇总（stdout 只有 J
 
 ## 契约 schema
 
-一个页面一个契约文件：`manual/verify/contracts/<page>.yaml`（`<page>` 形如 `page-17`，
-必须与 `page` 字段、页面文件名一致）。完整样例见 `contracts/page-17.yaml`：
+一个页面一个契约文件：`tutorial/verify/contracts/<page>.yaml`（`<page>` 形如 `page-17`，
+必须与 `page` 字段、页面文件名一致）。完整样例见 `system/contracts/page-17.yaml`：
 
 ```yaml
 page: page-17
@@ -72,7 +72,7 @@ blocks:
     marker: p17-pytest-correct      # 必须等于页面里 <!-- verify: <marker> -->
     kind: offline                   # offline | manual
     cmd: |                          # 必须与页面 fenced block 内容一致（归一化后）
-      backend/.venv/bin/python -m pytest backend/tests/agent/test_correct.py -q
+      system/backend/.venv/bin/python -m pytest system/backend/tests/agent/test_correct.py -q
     expect:                         # offline 必填；manual 必须不写
       exit: 0                       # 子进程退出码（整数）
       contains: ["14 passed"]       # 关键行：stdout+stderr 里必须出现的子串
@@ -84,16 +84,16 @@ blocks:
     kind: manual
     reason: 打开浏览器 GUI，不适合 T1 无人值守   # manual 必填：为什么不执行
     cmd: |
-      uv pip install --python backend/.venv/bin/python viztracer
+      uv pip install --python system/backend/.venv/bin/python viztracer
 static:
   paths:                            # 必须存在（相对仓库根，文件或目录）
-    - backend/tests/agent/test_correct.py
-    - contracts/errors.yaml
+    - system/backend/tests/agent/test_correct.py
+    - system/contracts/errors.yaml
   symbols:                          # 文件必须存在，且正则在内容里 re.search 命中
-    - {file: backend/app/agent/correct.py, pattern: "def propose_correction"}
-    - {file: contracts/errors.yaml, pattern: "max_attempts: 1"}
+    - {file: system/backend/app/agent/correct.py, pattern: "def propose_correction"}
+    - {file: system/contracts/errors.yaml, pattern: "max_attempts: 1"}
 evidence:
-  - {path: manual/images/page-17-correct.png, note: "14 passed + S6 PASS 截图"}
+  - {path: tutorial/images/page-17-correct.png, note: "14 passed + S6 PASS 截图"}
 ```
 
 ### 字段规则
@@ -144,7 +144,7 @@ evidence:
 ````markdown
 <!-- verify: p17-pytest-correct -->
 ```bash
-backend/.venv/bin/python -m pytest backend/tests/agent/test_correct.py -q
+system/backend/.venv/bin/python -m pytest system/backend/tests/agent/test_correct.py -q
 ```
 ````
 
@@ -186,7 +186,7 @@ S6 PASS
 - **绑定是逐 token 的**：只有 `page_contains` 声明的关键行才和页面/真实输出绑定；
   没有声明 token 的 `text` 围栏整段不自动比对（避免秒数、端口等易变值造成假红）。
   想让某行受保护，就把它写进对应块的 `page_contains` + 页面 `verify-out`。
-- **拆一刀块在干净仓库验的是"干净态"**：`contracts/page-17.yaml` 的
+- **拆一刀块在干净仓库验的是"干净态"**：`system/contracts/page-17.yaml` 的
   `p17-ablation-commands` 页内紧随的是消融后输出（`5 failed`），T1 在干净仓库只断言
   干净态关键行（`14 passed` / `S6 PASS` / `mismatch 0`）；消融态由 T2/人工复核。
   `--list` 会显示该块的 `note`。
@@ -246,12 +246,12 @@ T1（默认）在 T0 之上：
 ## 给新页面接验收（步骤）
 
 1. 页面里给每个 ` ```bash ` 块前一行加 `<!-- verify: <page>-<slug> -->`（只加注释，不改正文）；
-2. 复制 `contracts/page-17.yaml` 为 `contracts/<page>.yaml`，改 `page` / `title`；
+2. 复制 `system/contracts/page-17.yaml` 为 `system/contracts/<page>.yaml`，改 `page` / `title`；
 3. 每个块填 `id`（建议与 marker 相同）、`marker`、`kind`、`cmd`（**从页面块原样复制**）；
 4. offline 块补 `expect`：`exit` + `contains`（挑稳定的关键行/数字，别放秒数）；manual 块写 `reason`；
 5. 补 `static.paths` / `static.symbols`（页面前提的代码、契约、语料文件）与 `evidence`；
-6. 跑 `python3 scripts/verify.py --fast`（秒级）→ 修到 PASS；再跑默认 T1 真执行；
-7. 新增/修改页面后跑 `python3 manual/shots/audit_book.py`，保证全书结构审计仍 24/24。
+6. 跑 `python3 toolbox/scripts/verify.py --fast`（秒级）→ 修到 PASS；再跑默认 T1 真执行；
+7. 新增/修改页面后跑 `python3 tutorial/shots/audit_book.py`，保证全书结构审计仍 24/24。
 
 ## 已知边界（v1）
 

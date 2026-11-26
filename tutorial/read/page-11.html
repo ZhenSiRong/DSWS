@@ -9,14 +9,14 @@
 </head>
 <body>
 <main class="page">
-<p class="kicker">练本 · 阅读版（md 正典派生，改内容请改 manual/page-11.md）</p>
+<p class="kicker">练本 · 阅读版（md 正典派生，改内容请改 tutorial/page-11.md）</p>
 <h1>第 11 页 · 换真契约：让 SQL 从契约文件长出来</h1>
 <blockquote>
 <p><strong>城市坐标 · L2 通水电网 · 换计量标准</strong>｜取货单不再手写，改照对方的办事指南（契约文件）长出来。</p>
 <p>前置：第 0 页备好环境；本页接 L1 留下的 <code>lab/app.py</code>（第 8 页那份；L1 = 第 0–9 页盖出来的骨架版）。不用启动服务，也不用连 MySQL。</p>
 </blockquote>
 <h2>这一页构建什么</h2>
-<p>把第 6 页手抄进 <code>lab/app.py</code> 的 <code>CONTRACT = {...}</code> 字典删掉，改成从 <code>contracts/schema.contract.yaml</code> 加载：手抄字典是<strong>副本</strong>，契约文件是<strong>唯一事实源</strong>。</p>
+<p>把第 6 页手抄进 <code>lab/app.py</code> 的 <code>CONTRACT = {...}</code> 字典删掉，改成从 <code>system/contracts/schema.contract.yaml</code> 加载：手抄字典是<strong>副本</strong>，契约文件是<strong>唯一事实源</strong>。</p>
 <p><strong>行为不变</strong>：<code>build_sql</code> 改成按契约的指标别名/公式和地区全集生成 SQL，拼出的 5 行必须和第 6 页逐字一样——换了来源，行为不变。</p>
 <p><img alt="第 11 页 · 让 SQL 从契约里长出来：左边是契约文件，右边是蓝图与尺子：照图施工" src="../images/page-11-visual.webp" /></p>
 <h2>猜一猜</h2>
@@ -50,11 +50,11 @@ def _metric_formula(keyword: str) -&gt; str | None:
     metric = next(k for k in keywords if _metric_formula(k))
     sql = f&quot;&quot;&quot;SELECT dim_region.region_name, {_metric_formula(metric)} AS sales
 </code></pre>
-<p>在仓库根目录跑这两条（第二条的 <code>cd backend</code> 不能省：在仓库根跑 <code>-m app.schema_contract</code> 会报 <code>No module named 'app'</code>）：</p>
-<pre><code class="language-bash">backend/.venv/bin/python -m lab.app
-(cd backend &amp;&amp; .venv/bin/python -m app.schema_contract --check)
+<p>在仓库根目录跑这两条（第二条的 <code>cd system/backend</code> 不能省：在仓库根跑 <code>-m app.schema_contract</code> 会报 <code>No module named 'app'</code>）：</p>
+<pre><code class="language-bash">system/backend/.venv/bin/python -m lab.app
+(cd system/backend &amp;&amp; .venv/bin/python -m app.schema_contract --check)
 </code></pre>
-<p>注意第二条外面的括号：<code>cd backend</code> 在子 shell 里执行，不会把你当前目录带走，跑完你仍停在仓库根目录——后面「拆一刀」的命令照原样敲就行。</p>
+<p>注意第二条外面的括号：<code>cd system/backend</code> 在子 shell 里执行，不会把你当前目录带走，跑完你仍停在仓库根目录——后面「拆一刀」的命令照原样敲就行。</p>
 <h2>你应该看到</h2>
 <p>第一条命令打出的 5 行，和第 6 页逐字一致：</p>
 <pre><code>SELECT dim_region.region_name, SUM(fact_order.order_amount) AS sales
@@ -86,12 +86,12 @@ S1 PASS
 </li>
 </ul>
 <blockquote>
-<p><strong>你现在拥有</strong>：一条从唯一事实源取口径的生成链——<code>build_sql</code> 的指标公式和地区取值不再写死（注意：<code>extract_keywords</code> 里的 <code>REGIONS</code>/<code>METRICS</code> 还是写死的，那是第 5 页的遗留，后面 L3 再换），改口径只改一处；第 12 页会把它真交给数据库。</p>
+<p><strong>你现在拥有</strong>：一条从唯一事实源取口径的生成链——<code>build_sql</code> 的指标公式和地区取值不再写死（注意：<code>extract_keywords</code> 里的 <code>REGIONS</code>/<code>METRICS</code> 还是写死的，那是第 5 页的遗留，书内不再换；属于后续演进方向），改口径只改一处；第 12 页会把它真交给数据库。</p>
 </blockquote>
 <h2>拆一刀</h2>
 <ol>
-<li>先拍快照：<code>scripts/lab save p11-before</code>（名字只能用字母、数字、点、下划线、短横线，且必须以字母或数字开头；中文会被拒）。</li>
-<li>打开 <code>contracts/schema.contract.yaml</code>，把 <code>region_name</code> 的 <code>values: [华南, 华东, 西南, 华北, 华中]</code> 改成 <code>values: [华南, 华东, 西南, 华中]</code>，Ctrl+S，再跑 <code>backend/.venv/bin/python -m lab.app</code>。</li>
+<li>先拍快照：<code>toolbox/scripts/lab save p11-before</code>（名字只能用字母、数字、点、下划线、短横线，且必须以字母或数字开头；中文会被拒）。</li>
+<li>打开 <code>system/contracts/schema.contract.yaml</code>，把 <code>region_name</code> 的 <code>values: [华南, 华东, 西南, 华北, 华中]</code> 改成 <code>values: [华南, 华东, 西南, 华中]</code>，Ctrl+S，再跑 <code>system/backend/.venv/bin/python -m lab.app</code>。</li>
 </ol>
 <p><strong>会红什么</strong>：<code>"华北"</code> 在契约里查不到了，<code>next()</code> 空手而归，抛 <code>StopIteration</code>、退出码 1。</p>
 <p><strong>报错原文</strong>（这里只留与定位相关的行；你的终端会多几行 <code>&lt;frozen runpy&gt;</code>，路径用 <code>...</code> 略去，不影响结论，行号以你的文件为准）：</p>
@@ -101,7 +101,7 @@ S1 PASS
 StopIteration
 </code></pre>
 <ol start="3">
-<li>还原：<code>scripts/lab reset p11-before --yes</code>，末行是 <code>现在工作区与快照 "p11-before" 完全一致。</code>；再跑一次 <code>backend/.venv/bin/python -m lab.app</code>，5 行 SQL 回来，<code>WHERE dim_region.region_name = '华北'</code> 还在第 4 行。</li>
+<li>还原：<code>toolbox/scripts/lab reset p11-before --yes</code>，末行是 <code>现在工作区与快照 "p11-before" 完全一致。</code>；再跑一次 <code>system/backend/.venv/bin/python -m lab.app</code>，5 行 SQL 回来，<code>WHERE dim_region.region_name = '华北'</code> 还在第 4 行。</li>
 </ol>
 <p><strong>一句结论</strong>：唯一事实源被改坏，程序当着你面报错；没有唯一事实源，改坏一处，另一处替你继续跑——这就是本页要的反面。</p>
 </main>

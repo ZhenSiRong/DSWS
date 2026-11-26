@@ -10,7 +10,7 @@
       "judge": "删掉它"
     },
     {
-      "name": "contracts/schema.contract.yaml",
+      "name": "system/contracts/schema.contract.yaml",
       "role": "唯一事实源，表/列/口径都在这",
       "judge": "max_attempts 等契约"
     },

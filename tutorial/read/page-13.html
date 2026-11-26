@@ -9,14 +9,14 @@
 </head>
 <body>
 <main class="page">
-<p class="kicker">练本 · 阅读版（md 正典派生，改内容请改 manual/page-13.md）</p>
+<p class="kicker">练本 · 阅读版（md 正典派生，改内容请改 tutorial/page-13.md）</p>
 <h1>第 13 页 · 换真部署：一条命令起整座城，一条命令验收</h1>
 <blockquote>
 <p><strong>城市坐标 · L2 通水电网 · 并网通水</strong>｜一条命令把整座城的管网接起来（5 个长驻服务 + init），再一条命令验收。</p>
 <p>前置：第 0 页备好环境（Docker 可用）；本页接第 1 页的 <code>lab-mysql</code>、第 3/9 页的 uvicorn、第 9 页的 <code>lab-nginx</code>——动手前先把这三个手动起的东西停掉。L2 到此收尾。</p>
 </blockquote>
 <h2>这一页构建什么</h2>
-<p>把前九页手动起的三个东西换成 <code>compose.yaml</code> 编排的六个服务：<code>mysql</code> / <code>elasticsearch</code> / <code>qdrant</code> / <code>init</code> / <code>backend</code> / <code>frontend</code>。</p>
+<p>把 L1 各章手动起的三个东西换成 <code>compose.yaml</code> 编排的六个服务：<code>mysql</code> / <code>elasticsearch</code> / <code>qdrant</code> / <code>init</code> / <code>backend</code> / <code>frontend</code>。</p>
 <p><strong>新设施</strong>：<code>elasticsearch</code> / <code>qdrant</code> 是前九页没起过的新设施，随编排一起带起来。</p>
 <p><strong>两条命令</strong>：一条 <code>make docker-up</code> 起整座城，一条 <code>make docker-smoke</code> 用 8 步自动验收。部署不是“起得来”，是“起得来 + 能被自动验收”。</p>
 <p><img alt="第 13 页 · 一条命令起整座城：左边是编排与验收，右边是工地竣工：楼都亮灯，收尾机器人跑一次" src="../images/page-13-visual.webp" /></p>
@@ -27,13 +27,13 @@
 <li><code>make docker-smoke</code> 会检查哪些事？只检查“进程都在跑”够不够？</li>
 </ol>
 <h2>动手</h2>
-<p>以下命令都在仓库根目录执行（有 <code>compose.yaml</code>、<code>fixtures/</code> 的那一层），可整段复制。</p>
+<p>以下命令都在仓库根目录执行（有 <code>compose.yaml</code>、<code>system/fixtures/</code> 的那一层），可整段复制。</p>
 <p><strong>第 1 步：拍快照。</strong> 本页要改 <code>compose.yaml</code>，先拍一张（<code>.env</code> 不在快照里；同名快照会被拒，重做本页就换个名字）：</p>
-<pre><code class="language-bash">scripts/lab save p13-before
+<pre><code class="language-bash">toolbox/scripts/lab save p13-before
 </code></pre>
 <p><strong>第 2 步：停掉手动起的三个东西。</strong> 终端 1 里第 3/9 页的 uvicorn 按 <code>Ctrl+C</code>；两个容器删掉：<code>docker rm -f lab-mysql lab-nginx</code>（回显被删的容器名；报 <code>No such container</code> 说明早删了）。</p>
 <p><strong>为什么要停</strong>：它们占的 3307 / 8000 / 8081 和 compose 不冲突，但手动进程不会自己退，留着就是新旧两套系统同时在跑、容易对着旧入口验收（<code>make docker-down</code> 也管不到它们）。</p>
-<p><strong>两份库互不相干</strong>：<code>lab-mysql</code> 没有数据卷，删容器 = 第 1–12 页的库没了；部署库的数据来自 <code>fixtures/dw.sql</code> 首次灌进 <code>mysql_data</code> 卷，所以删它不影响这边（想重做前 12 页就回第 1、2 页重建并导入）。</p>
+<p><strong>两份库互不相干</strong>：<code>lab-mysql</code> 没有数据卷，删容器 = 第 1–12 页的库没了；部署库的数据来自 <code>system/fixtures/dw.sql</code> 首次灌进 <code>mysql_data</code> 卷，所以删它不影响这边（想重做前 12 页就回第 1、2 页重建并导入）。</p>
 <p><strong>第 3 步：生成 <code>.env</code>。</strong> 密码和宿主机端口都从这里读；<code>.env</code> 被忽略、不进快照：</p>
 <pre><code class="language-bash">make docker-env
 </code></pre>
@@ -50,8 +50,8 @@
 <tbody>
 <tr>
 <td>MySQL</td>
-<td><code>3306</code></td>
-<td>第 1 页绕开 3306 就是因为它常被本机 MySQL 占着</td>
+<td><code>3307</code></td>
+<td>与第 1 页保持一致；仍被本机 MySQL 占用就改 <code>.env</code> 的 <code>MYSQL_HOST_PORT</code></td>
 </tr>
 <tr>
 <td>ES</td>
@@ -75,9 +75,12 @@
 </tr>
 </tbody>
 </table>
+<blockquote>
+<p><strong>默认避开 3306</strong>：第 1 章就因为本机常见 MySQL 占 3306 才用 3307；第 13 章 <code>.env</code> 默认也改成 3307。若 3307 仍被占，再把 <code>MYSQL_HOST_PORT</code> 改到别的空闲端口。</p>
+</blockquote>
 <p><strong>被占就改 <code>.env</code></strong>：改对应那行（<code>MYSQL_HOST_PORT</code> / <code>ES_HOST_PORT</code> / <code>QDRANT_HOST_PORT</code> / <code>BACKEND_HOST_PORT</code> / <code>FRONTEND_HOST_PORT</code>），<strong>别改 <code>compose.yaml</code></strong>，改完重跑 <code>make docker-up</code>；smoke 会自己问 compose 前端实际端口。</p>
 <p><strong><code>FRONTEND_BIND</code></strong>：默认 <code>0.0.0.0</code>——前端是唯一对外入口，这会让局域网里的机器也能访问；只在本机调试就改成 <code>127.0.0.1</code>（其余四个端口本来就只绑本机）。</p>
-<p><strong>起之前先自查</strong>：<code>ss -tlnp | grep -E ':(3306|9200|6333|8100|8080) '</code>——有输出就是被占，改 <code>.env</code> 里对应的 <code>*_HOST_PORT</code>。</p>
+<p><strong>起之前先自查</strong>：<code>ss -tlnp | grep -E ':(3307|9200|6333|8100|8080) '</code>——有输出就是被占，改 <code>.env</code> 里对应的 <code>*_HOST_PORT</code>。</p>
 <p><strong>第 4 步：起整座城。</strong></p>
 <pre><code class="language-bash">make docker-up
 </code></pre>
@@ -183,13 +186,15 @@ DOCKER SMOKE PASS
 </tr>
 </tbody>
 </table>
-<p><strong>5/8 的判据</strong>：<code>rows=1</code> 且 <code>sse_verdict</code> 为 <code>streamed</code>，或为 <code>too-fast</code> 且 nginx 生效配置确认缓冲已关——<code>too-fast</code> 只因响应太快、时间上分不出流式，是合法的通过档，别当失败；<code>sse_chunks</code> 是客户端收到的 SSE 分片数（不是 12 条 progress 事件），有一两个出入不用对。</p>
+<p><strong>S0–S7 是什么</strong>：<code>stage":"S7"</code> 里的 S7 不是健康等级，是分层门禁编号（S0–S7）；对照见第 22 章。</p>
+<p><strong>结果形状</strong>：这里 <code>rows=1 columns=1</code> 是按契约只输出「销售额」一列；L1 lab 的 <code>rows</code> 是 <code>{region_name, sales}</code> 两个字段，两边形状不同，别硬对。</p>
+<p><strong>5/8 的判据</strong>：<code>rows=1</code> 且 <code>sse_verdict</code> 为 <code>streamed</code>，或为 <code>too-fast</code> 且 nginx 生效配置确认缓冲已关——<code>too-fast</code> 只因响应太快、时间上分不出流式，是合法的通过档，别当失败；<code>sse_chunks</code> 是客户端收到的 SSE 分片数，不是 12 条 progress 事件：真栈每步发 running/success 两帧，正常约 24 帧；有一两个出入不用对。</p>
 <ul>
 <li><strong>起得来 ≠ 部署好</strong>：<code>docker compose up</code> 成功只说明容器建起来了——健康可能还在 starting、init 可能已失败退出（默认 <code>ps</code> 还看不到）、查询可能 502、流可能被 nginx 攒住。</li>
 </ul>
 <p><strong>smoke 的意义</strong>：每一步都是一条判据，红一步就 <code>DOCKER SMOKE FAIL</code>，并把 <code>ps -a</code> 和相关日志全打出来。</p>
 <blockquote>
-<p><strong>你现在拥有</strong>：一套“一条命令重建、一条命令验收”的部署——<code>compose.yaml</code> 写清怎么起和依赖顺序，<code>scripts/docker-smoke.sh</code> 写清“起对了没有”；换台机器 clone 下来，两条命令复跑同一套判据。</p>
+<p><strong>你现在拥有</strong>：一套“一条命令重建、一条命令验收”的部署——<code>compose.yaml</code> 写清怎么起和依赖顺序，<code>toolbox/scripts/docker-smoke.sh</code> 写清“起对了没有”；换台机器 clone 下来，两条命令复跑同一套判据。</p>
 </blockquote>
 <h2>拆一刀</h2>
 <p>L2 的级考核：拆编排。</p>
@@ -215,7 +220,7 @@ DOCKER SMOKE FAIL: 120 秒内服务状态没齐
 <p>后面跟着 5 行 <code>ps -a</code>、三座存储的日志，以及一条 <code>no such service: init</code>——<code>fail()</code> 想打 init 的日志，可 init 已被你从编排里删掉，报这句是<strong>预期内</strong>的，不是新故障（backend / frontend 的日志也因此不会打印）。</p>
 <p><strong>假象</strong>：五座设施全 healthy、<code>/api/health</code> 也回 200——只看这些，部署像好的；但没有 init，下一次从零初始化就没人做了。<strong>起得来</strong>，不等于部署好。</p>
 <ol start="4">
-<li>还原：<code>scripts/lab reset p13-before --yes</code>，末行 <code>现在工作区与快照 "p13-before" 完全一致。</code>；再 <code>make docker-up</code>（init 回来会重跑一次，backend / frontend 重建，等它健康），最后 <code>make docker-smoke</code> 回到 <code>DOCKER SMOKE PASS</code>。</li>
+<li>还原：<code>toolbox/scripts/lab reset p13-before --yes</code>，末行 <code>现在工作区与快照 "p13-before" 完全一致。</code>；再 <code>make docker-up</code>（init 回来会重跑一次，backend / frontend 重建，等它健康），最后 <code>make docker-smoke</code> 回到 <code>DOCKER SMOKE PASS</code>。</li>
 </ol>
 <p><strong>等不到别慌</strong>：smoke 第 2 步会重新等 <code>/api/health</code>（最多 360 秒），先看它打出来的日志。整座城先留着跑——L3 的“审”要在它上面做。</p>
 </main>

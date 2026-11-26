@@ -4,11 +4,11 @@
 
 在仓库根目录一条命令重跑：
 
-    python3 manual/shots/render_maturity_compare.py
+    python3 tutorial/shots/render_maturity_compare.py
 
-读：`manual/maturity/data.json`（唯一数据源：12 件交付物 × `skeleton` / `mature` / `delta`；
-    编号 / 名字 / 位置 / 页码与 `manual/completeness/v2/data.json` 逐字一致，脚本逐项比对）
-写：`manual/maturity/compare-skeleton-vs-full.png`（3200×2000，横向两面板）
+读：`tutorial/maturity/data.json`（唯一数据源：12 件交付物 × `skeleton` / `mature` / `delta`；
+    编号 / 名字 / 位置 / 页码与 `tutorial/completeness/v2/data.json` 逐字一致，脚本逐项比对）
+写：`tutorial/maturity/compare-skeleton-vs-full.png`（3200×2000，横向两面板）
 
 图在说什么（一句话）：**同一棵树 —— 骨架版每个节点都是壳，成熟版每个节点都长成真机制。**
 所以版式不是左右各画一张图，而是**同一张 12 行表**：
@@ -45,7 +45,7 @@ import sys
 import tempfile
 from pathlib import Path
 
-HERE = Path(__file__).resolve().parent            # manual/shots
+HERE = Path(__file__).resolve().parent            # tutorial/shots
 REPO = HERE.parents[1]                            # 仓库根目录
 DATA_PATH = REPO / "manual" / "maturity" / "data.json"
 OUT_PNG = REPO / "manual" / "maturity" / "compare-skeleton-vs-full.png"
@@ -69,7 +69,7 @@ ROWS = 12
 STAGE_H = HEAD_ROW_H + ROW_H * ROWS                            # 716
 ORANGE = "#C2410C"
 
-RERUN = "python3 manual/shots/render_maturity_compare.py"
+RERUN = "python3 tutorial/shots/render_maturity_compare.py"
 
 # 成图 / HTML / 数据里不许出现的字符串（用户名、绝对路径、口令）。
 HOST_USER = Path.home().name
@@ -499,7 +499,7 @@ def header_html(data: dict) -> str:
         f'<h1>{rich(data["thesis"])}</h1>'
         '<div class="hmeta">左 = <b>现在这 10 页造出来的东西（壳）</b>　·　'
         '右 = <b>本项目仓库里的真实工程能力（真）</b>　·　'
-        '编号 / 名字 / 位置同 <b>manual/completeness/v2/data.json</b></div>'
+        '编号 / 名字 / 位置同 <b>tutorial/completeness/v2/data.json</b></div>'
         '</div>'
         '<div class="hdr-r"><div class="stamp"><b>12/12</b>'
         '<span>件交付物<br>左右同构对齐</span></div></div>'
@@ -568,7 +568,7 @@ def footer_html(data: dict) -> str:
         + '<div class="dhead"><span class="dtitle">差的那一格 · 12 条 delta</span>'
         '<span class="dsub">（左：现在能跑的壳 → 右：成熟版对应的真机制）</span></div>'
         f'<div class="dgrid">{deltas}</div>'
-        '<div class="note">数据 <code>manual/maturity/data.json</code>（唯一数据源）'
+        '<div class="note">数据 <code>tutorial/maturity/data.json</code>（唯一数据源）'
         '　·　重跑 <code>' + esc(data["rerun"]) + '</code>'
         '　·　渲染：本机 Chrome 无头截图 + <code>convert -trim</code>，本地字体，无外部请求</div>'
         '</footer>'
@@ -840,7 +840,7 @@ def main(argv: list[str]) -> int:
     if not Path(CONVERT).exists():
         fail(f"找不到 ImageMagick convert：{CONVERT}")
     check_only = "--check-only" in argv
-    print("「骨架版 vs 成熟版」同构对照图：manual/maturity/data.json → 一张 3200×2000 PNG")
+    print("「骨架版 vs 成熟版」同构对照图：tutorial/maturity/data.json → 一张 3200×2000 PNG")
     print(f"  画布：{DESIGN_W}×{DESIGN_H} CSS @{SCALE}x = {OUT_W}×{OUT_H}；"
           f"#poster {POSTER_W}×{POSTER_H}；{ROWS} 行 × 左右两面板")
     if check_only:
@@ -884,7 +884,7 @@ def main(argv: list[str]) -> int:
 
     size = OUT_PNG.stat().st_size
     print(f"\n完成 ✓ {OUT_PNG.relative_to(REPO)}  {OUT_W}×{OUT_H}  {size / 1024:.0f} KB")
-    print(f"  数据源：manual/maturity/data.json（12 件 × skeleton/mature/delta，"
+    print(f"  数据源：tutorial/maturity/data.json（12 件 × skeleton/mature/delta，"
           f"编号/名字/位置同 completeness/v2）；重跑：{RERUN}")
     return 0
 

@@ -24,7 +24,7 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
-SCRIPT = ROOT / "scripts" / "export-docker-env.sh"
+SCRIPT = ROOT.parent / "toolbox" / "scripts" / "export-docker-env.sh"
 
 
 def _bash_candidates() -> list[str]:

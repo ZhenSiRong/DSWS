@@ -156,7 +156,7 @@
 
 **决策逻辑**：随机性影响的是**控制流**（校验失败→correction→多一轮），不只是 SQL 文本；temp=0 只是降低不消除。"录一次、回放 N 次"才能同时满足"真实 LLM"与"可比性"。
 
-**已具备**：`fixtures/sse/` 14 条夹具 + `app/scripts/record_sse.py`（录的是真字节流，模型与 DB 是替身）。缺口：夹具录在 SSE 边界，**不含 prompt/模型原始响应**，无法回答"为什么拒答"——实验轨需录在 provider 边界。
+**已具备**：`system/fixtures/sse/` 14 条夹具 + `app/scripts/record_sse.py`（录的是真字节流，模型与 DB 是替身）。缺口：夹具录在 SSE 边界，**不含 prompt/模型原始响应**，无法回答"为什么拒答"——实验轨需录在 provider 边界。
 
 ---
 
@@ -181,7 +181,7 @@
 
 **决策逻辑**：截图的用途是**判据的视觉锚点**，不是装饰。所以"真"的标准不是"桌面截屏"，而是**内容来自真跑、且能一条命令重跑出来**。
 
-**实现约束**：生成脚本入库（`manual/shots/`）；提示符统一 `$`；不显示用户名/主机名/绝对路径；固定窗宽；端口 3307/8000（与正文一致）。
+**实现约束**：生成脚本入库（`tutorial/shots/`）；提示符统一 `$`；不显示用户名/主机名/绝对路径；固定窗宽；端口 3307/8000（与正文一致）。
 
 **何时推翻**：若评审明确要求"必须是真实桌面截图"。
 
@@ -191,8 +191,8 @@
 
 **决定**
 1. 练本的节点一律是**构建活动**（有产出物）；**验证下沉为每个活动的"完成判据"**，不单独成页/成节点。
-2. 原第 2 页（只做"证明数据在"）无产出 → 重切为：**第 1 页创建空库容器，第 2 页执行 `fixtures/dw.sql` 建表灌数据**。
-3. 全书结构图改用**单代号网络图（AON / 紧前关系法 PDM）**：节点=活动，箭头=紧前关系（FS），关键路径高亮；**同一份源文件**（`manual/flow.mmd`）供练本总览与答辩共用。
+2. 原第 2 页（只做"证明数据在"）无产出 → 重切为：**第 1 页创建空库容器，第 2 页执行 `system/fixtures/dw.sql` 建表灌数据**。
+3. 全书结构图改用**单代号网络图（AON / 紧前关系法 PDM）**：节点=活动，箭头=紧前关系（FS），关键路径高亮；**同一份源文件**（`tutorial/flow.mmd`）供练本总览与答辩共用。
 
 **备选与否决**
 | 方案 | 否决原因 |
@@ -211,7 +211,7 @@
 
 ## D32 AOA 只作对照附录，主线仍是 AON（2026-11-17）
 
-**决定**：D31 的「主线用单代号网络图」不变；**新增双代号（AOA/ADM）对照附录**——`manual/flow-aoa.mmd` + `manual/images/flow-aoa.png` + `README.md` 附录一节。用途是教学对照，不进主线、不进答辩主图。
+**决定**：D31 的「主线用单代号网络图」不变；**新增双代号（AOA/ADM）对照附录**——`tutorial/flow-aoa.mmd` + `tutorial/images/flow-aoa.png` + `README.md` 附录一节。用途是教学对照，不进主线、不进答辩主图。
 
 **事实依据**：把十个活动映射成 AOA 后是 **10 个事件（e1–e10）/ 10 条实箭线 / 0 个虚活动**（串并联形状，未撞上「共享同一对起止事件」「只依赖其一」这两种必须加虚活动的形状）。注：10 箭线 + 连通且单终点 ⇒ 事件数必为 10；若强行凑 11 个事件就必须加 1 条虚活动。
 
@@ -234,7 +234,7 @@
 3. 跳转机制用 **overlay**（`lab` 从只读快照解出文件覆盖工作区），不切分支、不 stash、不产生 detached HEAD。
 4. **必须先保存才能跳转**：工作区有未保存改动时 `lab start/done` 拒绝执行，提示先 `lab save <名字>`——把"存档"训练成肌肉记忆。
 5. **教学快照禁止被覆盖**：快照只存在于 git 的 `snapshots` 分支/只读缓存（chmod 555 + 读前校验哈希）；学生保存只能写入 `.lab/saves/`，与 `.lab/snapshots/` 物理隔离。
-6. **容器/数据库状态纳入回滚（Q4=b）**：`lab start A1/A2` 会重建容器并重新导入 `fixtures/dw.sql`；因属破坏性操作，必须**交互确认或显式 `--yes`**，不允许静默执行。
+6. **容器/数据库状态纳入回滚（Q4=b）**：`lab start A1/A2` 会重建容器并重新导入 `system/fixtures/dw.sql`；因属破坏性操作，必须**交互确认或显式 `--yes`**，不允许静默执行。
 7. **实现时机（Q5=a）**：验收后再做；当前只把方案写进 README/决策，三天冲刺优先保 A–E 判据。
 
 **为什么不让学生直接见 git**：初版目标是"构建体验 + 心智模型"，git 的 detached HEAD/stash/冲突会抢走教学注意力；"揭开版本控制"留作后续可选页。
@@ -308,7 +308,7 @@
 
 ## D37 体验教程五判据 + 代码压缩规则（2026-11-17）
 
-**决定**：修订现有 10 页时，每页必须同时满足五条（已写入 `manual/SPEC.md`）：①3 分钟内出可见结果 ②一个能被打脸的反直觉点 ③一张真截图 ④一句心智模型句 ⑤判据可第三方复核。正文代码压到**关键 3–5 行**，完整文件放 `manual/appendix/code.md`。
+**决定**：修订现有 10 页时，每页必须同时满足五条（已写入 `tutorial/SPEC.md`）：①3 分钟内出可见结果 ②一个能被打脸的反直觉点 ③一张真截图 ④一句心智模型句 ⑤判据可第三方复核。正文代码压到**关键 3–5 行**，完整文件放 `tutorial/appendix/code.md`。
 
 **理由**：体验层的敌人不是"不懂"，是"注意力跑偏"——整段代码会把学生从"我造出了什么"拽进"这些字符什么意思"。判据五条则是把"打动人"从感觉变成可验收。
 
@@ -328,7 +328,7 @@
 
 **否决**：每节点一份矩阵（12 份、多为同义反复）；纯拼图进度图（不证明覆盖）；甘特图（不证明结构完备）。
 
-**后果**：新增 `manual/completeness/` 海报（空白可打印版 + 答案版）与渲染脚本；每页页眉小图留待后续。
+**后果**：新增 `tutorial/completeness/` 海报（空白可打印版 + 答案版）与渲染脚本；每页页眉小图留待后续。
 
 ---
 
@@ -387,7 +387,7 @@
 
 **否决**：行=页（页是动作不是东西）；行=架构节点（v1，对不上学生动作单位）；一条命令一行（太碎，失去零件清单整体感）。
 
-**后果**：v2 数据与渲染先落 `manual/completeness/v2/`，确认后再替换 `completeness/` 下 v1 产物。
+**后果**：v2 数据与渲染先落 `tutorial/completeness/v2/`，确认后再替换 `completeness/` 下 v1 产物。
 
 ---
 
@@ -440,7 +440,7 @@
    | 市民/顾客 | 用户 |
 3. **标题统一「问题 + 方案」**，问题类型随级升级：L1 从无到有（"怎么开工？"）、L2 真的假不了（"只有演示数据怎么办？"）、L3 机器靠不靠谱（"检索靠蒙怎么办？"）、L4 出了事兜不兜得住（"谁都能进仓库怎么办？"）。
 4. **迁移节奏**：先出**样例**（L1 城市地图 + 23 页标题草案），确认后再全量替换（成熟度图、OVERVIEW、交互版地图）。
-5. **房子资产归档**：`manual/maturity/archive-house/`，主线唯一。
+5. **房子资产归档**：`tutorial/maturity/archive-house/`，主线唯一。
 
 ---
 
@@ -453,14 +453,14 @@
 2. **级间串行**：L2（换）→ L3（审）→ L4（守）。理由：L3 的"审生成"依赖 L2 的"真契约/真数据"。
 3. **级内 = 1 写手串行 + 1 验证者并行**（Q1' 选 c）：写手按依赖顺序写页；验证者独立做"学生视角重放 + 真截图 + 挑错"，端口/临时目录与写手隔离。不搞"页 vs 页"并行（抢环境、依赖断、术语漂移）。
 4. **每页 DoD 五项 + 一次重放**：六段结构 / 判据可跑 / 真截图 / 拆一刀 / 建成证明对应格。
-5. **主线不碰真 LLM**：L3 生成与纠错用确定性生成器 + 离线夹具；"真模型纠正成功率不可复现"写成已知现象（`eval/FINDINGS.md`、PRD 对照表第 13 行）。
+5. **主线不碰真 LLM**：L3 生成与纠错用确定性生成器 + 离线夹具；"真模型纠正成功率不可复现"写成已知现象（`system/eval/FINDINGS.md`、PRD 对照表第 13 行）。
 6. **边写边补工程债**（Q2 选 B）：`lab` CLI（save/reset/diff）**最先做**（安全底线）；第二数据集、可观测底座随用随补。
 7. **每级一批验收**（Q5 选 A）：L2 四页（契约/数据/执行/部署）→ 验收 → L3 四页 → L4 五页。
 8. **依赖顺序**：L2 = P11 契约 → P10 数据（第二数据集）→ P12 执行 → P13 部署；L3 = P14 检索 / P15 生成 → P16 校验 → P17 纠错；L4 = P18 账号 + P19 策略 → P20 取消 → P21 可观测 → P22 回归。
 
 **里程碑（估）**：L2 批 3–4 天；L3 批 3 天；L4 批 4 天；加工程债约 2 周出全套 23 页，L2 批 4–5 天可验收。
 
-**冻结清单**：`manual/city/*`、`manual/images/city-*.png`、`manual/images/map-*.png`、`manual/completeness/*`、`manual/maturity/*`、`manual/OVERVIEW.md`、`manual/map/*`——只修错。
+**冻结清单**：`tutorial/city/*`、`tutorial/images/city-*.png`、`tutorial/images/map-*.png`、`tutorial/completeness/*`、`tutorial/maturity/*`、`tutorial/OVERVIEW.md`、`tutorial/map/*`——只修错。
 
 ---
 
@@ -469,7 +469,7 @@
 **决定**
 1. L2–L4 每页沿用 L1 的六段骨架：`这一页构建什么 / 猜一猜 / 动手 / 你应该看到 / 对账 / 拆一刀`。
 2. 末段由「自己改一下」改为「**拆一刀**」：学生必须**主动把刚建好的防线拆掉**（改契约、关策略、删归一化、撤销只读），
-   看判据在哪一步变红，再 `scripts/lab reset` 还原。这是每页 DoD 第五项的可执行形态。
+   看判据在哪一步变红，再 `toolbox/scripts/lab reset` 还原。这是每页 DoD 第五项的可执行形态。
 3. 每级最后一页的「拆一刀」升级为**级考核**：拆的是本级的核心（L2 拆编排 / L3 拆检索 / L4 拆只读账号），并把现象写进页面。
 4. 截图规则不变（真跑输出 + 图文一致）；新增页面编号从 page-10 起（P10 数据 / P11 契约 / P12 执行 / P13 部署 / …）。
 
@@ -477,10 +477,10 @@
 
 ## D48 L2–L4 写作规范：所有 cd 用子 shell；每页必须整段连续执行（2026-11-19）
 
-**背景**：page-11 重放抓出 cwd 陷阱（`cd backend && ...` 后 shell 停在 backend，后续 `scripts/lab` 全 exit 127）；page-10 同类问题被同一模式命中。
+**背景**：page-11 重放抓出 cwd 陷阱（`cd system/backend && ...` 后 shell 停在 backend，后续 `toolbox/scripts/lab` 全 exit 127）；page-10 同类问题被同一模式命中。
 
 **规范**
-1. 页面里任何需要切目录的命令一律写成子 shell：`(cd backend && ...)`，并在首次出现处解释"括号是子 shell，不影响你当前目录"。
+1. 页面里任何需要切目录的命令一律写成子 shell：`(cd system/backend && ...)`，并在首次出现处解释"括号是子 shell，不影响你当前目录"。
 2. 每页交稿前，作者必须在 /tmp 现场**从仓库根目录按页面顺序整段连续执行**（不是逐条看），确认无 exit 127、无"跑完目录变了"。
 3. 重放者（独立验证者）必须复测"整段连续粘贴"这一条，作为该页 DoD 的一部分。
 
@@ -488,30 +488,30 @@
 
 ## D50 · 24 页全书（新增 `page-23.md` = 第 23 页）：L5「装」体验层（从 17 行 HTML 到真实前端）（2026-11-20）
 
-**背景**：全书已按 D44 交付 23 页（page-00…page-22，10+4+4+5）。第 9 页的界面是 17 行手写 HTML（`lab/index.html` + nginx 反代），只是"能看见结果"的最小入口；真实前端（`frontend/` 的 React 构建版）从 L2 起由 compose 的 `frontend` 服务提供，却没有任何一页对它负责。体验（界面 / 交互）是横切整个系统的一层，缺了它，「造 → 换 → 审 → 守」的链路没有交付面的验收。
+**背景**：全书已按 D44 交付 23 页（page-00…page-22，10+4+4+5）。第 9 页的界面是 17 行手写 HTML（`lab/index.html` + nginx 反代），只是"能看见结果"的最小入口；真实前端（`system/frontend/` 的 React 构建版）从 L2 起由 compose 的 `frontend` 服务提供，却没有任何一页对它负责。体验（界面 / 交互）是横切整个系统的一层，缺了它，「造 → 换 → 审 → 守」的链路没有交付面的验收。
 
 **决定**
 1. **末尾追加第 23 页正文文件 `page-23.md`（H1 `# 第 23 页 · …`），全书 24 页**；配比 `10+4+4+5+1 = 24`。级别 = **L5 装（体验层，1 页）**。
 2. **不重编号**：旧 23 页（page-00…page-22）的页码、标题、正文、截图、重放报告、城市图、AON 图、交付物编号一律不动；新页追加在末尾。旧城市 L1 图与 23 页版城市全景图按"历史快照"保留（24 页版城市图另出）。
 3. **L5 = 第五个横切系统**：L2 / L3 / L4 分别是数据与部署的真实性、生成与校验的正确性、安全与可观测；L5 是**体验**——真前端只换入口载体，接口、契约、SSE 与判据全部不变，同一句问题仍出 `41099.5`。之所以只给一页：装修不改变承重墙，一页足以装下"换掉入口、同一判据仍绿"。
 4. **L5 级考核（拆一刀）= 把真前端换回第 9 页同款简陋页**：`docker compose stop frontend`，写回 `p23-html/index.html`（第 9 页骨架 + 3 处接线：`POST /api/query`、`fetch` 读流、结果行 `rows[0][0]`），用真前端镜像的 nginx 占 8080 并接入 compose 网络 → 同一问题仍出 `41099.5` → 还原 `docker rm -f p23-html && docker compose up -d frontend`。这一刀延续第 9 页"删掉 nginx 主干还活着"的模板，证明前端只是入口、不是承重墙（命令以 [page-23](../manual/page-23.md)「拆一刀」为准）。
-5. **23 → 24 的全仓口径**：`manual/shots/audit_book.py` 审计范围 `PAGES = range(24)`（末行 `页面：24/24 通过`）；`AGENTS.md` 硬规则 1 改 `24/24`；`manual/README.md`（标题 24 页五级、配比、L5 段与 page-23 表行、全部页面 `– page-23`）；`manual/ACCEPTANCE.md`（书名 24 页、审计期望 `24/24`、新增 §6 L5 验收，原 §6/§7 顺延为 §7/§8）；`manual/OVERVIEW.md`（`10+4+4+5+1=24`，四阶段表不加行）；`manual/curriculum/plan-v2.md` 标注为 23 页设计快照（D44）、以 README 为准；`manual/review/README.md` 加 page-23 重放占位（待重放）。`manual/page-22.md` 前置句「也是全书最后一页」改为「也是 L4 最后一页」。
+5. **23 → 24 的全仓口径**：`tutorial/shots/audit_book.py` 审计范围 `PAGES = range(24)`（末行 `页面：24/24 通过`）；`AGENTS.md` 硬规则 1 改 `24/24`；`tutorial/README.md`（标题 24 页五级、配比、L5 段与 page-23 表行、全部页面 `– page-23`）；`tutorial/ACCEPTANCE.md`（书名 24 页、审计期望 `24/24`、新增 §6 L5 验收，原 §6/§7 顺延为 §7/§8）；`tutorial/OVERVIEW.md`（`10+4+4+5+1=24`，四阶段表不加行）；`tutorial/curriculum/plan-v2.md` 标注为 23 页设计快照（D44）、以 README 为准；`tutorial/review/README.md` 加 page-23 重放占位（待重放）。`tutorial/page-22.md` 前置句「也是全书最后一页」改为「也是 L4 最后一页」。
 
 **理由**
 - **不重编号（成本 / 稳定性）**：重编号要动 23 份正文 H1、所有跨页引用、城市数据与成图、AON、海报与 12 份重放报告——成本高且极易漂移；追加到末尾是最小扰动，旧证据链原样可引。
 - **独立成级而不是再写一页 L4**：体验与"数据 / 生成 / 安全"同级——横切全系统、只在入口可见；但它不新增交付物、不改任何判据，所以只有 1 页（对比 L2 4 页 / L3 4 页 / L4 5 页）。
 - **拆一刀选"换入口"而非"删入口"**：第 9 页已证明"删掉入口，主干还活着"；L5 要证明的是"换成真前端后判据不变"，所以拆的方向是换回最简入口、看同一判据是否仍绿。
 
-**后果**：全书按 24 页口径审计与验收；`manual/city/*`、`manual/aon/*`、`manual/shots/render_city_map*` 等仍写 23 页的引用由城市图 / AON 图 agent 出 24 页版时统一，旧图与旧数据作为历史快照保留；page-23 正文由页面作者交付后必须复跑 `python3 manual/shots/audit_book.py` 到 `页面：24/24 通过`。
+**后果**：全书按 24 页口径审计与验收；`tutorial/city/*`、`tutorial/aon/*`、`tutorial/shots/render_city_map*` 等仍写 23 页的引用由城市图 / AON 图 agent 出 24 页版时统一，旧图与旧数据作为历史快照保留；page-23 正文由页面作者交付后必须复跑 `python3 tutorial/shots/audit_book.py` 到 `页面：24/24 通过`。
 
 ---
 
 ## D51 · 装修对象改为成熟版原版前端（不是教学版重建前端）（2026-11-20/21）
 
-**背景**：D50 的第 23 页初稿把"真前端"写成 compose 的 `frontend` 服务（教学版重建前端，`frontend/`，React 19 + Tailwind 4.3.4，"从零重建 · 教学版"）。但仓库里另有一套**成熟版原版** `shopkeeper-agent` 前端：`deliverable/v2/original-frontend/`（React 19 + Tailwind **3.4.17**，dist 已构建、带原版 `nginx.conf`），本机 18081 与云端 v2 都在跑它。用户指出："我们要的装修是成熟版前端，不是重建版的。"
+**背景**：D50 的第 23 页初稿把"真前端"写成 compose 的 `frontend` 服务（教学版重建前端，`system/frontend/`，React 19 + Tailwind 4.3.4，"从零重建 · 教学版"）。但仓库里另有一套**成熟版原版** `shopkeeper-agent` 前端：`materials/deliverable/v2/original-frontend/`（React 19 + Tailwind **3.4.17**，dist 已构建、带原版 `nginx.conf`），本机 18081 与云端 v2 都在跑它。用户指出："我们要的装修是成熟版前端，不是重建版的。"
 
 **决定**
-1. **L5 装修对象 = 成熟版原版前端**。第 23 页判据改为：起整栈（第 13 页 compose）后，用原版 nginx 挂 `deliverable/v2/original-frontend/dist` 到 8088（进 compose 网络，`/api/` 反代 `backend:8100`）→ 浏览器问「华北销售额」→ 成熟版界面出 `41099.5`（原样，无千分位）+ 12 节点流程。
+1. **L5 装修对象 = 成熟版原版前端**。第 23 页判据改为：起整栈（第 13 页 compose）后，用原版 nginx 挂 `materials/deliverable/v2/original-frontend/dist` 到 8088（进 compose 网络，`/api/` 反代 `backend:8100`）→ 浏览器问「华北销售额」→ 成熟版界面出 `41099.5`（原样，无千分位）+ 12 节点流程。
 2. **教学版重建前端降级为"脚手架"**：compose 默认 8080 继续跑它（`npm test` 40 条协议测试），用来说明"把结构摆在明面上"的中间态；`41,099.5` 是它的千分位显示，数值相同。同一后端、同一契约、同一 SSE，两套界面并排对照。
 3. **拆一刀 = 把 8088 的成熟版换回第 9 页 17 行 HTML**（仍出 `41099.5`），证明"装修不改变承重墙"；不删 compose 默认前端。
 4. 口径同步：`ACCEPTANCE.md` §6、`README.md` L5 行与 PRD 矩阵（成熟版 Tailwind 3.4.17 / 教学版 4.3.4 分开写）、`OVERVIEW.md` 答辩 ④；城市图 P23 =「成熟前端体验馆」、AON P23 =「装成熟前端」。
@@ -534,7 +534,7 @@
 
 **理由**：A 真栈 + 真模型 + 真前端，能同时证明"界面在动"和"底下哪一行在算"；C 离线可复现、适合教调试方法。二者分工：A 做交付证据，C 做方法教学。
 
-**后果**：`manual/review/exec-trace-v2/` 保存原始 trace/帧/对齐；`manual/shots/trace_server.py` + `render_exec_trace.py` 一条命令重录；p17/p21 不引用该图；p23 的引用方式由用户决定。
+**后果**：`tutorial/review/exec-trace-v2/` 保存原始 trace/帧/对齐；`tutorial/shots/trace_server.py` + `render_exec_trace.py` 一条命令重录；p17/p21 不引用该图；p23 的引用方式由用户决定。
 
 > 逐轮 Q&A 记录见 [`QA-DECISIONS.md`](QA-DECISIONS.md)。
 
@@ -545,31 +545,31 @@
 **背景**：只看前端节点图看不到"解释器在算什么"；用户指出"学生换开发场景时更容易记住的是一个有特色的 GUI 工具"，要求能看、能自己录。CLI（pdb/curl/record_sse）仍要保留作可复现兜底。
 
 **决定**
-1. 新增附录 [`manual/appendix/gui-debugging.md`](../manual/appendix/gui-debugging.md)（不算 24 页）：**VizTracer**（函数级时间线，已实测截图）、**LangGraph Studio**（12 节点图 + run/state，已实测截图）、**Chrome DevTools**（前端 SSE 帧）、**Zed 断点**（配置样例；本机无窗口自动化，未实拍）；每条给装法/打开方式/看哪一栏 + CLI 兜底命令。
-2. **p17 不加图**、只加 1 行指针到附录（p17 正文保持"审纠错"的判据密度）；`manual/README.md` 附录行加入口。
+1. 新增附录 [`tutorial/appendix/gui-debugging.md`](../manual/appendix/gui-debugging.md)（不算 24 页）：**VizTracer**（函数级时间线，已实测截图）、**LangGraph Studio**（12 节点图 + run/state，已实测截图）、**Chrome DevTools**（前端 SSE 帧）、**Zed 断点**（配置样例；本机无窗口自动化，未实拍）；每条给装法/打开方式/看哪一栏 + CLI 兜底命令。
+2. **p17 不加图**、只加 1 行指针到附录（p17 正文保持"审纠错"的判据密度）；`tutorial/README.md` 附录行加入口。
 3. 保留"学习者自己录证据"方向：附录第 5 节的 CLI 三条（pdb / `curl | tee` / `record_sse --check`）即无 GUI 等价操作；后续若要进正文，另立 D 号。
 4. 诚实边界写进附录：VizTracer 会放大耗时（43→61ms）；离线夹具≠真模型；Zed 无实拍不能当教程照抄。
 
 **理由**：GUI 负责"记得住"（点开哪个工具、看哪一栏），CLI 负责"可复现"（CI/无 GUI 环境）；两者在附录里并存，正文不增负担。
 
-**后果**：附录 + 3 张实拍图（VizTracer/Studio 全图/Studio 画布）+ 证据 `manual/review/{viztracer,langgraph-studio,zed-debug}/`；p17 122 行（+2）；24 页正文口径不变。
+**后果**：附录 + 3 张实拍图（VizTracer/Studio 全图/Studio 画布）+ 证据 `tutorial/review/{viztracer,langgraph-studio,zed-debug}/`；p17 122 行（+2）；24 页正文口径不变。
 
 ---
 
 ## D54 · 工具定义：原子工具 / 项目一层命令 / 项目夹具（学生只碰前两类）（2026-11-21）
 
-**背景**：用户指出学生"很少会自己写代码"；换项目后既不会写也找不到我们为某个项目写的脚本。教材里把 `manual/shots/pdb_step_demo.py`、`trace_viztracer.py`、`record_sse` 这类仓库脚本当学生入口，是错误的。
+**背景**：用户指出学生"很少会自己写代码"；换项目后既不会写也找不到我们为某个项目写的脚本。教材里把 `tutorial/shots/pdb_step_demo.py`、`trace_viztracer.py`、`record_sse` 这类仓库脚本当学生入口，是错误的。
 
 **定义（教材口径）**
 1. **原子工具**：装一次，有一条稳定 CLI 或 GUI 入口；输入是标准对象（脚本 / 进程 / URL / 请求）；输出是文件或浏览器页面。**不需要为它写代码/脚本**。例：`viztracer`、`py-spy`、`scalene`、`pdb`、`curl`、`pytest`、Chrome DevTools、LangGraph Studio、Zed。
-2. **项目一层命令**：项目自带入口，一条命令（如 `make docker-up`、`pytest backend/tests/...`、`curl .../api/query`）。换项目要改参数，但不需要新写脚本；可进学生步骤。
-3. **项目夹具/脚本（script）**：为某项目/某次演示写的一次性脚本（`manual/shots/*.py`、`record_sse`、`render_*.py`）。**只用于教师/CI/证据生成，不进学生步骤**。
+2. **项目一层命令**：项目自带入口，一条命令（如 `make docker-up`、`pytest system/backend/tests/...`、`curl .../api/query`）。换项目要改参数，但不需要新写脚本；可进学生步骤。
+3. **项目夹具/脚本（script）**：为某项目/某次演示写的一次性脚本（`tutorial/shots/*.py`、`record_sse`、`render_*.py`）。**只用于教师/CI/证据生成，不进学生步骤**。
 
 **决定**
 1. **学生步骤只允许"原子工具 + 项目一层命令"**；仓库脚本在文件头或 README 标注"教师/CI 夹具，不是学生入口"。
 2. **p17 原子化改造**（方案已确认，由用户执行）：撤掉 `pdb_step_demo.py` 入口；第 5 步改为
-   - 时间线：`viztracer --open -- backend/.venv/bin/python -m pytest backend/tests/agent/test_correct.py -q`（浏览器点 `propose_correction` 条带）；
-   - 调试：`backend/.venv/bin/python -m pdb -m pytest backend/tests/agent/test_correct.py -q -k "proposes_a_new_sql"`（`b app/agent/correct.py:183`、`c`、`p policy.max_attempts`、`p attempts`）。
+   - 时间线：`viztracer --open -- system/backend/.venv/bin/python -m pytest system/backend/tests/agent/test_correct.py -q`（浏览器点 `propose_correction` 条带）；
+   - 调试：`system/backend/.venv/bin/python -m pdb -m pytest system/backend/tests/agent/test_correct.py -q -k "proposes_a_new_sql"`（`b app/agent/correct.py:183`、`c`、`p policy.max_attempts`、`p attempts`）。
    新增"自己采多次"：浏览器成熟版 8088 同一问题点 3 次（或 `curl -sN …/api/query` 手动 3 次），记录"无需校正/触发成功/触发失败/传输失败"，**分母=触发校正次数**；不写"成功率 100%"。
 3. **附录重构为"工具卡"**：每卡 = 安装命令 / 一条命令 / 浏览器里看什么 / 换项目改哪个参数；卡：viztracer、py-spy、scalene、pdb、curl、pytest、Chrome DevTools、LangGraph Studio、Zed。
 4. **"选工具三问"只写附录**（①能一条命令吗 ②要写代码吗 ③输出能浏览器点开吗），p17 不重复。
@@ -591,8 +591,8 @@
 4. **push 范围**：`continue-iterate` 分支 + `v1.0.0` tag；不推 `main`。
 5. **发布包内容**：`manual-24p.zip`（manual 的 md + images + appendix + README/ACCEPTANCE/OVERVIEW/SPEC）、`design-doc-30.pdf`、`design-doc.pdf`、`dev-book.pdf`、`SHA256SUMS`、`RELEASE-NOTES.md`；证据留在仓库，不进发布包。
 6. **Release 渠道**：GitHub 网页手动创建（本机无 gh、无 token）；上传上述文件。
-7. **执行分工**：tag / push / 发布 / p17 改造**全部由用户执行**；lead 只维护决策文档、回答疑问、审查产出。tag 前先 revert `manual/page-17.md` 的未提交草稿（+9/−1）。
+7. **执行分工**：tag / push / 发布 / p17 改造**全部由用户执行**；lead 只维护决策文档、回答疑问、审查产出。tag 前先 revert `tutorial/page-17.md` 的未提交草稿（+9/−1）。
 
-**后果**：v1.0.0 是"当前稳定快照"；v1.1.0 是原子工具化后的版本；仓库仍以 `design/manual-v1` 指向已发布代码，`continue-iterate` 承接下一轮。
+**后果**：v1.0.0 是"当前稳定快照"；v1.1.0 是原子工具化后的版本；仓库仍以 `materials/design/manual-v1` 指向已发布代码，`continue-iterate` 承接下一轮。
 
 > 逐轮 Q&A 见 [`QA-DECISIONS.md`](QA-DECISIONS.md) R8。

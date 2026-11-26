@@ -4,9 +4,9 @@
 
 > **前置**
 >
-> **还原上一页**：确认第 16 页的拆一刀已用 `scripts/lab reset p16-before --yes` 还原——否则第 2 步会变成 `1 failed, 13 passed`、没有 `S6 PASS`、probe `mismatch: 3`。
+> **还原上一页**：确认第 16 页的拆一刀已用 `toolbox/scripts/lab reset p16-before --yes` 还原——否则第 2 步会变成 `1 failed, 13 passed`、没有 `S6 PASS`、probe `mismatch: 3`。
 >
-> **可执行自查**：`(cd backend && .venv/bin/python -m app.scripts.failures --check | tail -2)` 应见 `S6 PASS`；不是就先 `scripts/lab reset p16-before --yes` 再往下。
+> **可执行自查**：`(cd system/backend && .venv/bin/python -m app.scripts.failures --check | tail -2)` 应见 `S6 PASS`；不是就先 `toolbox/scripts/lab reset p16-before --yes` 再往下。
 >
 > **第 1–5 步全离线**：14 条单元测试、9 个失败场景、20 条纠错语料全在离线跑——不需要 MySQL / ES / Qdrant、不需要 `.env`、也不需要模型 key。只有第 6 步要真模型 + 开栈（可选，没配 key / 没起栈就跳过）。
 >
@@ -20,8 +20,8 @@
 
 **为什么“纠正成功”不能当判据**：触发取决于模型是否生成可重试错误，**不能稳定复现、不能当判据**。
 
-- v1/v2 指两次交付评测，不是本书前后版本：v1 演示没复现（`deliverable/PRD-对照表.md` 第 13 行，触发=true、纠正成功=false）。
-- v2 **单次复现过**纠正成功态：`deliverable/v2/README-v2.md:172`；证据 `deliverable/v2/evidence/v2-natural-correct-success.sse`，故障注入样本 `v2-correct-success.sse` 另存作回归。
+- v1/v2 指两次交付评测，不是本书前后版本：v1 演示没复现（`materials/deliverable/PRD-对照表.md` 第 13 行，触发=true、纠正成功=false）。
+- v2 **单次复现过**纠正成功态：`materials/deliverable/v2/README-v2.md:172`；证据 `materials/deliverable/v2/evidence/v2-natural-correct-success.sse`，故障注入样本 `v2-correct-success.sse` 另存作回归。
 
 ![第 17 页 · 一次重试能修好什么、修不好什么：左边是校验与校正，右边是赌桌：只有一枚代币，只许改一次](images/page-17-visual.webp)
 
@@ -38,7 +38,7 @@
 
 <!-- verify: p17-lab-save -->
 ```bash
-scripts/lab save p17-before
+toolbox/scripts/lab save p17-before
 ```
 
 **命名陷阱**：同名快照会被拒，重做本页就换个名字；**重做换名后，拆一刀里 `reset` 的名字也要一起换**——照抄旧名会回滚掉中间改动，只有 `pre-reset-*` 快照能救。
@@ -52,7 +52,7 @@ scripts/lab save p17-before
 
 <!-- verify: p17-pytest-correct -->
 ```bash
-backend/.venv/bin/python -m pytest backend/tests/agent/test_correct.py -q
+system/backend/.venv/bin/python -m pytest system/backend/tests/agent/test_correct.py -q
 ```
 
 **第 3 步：跑失败矩阵。** 9 个场景各演一遍结局。只替换了模型与数据库；上下文、提示词、静态校验、安全策略、纠错闭环都是真代码，所以离线就能跑。
@@ -61,7 +61,7 @@ backend/.venv/bin/python -m pytest backend/tests/agent/test_correct.py -q
 
 <!-- verify: p17-failures-check -->
 ```bash
-(cd backend && .venv/bin/python -m app.scripts.failures --check)
+(cd system/backend && .venv/bin/python -m app.scripts.failures --check)
 ```
 
 **第 4 步：看 `corrected` 的期望结局，再数一遍 20 条语料的“可重试/标记”。**
@@ -72,18 +72,18 @@ backend/.venv/bin/python -m pytest backend/tests/agent/test_correct.py -q
 
 <!-- verify: p17-failures-scenarios -->
 ```bash
-(cd backend && .venv/bin/python -m app.scripts.failures --scenarios | grep corrected)
-grep -o '"retryable": [a-z]*' eval/correction.jsonl | sort | uniq -c
-grep -o '"expect": "[a-z]*"' eval/correction.jsonl | sort | uniq -c
+(cd system/backend && .venv/bin/python -m app.scripts.failures --scenarios | grep corrected)
+grep -o '"retryable": [a-z]*' system/eval/correction.jsonl | sort | uniq -c
+grep -o '"expect": "[a-z]*"' system/eval/correction.jsonl | sort | uniq -c
 ```
 
-**第 5 步：用原子工具看一层时间线、再停一次断点。** 本页这一步只把 VizTracer 装进项目 `backend/.venv`（trace 要和项目依赖同一个解释器；它不改 `uv.lock`），`--open` 跑完自动开浏览器；pdb 是 Python 自带，不用装：
+**第 5 步：用原子工具看一层时间线、再停一次断点。** 本页这一步只把 VizTracer 装进项目 `system/backend/.venv`（trace 要和项目依赖同一个解释器；它不改 `uv.lock`），`--open` 跑完自动开浏览器；pdb 是 Python 自带，不用装：
 
 <!-- verify: p17-viztracer -->
 ```bash
-uv pip install --python backend/.venv/bin/python viztracer
-backend/.venv/bin/python -m viztracer --open --min_duration 1ms -m pytest backend/tests/agent/test_correct.py -q
-backend/.venv/bin/python -m pdb -m pytest backend/tests/agent/test_correct.py -q -s -k "proposes_a_new_sql"
+uv pip install --python system/backend/.venv/bin/python viztracer
+system/backend/.venv/bin/python -m viztracer --open --min_duration 1ms -m pytest system/backend/tests/agent/test_correct.py -q
+system/backend/.venv/bin/python -m pdb -m pytest system/backend/tests/agent/test_correct.py -q -s -k "proposes_a_new_sql"
 ```
 
 **看时间线**：点 `propose_correction` 条带看 Wall Duration。`--min_duration 1ms` 约留 ≥1ms 的调用；收尾事件仍可能 <1ms，属正常。
@@ -92,7 +92,7 @@ backend/.venv/bin/python -m pdb -m pytest backend/tests/agent/test_correct.py -q
 
 **pdb 四连敲**（第三条命令），进 pdb 后依次敲：
 
-1. `b backend/app/agent/correct.py:183`
+1. `b system/backend/app/agent/correct.py:183`
 2. `c`
 3. `p policy.max_attempts`
 4. `p error.retryable`
@@ -109,7 +109,7 @@ backend/.venv/bin/python -m pdb -m pytest backend/tests/agent/test_correct.py -q
 
 **没 key 是预期**：默认栈不配 key 时后端走确定性生成器、根本没有校正器（`_build_corrector()` 返回 `None`）。页内这个问题一次就过校验，只会采到“无需校正 3/3”，采不到“触发/成功”——**这是预期，不是 bug**。
 
-**要采先配**：按 [`appendix/llm-endpoint.md`](appendix/llm-endpoint.md) 配 `REBUILD_LLM_*`，再 `docker compose up -d --force-recreate backend` 重启。变量缺一个或 key 配错都不算，先跑附录里的 `scripts/llm_check.py` 自检。
+**要采先配**：按 [`appendix/llm-endpoint.md`](appendix/llm-endpoint.md) 配 `REBUILD_LLM_*`，再 `docker compose up -d --force-recreate backend` 重启。变量缺一个或 key 配错都不算，先跑附录里的 `toolbox/scripts/llm_check.py` 自检。
 
 **界面入口别混**：只按第 13 页起整栈，默认是教学版 `http://127.0.0.1:8080`（改过 `.env` 就用你的 `FRONTEND_HOST_PORT`）；成熟版 `http://127.0.0.1:8088` 来自第 23 页第 2 步的 `docker run -p 127.0.0.1:8088:80`，不是 compose 起的。
 
@@ -171,21 +171,21 @@ True
 
   **两个标记什么意思**：`rejected` 不是“重试后仍失败”，是**根本不进重试**（策略拒绝 / 多语句 / 写操作 / 空 SQL 这类，重试等于给注入开一次口子）；`corrected` 也只说“这条错单该进校正”，不等于校正会成功。
 
-  **为什么成功率是假的**：`eval/build_datasets.py` 用 `contracts/errors.yaml` 的 `retryable` 逐条校验这张表（expect 与 retryable 对不上就报错退出）——语料里**一条重试结局都没有**，拿它算“成功率”（11/20 或 11/11）都是假的。
+  **为什么成功率是假的**：`system/eval/build_datasets.py` 用 `system/contracts/errors.yaml` 的 `retryable` 逐条校验这张表（expect 与 retryable 对不上就报错退出）——语料里**一条重试结局都没有**，拿它算“成功率”（11/20 或 11/11）都是假的。
 
 - **猜 2：不能。** 两个样本结论不一样——成功率是抽出来的数，不是“修好了”。
 
-  **样本 A**（`deliverable/PRD-对照表.md` 第 13 行，真实云端模型）：validate 红 → correct 真跑 16.31s → 改写后列名仍不在契约，记的是“**触发=true、纠正成功=false**”。v1 视频/SSE 未随仓库分发，仓库里能核对的同类证据在 `deliverable/v2/evidence/`。
+  **样本 A**（`materials/deliverable/PRD-对照表.md` 第 13 行，真实云端模型）：validate 红 → correct 真跑 16.31s → 改写后列名仍不在契约，记的是“**触发=true、纠正成功=false**”。v1 视频/SSE 未随仓库分发，仓库里能核对的同类证据在 `materials/deliverable/v2/evidence/`。
 
-  **样本 B**（`eval/FINDINGS.md`）：§3.1 同一问题第一次 `error → SQL_UNKNOWN_TABLE`，随后 3 次全成功——4 次里 3 次，不是“修好了”；§2 另一次 8 题 × 3 次采样记的是 5/5——那是 24 次运行里的 5 次机会，不能外推成“成功率 100%”。
+  **样本 B**（`system/eval/FINDINGS.md`）：§3.1 同一问题第一次 `error → SQL_UNKNOWN_TABLE`，随后 3 次全成功——4 次里 3 次，不是“修好了”；§2 另一次 8 题 × 3 次采样记的是 5/5——那是 24 次运行里的 5 次机会，不能外推成“成功率 100%”。
 
   **判据只能写“多次采样（`trials>=3`）+ 成功率 + 失败分类”，不许写“已修复”，分母是“触发校正的次数”，不是全部提问**。
 
-  **计数口径**（`eval/live_probe.py`，与第 6 步同一套五类）：无需校正 `no_correction_needed` / 触发并成功 `correction_success` / 触发失败 `correction_fail` / 校验红但没进校正 `validate_fail_no_correction`，另有传输失败 `transport_error`；成功率分母同为 success+fail、不含后两类。
+  **计数口径**（`system/eval/live_probe.py`，与第 6 步同一套五类）：无需校正 `no_correction_needed` / 触发并成功 `correction_success` / 触发失败 `correction_fail` / 校验红但没进校正 `validate_fail_no_correction`，另有传输失败 `transport_error`；成功率分母同为 success+fail、不含后两类。
 
   **怎么跑**：它要跑着的服务和模型 key；本页第 6 步只教你怎么采，采完按第 6 步五类表记。端点怎么配、怎么自检：见 [`appendix/llm-endpoint.md`](appendix/llm-endpoint.md)。
 
-- **一次重试的边界在契约里，不在代码里。** `contracts/errors.yaml` 的 `correction` 段：`max_attempts: 1`、`revalidate: true`、`revalidate_with: [guard, policy]`。
+- **一次重试的边界在契约里，不在代码里。** `system/contracts/errors.yaml` 的 `correction` 段：`max_attempts: 1`、`revalidate: true`、`revalidate_with: [guard, policy]`。
 
   **可重试名单**：`retryable: true` 的只有 6 个码——`SQL_SYNTAX` / `SQL_UNKNOWN_COLUMN` / `SQL_UNKNOWN_TABLE` / `SQL_CONSTANT_PROJECTION` / `SQL_MISSING_ORDER_BY` / `SQL_MISSING_LIMIT`。
 
@@ -201,7 +201,7 @@ True
 
 级考核不看本页做完没有，只看拆完你能说出“哪条判据抓到了、哪条没抓到”。
 
-**把纠错关掉**：打开 `backend/app/agent/correct.py`，找到校正的唯一入口 `def propose_correction`，在 `policy = contract.correction` 这一行后面插 4 行（缩进 4 格）。任何错误都直接返回“校正失败”，有校正器 / 可重试 / 契约允许这三条触发条件全部短路：
+**把纠错关掉**：打开 `system/backend/app/agent/correct.py`，找到校正的唯一入口 `def propose_correction`，在 `policy = contract.correction` 这一行后面插 4 行（缩进 4 格）。任何错误都直接返回“校正失败”，有校正器 / 可重试 / 契约允许这三条触发条件全部短路：
 
 ```python
     # 拆一刀：关掉校正闭环——任何错误都不再产出候选 SQL
@@ -214,9 +214,9 @@ Ctrl+S 保存，重跑三条判据（输出为节选：pytest 只留汇总行；
 
 <!-- verify: p17-ablation-commands -->
 ```bash
-backend/.venv/bin/python -m pytest backend/tests/agent/test_correct.py -q
-(cd backend && PYTHONUNBUFFERED=1 .venv/bin/python -m app.scripts.failures --check) 2>&1 | tail -5
-PYTHONPATH=backend backend/.venv/bin/python eval/probe_correction.py | tail -1
+system/backend/.venv/bin/python -m pytest system/backend/tests/agent/test_correct.py -q
+(cd system/backend && PYTHONUNBUFFERED=1 .venv/bin/python -m app.scripts.failures --check) 2>&1 | tail -5
+PYTHONPATH=system/backend system/backend/.venv/bin/python system/eval/probe_correction.py | tail -1
 ```
 
 <!-- verify-out: p17-ablation-commands -->
@@ -239,9 +239,9 @@ FAIL: 1 项不符合预期
 
 <!-- verify: p17-lab-reset-restore -->
 ```bash
-scripts/lab reset p17-before --yes
-backend/.venv/bin/python -m pytest backend/tests/agent/test_correct.py -q | tail -1
-(cd backend && .venv/bin/python -m app.scripts.failures --check | tail -1)
+toolbox/scripts/lab reset p17-before --yes
+system/backend/.venv/bin/python -m pytest system/backend/tests/agent/test_correct.py -q | tail -1
+(cd system/backend && .venv/bin/python -m app.scripts.failures --check | tail -1)
 ```
 
 结论：**纠错只负责一件事——把“可重试的失败”捞回来一次；捞回来就是 `corrected` 的 `result`，捞不回来就是最初那个错码。**

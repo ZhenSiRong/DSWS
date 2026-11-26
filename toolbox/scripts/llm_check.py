@@ -4,8 +4,8 @@
 默认 dry-run：只查环境变量与 URL 形状，不联网、不花钱。
 --models：GET {base}/models 列模型名（先列模型，再填 REBUILD_LLM_MODEL）；
 --live：POST 1 条最小 chat 请求（通常 ~1 token，会计费）。
-读环境变量、不读 .env：先 source scripts/export-docker-env.sh 再跑；退出码 0 通过、1 失败。
-为什么不用 requests：跟 scripts/find-python.sh 一样，宿主机脚本只用标准库——先保证任何一台
+读环境变量、不读 .env：先 source toolbox/scripts/export-docker-env.sh 再跑；退出码 0 通过、1 失败。
+为什么不用 requests：跟 toolbox/scripts/find-python.sh 一样，宿主机脚本只用标准库——先保证任何一台
 能跑 make docker-env 的机器都跑得动，自检本身不能变成新依赖。
 """
 from __future__ import annotations
@@ -16,7 +16,7 @@ import urllib.error, urllib.parse, urllib.request
 REQUIRED = ("REBUILD_LLM_BASE_URL", "REBUILD_LLM_API_KEY", "REBUILD_LLM_MODEL")
 FIX_HINT = """怎么补（只改 .env，别写进命令 / 页面 / 截图 / 提交）：
   1) 没有 .env 先 make docker-env；2) 在 .env 填 REBUILD_LLM_BASE_URL / _API_KEY / _MODEL（可加 _TIMEOUT）
-  3) source scripts/export-docker-env.sh（最小做法：set -a; . ./.env; set +a）；4) 重跑本脚本"""
+  3) source toolbox/scripts/export-docker-env.sh（最小做法：set -a; . ./.env; set +a）；4) 重跑本脚本"""
 NET = {
     "timeout": ("请求超时", "端点太慢或网络不通：把 REBUILD_LLM_TIMEOUT 调到 60 再试；本地模型可能还在加载；用 curl -sS -m 5 <base> 看宿主机到端点通不通（别带 key）"),
     "dns": ("DNS 解析失败", "主机名拼错，或当前网络/DNS 解析不了；检查 http_proxy / https_proxy——代理配错也会表现成解析失败"),
@@ -86,7 +86,7 @@ def report_failure(status, latency: float, body: bytes, reason, cfg: dict[str, s
         print(f"  ✗ 分类：{label}\n  排查：{hint}")
         if body:
             print(f"  返回摘要（已脱敏）：{hide(body[:200].decode('utf-8', 'replace'), key)}")
-    print("  改完 .env 记得重新 source scripts/export-docker-env.sh 再跑一次")
+    print("  改完 .env 记得重新 source toolbox/scripts/export-docker-env.sh 再跑一次")
     return 1
 
 def run_models(cfg: dict[str, str]) -> int:
@@ -133,7 +133,7 @@ def run_live(cfg: dict[str, str]) -> int:
 def main() -> int:
     args = set(sys.argv[1:])
     if args - {"--live", "--models"}:
-        print("用法：python3 scripts/llm_check.py [--models] [--live]", file=sys.stderr)
+        print("用法：python3 toolbox/scripts/llm_check.py [--models] [--live]", file=sys.stderr)
         return 2
     live, models = "--live" in args, "--models" in args
     cfg = {key: os.environ.get(key, "") for key in (*REQUIRED, "REBUILD_LLM_TIMEOUT")}

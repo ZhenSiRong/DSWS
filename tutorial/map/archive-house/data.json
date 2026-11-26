@@ -4,8 +4,8 @@
   "kicker": "全书地图 · 一页图看懂十页",
   "one_liner": "先立骨架、再通水电、最后精装与安防——软件也是这么盖起来的。",
   "image": "images/map-house-vs-pages.png",
-  "rerun": "python3 manual/shots/render_map.py",
-  "note": "页标题与页码由渲染脚本从 manual/page-0X.md 的 H1 提取并同步；本文件只存工地动作 / 比喻句 / 「这一页造什么」，页标题不在这里手写。",
+  "rerun": "python3 tutorial/shots/render_map.py",
+  "note": "页标题与页码由渲染脚本从 tutorial/page-0X.md 的 H1 提取并同步；本文件只存工地动作 / 比喻句 / 「这一页造什么」，页标题不在这里手写。",
   "rows": [
     {
       "page": "page-00",

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# 教师/CI 夹具：不是学生入口；学生工具见 manual/appendix/gui-debugging.md
+# 教师/CI 夹具：不是学生入口；学生工具见 tutorial/appendix/gui-debugging.md
 """trace_server.py —— 第 17 页 v2：**后端注入**行级 tracer + **真前端**截图循环。
 
 为什么换成注入而不是“进程内跑 runner”：
@@ -16,7 +16,7 @@
           重启容器（uvicorn 启动时 Python 自动 import sitecustomize），
           等 /api/health 200，并**原地清空** trace 文件（不能 rm：uvicorn 已
           用 O_APPEND 打开该 inode，rm 会让它的写入落进已删除文件）。
-  capture 用 headless Chrome（`/usr/bin/google-chrome` + frontend/node_modules 里
+  capture 用 headless Chrome（`/usr/bin/google-chrome` + system/frontend/node_modules 里
           已装的 playwright-core）打开成熟版前端，输入问题、点发送；点击后每
           ~360ms 截一帧并记录 DOM 状态探针（12 节点状态、结果表行数、关键 rect）
           与客户端 SSE 到达时间；结果出现后再拍 15 帧。每次尝试前原地清空 trace。
@@ -25,14 +25,14 @@
           `--attempts` 次；一次都没触发就报错退出，不做假图。
   fetch   把容器里的 /tmp/trace.jsonl 与 capture meta 收进工作目录。
   crop    把选中的真截图裁成最终左栏尺寸（800×1151）、写
-          `manual/review/exec-trace-v2/` 证据（关键窗口 trace、帧清单、meta）。
+          `tutorial/review/exec-trace-v2/` 证据（关键窗口 trace、帧清单、meta）。
   finalize 只补/刷新已提交 meta.json 的 model / LLM 调用次数（capture 原始目录已清理时用）。
 
 默认参数就是本次真跑用的隔离栈（runbook 里有完整的起栈命令）：
 
   project=p17t2   backend 容器=p17t2-backend-1   health=http://127.0.0.1:18117/api/health
   成熟版入口=http://127.0.0.1:8088  （nginx 容器 p17t2-mature，反代 backend:8100）
-  工作目录=/tmp/p17t2-run            证据目录=manual/review/exec-trace-v2
+  工作目录=/tmp/p17t2-run            证据目录=tutorial/review/exec-trace-v2
 
 为了可移植，容器 / 端口 / URL / 工作目录都能用参数覆盖。本脚本不启动 compose 栈，
 也不改页面与判据。
@@ -52,7 +52,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-HERE = Path(__file__).resolve().parent          # manual/shots
+HERE = Path(__file__).resolve().parent          # tutorial/shots
 REPO = HERE.parents[1]                          # 仓库根目录
 REVIEW = REPO / "manual" / "review"
 EVIDENCE = REVIEW / "exec-trace-v2"
@@ -84,15 +84,15 @@ DEFAULTS: dict[str, Any] = {
 
 #: 只追这 4 个文件（本次问数真正做判断的代码点）。
 TARGET_FILES = (
-    "backend/app/agent/graph.py",
-    "backend/app/agent/correct.py",
-    "backend/app/generate/guard.py",
-    "backend/app/security/policy.py",
+    "system/backend/app/agent/graph.py",
+    "system/backend/app/agent/correct.py",
+    "system/backend/app/generate/guard.py",
+    "system/backend/app/security/policy.py",
 )
 
 SITECUSTOMIZE = r'''"""sitecustomize —— 第 17 页执行轨迹补图：后端行级 tracer（仅 TRACE_OUT 存在时启用）。
 
-由 manual/shots/trace_server.py 生成并拷进 backend 容器的 site-packages；
+由 tutorial/shots/trace_server.py 生成并拷进 backend 容器的 site-packages；
 容器启动时 Python 自动 import 本模块。默认（TRACE_OUT 未设置）什么都不做。
 
 启用后：
@@ -120,10 +120,10 @@ if _TRACE_OUT:
     _ROOT = Path(os.environ.get("TRACE_ROOT", "/app")).resolve()
     _API_KEY = os.environ.get("REBUILD_LLM_API_KEY", "")
     _FILES = (
-        "backend/app/agent/graph.py",
-        "backend/app/agent/correct.py",
-        "backend/app/generate/guard.py",
-        "backend/app/security/policy.py",
+        "system/backend/app/agent/graph.py",
+        "system/backend/app/agent/correct.py",
+        "system/backend/app/generate/guard.py",
+        "system/backend/app/security/policy.py",
     )
     _RELS = set(_FILES)
     _TRIM = 120
@@ -1116,7 +1116,7 @@ def main(argv: list[str] | None = None) -> int:
             run(["docker", "cp", f"{cfg.container}:/tmp/trace.jsonl", str(kept / "trace.jsonl")])
         evidence = crop(cfg)
         say(f"[done] {time.time() - started:.1f}s；证据 {cfg.out.relative_to(REPO)}/，"
-            f"下一步：python3 manual/shots/render_exec_trace.py")
+            f"下一步：python3 tutorial/shots/render_exec_trace.py")
         say(f"[done] 帧序：{json.dumps(evidence['trigger'], ensure_ascii=False)}")
     return 0
 

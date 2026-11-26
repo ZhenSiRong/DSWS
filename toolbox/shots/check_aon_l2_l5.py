@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """check_aon_l2_l5.py —— L2–L5 合并 AON 的独立断言脚本（只读，不渲染）。
 
-它故意**不 import** render_flow_l2_l5.py 里的任何解析 / CPM 实现：从 `manual/flow-l2-l5.mmd`
+它故意**不 import** render_flow_l2_l5.py 里的任何解析 / CPM 实现：从 `tutorial/flow-l2-l5.mmd`
 原文重新解析节点 / 泳道 / 工期 / 依赖（级内实线 + 级间虚线计入 CPM，回流点线不计），用另一套
 算法（逐轮松弛到不动点，而不是 Kahn 拓扑序）重算 ES/EF/LS/LF/浮动，再逐节点和 mmd 里写的
 数值比对；关键路径「节点集合」与注释、class critical、linkStyle 四方对账。最后查 PNG 尺寸 /
@@ -10,9 +10,9 @@
 
 一条命令（在仓库根目录）：
 
-    python3 manual/shots/check_aon_l2_l5.py          # 人看的对账表
-    python3 manual/shots/check_aon_l2_l5.py -q       # 只留结论与失败
-    python3 manual/shots/check_aon_l2_l5.py --no-ocr # 环境没有 tesseract 时跳过 OCR
+    python3 tutorial/shots/check_aon_l2_l5.py          # 人看的对账表
+    python3 tutorial/shots/check_aon_l2_l5.py -q       # 只留结论与失败
+    python3 tutorial/shots/check_aon_l2_l5.py --no-ocr # 环境没有 tesseract 时跳过 OCR
 
 退出码 0 = 通过；1 = 有断言失败（明细打在 stderr）。
 依赖：python3 + ImageMagick(convert/identify)；OCR 可选，需 tesseract（eng 语言包即可）。
@@ -27,7 +27,7 @@ import sys
 import tempfile
 from pathlib import Path
 
-HERE = Path(__file__).resolve().parent      # manual/shots
+HERE = Path(__file__).resolve().parent      # tutorial/shots
 REPO = HERE.parents[1]                      # 仓库根目录
 MMD = REPO / "manual" / "flow-l2-l5.mmd"
 PNG = REPO / "manual" / "images" / "aon-l2-l5.png"

@@ -1,12 +1,12 @@
 # DSWS v2 演示视频逐段标注
 #
-# 视频：deliverable/v2/DSWS-v2-original-ui-demo.mp4
+# 视频：materials/deliverable/v2/DSWS-v2-original-ui-demo.mp4
 # 来源：Playwright 驱动系统 Chrome 操作云端 v2 前端（真实 SSE，无 mock）
 # 分辨率：1920x1080 / 30fps / 46.27s
 # 录制时间：2026-11-06（原版界面切换 + 2SQL 修复之后）；2026-11-09 补录校正段、叠加功能角标，并改为验收版片头/片尾
 # 时间码为近似值（按画面切换估算）
 
-video: deliverable/v2/DSWS-v2-original-ui-demo.mp4
+video: materials/deliverable/v2/DSWS-v2-original-ui-demo.mp4
 source: http://8.155.135.97:5051
 duration: 61.27s
 resolution: 1920x1080
@@ -69,15 +69,15 @@ segments:
     content: "验证完成：原版界面已恢复、「教学版」字样已移除；12 节点真实执行；商品级/品类级排名直接成功；UNION 仍被策略拒绝；旧实例 :5050 仍 healthy。"
 
 evidence:
-  success_sse: deliverable/v2/evidence/v2-fixed-query.sse
-  product_ranking_sse: deliverable/v2/evidence/v2-product-ranking.sse
-  correction_success_sse: deliverable/v2/evidence/v2-correct-success.sse
-  natural_correction_success_sse: deliverable/v2/evidence/v2-natural-correct-success.sse
+  success_sse: materials/deliverable/v2/evidence/v2-fixed-query.sse
+  product_ranking_sse: materials/deliverable/v2/evidence/v2-product-ranking.sse
+  correction_success_sse: materials/deliverable/v2/evidence/v2-correct-success.sse
+  natural_correction_success_sse: materials/deliverable/v2/evidence/v2-natural-correct-success.sse
   screenshots:
-    - deliverable/v2/screenshots/v2-idle-1920x1080.png
-    - deliverable/v2/screenshots/v2-query-result-1920x1080.png
-    - deliverable/v2/screenshots/v2-product-ranking-result-1920x1080.png
-    - deliverable/v2/screenshots/v2-union-rejected-1920x1080.png
+    - materials/deliverable/v2/screenshots/v2-idle-1920x1080.png
+    - materials/deliverable/v2/screenshots/v2-query-result-1920x1080.png
+    - materials/deliverable/v2/screenshots/v2-product-ranking-result-1920x1080.png
+    - materials/deliverable/v2/screenshots/v2-union-rejected-1920x1080.png
 
 notes:
   - "视频录制于 2026-11-06，界面已换回原版 shopkeeper-agent，后端仍是修复后的 v2。"

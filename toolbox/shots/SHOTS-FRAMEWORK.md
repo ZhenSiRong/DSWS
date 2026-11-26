@@ -7,7 +7,7 @@
 Chrome 截图 → OCR/对账 → 清栈」。抽成一个 **587 行**框架 + 每页一份 JSON 配置：
 公共能力只维护一份，一页要什么写成数据。旧脚本**不删、不改**，留作历史与重栈页实现。
 
-## 配置 schema（`manual/shots/captures/<page>.json`）
+## 配置 schema（`tutorial/shots/captures/<page>.json`）
 
 ```json
 {
@@ -15,7 +15,7 @@ Chrome 截图 → OCR/对账 → 清栈」。抽成一个 **587 行**框架 + �
   "output": "/tmp/shots-demo/page-19-policy.png",
   "stack": {"mode": "none|mysql|full", "project": "shots-page-19",
             "env_ports": {"MYSQL_HOST_PORT": 13337}, "exec_replace": [["127.0.0.1:8080", "127.0.0.1:18077"]]},
-  "embed": {"path": "manual/page-19.md", "image": "images/page-19-policy.png",
+  "embed": {"path": "tutorial/page-19.md", "image": "images/page-19-policy.png",
             "alt": "…", "anchor": "## 对账", "position": "before", "mode": "verify|replace|off"},
   "ocr_keywords": ["36/36", "S5 PASS"],
   "panels": [{"heading": "终端 · 第 2 步：…",
@@ -32,10 +32,10 @@ Chrome 截图 → OCR/对账 → 清栈」。抽成一个 **587 行**框架 + �
 
 ## 新增一页要做的 3 步
 
-1. 从 `manual/page-NN.md`「## 动手」抄命令原文、「## 你应该看到」抄期望行，写
-   `manual/shots/captures/page-NN.json`（离线页 `stack.mode=none`，输出先指 `/tmp`）。
-2. `python3 manual/shots/render_page_shots.py page-NN --dry-run` 查步骤与执行替身，再真跑去掉 `--dry-run`。
-3. 自检全绿后把 `output` 改回 `manual/images/page-NN-<slug>.png`、`embed` 改 `replace`，重跑并提交。
+1. 从 `tutorial/page-NN.md`「## 动手」抄命令原文、「## 你应该看到」抄期望行，写
+   `tutorial/shots/captures/page-NN.json`（离线页 `stack.mode=none`，输出先指 `/tmp`）。
+2. `python3 tutorial/shots/render_page_shots.py page-NN --dry-run` 查步骤与执行替身，再真跑去掉 `--dry-run`。
+3. 自检全绿后把 `output` 改回 `tutorial/images/page-NN-<slug>.png`、`embed` 改 `replace`，重跑并提交。
 ## 与旧脚本的关系
 
 `term_render.py` 仍被本框架 import，复用 CSS/字体/HTML 行渲染；`render_l2/l3/l4_pages.py`

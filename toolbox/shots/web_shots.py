@@ -5,26 +5,26 @@
 
 在仓库根目录一条命令重跑：
 
-    python3 manual/shots/web_shots.py
+    python3 tutorial/shots/web_shots.py
 
 输出：
 
-    manual/images/page-09-browser-ok.png   http://127.0.0.1:8081 点过「问一句」、结果区 41099.5
-    manual/images/page-09-no-nginx.png     删掉 nginx 容器后再打开 8081，Chrome 的 ERR_CONNECTION_REFUSED
+    tutorial/images/page-09-browser-ok.png   http://127.0.0.1:8081 点过「问一句」、结果区 41099.5
+    tutorial/images/page-09-no-nginx.png     删掉 nginx 容器后再打开 8081，Chrome 的 ERR_CONNECTION_REFUSED
 
 它做四件事：
 
-1. 在 /tmp 建一个**临时工作区**：软链 `backend/`（复用仓库现成的 venv），拷入
-   `fixtures/dw.sql` 和 `.env.example`，写 `lab/app.py`（第 3–8 页产物的最终形态；
+1. 在 /tmp 建一个**临时工作区**：软链 `system/backend/`（复用仓库现成的 venv），拷入
+   `system/fixtures/dw.sql` 和 `.env.example`，写 `lab/app.py`（第 3–8 页产物的最终形态；
    直接复用 `term_render.py` 里组装好的 `APP_PAGE_08`，避免两处 app.py 漂移），
    再逐字写入第 9 页的 `lab/default.conf` 和 `lab/index.html`。
    页面命令里全是相对路径，在临时工作区里逐字执行，所以图里不会出现
    `/home/...` 这类绝对路径。
 2. 起三层环境，端口/容器名与第 9 页一致：`shots-web-mysql`（`-p 127.0.0.1:3307:3306`，
-   挂 `fixtures/dw.sql`）→ uvicorn `--host 0.0.0.0 --port 8000` →
+   挂 `system/fixtures/dw.sql`）→ uvicorn `--host 0.0.0.0 --port 8000` →
    `shots-web-nginx`（`-p 127.0.0.1:8081:80`，`--add-host host.docker.internal:host-gateway`，
    挂 default.conf 和 index.html；镜像名与第 9 页一样从 `.env.example` 的 `NGINX_IMAGE` 读）。
-3. 浏览器自动化：本机没有 Playwright 自带浏览器，用 `frontend/node_modules/playwright-core`
+3. 浏览器自动化：本机没有 Playwright 自带浏览器，用 `system/frontend/node_modules/playwright-core`
    驱动 `/usr/bin/google-chrome`（`executablePath`）。视口 1100×720、
    `deviceScaleFactor=1`（1:1 像素）：
    成功图 = 打开 8081 → 核对输入框默认值「华北销售额」→ 点「问一句」→
@@ -39,7 +39,7 @@
 端口只用 3307 / 8000 / 8081；8100 / 13306 / 18081 是别的栈在用，本脚本不碰。
 
 依赖（本机已装，不新装）：docker、google-chrome、ImageMagick、node、
-仓库的 `backend/.venv` 与 `frontend/node_modules/playwright-core`。
+仓库的 `system/backend/.venv` 与 `system/frontend/node_modules/playwright-core`。
 """
 
 from __future__ import annotations
@@ -63,7 +63,7 @@ from pathlib import Path
 
 # ---------------------------------------------------------------- 常量
 
-HERE = Path(__file__).resolve().parent          # manual/shots
+HERE = Path(__file__).resolve().parent          # tutorial/shots
 REPO = HERE.parents[1]                          # 仓库根目录
 IMAGES = REPO / "manual" / "images"
 PLAYWRIGHT_CORE = REPO / "frontend" / "node_modules" / "playwright-core"
@@ -97,7 +97,7 @@ def load_app_py() -> str:
     if spec is None or spec.loader is None:
         raise RuntimeError(f"无法加载 {path}")
     module = importlib.util.module_from_spec(spec)
-    # 导入只是借它的 APP_PAGE_08，不在 manual/shots/ 下留 __pycache__。
+    # 导入只是借它的 APP_PAGE_08，不在 tutorial/shots/ 下留 __pycache__。
     previous = sys.dont_write_bytecode
     sys.dont_write_bytecode = True
     try:
@@ -113,7 +113,7 @@ def load_app_py() -> str:
 
 
 # ---------------------------------------------------------------- 第 9 页逐字代码
-# 与 manual/page-09.md「动手」第 2 步的两段代码逐字一致。
+# 与 tutorial/page-09.md「动手」第 2 步的两段代码逐字一致。
 
 DEFAULT_CONF = """\
 server {
@@ -147,7 +147,7 @@ function ask(question) {
 """
 
 # ---------------------------------------------------------------- 浏览器脚本
-# 由本脚本写进临时工作区再 `node` 执行（playwright-core 在 frontend/node_modules，
+# 由本脚本写进临时工作区再 `node` 执行（playwright-core 在 system/frontend/node_modules，
 # 通过 NODE_PATH 找到；本机没有 Playwright 自带浏览器，用系统 Chrome）。
 # 两个阶段都用同一个 1100×720、deviceScaleFactor=1 的视口：
 #   ok  —— 打开 8081，核对默认问题，点「问一句」，等 #out == 41099.5，截图；
@@ -340,7 +340,7 @@ class UvicornServer:
 
     @property
     def command(self) -> str:
-        return f"backend/.venv/bin/python -m uvicorn lab.app:app --host 0.0.0.0 --port {API_PORT}"
+        return f"system/backend/.venv/bin/python -m uvicorn lab.app:app --host 0.0.0.0 --port {API_PORT}"
 
     def start(self, timeout: float = 60.0) -> None:
         self.lines = []
@@ -411,7 +411,7 @@ def preflight() -> None:
     if missing:
         sys.exit(f"缺少依赖：{', '.join(missing)}（本脚本不装新依赖）")
     if not (PLAYWRIGHT_CORE / "package.json").is_file():
-        sys.exit(f"找不到 {PLAYWRIGHT_CORE}（需要 frontend/node_modules/playwright-core）")
+        sys.exit(f"找不到 {PLAYWRIGHT_CORE}（需要 system/frontend/node_modules/playwright-core）")
     for path in (REPO / "backend" / ".venv" / "bin" / "python", REPO / "fixtures" / "dw.sql"):
         if not path.exists():
             sys.exit(f"缺少仓库产物：{path}")
@@ -464,7 +464,7 @@ def start_mysql(work: Path) -> None:
         return proc.returncode == 0 and proc.stdout.strip() == "115"
 
     try:
-        wait_until("MySQL 灌完 fixtures/dw.sql（fact_order = 115）", data_ready,
+        wait_until("MySQL 灌完 system/fixtures/dw.sql（fact_order = 115）", data_ready,
                    timeout=300, interval=1.0)
     except RuntimeError:
         logs = subprocess.run(
@@ -511,7 +511,7 @@ def run_browser(work: Path, phase: str, json_name: str, png: Path,
                 timeout: float = 180.0) -> dict:
     json_path = work / json_name
     env = os.environ.copy()
-    env["NODE_PATH"] = str(PLAYWRIGHT_CORE.parent)   # frontend/node_modules
+    env["NODE_PATH"] = str(PLAYWRIGHT_CORE.parent)   # system/frontend/node_modules
     env["LANGUAGE"] = "zh_CN.UTF-8"                  # Chrome 界面/错误页用中文
     env["LANG"] = "zh_CN.UTF-8"
     cmd = ["node", str(work / "browser_shot.cjs"), phase, str(json_path), str(png)]
@@ -617,12 +617,12 @@ def main() -> int:
         work = prepare_workdir()
         say(f"临时工作区：{work}（命令里的相对路径都在这里，图里不出现绝对路径）")
         say("    lab/app.py = term_render.py 的 APP_PAGE_08（第 3–8 页产物的最终形态）")
-        say("    lab/default.conf、lab/index.html = manual/page-09.md 里逐字的那两份")
+        say("    lab/default.conf、lab/index.html = tutorial/page-09.md 里逐字的那两份")
 
         say("")
         say("── 环境 1/3：MySQL 容器 shots-web-mysql（127.0.0.1:3307）──")
         start_mysql(work)
-        say("    ✅ fact_order = 115（fixtures/dw.sql 已灌入）")
+        say("    ✅ fact_order = 115（system/fixtures/dw.sql 已灌入）")
 
         say("")
         say("── 环境 2/3：uvicorn 8000（第 9 页命令：--host 0.0.0.0）──")
@@ -709,7 +709,7 @@ def main() -> int:
             ident = run_cmd(["identify", "-format", "%f  %wx%h", str(path)], timeout=60).stdout
             say(f"  {ident.strip()}")
         say("")
-        say(f"用时 {time.monotonic() - started:.1f}s；重跑：python3 manual/shots/web_shots.py")
+        say(f"用时 {time.monotonic() - started:.1f}s；重跑：python3 tutorial/shots/web_shots.py")
         return 0
     except KeyboardInterrupt:
         say("\n被 Ctrl+C 中断，开始清理……")

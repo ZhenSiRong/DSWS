@@ -2,9 +2,9 @@
 
 > **城市坐标 · L4 城市安防 · 安检**｜36 条夹带全拦、11 条正常零误杀：安检口按规矩放行。
 
-> 前置：L4（守）第二页。本页一条服务都不用——判据只读 `contracts/`、`fixtures/`，第 2 步还读 S4 基线 `backend/tests/generate/baseline.yaml`；
+> 前置：L4（守）第二页。本页一条服务都不用——判据只读 `system/contracts/`、`system/fixtures/`，第 2 步还读 S4 基线 `system/backend/tests/generate/baseline.yaml`；
 >
-> 不访问网络，不需要 MySQL、`.env`、模型 key，但要用 `backend/.venv`（第 0 页 `make install` 建好，缺了先回第 0 页补）。命令都在仓库根目录、同一个终端里整段连续执行；括号是子 shell，跑完你还在仓库根目录。
+> 不访问网络，不需要 MySQL、`.env`、模型 key，但要用 `system/backend/.venv`（第 0 页 `make install` 建好，缺了先回第 0 页补）。命令都在仓库根目录、同一个终端里整段连续执行；括号是子 shell，跑完你还在仓库根目录。
 >
 > 第 18 页守的是账号（数据库层写不了），本页守的是策略（危险 SQL 根本到不了执行）。
 
@@ -21,7 +21,7 @@
 ## 猜一猜
 
 1. 36 条注入里，靠“整类拒”（集合运算 / 可执行注释 / 危险函数——构造本身不许）挡下的有几条：4 条、10 条、还是 36 条？
-2. 把 `contracts/sql.policy.yaml` 的 `forbid_set_operations` 关掉，重跑判据会漏几条？那 11 条正常 SQL 会不会跟着被误杀？
+2. 把 `system/contracts/sql.policy.yaml` 的 `forbid_set_operations` 关掉，重跑判据会漏几条？那 11 条正常 SQL 会不会跟着被误杀？
 
 ## 动手
 
@@ -29,14 +29,14 @@
 
 <!-- verify: p19-lab-save -->
 ```bash
-scripts/lab save p19-before
+toolbox/scripts/lab save p19-before
 ```
 
 **第 2 步：跑离线门禁。** 三段各是一个判据：36 条注入必须按**精确原因码**全拒、11 条正常 SQL 必须全放、S4 基线里真产出 SQL 的 8 题必须全部通过策略（另 2 题在生成阶段就拒答，没有 SQL 可过）。退出码 0 才算过：
 
 <!-- verify: p19-security-check -->
 ```bash
-(cd backend && .venv/bin/python -m app.scripts.security --check)
+(cd system/backend && .venv/bin/python -m app.scripts.security --check)
 ```
 
 **第 3 步：打判定表，看每条注入被归到哪个原因码。** 表共 47 行（36 拒 + 11 放；看全表就把下面的 `grep` 那段去掉）；管道里的 `grep` 只留**三类构造**（多语句 / 可执行注释 / 集合运算）。
@@ -47,12 +47,12 @@ scripts/lab save p19-before
 
 <!-- verify: p19-security-corpus -->
 ```bash
-(cd backend && PYTHONUNBUFFERED=1 .venv/bin/python -m app.scripts.security --corpus) 2>&1 | grep -E "multi_statement|executable_comment|union|语料："
+(cd system/backend && PYTHONUNBUFFERED=1 .venv/bin/python -m app.scripts.security --corpus) 2>&1 | grep -E "multi_statement|executable_comment|union|语料："
 ```
 
-**第 4 步（可选）：`make stage5`。** 前提：本机有 `uv` 且 `backend/.venv` 依赖已装好；不需要 MySQL / `.env` / 模型 key。
+**第 4 步（可选）：`make stage5`。** 前提：本机有 `uv` 且 `system/backend/.venv` 依赖已装好；不需要 MySQL / `.env` / 模型 key。
 
-**先自查**：`(cd backend && .venv/bin/python -c "import app, app.security") && command -v uv`（退出码 0 才继续；非 0 就跳过本步，**跳过不影响第 2 步的判据**：第 2、3 步只用 `.venv`，不经过 `uv`）。
+**先自查**：`(cd system/backend && .venv/bin/python -c "import app, app.security") && command -v uv`（退出码 0 才继续；非 0 就跳过本步，**跳过不影响第 2 步的判据**：第 2、3 步只用 `.venv`，不经过 `uv`）。
 
 **跑多久**：本机实测约 44 秒（先跑安全测试 179 passed + 2 skipped，再跑全后端 843 条 = 813 passed + 30 skipped、约 40 秒），末行 `S5 PASS`。**两个 S5 PASS 不要混**：`security --check` 与 `make stage5` 都会印它，前者是策略检查，后者是整层门禁；看到前者不等于 stage5 全跑。
 
@@ -61,9 +61,9 @@ scripts/lab save p19-before
 make stage5
 ```
 
-**Makefile 直接调的 `stage*` 全走 `uv run --frozen`，不会改 `backend/uv.lock`；只有脚本里的裸 `uv run`（`make stage3`、`make stage0-ui`、`make stage6-ui`）或手敲 `uv run` 会。**
+**Makefile 直接调的 `stage*` 全走 `uv run --frozen`，不会改 `system/backend/uv.lock`；只有脚本里的裸 `uv run`（`make stage3`、`make stage0-ui`、`make stage6-ui`）或手敲 `uv run` 会。**
 
-**lock 变脏怎么办**：它不在 `lab` 白名单里，`scripts/lab reset` 不管它——若 `git status` 里确实出现 `backend/uv.lock` 变脏（本机实测 1,250 行 registry / packages 地址从 `pypi.org` 换成镜像源），用 `git checkout -- backend/uv.lock` 还原。
+**lock 变脏怎么办**：它不在 `lab` 白名单里，`toolbox/scripts/lab reset` 不管它——若 `git status` 里确实出现 `system/backend/uv.lock` 变脏（本机实测 1,250 行 registry / packages 地址从 `pypi.org` 换成镜像源），用 `git checkout -- system/backend/uv.lock` 还原。
 
 ## 你应该看到
 
@@ -105,8 +105,8 @@ S5 PASS
 - **零误杀为什么是硬要求。** 门禁有两种错：漏拦（放行注入）和误杀（正常查询被拒）。误杀让问数直接失败，还会训练用户去关规则——最后回到没有防线。
     - 11 条 allow 语料专钉容易误杀的地方：字符串里的分号 `'a;b'`、块注释里的 `; DROP`（服务端不执行，策略也不能当第二条语句）、中文投影别名 `ORDER BY 销量`、`SELECT *`、子查询。
     - 策略“先 AST 后词法”，就是为了不看见分号就拒。
-- **原因码是契约。** `--check` 不只要求“拒”，还要求原因码精确匹配（`backend/app/scripts/security.py` 逐条比对）；
-    - 码表在 `contracts/sql.policy.yaml` 的 `errors.reason_codes`，执行器对外只暴露通道码 `SQL_REJECTED`，细码放在 `reason_code`。
+- **原因码是契约。** `--check` 不只要求“拒”，还要求原因码精确匹配（`system/backend/app/scripts/security.py` 逐条比对）；
+    - 码表在 `system/contracts/sql.policy.yaml` 的 `errors.reason_codes`，执行器对外只暴露通道码 `SQL_REJECTED`，细码放在 `reason_code`。
     - 拆一刀实测“拒仍是拒、码变了”也会红——下游按码决定重试与展示（第 16、17 页），码漂移就是事故。
 - **和第 16 页的分工。** 第 16 页的静态校验问“对不对”（列、指标、值域、行数、排序），本页策略问“危不危险”（单语句、只读、集合运算、注释、危险函数、表白名单）；
     - 两者都在连库前，是两层网。
@@ -116,13 +116,13 @@ S5 PASS
 
 ## 拆一刀
 
-打开 `contracts/sql.policy.yaml`，找到 `statement:` 段里 L31 的 `forbid_set_operations: true`（2 空格缩进；4 行后还有一个 `forbid_executable_comments: true`，别改错），只把这处改成 `false`。
+打开 `system/contracts/sql.policy.yaml`，找到 `statement:` 段里 L31 的 `forbid_set_operations: true`（2 空格缩进；4 行后还有一个 `forbid_executable_comments: true`，别改错），只把这处改成 `false`。
 
 **怎么验**：重跑第 2 步的判据（`tail -8` 只看结尾；管道末尾是 `tail`，门禁本体的退出码靠命令里的 `gate=` 打出来）：
 
 <!-- verify: p19-ablation-check -->
 ```bash
-(cd backend && PYTHONUNBUFFERED=1 .venv/bin/python -m app.scripts.security --check) 2>&1 | tail -8; echo "gate=${PIPESTATUS[0]}"
+(cd system/backend && PYTHONUNBUFFERED=1 .venv/bin/python -m app.scripts.security --check) 2>&1 | tail -8; echo "gate=${PIPESTATUS[0]}"
 ```
 
 ```text
@@ -143,12 +143,12 @@ gate=1
 
 **再确认一次不误杀**：11/11 与 8/8 一位没动。
 
-还原并回绿（`reset` 会先拍一张 `pre-reset-<时间戳>` 安全快照，只贴末两行；这里的“完全一致”只算 `lab` 白名单文件——第 4 步跑过的话 `backend/uv.lock` 仍要按上面单独还原）：
+还原并回绿（`reset` 会先拍一张 `pre-reset-<时间戳>` 安全快照，只贴末两行；这里的“完全一致”只算 `lab` 白名单文件——第 4 步跑过的话 `system/backend/uv.lock` 仍要按上面单独还原）：
 
 <!-- verify: p19-lab-reset -->
 ```bash
-scripts/lab reset p19-before --yes
-(cd backend && .venv/bin/python -m app.scripts.security --check | tail -1)
+toolbox/scripts/lab reset p19-before --yes
+(cd system/backend && .venv/bin/python -m app.scripts.security --check | tail -1)
 ```
 
 ```text
@@ -158,6 +158,6 @@ S5 PASS
 
 结论：**整类拒的开关拆掉，门禁都会红，但红法不同——集合运算丢的是“原因码”，可执行注释丢的是“执行层”，后者才是真正的事故。**
 
-**回绿后还想看“真的漏”**：把 `forbid_executable_comments` 改成 `false` 重跑同一条判据，两行会变成 `竟然被放行了`（`/*! ... */` 服务端会执行、解析器看不见，没有第二道网）；看完再 `scripts/lab reset p19-before --yes` 回绿。
+**回绿后还想看“真的漏”**：把 `forbid_executable_comments` 改成 `false` 重跑同一条判据，两行会变成 `竟然被放行了`（`/*! ... */` 服务端会执行、解析器看不见，没有第二道网）；看完再 `toolbox/scripts/lab reset p19-before --yes` 回绿。
 
 **为什么**：契约在，判定就得同时满足“拒”和“码对”——这正是白名单 + 类别规则比“黑名单逐个补”可靠的原因。

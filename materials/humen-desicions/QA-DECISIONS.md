@@ -14,7 +14,7 @@
 
 | 问题 | 决定 |
 |---|---|
-| 沉淀载体 | 仓库 `AGENTS.md`（导航指针）+ `manual/TRAPS.md`（陷阱表）+ 全局 skill `tutorial-production` |
+| 沉淀载体 | 仓库 `AGENTS.md`（导航指针）+ `tutorial/TRAPS.md`（陷阱表）+ 全局 skill `tutorial-production` |
 | 自动化护栏 | `uv run --frozen` + `make audit` + `.githooks/pre-commit` |
 | 重放 | 固定 `REPLAY-TEMPLATE.md`（六段 + 8 类必查） |
 | 截图工具 | 抽公共 `render_page_shots.py` 框架（旧 4 套退役） |
@@ -40,10 +40,10 @@
 | LangGraph 缺口 | 在 p21「对账」后加 **「深入探讨：12 个节点就是一张 LangGraph 图」**（H3，不破六段） |
 | 自校验/自纠错 | README 矩阵标 **★★★**（书里最深） |
 | 前端技术栈 | p23 补事实：成熟版 React 19 + Tailwind 3.4.17；教学版 4.3.4 |
-| 设计文档数量 | 从 78 页原版精选 **30 图一图一页 → `design/design-doc-30.pdf`（32 页）** |
+| 设计文档数量 | 从 78 页原版精选 **30 图一图一页 → `materials/design/design-doc-30.pdf`（32 页）** |
 | 矩阵放哪 | README 表 + OVERVIEW 答辩一页（Q6 A） |
 
-落地：commit `fe4c3f0`、`e92be50`；[`manual/README.md`](../manual/README.md) PRD 矩阵、[`manual/OVERVIEW.md`](../manual/OVERVIEW.md) 答辩一页、[`manual/page-21.md`](../manual/page-21.md) 深入探讨。
+落地：commit `fe4c3f0`、`e92be50`；[`tutorial/README.md`](../manual/README.md) PRD 矩阵、[`tutorial/OVERVIEW.md`](../manual/OVERVIEW.md) 答辩一页、[`tutorial/page-21.md`](../manual/page-21.md) 深入探讨。
 
 ## R4 · 23 → 24 页 + 城市图/AON（2026-11-20）→ D50
 
@@ -57,18 +57,18 @@
 | 城市图 | 旧 L1/23 页图冻结；`data-24.json` + `city-map-24.png`（Q6 a） |
 | AON | L2–L5 **合并成一张**（18 节点/330 分钟） |
 
-落地：commit `9e2fb3f`；[`manual/page-23.md`](../manual/page-23.md)、[`humen-desicions/09-ablation-course.md`](09-ablation-course.md) D50。
+落地：commit `9e2fb3f`；[`tutorial/page-23.md`](../manual/page-23.md)、[`materials/humen-desicions/09-ablation-course.md`](09-ablation-course.md) D50。
 
 ## R5 · 装修对象：成熟版，不是重建版（2026-11-20/21）→ D51
 
 | 问题 | 决定 |
 |---|---|
-| 装修用什么前端 | **成熟版原版 `shopkeeper-agent`**（`deliverable/v2/original-frontend/`，React 19 + Tailwind 3.4.17，dist 现成），不是教学版重建前端 |
+| 装修用什么前端 | **成熟版原版 `shopkeeper-agent`**（`materials/deliverable/v2/original-frontend/`，React 19 + Tailwind 3.4.17，dist 现成），不是教学版重建前端 |
 | 教学版定位 | **脚手架/对照**（compose 默认 8080，带 40 条协议测试；成熟版不带测试） |
 | 演示方式 | 8088 起成熟版（nginx 挂 dist + 原版 nginx.conf，进 compose 网络）；8080 教学版对照 |
 | 拆一刀 | 8088 成熟版换回 17 行 HTML，同一问题仍 `41099.5` |
 
-落地：commit `47e9b6f`、`7891ff1`；[`manual/review/p23-mature-runbook.md`](../manual/review/p23-mature-runbook.md)、[`page-23-mature.png`](../manual/images/page-23-mature.png)。
+落地：commit `47e9b6f`、`7891ff1`；[`tutorial/review/p23-mature-runbook.md`](../manual/review/p23-mature-runbook.md)、[`page-23-mature.png`](../manual/images/page-23-mature.png)。
 
 ## R6 · 执行轨迹可视化与归属（2026-11-21）→ D52
 
@@ -93,7 +93,7 @@
 | 放哪 | 新附录 `appendix/gui-debugging.md`（不算 24 页）；p17 只加 1 行指针，正文不加图 |
 | 实测状态 | VizTracer ✅、LangGraph Studio ✅（远程前端 + 代理变量坑）、Zed ⚠️ 配置交付/未实拍（无窗口自动化） |
 
-落地：附录 [`manual/appendix/gui-debugging.md`](../manual/appendix/gui-debugging.md)、图 `manual/images/gui-viztracer.png` / `gui-langgraph-studio-full.png` / `gui-langgraph-studio-graph.png`；证据 `manual/review/{viztracer,langgraph-studio,zed-debug}/`；p17 指针 + README 附录入口。
+落地：附录 [`tutorial/appendix/gui-debugging.md`](../manual/appendix/gui-debugging.md)、图 `tutorial/images/gui-viztracer.png` / `gui-langgraph-studio-full.png` / `gui-langgraph-studio-graph.png`；证据 `tutorial/review/{viztracer,langgraph-studio,zed-debug}/`；p17 指针 + README 附录入口。
 
 ## R8 · 工具原子化 + 版本发布（2026-11-21）
 
@@ -114,7 +114,7 @@
 | 问题 | 决定 |
 |---|---|
 | tag | `v1.0.0` = 当前 HEAD；p17 改造后 `v1.1.0` |
-| 未提交草稿 | tag 前 revert `manual/page-17.md`（+9/−1） |
+| 未提交草稿 | tag 前 revert `tutorial/page-17.md`（+9/−1） |
 | 分支 | 新分支 `continue-iterate`（用户口述 continue iterate；可改 `continue/iterate`）；`main` 不动 |
 | push | `continue-iterate` + `v1.0.0` tag；不推 main |
 | 发布包 | manual-24p.zip + design-doc-30.pdf + design-doc.pdf + dev-book.pdf + SHA256SUMS + RELEASE-NOTES.md |
@@ -126,12 +126,12 @@
 | 轮 | 角色 | 产出/结果 |
 |---|---|---|
 | 1 | 写手 | p17 134 行（撤 `pdb_step_demo.py`，第 5 步改 viztracer/pdb + 项目自带 pytest；第 6 步"自己采多次"）；附录重构为 9 张工具卡 + 选工具三问；page-00 预装；6 个夹具加"教师/CI"标注 |
-| 2 | 独立重放者 | 12 条问题（0 高/4 中/8 低），报告 `review/replay-page-17-v2.md` |
-| 3 | 修复者 | 12 条全修，报告 `review/fix-page-17-v2.md` |
-| 4 | 对抗审查者 | 自己复跑全部命令，11 条新问题（0 高/3 中/8 低），报告 `review/adversarial-page-17-v2.md`；结论"v1.1.0 可发布（需修 3 中）" |
-| 5 | 收口 | 11 条全修 + 附录 Studio 卡依赖注入修复，报告 `review/fix-page-17-v3.md` |
+| 2 | 独立重放者 | 12 条问题（0 高/4 中/8 低），报告 `materials/review/replay-page-17-v2.md` |
+| 3 | 修复者 | 12 条全修，报告 `materials/review/fix-page-17-v2.md` |
+| 4 | 对抗审查者 | 自己复跑全部命令，11 条新问题（0 高/3 中/8 低），报告 `materials/review/adversarial-page-17-v2.md`；结论"v1.1.0 可发布（需修 3 中）" |
+| 5 | 收口 | 11 条全修 + 附录 Studio 卡依赖注入修复，报告 `materials/review/fix-page-17-v3.md` |
 
-**终验**：`audit_book` 24/24、`make audit` 4/4、p17 离线三判据全绿（14 passed / S6 PASS / probe mismatch 0）、p17 134 行六段、`backend/uv.lock` 干净。
+**终验**：`audit_book` 24/24、`make audit` 4/4、p17 离线三判据全绿（14 passed / S6 PASS / probe mismatch 0）、p17 134 行六段、`system/backend/uv.lock` 干净。
 
 **残留（如实）**：p17 第 6 步真模型采样未跑（需栈+key）；py-spy `-p` attach 受 `ptrace_scope=1` 限制未实跑；Studio/Zed GUI 未实拍；curl/DevTools 完整链路未跑。
 
@@ -141,7 +141,7 @@
 
 - **p17「学习者自录证据」方案**（R6-Q2）：初步方向 = 三层脚手架
   1. 一条命令自己录：`curl -sN … /api/query | tee /tmp/correction.sse`，用 `grep` 对 `validate_sql:error → correct_sql:success → validate_sql:success`；
-  2. 自己改契约触发/关闭：`contracts/errors.yaml` 的 `max_attempts` 改 0 → `correct_sql` 跳过 → 观察差异 → 还原；
+  2. 自己改契约触发/关闭：`system/contracts/errors.yaml` 的 `max_attempts` 改 0 → `correct_sql` 跳过 → 观察差异 → 还原；
   3. 工具化附录：`record_sse` / pdb / `sitecustomize + settrace` 三种录制法 + 一条命令渲染对照 GIF（复用 `render_pdb_step.py` / `render_exec_trace.py`）。
   待用户确认后再进 p17/附录，并升格为 D 号。
 
@@ -149,4 +149,4 @@
 
 - 长期决策：[`09-ablation-course.md`](09-ablation-course.md)（D 系列，最新 D52）
 - 索引：[`DECISIONS.md`](DECISIONS.md)
-- 教材验收：[`manual/ACCEPTANCE.md`](../manual/ACCEPTANCE.md)
+- 教材验收：[`tutorial/ACCEPTANCE.md`](../manual/ACCEPTANCE.md)

@@ -17,8 +17,8 @@ from __future__ import annotations
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-SCRIPTS_DIR = ROOT / "scripts"
-GITATTRIBUTES = ROOT / ".gitattributes"
+SCRIPTS_DIR = ROOT.parent / "toolbox" / "scripts"
+GITATTRIBUTES = ROOT.parent / ".gitattributes"
 
 
 def _rules() -> list[str]:

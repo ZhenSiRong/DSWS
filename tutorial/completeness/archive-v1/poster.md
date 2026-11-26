@@ -1,11 +1,11 @@
 # 完备性证明海报 · 源稿
 
-> 依据 `humen-desicions/09-ablation-course.md` 的 **D38**（C4 分层插槽 + 每层一张「责任 × 证据」矩阵 + 三态图例 + 完备判据）。
-> 依据 `manual/README.md`（十个活动与 AON 节点编号 A0–A9）、`manual/page-00.md`–`page-09.md`（判据文案与真实输出）、`manual/flow.mmd`（活动编号与名称）。
+> 依据 `materials/humen-desicions/09-ablation-course.md` 的 **D38**（C4 分层插槽 + 每层一张「责任 × 证据」矩阵 + 三态图例 + 完备判据）。
+> 依据 `tutorial/README.md`（十个活动与 AON 节点编号 A0–A9）、`tutorial/page-00.md`–`page-09.md`（判据文案与真实输出）、`tutorial/flow.mmd`（活动编号与名称）。
 >
 > **两版说明**：`poster-blank.png` 是**空白可打印版**（A4 一页，三态方框 ▢ 留空、矩阵格与证据列留空，供学生打印后自己勾选/填写）；`poster-answer.png` 是**答案版（参考答案）**（A0–A9 全 ■，矩阵填 ■/—，末列写第 0–9 页「你应该看到」的真跑判据）。
 >
-> 渲染：`python3 manual/shots/render_completeness.py`（HTML+CSS → 无头 Chrome 截图；两张都是 2480×3508 = A4 @ 300dpi）。
+> 渲染：`python3 tutorial/shots/render_completeness.py`（HTML+CSS → 无头 Chrome 截图；两张都是 2480×3508 = A4 @ 300dpi）。
 
 ---
 
@@ -102,7 +102,7 @@ L1 的「问数系统」是系统边界（A3–A9），「MySQL（外部）」�
 
 ## 附：口径与交叉复核
 
-- 判据出处：`manual/page-00.md`–`page-09.md` 的「你应该看到」；证据均为真跑输出，未编造数值。版本号、包数量随机器不同，看到同类输出即算对上。
+- 判据出处：`tutorial/page-00.md`–`page-09.md` 的「你应该看到」；证据均为真跑输出，未编造数值。版本号、包数量随机器不同，看到同类输出即算对上。
 - 端口口径：本海报按练本 SPEC 的 **3307 / 8000 / 8081** 书写（第 1/3/9 页）。
-- 交叉复核：本仓库实跑栈的原版界面在 **18081**，端到端同样出 `41099.5`（见 `manual/review/demo-rehearsal.md`）；它不属于学生 A0–A9 的端口口径，故只作交叉证据，不在海报正文出现。
+- 交叉复核：本仓库实跑栈的原版界面在 **18081**，端到端同样出 `41099.5`（见 `tutorial/review/demo-rehearsal.md`）；它不属于学生 A0–A9 的端口口径，故只作交叉证据，不在海报正文出现。
 - D38 第 4 条把「完备性判据」写成三条后括注「四条全绿」；本海报按明确列出的**三条判据**执行（每行 ■、每列 ■、跨层边 + 端到端证据）。

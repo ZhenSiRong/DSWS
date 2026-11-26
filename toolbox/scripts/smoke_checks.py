@@ -2,7 +2,7 @@
 """docker-smoke.sh 的各项检查。
 
 跑在**宿主机**上，只用标准库——宿主机不一定装了后端的依赖，
-但一定有个能跑的 Python（见 scripts/find-python.sh）。
+但一定有个能跑的 Python（见 toolbox/scripts/find-python.sh）。
 
 为什么从 shell 的 heredoc 里搬出来：
 
@@ -248,7 +248,7 @@ def judge_stream(
         + " 秒，但首尾分片只差 "
         + str(round(gap, 3))
         + " 秒。代理很可能开了缓冲，"
-        "请检查 docker/nginx.conf 的 proxy_buffering off",
+        "请检查 system/docker/nginx.conf 的 proxy_buffering off",
     )
 
 
@@ -842,7 +842,7 @@ def check_nginx(config_text: str) -> int:
         print(
             "SSE 会被攒成一个整包再发："
             + "；".join(problems)
-            + "。请检查 docker/nginx.conf 里 location /api/ 的 proxy_buffering off",
+            + "。请检查 system/docker/nginx.conf 里 location /api/ 的 proxy_buffering off",
             file=sys.stderr,
         )
         return 1

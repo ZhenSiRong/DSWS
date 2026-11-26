@@ -4,12 +4,12 @@
 
 一条命令重跑全部图（在仓库根目录）：
 
-    python3 manual/shots/render_l4_pages.py
+    python3 tutorial/shots/render_l4_pages.py
 
 做五件事：
 
 1. 在 `/tmp/shots-l4` 建一个**临时副本**（rsync 仓库，排除 `.git` / `.lab` /
-   `node_modules` / 缓存，再把 `frontend/node_modules` 复制进来给 npm test 用）。
+   `node_modules` / 缓存，再把 `system/frontend/node_modules` 复制进来给 npm test 用）。
    - 副本 `.env` 的 5 个 host 端口改成隔离端口：mysql 13347 / ES 19247 /
      Qdrant 16367 / backend 18147 / frontend 18087，`FRONTEND_BIND=127.0.0.1`；
    - 副本 `compose.yaml` 只加两类**隔离运行所需**的行：`container_name:
@@ -39,24 +39,24 @@
 
 输出（只写这 8 个文件）：
 
-    manual/images/page-13-ps.png         第 13 页 `docker compose ps` / `ps -a`（5 healthy + init Exited(0)）
-    manual/images/page-13-smoke.png      第 13 页 `make docker-smoke` 8 步 PASS
-    manual/images/page-18-account.png    第 18 页 开通→PASS(1142)；GRANT ALL→FAIL: 3 项问题
-    manual/images/page-19-policy.png     第 19 页 36/36 + 11/11 + 8/8 + S5 PASS
-    manual/images/page-20-cancel.png     第 20 页 6 passed + 114 passed + S7 SSE RECORD PASS
-    manual/images/page-21-observe.png    第 21 页 12 步 / 16 码 / S7 PASS / 30 passed + 40 passed
-    manual/images/page-22-smoke.png      第 22 页 813 passed, 30 skipped + 40 passed + DOCKER SMOKE PASS
-    manual/images/page-22-ablation.png   第 22 页 L4 级考核：窗口内 GRANT ALL → 第 7 步红
+    tutorial/images/page-13-ps.png         第 13 页 `docker compose ps` / `ps -a`（5 healthy + init Exited(0)）
+    tutorial/images/page-13-smoke.png      第 13 页 `make docker-smoke` 8 步 PASS
+    tutorial/images/page-18-account.png    第 18 页 开通→PASS(1142)；GRANT ALL→FAIL: 3 项问题
+    tutorial/images/page-19-policy.png     第 19 页 36/36 + 11/11 + 8/8 + S5 PASS
+    tutorial/images/page-20-cancel.png     第 20 页 6 passed + 114 passed + S7 SSE RECORD PASS
+    tutorial/images/page-21-observe.png    第 21 页 12 步 / 16 码 / S7 PASS / 30 passed + 40 passed
+    tutorial/images/page-22-smoke.png      第 22 页 813 passed, 30 skipped + 40 passed + DOCKER SMOKE PASS
+    tutorial/images/page-22-ablation.png   第 22 页 L4 级考核：窗口内 GRANT ALL → 第 7 步红
 
 依赖（本机已有，不新装）：docker（compose v2）、rsync、google-chrome、ImageMagick
-convert/identify、仓库自带 `backend/.venv`；OCR 自检可选依赖 tesseract + Pillow
+convert/identify、仓库自带 `system/backend/.venv`；OCR 自检可选依赖 tesseract + Pillow
 （没装就跳过，主对账用渲染前原文完成）。
 
 调试用（不参与正常流程）：
 
-    python3 manual/shots/render_l4_pages.py --keep                 # 留 /tmp/shots-l4 与隔离栈
-    python3 manual/shots/render_l4_pages.py --keep-captures        # 保留 /tmp/shots-l4-captures.json
-    python3 manual/shots/render_l4_pages.py --render-only FILE     # 用捕获缓存只重渲染 + 自检
+    python3 tutorial/shots/render_l4_pages.py --keep                 # 留 /tmp/shots-l4 与隔离栈
+    python3 tutorial/shots/render_l4_pages.py --keep-captures        # 保留 /tmp/shots-l4-captures.json
+    python3 tutorial/shots/render_l4_pages.py --render-only FILE     # 用捕获缓存只重渲染 + 自检
 """
 
 from __future__ import annotations
@@ -82,7 +82,7 @@ from pathlib import Path
 
 # ---------------------------------------------------------------- 常量
 
-HERE = Path(__file__).resolve().parent          # manual/shots
+HERE = Path(__file__).resolve().parent          # tutorial/shots
 REPO = HERE.parents[1]                          # 仓库根目录
 IMAGES = REPO / "manual" / "images"
 PAGE_MD = {
@@ -178,7 +178,7 @@ EMBED_LINES = {
 
 # ---------------------------------------------------------------- 复用 term_render
 
-sys.dont_write_bytecode = True                   # 不在 manual/shots 里写 __pycache__
+sys.dont_write_bytecode = True                   # 不在 tutorial/shots 里写 __pycache__
 sys.path.insert(0, str(HERE))
 import term_render as tr  # noqa: E402
 
@@ -387,7 +387,7 @@ def capture(records: dict, key: str, display_cmd: str, cwd: Path,
     """真跑一条命令：记录「页面原文命令 + 真实输出」，供渲染和自检。"""
     cmd = exec_cmd(display_cmd)
     if with_env and not display_cmd.lstrip().startswith("source "):
-        cmd = f"source scripts/export-docker-env.sh\n{cmd}"
+        cmd = f"source toolbox/scripts/export-docker-env.sh\n{cmd}"
     env_extra = {"COMPOSE_PROJECT_NAME": PROJECT} if smoke else None
     t0 = time.monotonic()
     lines, code = run_pty(cmd, cwd, timeout, allowed, env_extra)
@@ -403,7 +403,7 @@ def capture_quiet(records: dict, key: str, display_cmd: str, cwd: Path,
     """上不了图的辅助命令（快照 / reset / 还原账号），用管道捕获。"""
     cmd = exec_cmd(display_cmd)
     if with_env and not display_cmd.lstrip().startswith("source "):
-        cmd = f"source scripts/export-docker-env.sh\n{cmd}"
+        cmd = f"source toolbox/scripts/export-docker-env.sh\n{cmd}"
     lines, code = run_pipe(cmd, cwd, timeout, allowed)
     records[key] = {"cmd": display_cmd, "lines": lines, "exit": code}
     say(f"    $ {display_cmd}  → exit {code}，{len(lines)} 行")
@@ -419,7 +419,7 @@ def preflight() -> None:
     if missing:
         sys.exit(f"缺少依赖：{', '.join(missing)}（本脚本不装新依赖）")
     if not (REPO / "backend" / ".venv" / "bin" / "python").exists():
-        sys.exit("backend/.venv 不存在；先按第 0 页准备好环境")
+        sys.exit("system/backend/.venv 不存在；先按第 0 页准备好环境")
     if not (REPO / ".env").is_file():
         sys.exit("缺少 .env；先按第 13 页 `make docker-env` 生成")
     free = mem_available_mb()
@@ -959,30 +959,30 @@ CMD13_CURL = (
 )
 CMD13_SMOKE = "make docker-smoke"
 
-CMD18_PROVISION = "(cd backend && .venv/bin/python -m app.scripts.security --provision-ro-account)"
-CMD18_VERIFY = "(cd backend && .venv/bin/python -m app.scripts.security --verify-ro-account)"
+CMD18_PROVISION = "(cd system/backend && .venv/bin/python -m app.scripts.security --provision-ro-account)"
+CMD18_VERIFY = "(cd system/backend && .venv/bin/python -m app.scripts.security --verify-ro-account)"
 CMD18_GRANT = (
     'docker compose exec -T mysql mysql -uroot -p"$REBUILD_MYSQL_ROOT_PASSWORD" '
     "-e \"GRANT ALL ON dw.* TO 'dw_reader'@'%'\""
 )
 
-CMD19_CHECK = "(cd backend && .venv/bin/python -m app.scripts.security --check)"
+CMD19_CHECK = "(cd system/backend && .venv/bin/python -m app.scripts.security --check)"
 CMD19_CORPUS = (
-    '(cd backend && PYTHONUNBUFFERED=1 .venv/bin/python -m app.scripts.security --corpus) '
+    '(cd system/backend && PYTHONUNBUFFERED=1 .venv/bin/python -m app.scripts.security --corpus) '
     '2>&1 | grep -E "multi_statement|executable_comment|union|语料："'
 )
 
-CMD20_SAVE = "scripts/lab save p20-before"
-CMD20_CANCEL = "(cd backend && .venv/bin/python -m pytest tests/agent -q -k cancel)"
-CMD20_AGENT = "(cd backend && .venv/bin/python -m pytest tests/agent -q)"
+CMD20_SAVE = "toolbox/scripts/lab save p20-before"
+CMD20_CANCEL = "(cd system/backend && .venv/bin/python -m pytest tests/agent -q -k cancel)"
+CMD20_AGENT = "(cd system/backend && .venv/bin/python -m pytest tests/agent -q)"
 CMD20_FRAMES = (
-    '(cd backend && .venv/bin/python -c "import json;[print(f) for f in '
+    '(cd system/backend && .venv/bin/python -c "import json;[print(f) for f in '
     "json.load(open('../fixtures/sse/cancelled.json'))['frames']]\")"
 )
-CMD20_RECORD = "(cd backend && .venv/bin/python -m app.scripts.record_sse --check)"
+CMD20_RECORD = "(cd system/backend && .venv/bin/python -m app.scripts.record_sse --check)"
 
-CMD21_SAVE = "scripts/lab save p21-before"
-CMD21_COUNTS = """(cd backend && .venv/bin/python -c "
+CMD21_SAVE = "toolbox/scripts/lab save p21-before"
+CMD21_COUNTS = """(cd system/backend && .venv/bin/python -c "
 import json
 from fastapi.testclient import TestClient
 from app.scenarios.app import create_scenario_app
@@ -994,13 +994,13 @@ for sid in ('happy', 'llm_refusal'):
     steps = [json.loads(f[6:])['step'] for f in json.load(open(f'../fixtures/sse/{sid}.json'))['frames'] if json.loads(f[6:])['type'] == 'progress']
     print(f'{sid}: {len(steps)} 条 progress 帧 / {len(set(steps))} 个步骤名；只出现一次 ' + '/'.join(x for x in dict.fromkeys(steps) if steps.count(x) == 1))
 ")"""
-CMD21_FIXTURES = "(cd backend && .venv/bin/python -m pytest tests/frontend/test_sse_fixtures.py -q)"
-CMD21_NPM = "(cd frontend && npm test)"
+CMD21_FIXTURES = "(cd system/backend && .venv/bin/python -m pytest tests/frontend/test_sse_fixtures.py -q)"
+CMD21_NPM = "(cd system/frontend && npm test)"
 
-CMD22_SAVE = "scripts/lab save p22-before"
-CMD22_PYTEST = "(cd backend && .venv/bin/python -m pytest -q)"
+CMD22_SAVE = "toolbox/scripts/lab save p22-before"
+CMD22_PYTEST = "(cd system/backend && .venv/bin/python -m pytest -q)"
 CMD22_SMOKE = "make docker-smoke"
-CMD22_TERMINAL_B = """source scripts/export-docker-env.sh
+CMD22_TERMINAL_B = """source toolbox/scripts/export-docker-env.sh
 seen=0; end=$((SECONDS+60)); while [ "$SECONDS" -lt "$end" ]; do
   id="$(docker compose ps -aq init 2>/dev/null)"; [ -z "$id" ] && { sleep 0.1; continue; }
   s="$(docker inspect -f '{{.State.Status}}' "$id" 2>/dev/null)"; [ "$s" = running ] && seen=1
@@ -1809,15 +1809,15 @@ def main(argv: list[str] | None = None) -> int:
             # 仓库 uv.lock 若被改（uv 会按镜像配置静默重写），还原掉
             tracked = subprocess.run(
                 ["git", "-C", str(REPO), "status", "--porcelain", "--",
-                 "backend/uv.lock"],
+                 "system/backend/uv.lock"],
                 capture_output=True, text=True, timeout=60,
             ).stdout.strip()
             if tracked:
                 subprocess.run(["git", "-C", str(REPO), "checkout", "--",
-                                "backend/uv.lock"], timeout=60)
-                say("  ✅ backend/uv.lock 被改过，已 git checkout -- 还原（命令都在 /tmp 副本里跑）")
+                                "system/backend/uv.lock"], timeout=60)
+                say("  ✅ system/backend/uv.lock 被改过，已 git checkout -- 还原（命令都在 /tmp 副本里跑）")
             else:
-                say("  ✅ backend/uv.lock 未被改动（命令都在 /tmp 副本里跑）")
+                say("  ✅ system/backend/uv.lock 未被改动（命令都在 /tmp 副本里跑）")
         else:
             say(f"\n--keep：保留 {WORK} 与隔离栈（project={PROJECT}）。")
 

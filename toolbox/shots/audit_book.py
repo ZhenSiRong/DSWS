@@ -12,8 +12,8 @@
   6. README 的相对链接全部存在
 
 用法：
-  python3 manual/shots/audit_book.py            # 打印审计表；有 FAIL 时退出码 1
-  python3 manual/shots/audit_book.py --verbose  # 额外打印每页问题明细
+  python3 tutorial/shots/audit_book.py            # 打印审计表；有 FAIL 时退出码 1
+  python3 tutorial/shots/audit_book.py --verbose  # 额外打印每页问题明细
 """
 from __future__ import annotations
 

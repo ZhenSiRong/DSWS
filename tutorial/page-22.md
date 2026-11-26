@@ -4,7 +4,7 @@
 
 > 前置：L4（守）第五页，也是 L4 最后一页。
 >
-> **前两条判据离线**：`backend/.venv` 由第 0 页 `make install` 生成，`frontend/node_modules` 缺了就先 `npm ci`（要联网）。
+> **前两条判据离线**：`system/backend/.venv` 由第 0 页 `make install` 生成，`system/frontend/node_modules` 缺了就先 `npm ci`（要联网）。
 >
 > **第三条要整栈**：Docker 可用、`.env` 已由 `make docker-env` 生成、第 13 页的 `make docker-up` 起过栈。
 >
@@ -35,19 +35,19 @@
 
 **第 1 步：拍快照。** 本页不改文件，但留一张退路（同名快照会被拒，重做本页换个名字；回显的文件数因工作区而异）：
 ```bash
-scripts/lab save p22-before
+toolbox/scripts/lab save p22-before
 ```
 
 **第 2 步：全量后端测试。** 843 条，本机约半分钟：
 
 **判据**：末行里不能出现 `failed` / `error`，通过数可以变——「没有失败」才算过，不是记死一个数字：
 ```bash
-(cd backend && .venv/bin/python -m pytest -q)
+(cd system/backend && .venv/bin/python -m pytest -q)
 ```
 
-**第 3 步：前端测试。** 40 条离线协议与渲染测试，前提是第 0 页装好的 `frontend/node_modules`：
+**第 3 步：前端测试。** 40 条离线协议与渲染测试，前提是第 0 页装好的 `system/frontend/node_modules`：
 ```bash
-(cd frontend && npm test)
+(cd system/frontend && npm test)
 ```
 
 **第 4 步：一键门禁。** 前提：Docker 可用、`.env` 已生成、第 13 页起的栈在跑（栈停过就先 `docker compose up -d` 或按第 13 页重起；端口被占就先按第 13 页第 3 步改 `.env`）。
@@ -135,7 +135,7 @@ DOCKER SMOKE PASS
 **窗口很短**：实测只有约 3 秒（init 退出 → 第 7 步开始），靠手速会输，让循环替你等；终端 A 只有一条 `make docker-smoke`：
 ```bash
 # 终端 B（仓库根目录，先启动、回车）：每轮重取 id（A 的 up 会重建 init），60 秒等不到就退出
-source scripts/export-docker-env.sh
+source toolbox/scripts/export-docker-env.sh
 seen=0; end=$((SECONDS+60)); while [ "$SECONDS" -lt "$end" ]; do
   id="$(docker compose ps -aq init 2>/dev/null)"; [ -z "$id" ] && { sleep 0.1; continue; }
   s="$(docker inspect -f '{{.State.Status}}' "$id" 2>/dev/null)"; [ "$s" = running ] && seen=1
@@ -166,11 +166,11 @@ DOCKER SMOKE FAIL: 只读账号验证未通过
 
 **单独跑第 8 步判据**：`docker compose run --rm --no-deps init python -m app.build_meta_knowledge --verify | tail -1` → `S2 VERIFY PASS`。
 
-**第 5 步：还原、回 PASS。** 在**终端 B（已 `source` 过）**里跑；新开的终端要先 `source scripts/export-docker-env.sh`，否则会红 `缺少环境变量 REBUILD_DW_RO_PASSWORD`。
+**第 5 步：还原、回 PASS。** 在**终端 B（已 `source` 过）**里跑；新开的终端要先 `source toolbox/scripts/export-docker-env.sh`，否则会红 `缺少环境变量 REBUILD_DW_RO_PASSWORD`。
 
 **还原命令**：还原就是第 18 页那句重开账号（权限集合回到 `SELECT`），再整跑一次（回显节选：实际前面还有 4 行 `已执行：…`）：
 ```bash
-(cd backend && .venv/bin/python -m app.scripts.security --provision-ro-account)
+(cd system/backend && .venv/bin/python -m app.scripts.security --provision-ro-account)
 make docker-smoke
 ```
 ```text

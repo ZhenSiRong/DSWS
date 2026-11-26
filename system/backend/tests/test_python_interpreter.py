@@ -33,9 +33,9 @@ from shellkit import (
 )
 
 ROOT = Path(__file__).resolve().parents[2]
-FIND_PYTHON = ROOT / "scripts" / "find-python.sh"
-MAKEFILE = ROOT / "Makefile"
-GENERATE_ENV = ROOT / "scripts" / "generate_docker_env.py"
+FIND_PYTHON = ROOT.parent / "toolbox" / "scripts" / "find-python.sh"
+MAKEFILE = ROOT.parent / "Makefile"
+GENERATE_ENV = ROOT.parent / "toolbox" / "scripts" / "generate_docker_env.py"
 
 BASH = usable_bash()
 SH = usable_sh()
@@ -224,7 +224,7 @@ def _smoke_fixture(tmp_path: Path) -> Path:
     repo = tmp_path / "repo"
     (repo / "scripts").mkdir(parents=True)
     for name in ("docker-smoke.sh", "find-python.sh", "smoke_checks.py"):
-        shutil.copy(ROOT / "scripts" / name, repo / "scripts" / name)
+        shutil.copy(ROOT.parent / "toolbox" / "scripts" / name, repo / "scripts" / name)
     return repo / "scripts" / "docker-smoke.sh"
 
 

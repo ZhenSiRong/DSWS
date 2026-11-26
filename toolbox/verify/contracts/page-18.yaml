@@ -1,6 +1,6 @@
 # 第 18 页 · 守账号 —— 教材可跟随性契约（coverage: static）
 #
-# schema 与规则见 manual/verify/README.md。
+# schema 与规则见 tutorial/verify/README.md。
 # 本页每条命令都要真 MySQL / docker compose / 真密码，无法离线无人值守执行，
 # 所以按「覆盖模式」降级为 static：只查页面引用的文件还在、关键符号还能命中，
 # **不执行任何命令**；页面也不写 <!-- verify: --> 注解（static 页不允许）。
@@ -11,18 +11,18 @@ coverage: static
 static:
   # 页面实际引用 / 命令实际依赖的仓库内路径
   paths:
-    - scripts/lab                                  # 第 1 步 scripts/lab save p18-before
-    - scripts/export-docker-env.sh                 # 第 2 步 / 拆一刀：source 拿 REBUILD_* 密码
-    - backend/app/scripts/security.py              # 第 3/4 步 -m app.scripts.security
-    - backend/tests/security/test_account.py       # 对账：10 条判据测试所在
+    - toolbox/scripts/lab                                  # 第 1 步 toolbox/scripts/lab save p18-before
+    - toolbox/scripts/export-docker-env.sh                 # 第 2 步 / 拆一刀：source 拿 REBUILD_* 密码
+    - system/backend/app/scripts/security.py              # 第 3/4 步 -m app.scripts.security
+    - system/backend/tests/security/test_account.py       # 对账：10 条判据测试所在
     - compose.yaml                                 # docker compose ps / exec -T mysql
     - Makefile                                     # 第 5 步 make stage5-live；对账 make docker-smoke
 
   # 一改就会让页面命令 / 判据失效的锚点：CLI 旗标、环境变量、make 目标、服务名、契约字段
   symbols:
-    - {file: backend/app/scripts/security.py, pattern: '"--provision-ro-account"'}
-    - {file: backend/app/scripts/security.py, pattern: '"--verify-ro-account"'}
-    - {file: scripts/export-docker-env.sh, pattern: '^export REBUILD_DW_RO_PASSWORD='}
+    - {file: system/backend/app/scripts/security.py, pattern: '"--provision-ro-account"'}
+    - {file: system/backend/app/scripts/security.py, pattern: '"--verify-ro-account"'}
+    - {file: toolbox/scripts/export-docker-env.sh, pattern: '^export REBUILD_DW_RO_PASSWORD='}
     - {file: Makefile, pattern: '^stage5-live:'}
     - {file: compose.yaml, pattern: '^  mysql:'}
-    - {file: contracts/sql.policy.yaml, pattern: '^  user: dw_reader$'}
+    - {file: system/contracts/sql.policy.yaml, pattern: '^  user: dw_reader$'}

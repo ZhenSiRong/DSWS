@@ -8,7 +8,7 @@
 >
 > **在哪跑**：命令都在仓库根目录、同一个终端里整段连续执行；括号是子 shell，跑完你还在仓库根目录。
 >
-> **第 0 页两样就绪**：`backend/.venv` 由第 0 页 `make install` 生成（本页 `.venv/bin/python` 靠它），宿主 `uv` 由第 0 页先装好（第 5 步 `uv run` 靠它）；缺了先回第 0 页（`.venv` 也可 `cd backend && uv sync --frozen` 补）。
+> **第 0 页两样就绪**：`system/backend/.venv` 由第 0 页 `make install` 生成（本页 `.venv/bin/python` 靠它），宿主 `uv` 由第 0 页先装好（第 5 步 `uv run` 靠它）；缺了先回第 0 页（`.venv` 也可 `cd system/backend && uv sync --frozen` 补）。
 
 ## 这一页构建什么
 
@@ -26,7 +26,7 @@
 **第 1 步：拍快照。** 本页拆的是数据库权限、不是文件，但先拍一张——待会儿用它证明“文件快照救不了数据库”（同名快照会被拒，重做本页就换个名字；**换了名字就把下文所有 `p18-before` 一并替换**，旧快照留在 `.lab/snapshots/` 不影响本页结论）：
 
 ```bash
-scripts/lab save p18-before
+toolbox/scripts/lab save p18-before
 ```
 
 **第 2 步：让当前终端拿到密码。** 开通要两把密码：MySQL root 的（建账号）和 `dw_reader` 的（设密码）。
@@ -43,19 +43,19 @@ scripts/lab save p18-before
 **结论**：都只是没 `source`，不是库/密码坏了：
 
 ```bash
-source scripts/export-docker-env.sh
+source toolbox/scripts/export-docker-env.sh
 ```
 
 **第 3 步：开通只读账号。** 第 13 页的 `init` 已经开通过一次，这里再开一次：语句是“先 `DROP USER IF EXISTS` 再 `CREATE USER`”，所以权限集合永远恰好是 `SELECT`，不会攒下旧授权。这条命令也是下面“拆一刀”的还原命令：
 
 ```bash
-(cd backend && .venv/bin/python -m app.scripts.security --provision-ro-account)
+(cd system/backend && .venv/bin/python -m app.scripts.security --provision-ro-account)
 ```
 
 **第 4 步：跑判据。** 门禁做两件事：读 `SHOW GRANTS`，再**真的执行**一条 `UPDATE ... WHERE 1=0`——匹配 0 行，但数据库要先检查 `UPDATE` 权限；被拒绝且错误码是 `1142` 才算 PASS。退出码就是结论（0 = 通过）：
 
 ```bash
-(cd backend && .venv/bin/python -m app.scripts.security --verify-ro-account)
+(cd system/backend && .venv/bin/python -m app.scripts.security --verify-ro-account)
 ```
 
 **第 5 步（可选）：`make stage5-live`。** 前提：上面的 `source` 还在同一个终端里、MySQL 在跑；本机约 2 秒（环境已装好时；第一次装依赖会久得多）。它重复开通 + 验证，再跑 `--demo` 两屏对比（旧系统 `didilili` 的 `ALL PRIVILEGES` 真删掉探针表，新系统在连库前拒绝），末行 `S5 LIVE PASS`。不跑不影响本页判据。
@@ -117,7 +117,7 @@ S5 LIVE PASS
 
   **边界**：它不证明“读得对/读得少”（那是检索与策略的职责），只证明**写不了**。
 
-- **门禁怎么验、哪里也在验。** 判据就在 `backend/tests/security/test_account.py`（10 条）里，连“写失败但不是权限错误不能算通过”都有测试。
+- **门禁怎么验、哪里也在验。** 判据就在 `system/backend/tests/security/test_account.py`（10 条）里，连“写失败但不是权限错误不能算通过”都有测试。
 
   **第 13 页也在验**：`make docker-smoke` 第 7 步（`== 7/8 只读账号验证 ==` → `PASS: 该账号在 dw 上只有 SELECT`）跑的就是同一条 `--verify-ro-account`，只是换成在 `backend` 容器里跑。
 
@@ -129,13 +129,13 @@ S5 LIVE PASS
 
 把“能力边界”拆掉：给 `dw_reader` 加一句数据库级全权，重跑同一条门禁，看它红在哪。
 
-**下面这段沿用第 2 步 `source` 过的那个终端；如果新开了终端，先 `source scripts/export-docker-env.sh`**。
+**下面这段沿用第 2 步 `source` 过的那个终端；如果新开了终端，先 `source toolbox/scripts/export-docker-env.sh`**。
 
 **没 `source` 的症状**：`$REBUILD_MYSQL_ROOT_PASSWORD` 是空的，`mysql` 会先让你 `Enter password:` 再报 `ERROR 1045 (28000): Access denied … (using password: NO)`，看着像库/密码坏了，其实只是没 `source`。
 
 ```bash
 docker compose exec -T mysql mysql -uroot -p"$REBUILD_MYSQL_ROOT_PASSWORD" -e "GRANT ALL ON dw.* TO 'dw_reader'@'%'"
-(cd backend && .venv/bin/python -m app.scripts.security --verify-ro-account)
+(cd system/backend && .venv/bin/python -m app.scripts.security --verify-ro-account)
 ```
 
 `mysql: [Warning] Using a password on the command line interface can be insecure.` 是客户端的例行提醒，不是失败。
@@ -155,20 +155,20 @@ FAIL: 3 项问题
   - 写操作被放行（权限配置有误）
 ```
 
-**关键坑：`scripts/lab reset` 救不了这个。** `lab` 快照只收文件，数据库权限不在里面——拆完跑 `scripts/lab diff p18-before`，它会说“工作区与快照完全一致”，可门禁还是红的。
+**关键坑：`toolbox/scripts/lab reset` 救不了这个。** `lab` 快照只收文件，数据库权限不在里面——拆完跑 `toolbox/scripts/lab diff p18-before`，它会说“工作区与快照完全一致”，可门禁还是红的。
 
 手动还原**推荐用下面第一段代码里的 `--provision-ro-account`**（一句重建账号，权限集合回到 `SELECT`）。
 
 **备选 REVOKE**：第二段只用于理解“去掉 ALL、补回 SELECT”两件事，一条命令里同时有双引号、单引号和分号，从正文复制极易断，请整行复制。两段二选一，推荐第一段：
 
 ```bash
-(cd backend && .venv/bin/python -m app.scripts.security --provision-ro-account)
-(cd backend && .venv/bin/python -m app.scripts.security --verify-ro-account)
+(cd system/backend && .venv/bin/python -m app.scripts.security --provision-ro-account)
+(cd system/backend && .venv/bin/python -m app.scripts.security --verify-ro-account)
 ```
 
 ```bash
 docker compose exec -T mysql mysql -uroot -p"$REBUILD_MYSQL_ROOT_PASSWORD" -e "REVOKE ALL PRIVILEGES, GRANT OPTION FROM 'dw_reader'@'%'; GRANT SELECT ON dw.* TO 'dw_reader'@'%'"
-(cd backend && .venv/bin/python -m app.scripts.security --verify-ro-account)
+(cd system/backend && .venv/bin/python -m app.scripts.security --verify-ro-account)
 ```
 
 跑完推荐的第一段，末行回到 `PASS: 该账号在 dw 上只有 SELECT`。这次拆一刀的答案：**静态判据和动态判据都抓到了，但“文件快照”没抓到——数据库状态必须手动还原。**

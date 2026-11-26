@@ -4,11 +4,11 @@
 
 一条命令重跑（在仓库根目录）：
 
-    python3 manual/shots/render_flow_l2_l5.py              # 渲染 + CPM / 结构 / 图形自检
-    python3 manual/shots/render_flow_l2_l5.py --width 1400 # 答辩投影用更窄的图
+    python3 tutorial/shots/render_flow_l2_l5.py              # 渲染 + CPM / 结构 / 图形自检
+    python3 tutorial/shots/render_flow_l2_l5.py --width 1400 # 答辩投影用更窄的图
 
 源文件（唯一内容源，只改它）：
-    manual/flow-l2-l5.mmd → manual/images/aon-l2-l5.png
+    tutorial/flow-l2-l5.mmd → tutorial/images/aon-l2-l5.png
 
 它做五件事：
 
@@ -19,7 +19,7 @@
    工期不是验收时限（每个节点都标「工期 N（估）」），这一点也在这里断言。
 2. **语法自检**：把 mmd 原样交给 mermaid@11（仓库内离线副本）渲染一遍，确认它仍是合法 mermaid
    图（18 个节点、0 个语法错误）。**注意**：mermaid 自动布局会把这条 18 节点链拉成一条长条
-   （子图方向与跨子图边互斥，见 manual/aon/README.md），所以正式出图不走 mermaid 自动布局，
+   （子图方向与跨子图边互斥，见 tutorial/aon/README.md），所以正式出图不走 mermaid 自动布局，
    而是第 3 步按四条泳道重排。
 3. **布局 + 画 SVG**：按 mmd 里的子图把节点排成四条泳道（L2 换 / L3 审 / L4 守 / L5 装），
    级内从左到右、段间蛇形换向，级间用短竖箭头衔接；节点尺寸由节点文字量决定（并断言不溢出）；
@@ -42,7 +42,7 @@ import sys
 import tempfile
 from pathlib import Path
 
-HERE = Path(__file__).resolve().parent      # manual/shots
+HERE = Path(__file__).resolve().parent      # tutorial/shots
 REPO = HERE.parents[1]                      # 仓库根目录
 MMD = REPO / "manual" / "flow-l2-l5.mmd"
 OUT = REPO / "manual" / "images" / "aon-l2-l5.png"
@@ -870,7 +870,7 @@ def check_dom(dom_visible: str, parsed: dict, c: dict) -> None:
 
 def main() -> int:
     ap = argparse.ArgumentParser(
-        description="把 L2–L5 合并 AON（manual/flow-l2-l5.mmd）渲染成 manual/images/aon-l2-l5.png")
+        description="把 L2–L5 合并 AON（tutorial/flow-l2-l5.mmd）渲染成 tutorial/images/aon-l2-l5.png")
     ap.add_argument("--width", type=int, default=DEFAULT_WIDTH,
                     help=f"输出 PNG 宽度（默认 {DEFAULT_WIDTH}px；最小 1100）")
     ap.add_argument("--out", type=Path, default=OUT, help="输出 PNG 路径")

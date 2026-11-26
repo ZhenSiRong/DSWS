@@ -14,10 +14,10 @@
 |---|---|
 | `tutorial/` | 教程正典：24 页正文、阅读版、图片、课程/城市地图 |
 | `toolbox/` | 制作教程的工具：页首图、截图、审计、T1 契约、任务台账 |
-| `system/` | 教程所教的示例系统：backend / frontend / contracts / fixtures / compose |
+| `system/` | 教程所教的示例系统：backend / frontend / contracts / fixtures；compose 在根目录 |
 | `materials/` | 设计文档、研究决策、评审证据、发布物 |
 
-根目录旧路径（`manual/`、`backend/`、`scripts/`…）保留兼容软链；新文件写进上面四个真实目录。完整地图见 [`PROJECT-MAP.md`](PROJECT-MAP.md)。
+根目录**不再保留兼容软链**；所有命令、文档、脚本直接使用四个真实目录。部署入口 `compose.yaml` / `compose.lab-ui.yaml` 在仓库根目录。完整地图见 [`PROJECT-MAP.md`](PROJECT-MAP.md)。
 
 ## 演示
 
@@ -84,7 +84,7 @@ S2 / S3 需要先启动三存储（S0 / S1 / S4–S7 不需要）：
 ```bash
 make docker-env
 docker compose up -d mysql elasticsearch qdrant
-source scripts/export-docker-env.sh   # 导出 Compose 随机密码；不跨终端保留
+source toolbox/scripts/export-docker-env.sh   # 导出 Compose 随机密码；不跨终端保留
 ```
 
 ### Docker 一键部署（推荐）
@@ -98,7 +98,7 @@ make docker-smoke     # 8 步验收，输出 DOCKER SMOKE PASS
 
 | 服务 | 镜像 | 端口 | 职责 |
 |---|---|---|---|
-| `mysql` | `mysql:8.0` | `127.0.0.1:3306` | 首次启动自动执行 `fixtures/dw.sql` |
+| `mysql` | `mysql:8.0` | `127.0.0.1:3306` | 首次启动自动执行 `system/fixtures/dw.sql` |
 | `elasticsearch` | `8.15.3` | `127.0.0.1:9200` | 元知识 + 检索 |
 | `qdrant` | `v1.12.4` | `127.0.0.1:6333` | 向量元知识 |
 | `init` | 与 backend 同镜像 | 无 | 一次性：等依赖健康 → 开通只读账号 → 校验/重建 S2 元知识 |
@@ -111,7 +111,7 @@ make docker-smoke     # 8 步验收，输出 DOCKER SMOKE PASS
 构建方式：
 
 - **backend**：多阶段（uv 装依赖 → `python:3.12-slim`），非 root（uid 10001）；
-  运行镜像只带虚拟环境、`backend/app`、`contracts`、`fixtures`（不含测试）；uvicorn 单 worker。
+  运行镜像只带虚拟环境、`system/backend/app`、`contracts`、`fixtures`（不含测试）；uvicorn 单 worker。
 - **frontend**：`node:20-alpine` 构建 → `nginx:1.27-alpine` 托管 `dist`；
   `/api/` 关闭缓冲，保证 SSE 实时到达。
 - **init**：`init` 非零退出会阻止 backend 启动（`service_completed_successfully`）；
@@ -171,13 +171,13 @@ docker compose exec backend python -c \
 ## 重要源码
 
 ```text
-rebuild/
+materials/rebuild/
 ├── compose.yaml                # 五服务 + 一次性 init
 ├── Makefile                    # 阶段验收 + Docker 命令
-├── docker/                     # backend / frontend Dockerfile、nginx.conf
-├── contracts/                  # 唯一事实源：步骤/SSE/Schema/策略/错误码/提示词
-├── fixtures/                   # dw.sql、注入语料、失败场景、SSE 夹具
-├── backend/
+├── system/docker/                     # backend / frontend Dockerfile、nginx.conf
+├── system/contracts/                  # 唯一事实源：步骤/SSE/Schema/策略/错误码/提示词
+├── system/fixtures/                   # dw.sql、注入语料、失败场景、SSE 夹具
+├── system/backend/
 │   ├── app/main.py             # 应用工厂 + HTTP/SSE 入口
 │   ├── app/schema_contract.py  # S1 契约检查器 + 文档生成
 │   ├── app/build/              # S2 三存储构建 / embedding / manifest
@@ -187,12 +187,12 @@ rebuild/
 │   ├── app/agent/              # S6 错误码、校正、编排、取消 + 值归一化
 │   ├── app/scripts/            # 阶段 CLI + docker_init + 契约生成/录制
 │   └── tests/                  # S0–S7 后端测试
-├── frontend/
+├── system/frontend/
 │   ├── src/generated/          # ★ 机器生成，不要手改
 │   ├── src/lib/                # SSE 解析、JSON Schema、结果表语义
 │   ├── src/components/         # StepRail / ErrorCard / PseudoErrorCard
 │   └── tests/                  # 无头浏览器 + SSE 回放服务器
-├── scripts/                    # docker-smoke / docker-reset / *-ui 验收脚本
+├── toolbox/scripts/                    # docker-smoke / docker-reset / *-ui 验收脚本
 └── materials/docs/                       # 搭建手册、Schema 文档、部署与交接文档
 ```
 
@@ -207,13 +207,13 @@ HTTP 接口：`GET /api/health`、`GET /api/steps`、`GET /api/errors`、
 
 | 文件 | 内容 |
 |---|---|
-| `contracts/steps.yaml` | 12 个步骤；`correct_sql` 标为 `conditional` |
-| `contracts/sse.schema.json` | 三种事件：`progress` / `result` / `error` |
-| `contracts/schema.contract.yaml` | 5 表 / 24 列 / 6 指标的语义契约 |
-| `contracts/sql.output.schema.json` | 只允许 `sql` 或 `refusal` 两种形状 |
-| `contracts/sql.policy.yaml` | 行数上限、超时、禁词、只读账号 |
-| `contracts/errors.yaml` | 16 个错误码 / 3 类失败 / 校正策略 |
-| `contracts/prompts/` | 7 个提示词；frontmatter 的 `slots` 是唯一声明 |
+| `system/contracts/steps.yaml` | 12 个步骤；`correct_sql` 标为 `conditional` |
+| `system/contracts/sse.schema.json` | 三种事件：`progress` / `result` / `error` |
+| `system/contracts/schema.contract.yaml` | 5 表 / 24 列 / 6 指标的语义契约 |
+| `system/contracts/sql.output.schema.json` | 只允许 `sql` 或 `refusal` 两种形状 |
+| `system/contracts/sql.policy.yaml` | 行数上限、超时、禁词、只读账号 |
+| `system/contracts/errors.yaml` | 16 个错误码 / 3 类失败 / 校正策略 |
+| `system/contracts/prompts/` | 7 个提示词；frontmatter 的 `slots` 是唯一声明 |
 
 后端与前端都从契约派生：步骤目录与错误码由 API 下发，前端事件类型由
 `contracts_gen` 生成。
@@ -256,7 +256,7 @@ SQL 在**连库之前**过六道检查：可执行注释/词法禁词 → 单语
 
 ## 数据与存储
 
-- `fixtures/dw.sql` 是**演示数据集**（合成数据，非生产数据）：`fact_order` 115 行、
+- `system/fixtures/dw.sql` 是**演示数据集**（合成数据，非生产数据）：`fact_order` 115 行、
   `dim_customer` 20、`dim_product` 15、`dim_region` 6、`dim_date` 90。
   Compose 首次初始化时灌入真实 MySQL，查询由只读账号真实执行并聚合。
 - S2 只写 `meta_rebuild` / `value_index_rebuild` / `column_info_rebuild` /
@@ -264,7 +264,7 @@ SQL 在**连库之前**过六道检查：可执行注释/词法禁词 → 单语
   `hash-ngram-v1`，不依赖模型下载。
 - 生产问数上下文由 `OfflineContextBuilder`（契约离线裁剪）生成；S3 的 ES/Qdrant
   召回只在 `stage3` 与集成测试中使用，不在线上问数主链路。
-- 换真实数据 = 替换 `fixtures/dw.sql` + 同步 `contracts/schema.contract.yaml`，
+- 换真实数据 = 替换 `system/fixtures/dw.sql` + 同步 `system/contracts/schema.contract.yaml`，
   再重建 S2；这是数据建模改造，改配置项解决不了。
 
 ---
@@ -272,8 +272,8 @@ SQL 在**连库之前**过六道检查：可执行注释/词法禁词 → 单语
 ## 必须知道的约束
 
 1. **契约先行**：改契约后重新生成前端类型
-   `cd backend && uv run python -m app.scripts.contracts_gen`；`--check` 防止生成物过期。
-2. **生成物不要手改**：`frontend/src/generated/` 是机器产物。
+   `cd system/backend && uv run python -m app.scripts.contracts_gen`；`--check` 防止生成物过期。
+2. **生成物不要手改**：`system/frontend/src/generated/` 是机器产物。
 3. **只动 `*_rebuild` 目标**：S2/S3 不修改旧系统的库、索引与 collection；
    删除本项目数据卷只能用 `make docker-reset`（需输入 yes）。
 4. **`.env` 不入库**：`make docker-env` 生成随机密码；改了 `.env` 要 `docker compose up -d`，

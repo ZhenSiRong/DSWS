@@ -67,7 +67,7 @@ def query(q: Query):
 2. 回终端 1 按 Ctrl+C 停掉，再用第 3 页那条命令原样重启：
 
 ```bash
-backend/.venv/bin/python -m uvicorn lab.app:app --port 8000
+system/backend/.venv/bin/python -m uvicorn lab.app:app --port 8000
 ```
 
 3. 在终端 2 发两个请求：一个短的，一个更长的（带一些跟查询无关的字；端口沿用你第 3 页实际启动的那个，默认 `8000`）：

@@ -9,11 +9,11 @@
 </head>
 <body>
 <main class="page">
-<p class="kicker">练本 · 阅读版（md 正典派生，改内容请改 manual/page-12.md）</p>
+<p class="kicker">练本 · 阅读版（md 正典派生，改内容请改 tutorial/page-12.md）</p>
 <h1>第 12 页 · 换真执行器：给临时通道装上四道闸</h1>
 <blockquote>
 <p><strong>城市坐标 · L2 通水电网 · 换泵站</strong>｜临时通道换成带四道闸的真执行器：只读、限行数、限时长、只准 SELECT。</p>
-<p>前置：第 0 页备好环境；本页接第 11 页的 <code>lab/app.py</code> 和第 10 页的 <code>fixtures/dw-real.sql</code>。不用启动服务。</p>
+<p>前置：第 0 页备好环境；本页接第 11 页的 <code>lab/app.py</code> 和第 10 页的 <code>system/fixtures/dw-real.sql</code>。不用启动服务。</p>
 </blockquote>
 <h2>这一页构建什么</h2>
 <p>把第 7 页那条裸 <code>pymysql</code> 临时通道换成一个执行器 <code>lab/db.py</code>：行是 dict、Decimal 原样交出来、没写 LIMIT 自动补 1000、5 秒不回就断、非 SELECT 拒绝。</p>
@@ -26,9 +26,9 @@
 <li><code>dim_date</code> 一共 1461 行。执行器自动补 <code>LIMIT 1000</code> 后，<code>SELECT * FROM dim_date</code> 回几行——1000 还是 1461？</li>
 </ol>
 <h2>动手</h2>
-<p><strong>第 1 步：把真数据灌回库</strong>（命令都在仓库根目录执行：有 <code>fixtures/</code>、<code>backend/</code> 的那一层）。</p>
-<p><strong>为什么灌 <code>dw-real</code></strong>：第 10 页收尾时你重灌回了演示集（115 行），带分金额的 <code>dw-real</code> 才看得出漂移，用第 10 页同一条命令：</p>
-<pre><code class="language-bash">docker exec -i lab-mysql mysql -uroot -plabpass --default-character-set=utf8mb4 &lt; fixtures/dw-real.sql
+<p><strong>第 1 步：把真数据灌回库</strong>（命令都在仓库根目录执行：有 <code>system/fixtures/</code>、<code>system/backend/</code> 的那一层）。</p>
+<p><strong>为什么灌 <code>dw-real</code></strong>：如果第 10 章收尾时重灌回了演示集（115 行），本步把它换回带金额的 <code>dw-real</code>（若库里还是 410 行，本步幂等无害），用第 10 页同一条命令：</p>
+<pre><code class="language-bash">docker exec -i lab-mysql mysql -uroot -plabpass --default-character-set=utf8mb4 &lt; system/fixtures/dw-real.sql
 </code></pre>
 <p><strong>第 2 步：新建 <code>lab/db.py</code>，把下面整段粘进去，Ctrl+S 保存：</strong></p>
 <pre><code class="language-python"># lab/db.py —— 最小只读执行器：一条 SQL 只过四道闸
@@ -86,11 +86,11 @@ if __name__ == &quot;__main__&quot;:
 <pre><code class="language-python">def run_sql(sql: str) -&gt; list[dict]:
     return db.query(sql)
 </code></pre>
-<pre><code class="language-bash">backend/.venv/bin/python -c &quot;from lab.app import run_sql; print(len(run_sql('SELECT * FROM dim_date')))&quot;
+<pre><code class="language-bash">system/backend/.venv/bin/python -c &quot;from lab.app import run_sql; print(len(run_sql('SELECT * FROM dim_date')))&quot;
 # 回 1000 才算接上：dim_date 共 1461 行，执行器补 LIMIT 1000；旧 run_sql 会回 1461，报 ModuleNotFoundError 说明不在仓库根
 </code></pre>
 <p><strong>第 4 步：跑自检。</strong> 文件末尾的 <code>if __name__</code> 把四道闸和你猜的两个数一次打出来（这条整体要等 5 秒多，最后一项是超时，别以为卡住）：</p>
-<pre><code class="language-bash">backend/.venv/bin/python -m lab.db
+<pre><code class="language-bash">system/backend/.venv/bin/python -m lab.db
 </code></pre>
 <h2>你应该看到</h2>
 <pre><code class="language-text">裸游标  ： (1144735.4994544983,)
@@ -130,14 +130,14 @@ float   ： 1144735.4994544983 float
 </blockquote>
 <h2>拆一刀</h2>
 <ol>
-<li>先拍快照：<code>scripts/lab save p12-before</code>（名字只能用字母、数字、点、下划线、短横线，且必须以字母或数字开头；中文会被拒）。</li>
+<li>先拍快照：<code>toolbox/scripts/lab save p12-before</code>（名字只能用字母、数字、点、下划线、短横线，且必须以字母或数字开头；中文会被拒）。</li>
 </ol>
-<p><strong>白名单含 <code>lab/</code></strong>：<code>scripts/lab</code> 的白名单现在含 <code>lab/</code>：<code>lab/db.py</code>、<code>lab/app.py</code> 也进快照，改代码同样能 reset 还原——所以第 2 步改契约不是为了「只能改契约」，而是为了证明<strong>上限来自契约</strong>（改 <code>lab/db.py</code> 里写死的 LIMIT 也能过自检，却测不出这个单源）。
-2. 打开 <code>contracts/sql.policy.yaml</code>，把 <code>limits:</code> 下 <code># 明细查询默认最多返回多少行</code> 那行的 <code>default_limit: 1000</code> 改成 <code>100000</code>。</p>
+<p><strong>白名单含 <code>lab/</code></strong>：<code>toolbox/scripts/lab</code> 的白名单现在含 <code>lab/</code>：<code>lab/db.py</code>、<code>lab/app.py</code> 也进快照，改代码同样能 reset 还原——所以第 2 步改契约不是为了「只能改契约」，而是为了证明<strong>上限来自契约</strong>（改 <code>lab/db.py</code> 里写死的 LIMIT 也能过自检，却测不出这个单源）。
+2. 打开 <code>system/contracts/sql.policy.yaml</code>，把 <code>limits:</code> 下 <code># 明细查询默认最多返回多少行</code> 那行的 <code>default_limit: 1000</code> 改成 <code>100000</code>。</p>
 <p><strong>上限来自契约</strong>：<code>lab/db.py</code> 里 <code>LIMIT = POLICY["limits"]["default_limit"]</code> 那一行就是从契约这里读上限——改契约这一行、执行器下次起进程就换上限，这才叫「上限来自契约」。</p>
 <p><strong>注意本页执行器只读 <code>default_limit</code>；<code>max_limit</code> 是工业版概念，这里没实现</strong>：别改下面 <code>max_limit: 1000</code>，只改它自检还是回 1000 行；而且 <code>default_limit: 100000</code> 已经比 <code>max_limit: 1000</code> 还大，工业版会当配置错误（默认上限不能超截断上限），本页不读它所以照样跑。</p>
-<p><strong>拆完什么样</strong>：Ctrl+S，再跑一次 <code>backend/.venv/bin/python -m lab.db</code>（这条同样要等 5 秒多，别以为卡死）：上限这道闸拆掉，1461 行全跑出来，<code>上限    ： 1461 行（dim_date 共 1461 行）</code>；其它几行不变，说明只拆了这一道闸。
-3. 还原：<code>scripts/lab reset p12-before --yes</code>，末行 <code>现在工作区与快照 "p12-before" 完全一致。</code>；再跑一次，<code>上限    ： 1000 行（dim_date 共 1461 行）</code> 回来。</p>
+<p><strong>拆完什么样</strong>：Ctrl+S，再跑一次 <code>system/backend/.venv/bin/python -m lab.db</code>（这条同样要等 5 秒多，别以为卡死）：上限这道闸拆掉，1461 行全跑出来，<code>上限    ： 1461 行（dim_date 共 1461 行）</code>；其它几行不变，说明只拆了这一道闸。
+3. 还原：<code>toolbox/scripts/lab reset p12-before --yes</code>，末行 <code>现在工作区与快照 "p12-before" 完全一致。</code>；再跑一次，<code>上限    ： 1000 行（dim_date 共 1461 行）</code> 回来。</p>
 </main>
 </body>
 </html>

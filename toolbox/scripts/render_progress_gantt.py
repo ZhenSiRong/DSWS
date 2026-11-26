@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """render_progress_gantt.py —— 进度看板甘特图渲染（离线、可重复）
 
-从 humen-desicions/14-progress-gantt.md 的 ```mermaid 代码块渲染 PNG：
-mermaid@11 本地副本（design/assets/mermaid.min.js）+ google-chrome 无头 + ImageMagick trim。
+从 materials/humen-desicions/14-progress-gantt.md 的 ```mermaid 代码块渲染 PNG：
+mermaid@11 本地副本（materials/design/assets/mermaid.min.js）+ google-chrome 无头 + ImageMagick trim。
 
 用法：
-    python3 scripts/render_progress_gantt.py            # 渲染并覆盖 humen-desicions/progress-gantt.png
-    python3 scripts/render_progress_gantt.py --width 1800
+    python3 toolbox/scripts/render_progress_gantt.py            # 渲染并覆盖 materials/humen-desicions/progress-gantt.png
+    python3 toolbox/scripts/render_progress_gantt.py --width 1800
 """
 from __future__ import annotations
 

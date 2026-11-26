@@ -1,7 +1,7 @@
 # 14 · 进度看板（甘特）
 
-> 唯一进度看板：真相源是台账 `workflows/ledger.yaml`，本图是它的投影；状态变更只经 `scripts/task.py`。
-> 图由 `python3 scripts/task.py render` 从台账生成并渲染（下方 mermaid 是**生成物，勿手改**；本地 mermaid，离线可跑）。
+> 唯一进度看板：真相源是台账 `toolbox/workflows/ledger.yaml`，本图是它的投影；状态变更只经 `toolbox/scripts/task.py`。
+> 图由 `python3 toolbox/scripts/task.py render` 从台账生成并渲染（下方 mermaid 是**生成物，勿手改**；本地 mermaid，离线可跑）。
 > 看板只管「做到哪／下一步」；规则细节看 11（md 阅读层）/ 12（MarkText）/ 13（HTML 重构轨）。
 
 ![进度甘特](progress-gantt.png)
@@ -43,10 +43,10 @@ gantt
     C 快通 12 页        :done, r4, after r3, 1d
 
     section verify-line
-    verify 核心：scripts/verify.py + p17 契约与注解（T0/T1）        :done, v1, 2026-11-24, 1d
+    verify 核心：toolbox/scripts/verify.py + p17 契约与注解（T0/T1）        :done, v1, 2026-11-24, 1d
     verify 接线：Makefile/pre-commit/GitHub Actions/checks 文档        :done, v2, after v1, 1d
-    T2 级考核脚本：scripts/acceptance/level-*.sh + make accept-*        :done, v3, 2026-11-24, 1d
-    术语与 ADR：GLOSSARY 四词 + ADR 0002 + docs/verify-line.md        :done, v4, 2026-11-24, 1d
+    T2 级考核脚本：toolbox/scripts/acceptance/level-*.sh + make accept-*        :done, v3, 2026-11-24, 1d
+    术语与 ADR：GLOSSARY 四词 + ADR 0002 + materials/docs/verify-line.md        :done, v4, 2026-11-24, 1d
     契约全覆盖：coverage： static + 24 页契约（8 blocks / 16 static，15 offline 块）        :done, v5, 2026-11-24, 1d
 ```
 
@@ -67,7 +67,7 @@ gantt
 ## 进度怎么保证实时与准确
 
 > ⚠️ 本节以下描述的是**旧机制**（手改甘特 + check_progress），已被任务生命周期台账取代：
-> 真相源 `workflows/ledger.yaml`、唯一写入口 `scripts/task.py`、规格 `workflows/task-lifecycle.md`。
+> 真相源 `toolbox/workflows/ledger.yaml`、唯一写入口 `toolbox/scripts/task.py`、规格 `toolbox/workflows/task-lifecycle.md`。
 > 保留下文仅作决策演进记录。
 
 > 手工进度板的两种失败：**失实时**（图旧于事实）与**假 done**（标了做完但没真做）。
@@ -78,21 +78,21 @@ gantt
    本项目本就按闸门/收尾点推进，所以“实时”= 每个收尾点必更新，不是后台秒级同步。
    （todayMarker 自动跟系统日期，时间轴不需手动维护。）
 2. **状态有可核对的证据（治假 done）**：每个标 done 的项必须挂一条机器可验的证据
-   （文件存在 / 命令 exit 0 / audit 24/24），由 `scripts/check_progress.py` 核对。
+   （文件存在 / 命令 exit 0 / audit 24/24），由 `toolbox/scripts/check_progress.py` 核对。
    证据对不上就不算 done——把“声明”钉到“现场”（GLOSSARY：声明/现场/身份）。
 
 ### 证据表（done 项 → 可核对证据，check_progress.py 读这张表）
 
 | 工项 | 证据（文件 glob 或命令） | 机器判据 |
 | - | - | - |
-| grill 选型 12/13 | `humen-desicions/12-md-editor.md` `13-html-rebuild.md` | 两文件存在且含“已落定” |
-| GLOSSARY 三词条 + ADR | `GLOSSARY.md` 含“复核编辑器”“重构版”；`docs/adr/0001-dual-canon.md` | grep 命中 + 文件存在 |
-| 进度看板（本图） | `humen-desicions/progress-gantt.png` 新于本文 mtime | PNG mtime ≥ md mtime |
-| 闸门不破 | `python3 manual/shots/audit_book.py` | exit 0 且末行 24/24 |
+| grill 选型 12/13 | `materials/humen-desicions/12-md-editor.md` `13-html-rebuild.md` | 两文件存在且含“已落定” |
+| GLOSSARY 三词条 + ADR | `GLOSSARY.md` 含“复核编辑器”“重构版”；`materials/docs/adr/0001-dual-canon.md` | grep 命中 + 文件存在 |
+| 进度看板（本图） | `materials/humen-desicions/progress-gantt.png` 新于本文 mtime | PNG mtime ≥ md mtime |
+| 闸门不破 | `python3 tutorial/shots/audit_book.py` | exit 0 且末行 24/24 |
 
 > 待填：MarkText / GrapesJS / read-serve 等 done 后各加一行证据。
 
-用法：`python3 scripts/check_progress.py`——任一行证据对不上则退出码 1，列出漂移项。
+用法：`python3 toolbox/scripts/check_progress.py`——任一行证据对不上则退出码 1，列出漂移项。
 
 ## 触发方式：hooks，不是守护进程
 
@@ -122,7 +122,7 @@ gantt
 
 **问：commit 确实能触发 check_progress.py，但要是没有 commit 呢？**
 
-**答（已实现）**：主网不是 commit hook，而是 `scripts/task.py` chokepoint——每次 `start/done` 都执行
+**答（已实现）**：主网不是 commit hook，而是 `toolbox/scripts/task.py` chokepoint——每次 `start/done` 都执行
 依赖闸与 review 门禁，**与 git 解耦**，不 commit 也拦得住跳步/假 done。pre-commit 的 `task.py check --quick`
-只是兜底（揪手改台账/忘重渲）。台账 `workflows/ledger.yaml`；旧 `check_progress.py` 已转为转发壳；
-完整规格见 `workflows/task-lifecycle.md`。
+只是兜底（揪手改台账/忘重渲）。台账 `toolbox/workflows/ledger.yaml`；旧 `check_progress.py` 已转为转发壳；
+完整规格见 `toolbox/workflows/task-lifecycle.md`。

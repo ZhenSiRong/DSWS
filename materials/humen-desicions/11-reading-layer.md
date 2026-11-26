@@ -9,12 +9,12 @@
 
 | # | 事实 | 出处 |
 | - | - | - |
-| F1 | `audit_book.py` 强制 p10–p23 **恰好六个 `##` 段**，段名与顺序钉死；p17 当前恰好六段 | `manual/shots/audit_book.py` L74–83 |
+| F1 | `audit_book.py` 强制 p10–p23 **恰好六个 `##` 段**，段名与顺序钉死；p17 当前恰好六段 | `tutorial/shots/audit_book.py` L74–83 |
 | F2 | **「卡住了看这里」只是 p00 的专属段**。上一轮建议"把陷阱搬进 `## 卡住了看这里`"对 p17 **不成立**——加这个 H2 会让审计直接 FAIL。此处更正 | 同上 L57–61 |
-| F3 | 仓库已有一套 Tufte 风阅读样式 `assets/lesson.css`（68ch 窄栏、衬线、语义色变量），`lessons/*.html` 在用；练本 24 页没有任何 HTML 渲染管线 | `assets/lesson.css`、`manual/shots/` 目录 |
-| F4 | 终端截图由 `manual/shots/term_render.py` 等脚本真跑渲染，改渲染参数即可重出图，不违反"禁止手绘"红线 | `manual/SPEC.md` L56–61 |
-| F5 | GLOSSARY 里「体验层」已被 L5（page-23 前端装修）占用；「练本」定义为"以动手为主，每步必须带预期输出" | `GLOSSARY.md` L9、`manual/README.md` L16 |
-| F6 | 改 `manual/` 页面后必须跑 `audit_book.py` 到 `24/24 通过；README 坏链：0` | `AGENTS.md` 硬规则 1 |
+| F3 | 仓库已有一套 Tufte 风阅读样式 `materials/assets/lesson.css`（68ch 窄栏、衬线、语义色变量），`lessons/*.html` 在用；练本 24 页没有任何 HTML 渲染管线 | `materials/assets/lesson.css`、`tutorial/shots/` 目录 |
+| F4 | 终端截图由 `tutorial/shots/term_render.py` 等脚本真跑渲染，改渲染参数即可重出图，不违反"禁止手绘"红线 | `tutorial/SPEC.md` L56–61 |
+| F5 | GLOSSARY 里「体验层」已被 L5（page-23 前端装修）占用；「练本」定义为"以动手为主，每步必须带预期输出" | `GLOSSARY.md` L9、`tutorial/README.md` L16 |
+| F6 | 改 `tutorial/` 页面后必须跑 `audit_book.py` 到 `24/24 通过；README 坏链：0` | `AGENTS.md` 硬规则 1 |
 
 ## 设计树（当前形态）
 
@@ -53,7 +53,7 @@ Answer:可以，按17试点
 - **B. 只改 md 内容层**：不做渲染层，继续用 IDE/Typora 等通用预览器读。零基建，但组件化、导航、代码块复制按钮全部做不了，"灰色麻疹"只能缓解不能根治。
 - **C. 换现成文档框架**（VitePress/mdBook 等）：功能全，但引入新依赖栈，且六段模板的语义化组件仍要自己写主题。
 
-➡️ **推荐：A。** 仓库已有 lesson.css 的品味基线，Python 渲染脚本放 `manual/shots/` 旁即可，不引新依赖栈；B 治标不治本，C 杀鸡用牛刀。\
+➡️ **推荐：A。** 仓库已有 lesson.css 的品味基线，Python 渲染脚本放 `tutorial/shots/` 旁即可，不引新依赖栈；B 治标不治本，C 杀鸡用牛刀。\
 Answer:B（2026-11-22 改判：放弃 HTML 管线，只改 md + 漫画插图，ark-cli Seedream 5.0 Flash 生图）
 
 ---
@@ -64,7 +64,7 @@ p17 的 pdb `BdbQuit`、`p attempts` NameError、8080/8088/8100 端口辨析等"
 不能加 `## 卡住了看这里`（审计 FAIL）。剩下的路：
 
 - **A. 段内 `###` 小节**：在「动手」对应步骤下加 `### 卡住了看这里`，审计只数 `##`，合法。主线文字变短，陷阱仍在原步骤附近。
-- **B. 搬去附录**：`manual/appendix/` 新建 troubleshooting 页，正文一句"卡住见附录 §X"。主线最干净，但学生卡住时要跳转。
+- **B. 搬去附录**：`tutorial/appendix/` 新建 troubleshooting 页，正文一句"卡住见附录 §X"。主线最干净，但学生卡住时要跳转。
 - **C. 改审计与模板**：给 L2–L5 模板正式加第七段。动静最大，牵动 SPEC、ACCEPTANCE、24 页重放口径。
 
 ➡️ **推荐：A 为主、B 兜底。** 短陷阱（≤5 行）留在步骤内 `###`；长辨析（端口三口径这类）进附录。不动审计、不动模板、判据文字零删改。\
@@ -133,7 +133,7 @@ Answer:除了Q2选B(多插漫画解释图少插文字,我们用ark-cli中的模�
 
 > 生成参数：ep-20261109172906-d7fr4，1536×1024 PNG，无水印。结构验收过（尺寸/格式/哈希）；画面内容以你肉眼为准。
 > 设计约定：**图文并茂**（2026-11-22 按你要求推翻原「文字外置」）——图内带中文标题与对话气泡（Seedream 5.0 支持中文文字渲染），图下 md caption 再补一句解释；沿用 TODO 里「6 张概念漫画 Lite」的既定方针。
-> 显示说明：Tandem WebUI 不认本地相对/绝对路径（浏览器按 WebUI 的 URL 解析会 404），预览图一律走本地静态服务 `http://127.0.0.1:8765/`（起法：`python3 -m http.server 8765 --bind 127.0.0.1 --directory manual/review/reading-layer-preview`）。服务停了图就裂，重新起即可；定稿进 manual/ 时再换回仓库相对路径。
+> 显示说明：Tandem WebUI 不认本地相对/绝对路径（浏览器按 WebUI 的 URL 解析会 404），预览图一律走本地静态服务 `http://127.0.0.1:8765/`（起法：`python3 -m http.server 8765 --bind 127.0.0.1 --directory tutorial/review/reading-layer-preview`）。服务停了图就裂，重新起即可；定稿进 tutorial/ 时再换回仓库相对路径。
 
 ### 预览 1 · 「纠错 = 一次有上限的赌博」（p17 核心隐喻）
 
@@ -168,14 +168,14 @@ Answer:除了Q2选B(多插漫画解释图少插文字,我们用ark-cli中的模�
 
 ### 已改动（均在提交边界内）
 
-1. manual/page-17.md：插 2 张漫画＋caption——漫画1「一次有上限的赌博」在「## 这一页构建什么」段末；漫画2「成功率是抽出来的数」在「## 动手」第 6 步五类表后。原有散文/判据/命令全保留（删减幅度另议）。
-2. manual/images/page-17-comic-one-retry.webp、page-17-comic-sampling.webp：1536×1024 WebP 定稿（正文用仓库相对路径，审计 IMG_RE 查存在通过）。
+1. tutorial/page-17.md：插 2 张漫画＋caption——漫画1「一次有上限的赌博」在「## 这一页构建什么」段末；漫画2「成功率是抽出来的数」在「## 动手」第 6 步五类表后。原有散文/判据/命令全保留（删减幅度另议）。
+2. tutorial/images/page-17-comic-one-retry.webp、page-17-comic-sampling.webp：1536×1024 WebP 定稿（正文用仓库相对路径，审计 IMG_RE 查存在通过）。
 3. GLOSSARY.md：增「阅读层（reading layer）」词条，按 Q2=B 校准为「md 内容呈现优化＋漫画插图」，不写 HTML；指向本规划文档（不引虚编号）。
-4. Q4 截图重高：manual/shots/render_l3_pages.py 高度改内容自适应（MIN_PNG_H 1800→600，新增 PAD_PX=80、MAX_PNG_H=7200；target_h=min(max(h+PAD,MIN),MAX)）。p17 两张截图用同一 trim+extent 逻辑处理现有真跑 PNG（内容像素未动，仅调画布）：correct 1800→1194、ablation 1800→1013，黑边 867→80px 留白。未来全量重渲即按新高度。
+4. Q4 截图重高：tutorial/shots/render_l3_pages.py 高度改内容自适应（MIN_PNG_H 1800→600，新增 PAD_PX=80、MAX_PNG_H=7200；target_h=min(max(h+PAD,MIN),MAX)）。p17 两张截图用同一 trim+extent 逻辑处理现有真跑 PNG（内容像素未动，仅调画布）：correct 1800→1194、ablation 1800→1013，黑边 867→80px 留白。未来全量重渲即按新高度。
 
 ### 验证
 
-- python3 manual/shots/audit_book.py → 页面 24/24 通过；README 坏链 0。
+- python3 tutorial/shots/audit_book.py → 页面 24/24 通过；README 坏链 0。
 - py_compile render_l3_pages.py OK；无 1800 硬编码残留（除历史注释）。
 
 ### 后续轮次（未开工）
@@ -204,7 +204,7 @@ Answer:除了Q2选B(多插漫画解释图少插文字,我们用ark-cli中的模�
 
 ### 样例已出（2026-11-23，待用户认可）
 
-两处最重段落已按口径重写进 manual/page-17.md：
+两处最重段落已按口径重写进 tutorial/page-17.md：
 
 1. 第 5 步后 ~640 字大段 → 看时间线／缓冲陷阱／pdb 四连敲（编号列表）／三个陷阱（bullet）＋工具卡链接，事实一条未丢。
 2. 对账猜 2 ~700 字 → 领词句＋样本 A／样本 B／判据段／计数口径／怎么跑五小段；判据粗体句逐字保留。
@@ -231,8 +231,8 @@ Answer:除了Q2选B(多插漫画解释图少插文字,我们用ark-cli中的模�
 
 ### Q2 修订（取代「只改 md、不做 HTML 渲染管线」旧决定）
 
-- 阅读版 HTML 转正：md 仍是唯一正典（audit 闸门不变），`manual/shots/render_read.py` 只转排版不改内容；样式复用 `assets/lesson.css`＋新增 `assets/read.css`（窄栏 40em、首行缩进 2em、行距 1.72、行内代码降噪、命令块深底）。
-- 输出 `manual/read/page-XX.html`（相对链接，约 19KB/页，file:// 直接开）；`--embed` 导出自包含单文件到 review/reading-layer-preview/（分享用）。
+- 阅读版 HTML 转正：md 仍是唯一正典（audit 闸门不变），`tutorial/shots/render_read.py` 只转排版不改内容；样式复用 `materials/assets/lesson.css`＋新增 `materials/assets/read.css`（窄栏 40em、首行缩进 2em、行距 1.72、行内代码降噪、命令块深底）。
+- 输出 `tutorial/read/page-XX.html`（相对链接，约 19KB/页，file:// 直接开）；`--embed` 导出自包含单文件到 materials/review/reading-layer-preview/（分享用）。
 - p17 阅读版已生成验证：相对链接 5 条 0 失效；12 代码块/2 表/3 图；audit 24/24。
 - 修订理由：用户两次复核「阅读体验差」；瓶颈在行宽/缩进/节奏（渲染层），md 措辞优化有天花板（第 3 轮净字数 +5%）。
 
@@ -255,9 +255,9 @@ Answer:除了Q2选B(多插漫画解释图少插文字,我们用ark-cli中的模�
 
 > 用户原话：「ok, 渐进式铺开，画个AON出来」——批准三批渐进铺开，先要一张单代号网络图。
 
-- 源文件 `humen-desicions/reading-layer-aon.mmd`（17 节点 / 22 条 FS 边）；图 `humen-desicions/reading-layer-aon.png`（2600×683）。
-- 渲染＋核对：`python3 scripts/render_reading_aon.py`——逐轮松弛独立重算 CPM（与 render_flow 的 Kahn 是两套算法），逐节点核对 ES/EF/LS/LF、class、linkStyle、注释四方对账，再 mermaid 渲染＋PNG 配色自检。
-- 节点口径同 `manual/aon/README.md`：编号＋活动名 / 工期（估）/ ES EF / LS LF / 完成判据；橙=关键路径，灰=有浮动，绿六边形=用户复核里程碑（RA/RB/RC，在关键路径上、批间闸门）。
+- 源文件 `materials/humen-desicions/reading-layer-aon.mmd`（17 节点 / 22 条 FS 边）；图 `materials/humen-desicions/reading-layer-aon.png`（2600×683）。
+- 渲染＋核对：`python3 toolbox/scripts/render_reading_aon.py`——逐轮松弛独立重算 CPM（与 render_flow 的 Kahn 是两套算法），逐节点核对 ES/EF/LS/LF、class、linkStyle、注释四方对账，再 mermaid 渲染＋PNG 配色自检。
+- 节点口径同 `tutorial/aon/README.md`：编号＋活动名 / 工期（估）/ ES EF / LS LF / 完成判据；橙=关键路径，灰=有浮动，绿六边形=用户复核里程碑（RA/RB/RC，在关键路径上、批间闸门）。
 - 关键路径：R0 → A21 → GA → RA → B20/B19 → GB → RB → C → GC → RC → F；总工期 155 分钟（估，不是验收时限）。B20/B19 是并行关键支路（同浮动 0）。
 - 浮动：A13/A18 各 5、B23/B15 各 3、B10 5 分钟——批内并行页可错峰，不卡关键路径。
 - 三批节奏：A 试点（21/13/18）→ GA 闸门 → RA 用户复核 → B（20/19/23/15/10）→ GB → RB → C 快通 12 页 → GC → RC → F 收尾（--all 全书＋TODO 勾销＋文档收口）。
@@ -267,7 +267,7 @@ Answer:除了Q2选B(多插漫画解释图少插文字,我们用ark-cli中的模�
 
 - 净口径扫描：p21 >200 字散文单元 10 处；选最重的两处概念段做样例——「这一页构建什么」(223 字)、「与运维可观测的边界」(290 字，对账里最重)。L88 深入探讨(390)/L101 拆一刀引言(294) 更重但满是受保护行号，留待全页铺开时小心拆。
 - 手法：构建什么 → 领词起句＋进度/目录端点/回放夹具三 bullet＋判据段＋心智模型句；边界 → 端点枚举改嵌套列表＋「没有 X」保留粗体整句＋能回答/不能回答粗体领词对比。
-- 验证：audit 24/24、README 坏链 0；9 代码块与 HEAD 逐块一致；保护区 21 项全在（心智模型句、猜 1 判据原句、结论句、全部端点/数字/路径）；>200 单元 10→8；阅读版 `manual/read/page-21.html` 重生成（13KB，3 链接 0 失效、9 pre、1 表）。
+- 验证：audit 24/24、README 坏链 0；9 代码块与 HEAD 逐块一致；保护区 21 项全在（心智模型句、猜 1 判据原句、结论句、全部端点/数字/路径）；>200 单元 10→8；阅读版 `tutorial/read/page-21.html` 重生成（13KB，3 链接 0 失效、9 pre、1 表）。
 - 待用户认可样例 → 铺 p21 余 8 处（深入探讨/拆一刀/猜 1/猜 2/稳定量/uv.lock/第 3 步/为什么值得看），再 A13/A18（各 5 分钟浮动可并行）。
 
 ## 第 5 轮 · A/B/C 三批全量铺开完成（2026-11-24，branch `reading-layer-v2`）
@@ -276,10 +276,10 @@ Answer:除了Q2选B(多插漫画解释图少插文字,我们用ark-cli中的模�
 
 | 批次 | 页 | 报告 |
 | - | - | - |
-| A | p21 / p13 / p18 | `manual/review/reading-layer-batch-A-report.md` |
-| B | p20 / p19 / p23 / p15 / p10 | `manual/review/reading-layer-batch-B-report.md` |
-| C1 | p09 / p00 / p07 / p22 / p06 / p08 | `manual/review/reading-layer-batch-C1-report.md` |
-| C2 | p14 / p01 / p05 / p11 / p12 / p03 | `manual/review/reading-layer-batch-C2-report.md` |
+| A | p21 / p13 / p18 | `tutorial/review/reading-layer-batch-A-report.md` |
+| B | p20 / p19 / p23 / p15 / p10 | `tutorial/review/reading-layer-batch-B-report.md` |
+| C1 | p09 / p00 / p07 / p22 / p06 / p08 | `tutorial/review/reading-layer-batch-C1-report.md` |
+| C2 | p14 / p01 / p05 / p11 / p12 / p03 | `tutorial/review/reading-layer-batch-C2-report.md` |
 
 **闸门**：`audit_book` 24/24；`verify.py --fast` T0 PASS；保护区脚本核对 20 页（代码围栏 / 六段标题 / 图片引用 / 粗体判据 / 数字）**0 异常**；`render_read.py --all` 生成 24 页阅读版 HTML。
 **诚实口径**：各批指标以报告为准（散文净字数持平或小幅升降，收益在段长/结构）；独立复测仍发现少量 >200 字符的**引用块/长 bullet**（非"散文段"口径），留给第二轮清理或人工复核。
@@ -288,9 +288,9 @@ Answer:除了Q2选B(多插漫画解释图少插文字,我们用ark-cli中的模�
 
 > 基线：`v1.1.0` 前；风格沿用 p17 定稿（白底扁平、黑线 + 单橙点缀、中文标题/气泡），Seedream 5.0 Flash（`ep-20261109172906-d7fr4`）。
 
-- 每页 1 张概念漫画（p17 已有 2 张），共 **23 张新图**：`manual/images/page-{00..23}-comic.webp`（WebP q82，总计约 2.5 MB）。
+- 每页 1 张概念漫画（p17 已有 2 张），共 **23 张新图**：`tutorial/images/page-{00..23}-comic.webp`（WebP q82，总计约 2.5 MB）。
 - 插入位置：`## 这一页构建什么` 段末（p17 保持原两张位置）。
-- 生成方式：`arkcli +gen --model ep-20261109172906-d7fr4 --modality image --size 1536x1024`；提示词按页内核心隐喻（见 `manual/review/reading-layer-preview/comics-sheet.png` 联系表）。
+- 生成方式：`arkcli +gen --model ep-20261109172906-d7fr4 --modality image --size 1536x1024`；提示词按页内核心隐喻（见 `tutorial/review/reading-layer-preview/comics-sheet.png` 联系表）。
 - 闸门：`audit_book` 24/24、`verify.py --fast` T0 PASS、`make verify` T1 PASS、`make audit` 5/5；阅读版 HTML 全书重生成。
 
 **说明**：漫画只替换/补充解释性呈现，六段结构、代码块、判据原句、数字/路径/证据链接一字未动。
@@ -301,17 +301,17 @@ Answer:除了Q2选B(多插漫画解释图少插文字,我们用ark-cli中的模�
 
 | 批次 | 页 | 实现 |
 | - | - | - |
-| 试点（kimi + lead 收尾） | p00–p02 | `manual/designs/page-00…02/`（pilot 定制版式） |
-| 批量（共享模板） | p03–p23 | `manual/designs/page-NN/`（`build_visuals.py` 从 `data/page-NN.json` 生成） |
+| 试点（kimi + lead 收尾） | p00–p02 | `tutorial/designs/page-00…02/`（pilot 定制版式） |
+| 批量（共享模板） | p03–p23 | `tutorial/designs/page-NN/`（`build_visuals.py` 从 `data/page-NN.json` 生成） |
 
-- 页面只引用 `manual/images/page-NN-visual.webp`；旧 25 张 AI 漫画移到 `manual/images/archive/comics-v1/`。
-- 构建：`python3 manual/designs/build_visuals.py`（全部）或 `build_visuals.py 03 04`；每页同时生成 `index.html` + `editor.html` + `out/poster.png`。
+- 页面只引用 `tutorial/images/page-NN-visual.webp`；旧 25 张 AI 漫画移到 `tutorial/images/archive/comics-v1/`。
+- 构建：`python3 tutorial/designs/build_visuals.py`（全部）或 `build_visuals.py 03 04`；每页同时生成 `index.html` + `editor.html` + `out/poster.png`。
 - 改版：改 `data/page-NN.json` → 重跑构建 → `render_read.py` → audit；不需要生图 token。
 - 闸门：`audit_book 24/24`、`verify T0/T1`（24 个契约，含页面图的静态路径）。
 - 说明：p00–p02 目前仍是 pilot 定制版式，后续可统一迁到共享模板（若用户要求视觉完全一致）。
 ## 第 8 轮 · 24 页实体/喻体版铺开（2026-11-25）
 
 - 全部 24 页统一为「左实体 / 右喻体 + ①②③映射」；喻体插画由 Seedream 生成（无字），文字全部 HTML。
-- 21 条 prompt 见 `manual/designs/art-prompts.md`；p12/p18 曾把 SELECT 画进图里，已重生成无字版。
-- 编辑器新增「另存为 HTML / 覆盖保存」顶栏按钮；`scripts/design-serve.py` 提供保存接口。
+- 21 条 prompt 见 `tutorial/designs/art-prompts.md`；p12/p18 曾把 SELECT 画进图里，已重生成无字版。
+- 编辑器新增「另存为 HTML / 覆盖保存」顶栏按钮；`toolbox/scripts/design-serve.py` 提供保存接口。
 - 闸门：audit 24/24、make audit 5/5、verify T0/T1 PASS、render_read 幂等。

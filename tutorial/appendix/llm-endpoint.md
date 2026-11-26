@@ -4,9 +4,9 @@
 
 ## 1. 这页解决什么 / 不解决什么
 
-- **解决**：把 `.env` 里四个 `REBUILD_LLM_*` 填对 → 用 `scripts/llm_check.py` 自检 → 重启 backend 确认切换生效；失败时按状态码定位。
+- **解决**：把 `.env` 里四个 `REBUILD_LLM_*` 填对 → 用 `toolbox/scripts/llm_check.py` 自检 → 重启 backend 确认切换生效；失败时按状态码定位。
 - **不解决判据**：主线判定用确定性生成器 + 录制夹具（p15 基线、p17 纠错、ACCEPTANCE 全清单）。配 key 不改变任何一条判据；真模型成功态不能稳定复现（见 §7）。
-- **不配 key 时一切照旧**：`backend/app/main.py` 的 `_build_generator()` 拿不到三个非空变量就返回 `DeterministicGenerator`，页面、基线、验收都不变。
+- **不配 key 时一切照旧**：`system/backend/app/main.py` 的 `_build_generator()` 拿不到三个非空变量就返回 `DeterministicGenerator`，页面、基线、验收都不变。
 - 一个例外要知道：**配了坏 key 不会自动退回确定性生成器**——每个请求会以有名字的失败结束（见 §6），所以先自检再重启。
 
 ## 2. 四个变量 + 放哪
@@ -20,8 +20,8 @@
 
 - **只写进仓库根 `.env`**（`make docker-env` 从 `.env.example` 生成，已被 `.gitignore`）。**不要**写进命令、页面、截图、提交、聊天记录——key 只该出现在 `.env` 里。
 - 容器读 `.env`：Compose 每次重新读；改完 `docker compose up -d --force-recreate backend`（或 `make docker-up`）。
-- 宿主 shell 读 `.env`：`source scripts/export-docker-env.sh`（会把 `REBUILD_LLM_*` 导出到当前 shell）；最小做法 `set -a; . ./.env; set +a`（值里有 `$` 时优先用脚本）。
-- 读取点：`backend/app/generate/provider.py` 的 `HttpLlmGenerator.from_env()`，**三个非空才启用**，`TIMEOUT` 缺省 30。
+- 宿主 shell 读 `.env`：`source toolbox/scripts/export-docker-env.sh`（会把 `REBUILD_LLM_*` 导出到当前 shell）；最小做法 `set -a; . ./.env; set +a`（值里有 `$` 时优先用脚本）。
+- 读取点：`system/backend/app/generate/provider.py` 的 `HttpLlmGenerator.from_env()`，**三个非空才启用**，`TIMEOUT` 缺省 30。
 
 ## 3. 端点形状（OpenAI 兼容）
 
@@ -42,8 +42,8 @@
 **第 0 步：先列模型，再填 `REBUILD_LLM_MODEL`。** 模型名不要猜：
 
 ```bash
-source scripts/export-docker-env.sh
-python3 scripts/llm_check.py --models
+source toolbox/scripts/export-docker-env.sh
+python3 toolbox/scripts/llm_check.py --models
 ```
 
 本机实测（2026-11-19，DeepSeek；两次运行）：`status=200 latency=0.27–0.31s models=deepseek-flash, deepseek-v4-pro`。清单里没有的名字别填——换厂商要同时换 base_url 和 model，**不同厂商的模型名不能混用**。
@@ -51,7 +51,7 @@ python3 scripts/llm_check.py --models
 **第 1 步：dry-run（默认；不联网、不花钱）**——只查四个变量、URL 形状、超时数字，缺什么就打印"怎么补"：
 
 ```bash
-python3 scripts/llm_check.py
+python3 toolbox/scripts/llm_check.py
 ```
 
 全齐且形状合法时末行是 `READY：…（dry-run 没有发请求）`，退出码 0；否则退出码 1 并列出缺哪个变量、怎么补。
@@ -59,7 +59,7 @@ python3 scripts/llm_check.py
 **第 2 步：`--live`（真的发 1 条，会计费）**——POST 最小请求 `messages:[{"role":"user","content":"ping"}]`、`max_tokens=1`，打印状态码 / 模型 / 耗时 / 字节数 / 返回字符数；401、404、超时、DNS 各自分类并给排查步骤。**任何路径都不打印完整 key，只显示前 4 位**：
 
 ```bash
-python3 scripts/llm_check.py --live
+python3 toolbox/scripts/llm_check.py --live
 ```
 
 本机实测（DeepSeek；两次运行）：`status=200 latency=0.57s / 0.87s bytes=531 model=deepseek-flash reply_chars=0`。`reply_chars=0` 不是失败：推理型模型把预算花在 `reasoning_content` 上，本检查只看连通与认证，不看内容。
@@ -94,7 +94,7 @@ docker compose exec backend python -c "from app.generate.provider import HttpLlm
 
 ## 7. 诚实边界
 
-- 真模型成功态**不能稳定复现**：本机这一次出了能过 `check_sql` 的 SQL，不代表每次、每台机器都行。结论只能写「多次采样（`trials>=3`）+ 成功率 + 失败分类」，不许写「已修复」（p17 对账；`eval/live_probe.py` 是采样探针，要跑着的服务 + 真 key）。
+- 真模型成功态**不能稳定复现**：本机这一次出了能过 `check_sql` 的 SQL，不代表每次、每台机器都行。结论只能写「多次采样（`trials>=3`）+ 成功率 + 失败分类」，不许写「已修复」（p17 对账；`system/eval/live_probe.py` 是采样探针，要跑着的服务 + 真 key）。
 - **本附录不改变 ACCEPTANCE 任何判据**：真模型仍不在验收清单里；主线回归仍用确定性一侧 + 录制夹具。
 - 本机只实测了 DeepSeek + `deepseek-flash`；Ark / Ollama / vLLM 是形状示例，未在本机验证。
 - 真模型纠错实测证据（2026-11-20，隔离栈，8 题 × 3 次 = 24 次真实请求）：[`llm-live-probe.md`](llm-live-probe.md)。

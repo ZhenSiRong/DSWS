@@ -9,7 +9,7 @@
 </head>
 <body>
 <main class="page">
-<p class="kicker">练本 · 阅读版（md 正典派生，改内容请改 manual/page-03.md）</p>
+<p class="kicker">练本 · 阅读版（md 正典派生，改内容请改 tutorial/page-03.md）</p>
 <h1>第 3 页 · 让服务在 8000 端口回答问题</h1>
 <blockquote>
 <p><strong>城市坐标 · P3 查询服务中心（交付物 ⑤）</strong>｜服务中心开门值班：窗口 <code>GET /health</code> 先通，楼里第一次有人应声。</p>
@@ -25,9 +25,9 @@
 <li>再另开一个终端敲 <code>curl -s http://127.0.0.1:8000/health</code>，屏幕上会出现哪一行？</li>
 </ol>
 <h2>动手</h2>
-<p><strong>先备环境</strong>：没有 <code>backend/.venv</code> 的话先回第 0 页跑 <code>make install</code>。</p>
-<p><strong>仓库根执行</strong>：所有命令都在<strong>仓库根目录</strong>敲（<code>ls</code> 能看到 <code>backend</code>、<code>fixtures</code> 的那一层）。</p>
-<p><strong>不装新东西</strong>：Python 用仓库里现成的 <code>backend/.venv/bin/python</code>，它已经装好 fastapi 和 uvicorn，<strong>不要再用 pip 装新东西</strong>。</p>
+<p><strong>先备环境</strong>：没有 <code>system/backend/.venv</code> 的话先回第 0 页跑 <code>make install</code>。</p>
+<p><strong>仓库根执行</strong>：所有命令都在<strong>仓库根目录</strong>敲（<code>ls</code> 能看到 <code>system/backend</code>、<code>system/fixtures</code> 的那一层）。</p>
+<p><strong>不装新东西</strong>：Python 用仓库里现成的 <code>system/backend/.venv/bin/python</code>，它已经装好 fastapi 和 uvicorn，<strong>不要再用 pip 装新东西</strong>。</p>
 <ol>
 <li>在仓库根目录新建文件夹 <code>lab</code>，在 <code>lab</code> 里新建文件 <code>app.py</code>，把下面整段<strong>粘贴</strong>进去（口语常说“粘进去”）、保存：</li>
 </ol>
@@ -44,7 +44,7 @@ def health():
 <ol start="2">
 <li>在终端 1 敲：</li>
 </ol>
-<pre><code class="language-bash">backend/.venv/bin/python -m uvicorn lab.app:app --port 8000
+<pre><code class="language-bash">system/backend/.venv/bin/python -m uvicorn lab.app:app --port 8000
 </code></pre>
 <p><strong>端口被占</strong>：如果报 <code>ERROR:    [Errno 98] error while attempting to bind on address ('127.0.0.1', 8000): address already in use</code>，说明 <code>8000</code> 被别的程序占了。</p>
 <p><strong>换端口</strong>：把命令里的 <code>--port 8000</code> 改成 <code>--port 8010</code>（或别的空闲端口），<strong>后面第 4–9 页里写 <code>8000</code> 的地方全部同步改成这个端口</strong>。</p>

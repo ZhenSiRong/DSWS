@@ -2,19 +2,19 @@
 
 > **城市坐标 · L4 城市安防 · 停止按钮**｜市民按了停止，城里的活要真的停下来，而不是把按钮藏起来。
 
-> 前置：L4（守）第三页。本页的判据一条服务都不用：只跑 `backend/` 里的离线测试和一条夹具回放，不需要 MySQL、`.env`、模型 key，也不需要浏览器；
+> 前置：L4（守）第三页。本页的判据一条服务都不用：只跑 `system/backend/` 里的离线测试和一条夹具回放，不需要 MySQL、`.env`、模型 key，也不需要浏览器；
 >
-> 要用第 0 页 `make install` 建好的 `backend/.venv`（缺了先回第 0 页）。命令都在仓库根目录、同一个终端里整段连续执行；括号是子 shell，跑完你还在仓库根目录。
+> 要用第 0 页 `make install` 建好的 `system/backend/.venv`（缺了先回第 0 页）。命令都在仓库根目录、同一个终端里整段连续执行；括号是子 shell，跑完你还在仓库根目录。
 >
 > 第 18 页守账号、第 19 页守策略，本页守取消：用户点「停止」之后，服务端到底是真停了，还是把它当成一次完成？
 >
 > 开始前先确认**第 19 页的拆一刀（`forbid_set_operations: false`）已还原**：
 >
-> 先跑 `scripts/lab reset p19-before --yes`，再自查两处——
+> 先跑 `toolbox/scripts/lab reset p19-before --yes`，再自查两处——
 >
-> `grep -n 'forbid_set_operations: true' contracts/sql.policy.yaml` 应回 `31:  forbid_set_operations: true`（无输出 = 还没还原）；
+> `grep -n 'forbid_set_operations: true' system/contracts/sql.policy.yaml` 应回 `31:  forbid_set_operations: true`（无输出 = 还没还原）；
 >
-> `(cd backend && .venv/bin/python -m app.scripts.record_sse --check)` 应回 `S7 SSE RECORD PASS（14 个夹具与真实输出一致）`。
+> `(cd system/backend && .venv/bin/python -m app.scripts.record_sse --check)` 应回 `S7 SSE RECORD PASS（14 个夹具与真实输出一致）`。
 >
 > 不还原的话，第 2 步会变成 `3 failed, 111 passed`、第 3 步红在 `sql_rejected.json 与今天的真实输出不同步`；这时拍的 `p20-before` 会把坏契约一起存进快照，`reset` 也回不到绿。
 
@@ -22,7 +22,7 @@
 
 让取消成为**独立状态**——不是 `done`、也不是失败：服务端真的停下、发一条名字叫 `CANCELLED` 的事件、界面标「已取消」。
 
-**判据可重放**：做完你得到 6 条取消测试全绿 + `fixtures/sse/cancelled.json` 的 2 帧（`skipped` + `CANCELLED`）+ 夹具与今天的真实输出逐字节一致。
+**判据可重放**：做完你得到 6 条取消测试全绿 + `system/fixtures/sse/cancelled.json` 的 2 帧（`skipped` + `CANCELLED`）+ 夹具与今天的真实输出逐字节一致。
 
 心智模型：**「停止」是一个状态，不是「不返回」。**
 
@@ -39,15 +39,15 @@
 
 <!-- verify: p20-lab-save -->
 ```bash
-scripts/lab save p20-before
+toolbox/scripts/lab save p20-before
 ```
 
 **第 2 步：跑离线判据。** 第一行只跑名字带 `cancel` 的 6 条；第二行跑 `tests/agent` 全量，确认你没碰坏别的。两条都退出码 0 才算过：
 
 <!-- verify: p20-pytest-cancel -->
 ```bash
-(cd backend && .venv/bin/python -m pytest tests/agent -q -k cancel)
-(cd backend && .venv/bin/python -m pytest tests/agent -q)
+(cd system/backend && .venv/bin/python -m pytest tests/agent -q -k cancel)
+(cd system/backend && .venv/bin/python -m pytest tests/agent -q)
 ```
 
 **第 3 步：回放取消夹具。** 夹具是「真字节流的录像」：`frames` 里每一行就是回放服务器要写给浏览器的一个 `data:` 帧。
@@ -56,15 +56,15 @@ scripts/lab save p20-before
 
 <!-- verify: p20-record-sse -->
 ```bash
-(cd backend && .venv/bin/python -c "import json;[print(f) for f in json.load(open('../fixtures/sse/cancelled.json'))['frames']]")
-(cd backend && .venv/bin/python -m app.scripts.record_sse --check)
+(cd system/backend && .venv/bin/python -c "import json;[print(f) for f in json.load(open('../fixtures/sse/cancelled.json'))['frames']]")
+(cd system/backend && .venv/bin/python -m app.scripts.record_sse --check)
 ```
 
 **第 4 步（可选，浏览器）：** 想在真实界面上看「已取消」和步骤条停住，跑 `make stage6-ui`（自起临时后端/前端，不跑不影响本页判据）。
 
-**前提**：`uv`、Node、Chrome/Edge 和装好的 `frontend/node_modules`——没有先 `npm install`，要联网。
+**前提**：`uv`、Node、Chrome/Edge 和装好的 `system/frontend/node_modules`——没有先 `npm install`，要联网。
 
-**陷阱**：脚本里的 `uv run` 会改写 `backend/uv.lock`（不在 `lab` 白名单、`reset` 救不回），跑完用 `git checkout -- backend/uv.lock` 还原。
+**陷阱**：脚本里的 `uv run` 会改写 `system/backend/uv.lock`（不在 `lab` 白名单、`reset` 救不回），跑完用 `git checkout -- system/backend/uv.lock` 还原。
 
 ## 你应该看到
 
@@ -104,7 +104,7 @@ S7 SSE RECORD PASS（14 个夹具与真实输出一致）
 
 ## 拆一刀
 
-打开 `backend/app/agent/cancel.py`，找到 `CancelToken.cancel`（`cancel.py:37`，方法体内唯一一行 `self._event.set()`；同文件 L64 还有一个 `CancelRegistry.cancel`，别改错）。
+打开 `system/backend/app/agent/cancel.py`，找到 `CancelToken.cancel`（`cancel.py:37`，方法体内唯一一行 `self._event.set()`；同文件 L64 还有一个 `CancelRegistry.cancel`，别改错）。
 
 **改法**：把 `self._event.set()` 改成 `pass`（别只删这一行：缩进块空了会 `IndentationError`）——停止开关永远不会被拉下，正是旧系统「点了停止、查询照跑完」的复现。
 
@@ -112,8 +112,8 @@ S7 SSE RECORD PASS（14 个夹具与真实输出一致）
 
 <!-- verify: p20-ablation-commands -->
 ```bash
-(cd backend && .venv/bin/python -m pytest tests/agent -q -k cancel)
-(cd backend && .venv/bin/python -m app.scripts.record_sse --check)
+(cd system/backend && .venv/bin/python -m pytest tests/agent -q -k cancel)
+(cd system/backend && .venv/bin/python -m app.scripts.record_sse --check)
 ```
 
 ```text
@@ -138,13 +138,13 @@ FAIL: SSE 夹具与真实输出不同步：
 
 **后果**：`cancelled.json` 会被录成 24 帧「正常完成」流（和 `happy.json` 的 24 帧逐帧相同），`--check` 反而立刻变绿、判据失效。
 
-**还原**：用 `scripts/lab reset p20-before --yes`，但提示里的 `uv run` 还会改写 `backend/uv.lock`（不在 `lab` 白名单、`reset` 救不回），要 `git checkout -- backend/uv.lock`。本页用快照还原并回绿：
+**还原**：用 `toolbox/scripts/lab reset p20-before --yes`，但提示里的 `uv run` 还会改写 `system/backend/uv.lock`（不在 `lab` 白名单、`reset` 救不回），要 `git checkout -- system/backend/uv.lock`。本页用快照还原并回绿：
 
 <!-- verify: p20-lab-reset-restore -->
 ```bash
-scripts/lab reset p20-before --yes
-(cd backend && .venv/bin/python -m pytest tests/agent -q -k cancel | tail -1)
-(cd backend && .venv/bin/python -m app.scripts.record_sse --check | tail -1)
+toolbox/scripts/lab reset p20-before --yes
+(cd system/backend && .venv/bin/python -m pytest tests/agent -q -k cancel | tail -1)
+(cd system/backend && .venv/bin/python -m app.scripts.record_sse --check | tail -1)
 ```
 
 ```text

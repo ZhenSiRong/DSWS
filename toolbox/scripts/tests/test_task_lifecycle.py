@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """task.py 生命周期验收测试（隔离：monkeypatch 把 REPO/LEDGER 指到临时 git 仓库）。
 
-覆盖 workflows/task-lifecycle.md §12：环拒/依赖闸/并行/review 三态/降级/check/render/board/migrate。
-跑：backend/.venv/bin/python -m pytest scripts/tests/test_task_lifecycle.py -q
+覆盖 toolbox/workflows/task-lifecycle.md §12：环拒/依赖闸/并行/review 三态/降级/check/render/board/migrate。
+跑：system/backend/.venv/bin/python -m pytest toolbox/scripts/tests/test_task_lifecycle.py -q
 渲染测试需 google-chrome + ImageMagick + MERMAID_JS（fixture 自动指向仓库本地副本）。
 """
 from __future__ import annotations

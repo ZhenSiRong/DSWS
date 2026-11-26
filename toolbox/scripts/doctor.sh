@@ -3,10 +3,10 @@
 #
 # 用法（在仓库根目录）：
 #
-#     make doctor                  # 等价于 bash scripts/doctor.sh
-#     bash scripts/doctor.sh -v    # 每项多一行：实际输出 + 判定依据
+#     make doctor                  # 等价于 bash toolbox/scripts/doctor.sh
+#     bash toolbox/scripts/doctor.sh -v    # 每项多一行：实际输出 + 判定依据
 #
-# 为什么要它：第 0 页原本要人一条条敲 docker/uv/node/make/curl/python/端口，
+# 为什么要它：第 0 页原本要人一条条敲 system/docker/uv/node/make/curl/python/端口，
 # 敲完还得自己判断「这算不算过了」。判据散在 7 条命令里，第三方没法复核——
 # SPEC「体验判据」第 5 条要求「别人照着页面文字能判断对错，不依赖作者在场」，
 # 所以把散判据收成一条命令 + 一个总判定；输出里带版本号，别人照图就能对上。
@@ -16,7 +16,7 @@
 
 set -u
 
-ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "$ROOT" || exit 2
 
 VERBOSE=0
@@ -84,37 +84,37 @@ note $st "curl" "没装 curl（多数系统自带）"
 deps=()
 
 PY=""
-for cand in backend/.venv/bin/python backend/.venv/Scripts/python.exe; do
+for cand in system/backend/.venv/bin/python system/backend/.venv/Scripts/python.exe; do
   if [ -x "$cand" ]; then PY="$cand"; break; fi
 done
 
 if [ -z "$PY" ]; then
   deps+=("✗ Python")
   tally 1
-  note 1 "Python 环境" "backend/.venv 不存在。回仓库根目录跑 make install"
+  note 1 "Python 环境" "system/backend/.venv 不存在。回仓库根目录跑 make install"
 else
   pv=$("$PY" -V 2>&1 | grep -oE '[0-9]+(\.[0-9]+)+' | head -1)
-  req=$(grep -oE 'requires-python *= *">= *[0-9.]+"' backend/pyproject.toml 2>/dev/null |
+  req=$(grep -oE 'requires-python *= *">= *[0-9.]+"' system/backend/pyproject.toml 2>/dev/null |
     grep -oE '[0-9]+(\.[0-9]+)+' | head -1)
   req=${req:-3.12}
   newer=$(printf '%s\n%s\n' "$req" "$pv" | sort -V | tail -1)
   if [ "$newer" = "$pv" ]; then st=0; else st=1; fi
   deps+=("$(mark $st) Python $pv（要求 ≥$req）")
   tally $st
-  note $st "Python $pv" "低于 pyproject 要求的 $req，重建 venv：rm -rf backend/.venv && make install"
+  note $st "Python $pv" "低于 pyproject 要求的 $req，重建 venv：rm -rf system/backend/.venv && make install"
 
   out=$(uv pip check --python "$PY" 2>&1)
   st=$?
   cnt=$(printf '%s' "$out" | grep -oE 'Checked [0-9]+ packages' | grep -oE '[0-9]+' | head -1)
   deps+=("$(mark $st) uv ${cnt:-?} 个包全兼容")
   tally $st
-  note $st "uv 包" "有包装不上或互相冲突。跑 cd backend && uv sync --frozen 看第一段红字"
+  note $st "uv 包" "有包装不上或互相冲突。跑 cd system/backend && uv sync --frozen 看第一段红字"
 
-  (cd frontend && npm ls --depth=0 >/dev/null 2>&1)
+  (cd system/frontend && npm ls --depth=0 >/dev/null 2>&1)
   st=$?
   deps+=("$(mark $st) npm 依赖无缺失")
   tally $st
-  note $st "npm 依赖" "缺包。跑 cd frontend && npm ci（别用 npm install）"
+  note $st "npm 依赖" "缺包。跑 cd system/frontend && npm ci（别用 npm install）"
 fi
 
 # ---------------- 端口 ----------------

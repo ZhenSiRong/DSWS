@@ -7,7 +7,7 @@
 
 把 rebuild 的前端、后端、MySQL、Elasticsearch、Qdrant 全部封装进 Docker，
 通过单机 Docker Compose 一条命令部署。MySQL 由容器自带，首次启动自动导入
-`fixtures/dw.sql`，并自动创建只读账号 `dw_reader` 与 S2 元知识。
+`system/fixtures/dw.sql`，并自动创建只读账号 `dw_reader` 与 S2 元知识。
 
 不修改旧系统，不引入 Swarm / Kubernetes。
 
@@ -44,7 +44,7 @@
 
 - 基础镜像 `python:3.12-slim`。
 - 构建阶段使用 `ghcr.io/astral-sh/uv` 执行 `uv sync --frozen --no-dev`。
-- 运行镜像只包含虚拟环境、`backend/app`、`contracts/`、`fixtures/`。
+- 运行镜像只包含虚拟环境、`system/backend/app`、`system/contracts/`、`system/fixtures/`。
 - 非 root 用户运行；设置 `PYTHONUNBUFFERED=1`、`PYTHONDONTWRITEBYTECODE=1`。
 - 启动命令固定单 worker：
   `uvicorn app.main:app --host 0.0.0.0 --port 8100 --workers 1`。
@@ -84,14 +84,14 @@
 MySQL 首次创建数据卷时，官方 entrypoint 按以下顺序工作：
 
 - `MYSQL_DATABASE=dw`、`MYSQL_USER=didilili`、`MYSQL_PASSWORD` 创建库与普通账号。
-- 挂载 `fixtures/dw.sql` 到 `/docker-entrypoint-initdb.d/` 导入表与数据。
+- 挂载 `system/fixtures/dw.sql` 到 `/docker-entrypoint-initdb.d/` 导入表与数据。
 
 数据卷已存在时不会重复导入。
 
 ## 6. 配置与密钥
 
 - `.env.example` 入库；`.env` 不入库。
-- `make docker-env` 调用 `scripts/generate_docker_env.py`：
+- `make docker-env` 调用 `toolbox/scripts/generate_docker_env.py`：
   - 已存在 `.env` 时拒绝覆盖，除非显式 `--force`；
   - 生成三个随机密码：`MYSQL_ROOT_PASSWORD`、`MYSQL_PASSWORD`、
     `REBUILD_DW_RO_PASSWORD`；
@@ -113,7 +113,7 @@ MySQL 首次创建数据卷时，官方 entrypoint 按以下顺序工作：
 
 ## 8. 测试与验收
 
-先写 `scripts/docker-smoke.sh`，确认在实现前失败，再实现 Compose。
+先写 `toolbox/scripts/docker-smoke.sh`，确认在实现前失败，再实现 Compose。
 
 脚本验收项：
 
@@ -131,7 +131,7 @@ Python 初始化逻辑增加单元测试：verify 成功不重建、失败触发
 
 ## 9. 文档
 
-- 新增 `docs/DOCKER-DEPLOY.md`：前置条件、首次部署、日常启停、日志、
+- 新增 `materials/docs/DOCKER-DEPLOY.md`：前置条件、首次部署、日常启停、日志、
   健康检查、数据重置、端口、密钥、资源要求、排障。
 - README 增加 Docker 快速开始，并保留本机开发方式。
 - 文档说明 ES 使用官方镜像、S2 自动回退 `standard` analyzer；IK 作为后续可选增强。
@@ -142,5 +142,5 @@ Python 初始化逻辑增加单元测试：verify 成功不重建、失败触发
 - 首次构建需要网络拉取镜像与依赖；运行期不需要外网（LLM 除外）。
 - ES 单节点、无鉴权，仅适合单机部署；不暴露到公网。
 - MySQL 数据卷删除即丢失；重置流程必须显式确认。
-- `fixtures/dw.sql` 是当前数据源；真实业务数据替换不在本次范围。
+- `system/fixtures/dw.sql` 是当前数据源；真实业务数据替换不在本次范围。
 - 不提供镜像仓库推送与多节点编排。

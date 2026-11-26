@@ -1,26 +1,26 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# 教师/CI 夹具：不是学生入口；学生工具见 manual/appendix/gui-debugging.md
+# 教师/CI 夹具：不是学生入口；学生工具见 tutorial/appendix/gui-debugging.md
 """render_exec_trace.py —— 第 17 页 v2：左「真前端截图」/ 右「同一次真跑的代码行」对照 GIF。
 
-输入（由 manual/shots/trace_server.py 产出，已提交在仓库里）：
+输入（由 tutorial/shots/trace_server.py 产出，已提交在仓库里）：
 
-    manual/review/exec-trace-v2/meta.json            本次真跑：时间轴 / 触发帧序 / 尝试次数
-    manual/review/exec-trace-v2/capture-frames.json  选中的真截图 + 每帧 DOM 探针（节点状态 / rect / 时间戳）
-    manual/review/exec-trace-v2/frames/*.png         左栏真截图（800×1151，裁掉侧栏）
-    manual/review/exec-trace-v2/trace.jsonl          同一请求的 backend 行级轨迹（sitecustomize 注入）
+    tutorial/review/exec-trace-v2/meta.json            本次真跑：时间轴 / 触发帧序 / 尝试次数
+    tutorial/review/exec-trace-v2/capture-frames.json  选中的真截图 + 每帧 DOM 探针（节点状态 / rect / 时间戳）
+    tutorial/review/exec-trace-v2/frames/*.png         左栏真截图（800×1151，裁掉侧栏）
+    tutorial/review/exec-trace-v2/trace.jsonl          同一请求的 backend 行级轨迹（sitecustomize 注入）
 
 输出：
 
-    manual/images/page-23-exec-trace.gif   18–25s 循环，12.5fps（80ms/帧），1600 宽，≤5MB
-    manual/images/page-23-exec-trace.png   关键帧：阶段 c（校正SQL 转圈）—— 左：前端红叉+转圈，
+    tutorial/images/page-23-exec-trace.gif   18–25s 循环，12.5fps（80ms/帧），1600 宽，≤5MB
+    tutorial/images/page-23-exec-trace.png   关键帧：阶段 c（校正SQL 转圈）—— 左：前端红叉+转圈，
                                            右：correct.py propose_correction() L202/203 + sql_before/error/attempts
-    manual/review/exec-trace-v2/render.json  渲染/断言报告（帧计划、每阶段停留表、OCR、对齐抽样）
+    tutorial/review/exec-trace-v2/render.json  渲染/断言报告（帧计划、每阶段停留表、OCR、对齐抽样）
 
 一条命令重跑（仓库根目录）：
 
-    python3 manual/shots/render_exec_trace.py                 # 渲染 + 全部断言
-    python3 manual/shots/render_exec_trace.py --verify-only   # 只验证已有产物
+    python3 tutorial/shots/render_exec_trace.py                 # 渲染 + 全部断言
+    python3 tutorial/shots/render_exec_trace.py --verify-only   # 只验证已有产物
 
 设计要点（都是“教学可读”的硬要求）：
   * 总时长 18–25s、12.5fps；每个关键状态停 2–3s 让人读完，末帧结果表停 ≥2.5s；
@@ -48,7 +48,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Callable
 
-HERE = Path(__file__).resolve().parent          # manual/shots
+HERE = Path(__file__).resolve().parent          # tutorial/shots
 REPO = HERE.parents[1]                          # 仓库根目录
 REVIEW = REPO / "manual" / "review"
 EVIDENCE = REVIEW / "exec-trace-v2"
@@ -81,10 +81,10 @@ GIF_MAX_BYTES = 5 * 1024 * 1024
 CODE_WINDOW = 8
 
 TARGET_FILES = (
-    "backend/app/agent/graph.py",
-    "backend/app/agent/correct.py",
-    "backend/app/generate/guard.py",
-    "backend/app/security/policy.py",
+    "system/backend/app/agent/graph.py",
+    "system/backend/app/agent/correct.py",
+    "system/backend/app/generate/guard.py",
+    "system/backend/app/security/policy.py",
 )
 
 CHROME = "/usr/bin/google-chrome"
@@ -152,7 +152,7 @@ class Evidence:
 def load_evidence() -> Evidence:
     for path in (META_PATH, FRAMES_PATH, TRACE_PATH):
         if not path.exists():
-            raise SystemExit(f"缺证据文件：{path.relative_to(REPO)}（先跑 manual/shots/trace_server.py）")
+            raise SystemExit(f"缺证据文件：{path.relative_to(REPO)}（先跑 tutorial/shots/trace_server.py）")
     meta = json.loads(META_PATH.read_text(encoding="utf-8"))
     frames = json.loads(FRAMES_PATH.read_text(encoding="utf-8"))
     trace = [json.loads(line) for line in TRACE_PATH.read_text(encoding="utf-8").splitlines() if line.strip()]
@@ -243,38 +243,38 @@ def build_anchors(ev: Evidence) -> dict[str, Anchor]:
     # t0：构图（build_agent_graph），左帧是“正在连接问数智能体…”
     t0_frame = frame_t["t0"][0] + 0.25
     rec = find_last(trace, t0_frame, lambda r: r["rel"].endswith("graph.py") and r["func"] == "build_agent_graph")
-    anchors = {"t0": Anchor("t0", rec, rec["lineno"] if rec else None, "backend/app/agent/graph.py",
+    anchors = {"t0": Anchor("t0", rec, rec["lineno"] if rec else None, "system/backend/app/agent/graph.py",
                             "12 节点图在这一刻编译完成")}
 
     # a：生成节点停在 draft_sql(...) 调用行，等模型
     a_frame = sum(frame_t["a"]) / len(frame_t["a"])
     rec = find_last(trace, a_frame, lambda r: r["rel"].endswith("graph.py") and 236 <= r["lineno"] <= 243)
     gen_wait = ev.timeline.get("generate_wait_s")
-    anchors["a"] = Anchor("a", rec, 239, "backend/app/agent/graph.py",
+    anchors["a"] = Anchor("a", rec, 239, "system/backend/app/agent/graph.py",
                           f"停在 L239 draft_sql(...) 等模型返回（真实 {fmt_s(gen_wait)}）", exact_state=True)
 
     # b：guard.check_sql 拒绝行（第一次校验）
     b_frame = frame_t["b"][0] + 0.30
     rec = find_last(trace, b_frame, lambda r: r["rel"].endswith("guard.py") and r["lineno"] == 306)
-    anchors["b"] = Anchor("b", rec, 306, "backend/app/generate/guard.py",
+    anchors["b"] = Anchor("b", rec, 306, "system/backend/app/generate/guard.py",
                           "guard.check_sql 在 L306 拒绝：violations 非空 → GuardReport(False)")
 
     # c：correct.py propose_correction 的 L202/203（corrector.correct(...) 调用）
     c_frame = sum(frame_t["c"]) / len(frame_t["c"])
     rec = find_last(trace, c_frame, lambda r: r["rel"].endswith("correct.py") and r["lineno"] == 203)
-    anchors["c"] = Anchor("c", rec, 203, "backend/app/agent/correct.py",
+    anchors["c"] = Anchor("c", rec, 203, "system/backend/app/agent/correct.py",
                           "停在 L203 corrector.correct(...) 等模型返回候选 SQL", exact_state=True)
 
     # d：二次校验通过（validate node 的 if failure is None 分支）
     d_frame = frame_t["d"][0]
     rec = find_last(trace, d_frame, lambda r: r["rel"].endswith("graph.py") and r["lineno"] in (295, 296))
-    anchors["d"] = Anchor("d", rec, 296, "backend/app/agent/graph.py",
+    anchors["d"] = Anchor("d", rec, 296, "system/backend/app/agent/graph.py",
                           "二次 validate_sql 返回 None：failure is None → 发 success")
 
     # e：执行器返回（run node 的 if execution.ok / emit success）
     e_frame = frame_t["e"][0]
     rec = find_last(trace, e_frame, lambda r: r["rel"].endswith("graph.py") and r["lineno"] in (400, 404))
-    anchors["e"] = Anchor("e", rec, 404, "backend/app/agent/graph.py",
+    anchors["e"] = Anchor("e", rec, 404, "system/backend/app/agent/graph.py",
                           "deps.executor.execute 返回 ok：发 run_sql success → result")
     return anchors
 

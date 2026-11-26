@@ -2,10 +2,10 @@
 """页首图构建器：data/page-NN.json → page-NN/index.html → out/poster.png → images/page-NN-visual.webp
 
 用法：
-  python3 manual/designs/build_visuals.py            # 构建全部已登记页
-  python3 manual/designs/build_visuals.py 03 04      # 只构建指定页
-  python3 manual/designs/build_visuals.py --no-render # 只生成 HTML/editor
-  python3 manual/designs/build_visuals.py --no-editor # 不生成 editor.html
+  python3 tutorial/designs/build_visuals.py            # 构建全部已登记页
+  python3 tutorial/designs/build_visuals.py 03 04      # 只构建指定页
+  python3 tutorial/designs/build_visuals.py --no-render # 只生成 HTML/editor
+  python3 tutorial/designs/build_visuals.py --no-editor # 不生成 editor.html
 """
 from __future__ import annotations
 import json, shutil, subprocess, sys
@@ -25,8 +25,8 @@ DATA = {
  "00": {"eyebrow":"第 0 页 · L1 造 · 环境","title":"先体检，再开工","subtitle":"左边是真实工具，右边是装修前验房：每一件工具都在项目里对应一个动作","layout":"entity_metaphor",
    "left_cards":[
      {"icon":"docker","name":"Docker","role":"把 MySQL / ES / Qdrant 装进容器跑起来","judge":"docker compose ps"},
-     {"icon":"uv","name":"uv","role":"按 uv.lock 装 Python 依赖、建 backend/.venv","judge":"uv sync --frozen"},
-     {"icon":"nodedotjs","name":"Node.js + npm","role":"前端脚手架与协议测试","judge":"cd frontend && npm test"},
+     {"icon":"uv","name":"uv","role":"按 uv.lock 装 Python 依赖、建 system/backend/.venv","judge":"uv sync --frozen"},
+     {"icon":"nodedotjs","name":"Node.js + npm","role":"前端脚手架与协议测试","judge":"cd system/frontend && npm test"},
      {"icon":"gnu","name":"GNU Make","role":"一键任务入口，常用流程收成一条命令","judge":"make doctor / make docker-up"},
      {"name":"curl","role":"探活接口、看 SSE 返回","judge":"curl /api/health"},
      {"icon":"git","name":"Git","role":"拿到仓库、看历史与回滚","judge":"git status / git log"}],
@@ -51,7 +51,7 @@ DATA = {
    "footer":"容器 running + 能连上（SELECT VERSION() 有输出）+ 没有 dw"},
  "02": {"eyebrow":"第 2 页 · L1 造 · 数据","title":"先把仓库搭好","subtitle":"左边是 5 个分区与 115 行货，右边是仓库货架与叉车：一条命令把货入库","layout":"entity_metaphor",
    "left_cards":[
-     {"name":"fixtures/dw.sql","role":"建库、建表、灌数据全写在一个文件里","judge":"docker exec -i … < fixtures/dw.sql"},
+     {"name":"system/fixtures/dw.sql","role":"建库、建表、灌数据全写在一个文件里","judge":"docker exec -i … < system/fixtures/dw.sql"},
      {"name":"5 张表","role":"dim_customer / dim_date / dim_product / dim_region / fact_order","judge":"5 个分区"},
      {"name":"115 行","role":"演示数据，够把问数链路跑通","judge":"SELECT COUNT(*) FROM fact_order"}],
    "metaphor_title":"喻体 · 仓库货架与叉车",
@@ -102,7 +102,7 @@ DATA = {
    "footer":"门禁只读快照：换完真数据它还是绿的 —— 门禁绿 ≠ 数据真"},
  "11": {"eyebrow":"第 11 页 · L2 换 · 真契约","title":"让 SQL 从契约里长出来","subtitle":"删掉手抄 CONTRACT，改成加载唯一的契约文件","layout":"steps","steps":[
    {"n":"1","title":"删手抄字典","detail":"lab/app.py 里的 CONTRACT = {...}","judge":"副本不可信"},
-   {"n":"2","title":"加载契约","detail":"contracts/schema.contract.yaml","judge":"唯一事实源"},
+   {"n":"2","title":"加载契约","detail":"system/contracts/schema.contract.yaml","judge":"唯一事实源"},
    {"n":"3","title":"逐字一致","detail":"build_sql 输出与第 6 页一模一样","judge":"5 行 SELECT"}],
    "footer":"契约文件是唯一事实源；手抄字典只是副本"},
  "12": {"eyebrow":"第 12 页 · L2 换 · 真执行器","title":"给临时通道装上四道闸","subtitle":"lab/db.py：dict 行、Decimal 精度、自动 LIMIT、只读","layout":"cards","cards":[

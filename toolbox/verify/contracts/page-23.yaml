@@ -1,6 +1,6 @@
 # 第 23 页 · 装体验 —— 教材可跟随性契约（T0）
 #
-# schema 与规则见 manual/verify/README.md。
+# schema 与规则见 tutorial/verify/README.md。
 # 本页 coverage: static：整栈要 docker compose 起服务、成熟版要 docker run 挂 dist/，
 # 第 3 步还要 npm test；这些命令都依赖镜像/端口/网络/浏览器，CI 无法无人值守执行。
 # 所以本页不执行任何块，只做 T0 的静态存在性 + 符号命中（页面本身不挂 <!-- verify: --> 注解）。
@@ -13,14 +13,14 @@ static:
     # 第 1 步起栈的入口；网络名、默认端口、镜像 tag 都由它决定
     - compose.yaml
     # 拆一刀第 3 步说「反代配置沿用教学版镜像里的这一套」
-    - docker/nginx.conf
+    - system/docker/nginx.conf
     # 成熟版 docker run 挂载的两个路径：构建产物 + nginx 反代配置
-    - deliverable/v2/original-frontend/dist
-    - deliverable/v2/original-frontend/nginx.conf
-    # 第 3 步 (cd frontend && npm test) 的测试入口
-    - frontend/package.json
+    - materials/deliverable/v2/original-frontend/dist
+    - materials/deliverable/v2/original-frontend/nginx.conf
+    # 第 3 步 (cd system/frontend && npm test) 的测试入口
+    - system/frontend/package.json
     # 对账里 41099.5 的数据来源（库不是这份演示集就要 make docker-reset）
-    - fixtures/dw.sql
+    - system/fixtures/dw.sql
   symbols:
     # docker run 的 --network 直接拼这个项目名；改了 → shopkeeper-rebuild_default 解析不到
     - {file: compose.yaml, pattern: '^name: shopkeeper-rebuild$'}
@@ -29,8 +29,8 @@ static:
     # 教学版默认 8080（页面第 4 步要并排开 8088 / 8080）；默认端口改了 → 学生开错地址
     - {file: compose.yaml, pattern: 'FRONTEND_HOST_PORT:-8080'}
     # 成熟版容器必须进 compose 网络才能解析 backend:8100；服务名/端口改了 → 8088 回 502
-    - {file: deliverable/v2/original-frontend/nginx.conf, pattern: 'set \$backend_upstream http://backend:8100;'}
+    - {file: materials/deliverable/v2/original-frontend/nginx.conf, pattern: 'set \$backend_upstream http://backend:8100;'}
     # npm test 的入口脚本；脚本名改了 → 第 3 步直接失败
-    - {file: frontend/package.json, pattern: '"test": "vitest run"'}
+    - {file: system/frontend/package.json, pattern: '"test": "vitest run"'}
     # 成熟版只认这一个后端入口；路由改了 → 成熟版问不出数
-    - {file: deliverable/v2/original-frontend/src/lib/agentApi.ts, pattern: 'API_BASE_URL\}/api/query'}
+    - {file: materials/deliverable/v2/original-frontend/src/lib/agentApi.ts, pattern: 'API_BASE_URL\}/api/query'}

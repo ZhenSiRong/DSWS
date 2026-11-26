@@ -21,10 +21,10 @@
 | D13 | 可理解性判据 | 三问盲测（2/3）+ 3 张学生抽检 | 同上 §4 |
 | D14 | 结构类做法 | 加读图带 + 高亮主路径，不重画 | 同上 §5 |
 | D15 | 概念类预算 | 6 张 Lite 漫画，Pro 0；其余加横幅 | 同上 §5 |
-| D16 | 文档分类 | 设计文档进 `design/`/`contracts/`；过程文档进 `humen-desicions/`/`pilot/`/`eval/` | `08-doc-placement.md` |
+| D16 | 文档分类 | 设计文档进 `materials/design/`/`system/contracts/`；过程文档进 `materials/humen-desicions/`/`materials/pilot/`/`system/eval/` | `08-doc-placement.md` |
 | D17 | 视频结尾角标 | `DSWS · 验收完成` → `DSWS · 演示完成` | 已完成，commit `89611d9` |
-| D18 | 两份文档 | `design-doc.pdf`（32 图 + 地图）与 `dev-book.pdf` 分开；教材图集章改为索引 | `08-doc-placement.md`、`design/design-doc.pdf` |
-| D19 | 读图带 | 32 张 SVG 注入“回答什么 + 读图 1→2→3”；design-doc 78 页、dev-book 162 页 | `design/scripts/add_reading_band.py` |
+| D18 | 两份文档 | `design-doc.pdf`（32 图 + 地图）与 `dev-book.pdf` 分开；教材图集章改为索引 | `08-doc-placement.md`、`materials/design/design-doc.pdf` |
+| D19 | 读图带 | 32 张 SVG 注入“回答什么 + 读图 1→2→3”；design-doc 78 页、dev-book 162 页 | `materials/design/scripts/add_reading_band.py` |
 | D20 | 教材重构 | **新写主线练本（9 页起）+ 原书 162 页降为参考书**，两册一起交 | `09-ablation-course.md` §D20 |
 | D21 | 练本切法 | 九个"能跑的里程碑"（建表→种子→HTTP→硬编码→抽词→拼SQL→真执行→SSE→界面）；界面可降级附录 | 同上 §D21 |
 | D22 | 教学法内核 | **猜 → 造 → 对账**（每页：预测问题 → 动手 → 应见判据 → 对账） | 同上 §D22 |
@@ -57,7 +57,7 @@
 | D54 | 工具定义三层 | 原子工具（装一次/一条命令/浏览器输出，换项目可用）· 项目一层命令（make/pytest/curl，可进学生步骤）· 项目夹具脚本（教师/CI 用，不进学生步骤）；p17 撤 `pdb_step_demo.py` 入口改 viztracer/pdb + 项目自带 pytest；附录改工具卡；第 0 页预装 `pipx install viztracer py-spy scalene` | `09-ablation-course.md` §D54；`QA-DECISIONS.md` R8 |
 | D55 | 版本与发行 | v1.0.0 = 当前 HEAD `2542d71`；p17 改造后 v1.1.0；新分支 `continue-iterate`；发布包 = manual-24p.zip + 三份 PDF + SHA256 + notes；tag/push/release 由用户执行，lead 只维护决策文档 | `09-ablation-course.md` §D55 |
 | D53 | GUI 调试教学 | 三 GIU 路径进附录（VizTracer 时间线 / LangGraph Studio 12 节点 / Chrome DevTools；Zed 配置未实拍）+ CLI 兜底；p17 只加 1 行指针，正文不加图 | `09-ablation-course.md` §D53；`QA-DECISIONS.md` R7 |
-| D51 | 装修对象=成熟版原版前端 | L5 装修终点是 `deliverable/v2/original-frontend/`（原版 shopkeeper-agent，React 19 + Tailwind 3.4.17）；教学版重建前端降为脚手架（8080 对照）；拆一刀=成熟版换回 17 行 HTML 仍出 41099.5 | `09-ablation-course.md` §D51 |
+| D51 | 装修对象=成熟版原版前端 | L5 装修终点是 `materials/deliverable/v2/original-frontend/`（原版 shopkeeper-agent，React 19 + Tailwind 3.4.17）；教学版重建前端降为脚手架（8080 对照）；拆一刀=成熟版换回 17 行 HTML 仍出 41099.5 | `09-ablation-course.md` §D51 |
 | D52 | 执行轨迹可视化 | 左=真前端界面 / 右=同一次真跑的 settrace 行级轨迹；18–25s 慢节奏；资产归 p23（`page-23-exec-trace.*`）；p17 不放此图，改"学习者自录工具"方向；C（pdb 离线）留附录/答辩 | `09-ablation-course.md` §D52；`QA-DECISIONS.md` R6 |
 | D50 | 24 页全书：L5「装」体验层 | 不重编号，末尾追加 page-23（第 23 页）；配比 10+4+4+5+1=24；L5 = 第五个横切系统（体验层）只 1 页（装修不改变承重墙）；拆一刀 = 前端换回第 9 页 17 行 HTML，同一问题仍出 41099.5 | `09-ablation-course.md` §D50 |
 
@@ -94,12 +94,12 @@
 | 项 | 状态 | 证据 |
 |---|---|---|
 | 教材改写 | ✅ 211 页 | §2.4 LangGraph/12→10、§2.7 故障八/九、§5 DeepSeek、§3.2 Tailwind；PDF p.56/88/89/98/201 |
-| 契约 12→10 | ✅ 机器可校验 | `contracts/steps.yaml` 的 `stages`；`backend/tests/test_steps_stages.py`；46 passed |
-| 一致性测试 | ✅ C1–C6 | `eval/conformance/reference-baseline.json`（干净树全绿） |
-| 校正实测 | ✅ 5/5 触发后成功 | `eval/live-report.json`；单次会失败，已写进教材 |
-| Capstone | ✅ 学生修复 4 缺陷后全绿 | `pilot/student-capstone-record.md` |
-| 视频 | ✅ 61.27s，含校正段 | `deliverable/v2/DSWS-v2-original-ui-demo.mp4`（30.2–45.2s） |
-| 5051 | ✅ 四项能力外部验证通过 | `deliverable/v2/evidence/2026-11-09-5051-smoke.md` |
+| 契约 12→10 | ✅ 机器可校验 | `system/contracts/steps.yaml` 的 `stages`；`system/backend/tests/test_steps_stages.py`；46 passed |
+| 一致性测试 | ✅ C1–C6 | `system/eval/conformance/reference-baseline.json`（干净树全绿） |
+| 校正实测 | ✅ 5/5 触发后成功 | `system/eval/live-report.json`；单次会失败，已写进教材 |
+| Capstone | ✅ 学生修复 4 缺陷后全绿 | `materials/pilot/student-capstone-record.md` |
+| 视频 | ✅ 61.27s，含校正段 | `materials/deliverable/v2/DSWS-v2-original-ui-demo.mp4`（30.2–45.2s） |
+| 5051 | ✅ 四项能力外部验证通过 | `materials/deliverable/v2/evidence/2026-11-09-5051-smoke.md` |
 | 5051 部署 | ⛔ SSH 被拒 | `Permission denied (publickey)` |
 
 **待用户提供**：`root@8.155.135.97` 的 SSH 私钥/密码（用于同步新契约或镜像）；

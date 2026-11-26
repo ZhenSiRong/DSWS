@@ -9,12 +9,12 @@
 </head>
 <body>
 <main class="page">
-<p class="kicker">练本 · 阅读版（md 正典派生，改内容请改 manual/page-19.md）</p>
+<p class="kicker">练本 · 阅读版（md 正典派生，改内容请改 tutorial/page-19.md）</p>
 <h1>第 19 页 · 守策略：36 条注入全拒、11 条正常零误杀</h1>
 <blockquote>
 <p><strong>城市坐标 · L4 城市安防 · 安检</strong>｜36 条夹带全拦、11 条正常零误杀：安检口按规矩放行。</p>
-<p>前置：L4（守）第二页。本页一条服务都不用——判据只读 <code>contracts/</code>、<code>fixtures/</code>，第 2 步还读 S4 基线 <code>backend/tests/generate/baseline.yaml</code>；</p>
-<p>不访问网络，不需要 MySQL、<code>.env</code>、模型 key，但要用 <code>backend/.venv</code>（第 0 页 <code>make install</code> 建好，缺了先回第 0 页补）。命令都在仓库根目录、同一个终端里整段连续执行；括号是子 shell，跑完你还在仓库根目录。</p>
+<p>前置：L4（守）第二页。本页一条服务都不用——判据只读 <code>system/contracts/</code>、<code>system/fixtures/</code>，第 2 步还读 S4 基线 <code>system/backend/tests/generate/baseline.yaml</code>；</p>
+<p>不访问网络，不需要 MySQL、<code>.env</code>、模型 key，但要用 <code>system/backend/.venv</code>（第 0 页 <code>make install</code> 建好，缺了先回第 0 页补）。命令都在仓库根目录、同一个终端里整段连续执行；括号是子 shell，跑完你还在仓库根目录。</p>
 <p>第 18 页守的是账号（数据库层写不了），本页守的是策略（危险 SQL 根本到不了执行）。</p>
 </blockquote>
 <h2>这一页构建什么</h2>
@@ -25,35 +25,35 @@
 <h2>猜一猜</h2>
 <ol>
 <li>36 条注入里，靠“整类拒”（集合运算 / 可执行注释 / 危险函数——构造本身不许）挡下的有几条：4 条、10 条、还是 36 条？</li>
-<li>把 <code>contracts/sql.policy.yaml</code> 的 <code>forbid_set_operations</code> 关掉，重跑判据会漏几条？那 11 条正常 SQL 会不会跟着被误杀？</li>
+<li>把 <code>system/contracts/sql.policy.yaml</code> 的 <code>forbid_set_operations</code> 关掉，重跑判据会漏几条？那 11 条正常 SQL 会不会跟着被误杀？</li>
 </ol>
 <h2>动手</h2>
 <p><strong>第 1 步：拍快照。</strong> 拆一刀要改契约，先留退路（同名快照会被拒，重做本页换个名字——换了名字，下文出现的 <code>p19-before</code> 也一起替换；回显 <code>已保存快照 "p19-before"：169 个文件。</code>，数字因工作区而异）：</p>
 <!-- verify: p19-lab-save -->
 
-<pre><code class="language-bash">scripts/lab save p19-before
+<pre><code class="language-bash">toolbox/scripts/lab save p19-before
 </code></pre>
 <p><strong>第 2 步：跑离线门禁。</strong> 三段各是一个判据：36 条注入必须按<strong>精确原因码</strong>全拒、11 条正常 SQL 必须全放、S4 基线里真产出 SQL 的 8 题必须全部通过策略（另 2 题在生成阶段就拒答，没有 SQL 可过）。退出码 0 才算过：</p>
 <!-- verify: p19-security-check -->
 
-<pre><code class="language-bash">(cd backend &amp;&amp; .venv/bin/python -m app.scripts.security --check)
+<pre><code class="language-bash">(cd system/backend &amp;&amp; .venv/bin/python -m app.scripts.security --check)
 </code></pre>
 <p><strong>第 3 步：打判定表，看每条注入被归到哪个原因码。</strong> 表共 47 行（36 拒 + 11 放；看全表就把下面的 <code>grep</code> 那段去掉）；管道里的 <code>grep</code> 只留<strong>三类构造</strong>（多语句 / 可执行注释 / 集合运算）。</p>
 <p><strong>两个细节</strong>：末行统计走 stderr，<code>2&gt;&amp;1</code> 把它并回来；<code>PYTHONUNBUFFERED=1</code> 保证汇总落在表尾（去掉它，汇总会先跑到表头——stdout 被管道缓冲、stderr 不会）。</p>
 <p><strong>退出码</strong>：这一步全 PASS 时退出码 0，有 FAIL 时会非 0：</p>
 <!-- verify: p19-security-corpus -->
 
-<pre><code class="language-bash">(cd backend &amp;&amp; PYTHONUNBUFFERED=1 .venv/bin/python -m app.scripts.security --corpus) 2&gt;&amp;1 | grep -E &quot;multi_statement|executable_comment|union|语料：&quot;
+<pre><code class="language-bash">(cd system/backend &amp;&amp; PYTHONUNBUFFERED=1 .venv/bin/python -m app.scripts.security --corpus) 2&gt;&amp;1 | grep -E &quot;multi_statement|executable_comment|union|语料：&quot;
 </code></pre>
-<p><strong>第 4 步（可选）：<code>make stage5</code>。</strong> 前提：本机有 <code>uv</code> 且 <code>backend/.venv</code> 依赖已装好；不需要 MySQL / <code>.env</code> / 模型 key。</p>
-<p><strong>先自查</strong>：<code>(cd backend &amp;&amp; .venv/bin/python -c "import app, app.security") &amp;&amp; command -v uv</code>（退出码 0 才继续；非 0 就跳过本步，<strong>跳过不影响第 2 步的判据</strong>：第 2、3 步只用 <code>.venv</code>，不经过 <code>uv</code>）。</p>
-<p><strong>跑多久</strong>：本机实测约 44 秒（先跑安全测试 179 passed + 2 skipped，再跑全后端 843 条 = 813 passed + 30 skipped、约 40 秒），末行 <code>S5 PASS</code>：</p>
+<p><strong>第 4 步（可选）：<code>make stage5</code>。</strong> 前提：本机有 <code>uv</code> 且 <code>system/backend/.venv</code> 依赖已装好；不需要 MySQL / <code>.env</code> / 模型 key。</p>
+<p><strong>先自查</strong>：<code>(cd system/backend &amp;&amp; .venv/bin/python -c "import app, app.security") &amp;&amp; command -v uv</code>（退出码 0 才继续；非 0 就跳过本步，<strong>跳过不影响第 2 步的判据</strong>：第 2、3 步只用 <code>.venv</code>，不经过 <code>uv</code>）。</p>
+<p><strong>跑多久</strong>：本机实测约 44 秒（先跑安全测试 179 passed + 2 skipped，再跑全后端 843 条 = 813 passed + 30 skipped、约 40 秒），末行 <code>S5 PASS</code>。<strong>两个 S5 PASS 不要混</strong>：<code>security --check</code> 与 <code>make stage5</code> 都会印它，前者是策略检查，后者是整层门禁；看到前者不等于 stage5 全跑。</p>
 <!-- verify: p19-make-stage5 -->
 
 <pre><code class="language-bash">make stage5
 </code></pre>
-<p><strong>Makefile 直接调的 <code>stage*</code> 全走 <code>uv run --frozen</code>，不会改 <code>backend/uv.lock</code>；只有脚本里的裸 <code>uv run</code>（<code>make stage3</code>、<code>make stage0-ui</code>、<code>make stage6-ui</code>）或手敲 <code>uv run</code> 会。</strong></p>
-<p><strong>lock 变脏怎么办</strong>：它不在 <code>lab</code> 白名单里，<code>scripts/lab reset</code> 不管它——若 <code>git status</code> 里确实出现 <code>backend/uv.lock</code> 变脏（本机实测 1,250 行 registry / packages 地址从 <code>pypi.org</code> 换成镜像源），用 <code>git checkout -- backend/uv.lock</code> 还原。</p>
+<p><strong>Makefile 直接调的 <code>stage*</code> 全走 <code>uv run --frozen</code>，不会改 <code>system/backend/uv.lock</code>；只有脚本里的裸 <code>uv run</code>（<code>make stage3</code>、<code>make stage0-ui</code>、<code>make stage6-ui</code>）或手敲 <code>uv run</code> 会。</strong></p>
+<p><strong>lock 变脏怎么办</strong>：它不在 <code>lab</code> 白名单里，<code>toolbox/scripts/lab reset</code> 不管它——若 <code>git status</code> 里确实出现 <code>system/backend/uv.lock</code> 变脏（本机实测 1,250 行 registry / packages 地址从 <code>pypi.org</code> 换成镜像源），用 <code>git checkout -- system/backend/uv.lock</code> 还原。</p>
 <h2>你应该看到</h2>
 <p>第 2–4 步（<code>#</code> 开头是标注，不是程序输出；秒数随机器变）：</p>
 <!-- verify-out: p19-security-check p19-security-corpus -->
@@ -94,8 +94,8 @@ S5 PASS
 <li>策略“先 AST 后词法”，就是为了不看见分号就拒。</li>
 </ul>
 </li>
-<li><strong>原因码是契约。</strong> <code>--check</code> 不只要求“拒”，还要求原因码精确匹配（<code>backend/app/scripts/security.py</code> 逐条比对）；<ul>
-<li>码表在 <code>contracts/sql.policy.yaml</code> 的 <code>errors.reason_codes</code>，执行器对外只暴露通道码 <code>SQL_REJECTED</code>，细码放在 <code>reason_code</code>。</li>
+<li><strong>原因码是契约。</strong> <code>--check</code> 不只要求“拒”，还要求原因码精确匹配（<code>system/backend/app/scripts/security.py</code> 逐条比对）；<ul>
+<li>码表在 <code>system/contracts/sql.policy.yaml</code> 的 <code>errors.reason_codes</code>，执行器对外只暴露通道码 <code>SQL_REJECTED</code>，细码放在 <code>reason_code</code>。</li>
 <li>拆一刀实测“拒仍是拒、码变了”也会红——下游按码决定重试与展示（第 16、17 页），码漂移就是事故。</li>
 </ul>
 </li>
@@ -109,11 +109,11 @@ S5 PASS
 <p><strong>你现在拥有</strong>：一条能被别人重放的安全判据（36/36 + 11/11 + 8/8），和一句可复用的判断：<strong>追着已知载荷打补丁永远慢一步；按类别拒 + 白名单放，才能让变体一起死、又不误杀正常查询。</strong></p>
 </blockquote>
 <h2>拆一刀</h2>
-<p>打开 <code>contracts/sql.policy.yaml</code>，找到 <code>statement:</code> 段里 L31 的 <code>forbid_set_operations: true</code>（2 空格缩进；4 行后还有一个 <code>forbid_executable_comments: true</code>，别改错），只把这处改成 <code>false</code>。</p>
+<p>打开 <code>system/contracts/sql.policy.yaml</code>，找到 <code>statement:</code> 段里 L31 的 <code>forbid_set_operations: true</code>（2 空格缩进；4 行后还有一个 <code>forbid_executable_comments: true</code>，别改错），只把这处改成 <code>false</code>。</p>
 <p><strong>怎么验</strong>：重跑第 2 步的判据（<code>tail -8</code> 只看结尾；管道末尾是 <code>tail</code>，门禁本体的退出码靠命令里的 <code>gate=</code> 打出来）：</p>
 <!-- verify: p19-ablation-check -->
 
-<pre><code class="language-bash">(cd backend &amp;&amp; PYTHONUNBUFFERED=1 .venv/bin/python -m app.scripts.security --check) 2&gt;&amp;1 | tail -8; echo &quot;gate=${PIPESTATUS[0]}&quot;
+<pre><code class="language-bash">(cd system/backend &amp;&amp; PYTHONUNBUFFERED=1 .venv/bin/python -m app.scripts.security --check) 2&gt;&amp;1 | tail -8; echo &quot;gate=${PIPESTATUS[0]}&quot;
 </code></pre>
 <pre><code class="language-text">  注入语料：34/36 条按预期拒绝
 == 2/3 零误杀语料（必须全部放行） ==
@@ -128,17 +128,17 @@ gate=1
 <p><strong>退出码怎么看</strong>：末行 <code>gate=1</code> 是门禁本体的退出码——管道末尾是 <code>tail</code>，不带 <code>gate=</code> 直接看 <code>$?</code> 只会拿到它的 0（门禁本体看 <code>PIPESTATUS[0]</code>）。</p>
 <p><strong>漏了什么</strong>：<strong>漏到执行的是 0 条</strong>（根节点规则又把两条 UNION 兜了一次），<strong>漏掉的是这 2 条的原因码</strong>——判定表上它们从 PASS 变 FAIL，门禁红。</p>
 <p><strong>再确认一次不误杀</strong>：11/11 与 8/8 一位没动。</p>
-<p>还原并回绿（<code>reset</code> 会先拍一张 <code>pre-reset-&lt;时间戳&gt;</code> 安全快照，只贴末两行；这里的“完全一致”只算 <code>lab</code> 白名单文件——第 4 步跑过的话 <code>backend/uv.lock</code> 仍要按上面单独还原）：</p>
+<p>还原并回绿（<code>reset</code> 会先拍一张 <code>pre-reset-&lt;时间戳&gt;</code> 安全快照，只贴末两行；这里的“完全一致”只算 <code>lab</code> 白名单文件——第 4 步跑过的话 <code>system/backend/uv.lock</code> 仍要按上面单独还原）：</p>
 <!-- verify: p19-lab-reset -->
 
-<pre><code class="language-bash">scripts/lab reset p19-before --yes
-(cd backend &amp;&amp; .venv/bin/python -m app.scripts.security --check | tail -1)
+<pre><code class="language-bash">toolbox/scripts/lab reset p19-before --yes
+(cd system/backend &amp;&amp; .venv/bin/python -m app.scripts.security --check | tail -1)
 </code></pre>
 <pre><code class="language-text">现在工作区与快照 &quot;p19-before&quot; 完全一致。
 S5 PASS
 </code></pre>
 <p>结论：<strong>整类拒的开关拆掉，门禁都会红，但红法不同——集合运算丢的是“原因码”，可执行注释丢的是“执行层”，后者才是真正的事故。</strong></p>
-<p><strong>回绿后还想看“真的漏”</strong>：把 <code>forbid_executable_comments</code> 改成 <code>false</code> 重跑同一条判据，两行会变成 <code>竟然被放行了</code>（<code>/*! ... */</code> 服务端会执行、解析器看不见，没有第二道网）；看完再 <code>scripts/lab reset p19-before --yes</code> 回绿。</p>
+<p><strong>回绿后还想看“真的漏”</strong>：把 <code>forbid_executable_comments</code> 改成 <code>false</code> 重跑同一条判据，两行会变成 <code>竟然被放行了</code>（<code>/*! ... */</code> 服务端会执行、解析器看不见，没有第二道网）；看完再 <code>toolbox/scripts/lab reset p19-before --yes</code> 回绿。</p>
 <p><strong>为什么</strong>：契约在，判定就得同时满足“拒”和“码对”——这正是白名单 + 类别规则比“黑名单逐个补”可靠的原因。</p>
 </main>
 </body>

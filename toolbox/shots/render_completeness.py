@@ -4,13 +4,13 @@
 
 在仓库根目录一条命令重跑（同时出两张 PNG，README 里的链接不变）：
 
-    python3 manual/shots/render_completeness.py
+    python3 tutorial/shots/render_completeness.py
 
-读：`manual/completeness/v2/data.json`（**单源数据**：12 件交付物 × 1–3 个检验点，共 24 个）
-写：`manual/completeness/poster-answer.png`  答案版，全部检验点 ■
-    `manual/completeness/poster-blank.png`   空白版，检验点方框留空，打印后自己涂
+读：`tutorial/completeness/v2/data.json`（**单源数据**：12 件交付物 × 1–3 个检验点，共 24 个）
+写：`tutorial/completeness/poster-answer.png`  答案版，全部检验点 ■
+    `tutorial/completeness/poster-blank.png`   空白版，检验点方框留空，打印后自己涂
 
-依据 `humen-desicions/09-ablation-course.md`：
+依据 `materials/humen-desicions/09-ablation-course.md`：
 
 - **D42**：行 = 具体交付物（container / db / data / process / endpoint / function / chain），
   每行显式写「位置」，1–3 个检验点，每点给「命令 + 期望输出」；
@@ -18,14 +18,14 @@
 - **D43**：海报直读 v2 数据、输出仍为 `completeness/poster-*.png`，并还掉 D39 遗留的
   「海报硬编码、非单源」债；v1（行=架构节点的四层矩阵）已归档到 `completeness/archive-v1/`。
 
-版式沿用 v2 单页样例（`manual/shots/render_v2_sample.py` 的模板与校验逻辑）：一张
+版式沿用 v2 单页样例（`tutorial/shots/render_v2_sample.py` 的模板与校验逻辑）：一张
 「零件 | 位置 | 检验点（命令 → 期望输出）| 页」表 + 页眉 + 底部三条完备判据 + 生成命令脚注；
 A4 竖向、黑白灰、Noto Sans CJK，命令与输出用等宽。
 
 脚本做四件事：
 
 1. **逐条溯源校验**：每个检验点的「期望输出」必须能在 `evidence_source` 指向的
-   `manual/page-0X.md` 正文里逐字 grep 到（多行逐行查），并标出命中的页内段落
+   `tutorial/page-0X.md` 正文里逐字 grep 到（多行逐行查），并标出命中的页内段落
    （「你应该看到」/「对账」/「重来一遍」等）。任一 FAIL 就退出码 1 ——
    **FAIL 只许修 `completeness/v2/data.json`，不许改十页正文**。
    同时核对结构：12–14 件交付物、每件 1–3 个检验点、依赖 id 存在、页面存在、计数自洽。
@@ -55,7 +55,7 @@ import sys
 import tempfile
 from pathlib import Path
 
-HERE = Path(__file__).resolve().parent          # manual/shots
+HERE = Path(__file__).resolve().parent          # tutorial/shots
 REPO = HERE.parents[1]                          # 仓库根目录
 COMPLETENESS_DIR = REPO / "manual" / "completeness"
 V2_DIR = COMPLETENESS_DIR / "v2"
@@ -73,7 +73,7 @@ SHOT_W, SHOT_H = PAGE_W * 2, PAGE_H * 2         # A4 竖向 @300dpi
 # v2/data.json 不在本脚本的改动范围；成品海报必须写 D43 的生产口径与真实生成命令。
 # （数据升为生产口径后，effective_kicker / effective_rerun 会自动改用数据里的值。）
 KICKER = "D43 · v2 单源 · 12 件交付物 × 24 个检验点"
-RERUN = "python3 manual/shots/render_completeness.py"
+RERUN = "python3 tutorial/shots/render_completeness.py"
 
 
 def effective_kicker(data: dict) -> tuple[str, bool]:
@@ -186,7 +186,7 @@ def section_at(line_no: int, secs: list[tuple[int, str]]) -> str:
 
 def load_data() -> dict:
     if not DATA_PATH.exists():
-        raise SystemExit(f"找不到数据文件 {DATA_PATH}（应在 manual/completeness/v2/data.json）")
+        raise SystemExit(f"找不到数据文件 {DATA_PATH}（应在 tutorial/completeness/v2/data.json）")
     try:
         data = json.loads(DATA_PATH.read_text(encoding="utf-8"))
     except json.JSONDecodeError as exc:
@@ -334,7 +334,7 @@ def header_html(data: dict, mode: str, total_cp: int, total_art: int) -> str:
         f'<div class="kicker">{rich(kicker)}</div>'
         f'<h1>{rich(data["title"])}</h1>'
         f'<div class="sub">{rich(data["subtitle"])}</div>'
-        f'<div class="meta">判据出处：{rich("`manual/page-00…09.md` 的「你应该看到」真跑输出（脚本逐条溯源校验）")}</div>'
+        f'<div class="meta">判据出处：{rich("`tutorial/page-00…09.md` 的「你应该看到」真跑输出（脚本逐条溯源校验）")}</div>'
         f'<div class="meta">{rich(data["order_hint"])}</div>'
         '</div>'
         '<div class="hdr-right">'
@@ -644,7 +644,7 @@ def render(data: dict, mode: str, out_png: Path, now: str) -> tuple[int, int, in
 
 
 def main() -> int:
-    print("《建成证明》v2 海报：manual/completeness/v2/data.json → 两张 A4 PNG")
+    print("《建成证明》v2 海报：tutorial/completeness/v2/data.json → 两张 A4 PNG")
     data = load_data()
     total_cp = sum(len(a["checkpoints"]) for a in data.get("artifacts") or [])
     print(f"  数据：{DATA_PATH.relative_to(REPO)}"

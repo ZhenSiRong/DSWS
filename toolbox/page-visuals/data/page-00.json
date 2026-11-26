@@ -13,14 +13,14 @@
     {
       "icon": "uv",
       "name": "uv",
-      "role": "按 uv.lock 装 Python 依赖、建 backend/.venv",
+      "role": "按 uv.lock 装 Python 依赖、建 system/backend/.venv",
       "judge": "uv sync --frozen"
     },
     {
       "icon": "nodedotjs",
       "name": "Node.js + npm",
       "role": "前端脚手架与协议测试",
-      "judge": "cd frontend && npm test"
+      "judge": "cd system/frontend && npm test"
     },
     {
       "icon": "gnu",

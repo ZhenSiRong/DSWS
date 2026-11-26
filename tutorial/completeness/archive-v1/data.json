@@ -7,9 +7,9 @@
   "source_refs": {
     "poster": "poster.md",
     "poster_image": "poster-answer.png",
-    "decision": "humen-desicions/09-ablation-course.md · D38 完备性视觉装置 / D39 交互版 / D40 状态编辑方向 / D41 状态粒度下沉到能力格",
-    "activities": "manual/flow.mmd",
-    "pages": "manual/page-00.md – manual/page-09.md（「你应该看到」）"
+    "decision": "materials/humen-desicions/09-ablation-course.md · D38 完备性视觉装置 / D39 交互版 / D40 状态编辑方向 / D41 状态粒度下沉到能力格",
+    "activities": "tutorial/flow.mmd",
+    "pages": "tutorial/page-00.md – tutorial/page-09.md（「你应该看到」）"
   },
   "status_order": [
     "unbuilt",

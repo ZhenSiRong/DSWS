@@ -1,6 +1,6 @@
 # 第 5 页 · 从一句话里抽出关键词 —— 教材可跟随性契约（static）
 #
-# schema 与规则见 manual/verify/README.md。
+# schema 与规则见 tutorial/verify/README.md。
 # 本页全靠手工起 uvicorn + curl 并肉眼核对 JSON；命令依赖本地 8000 端口与已启动服务，
 # 不适合 T0/T1 无人值守执行，因此 coverage: static，只做路径存在性与符号命中。
 page: page-05
@@ -9,11 +9,11 @@ coverage: static
 
 static:
   paths:
-    - fixtures/dw.sql                # 关键词要匹配的真实区域/指标数据
-    - contracts/schema.contract.yaml # 115 行演示数据的契约口径
-    - manual/images/page-05-visual.webp
-    - manual/images/page-05-keywords.png
+    - system/fixtures/dw.sql                # 关键词要匹配的真实区域/指标数据
+    - system/contracts/schema.contract.yaml # 115 行演示数据的契约口径
+    - tutorial/images/page-05-visual.webp
+    - tutorial/images/page-05-keywords.png
   symbols:
-    - {file: fixtures/dw.sql, pattern: "'华北'"}
-    - {file: contracts/schema.contract.yaml, pattern: 'expected_fact_rows: 115'}
+    - {file: system/fixtures/dw.sql, pattern: "'华北'"}
+    - {file: system/contracts/schema.contract.yaml, pattern: 'expected_fact_rows: 115'}
     - {file: .env.example, pattern: '^MYSQL_IMAGE='}

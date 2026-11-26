@@ -10,7 +10,7 @@
 | - | - | - |
 | F1 | 本机无专用 md 编辑器（仅 GNOME Text Editor）；flatpak 1.14.6 + flathub 远端已配置 | 2026-11-23 探测 |
 | F2 | Tandem WebUI（127.0.0.1:3479）在跑，支持浏览器选中批注；但 save 会重序列化 md（插空格/续行） | curl 200 + 本会话实测 |
-| F3 | 阅读层双轨已转正：md 唯一正典（audit 闸门）＋阅读版 HTML（manual/read/，lesson.css+read.css） | 11-reading-layer.md 第 4 轮 |
+| F3 | 阅读层双轨已转正：md 唯一正典（audit 闸门）＋阅读版 HTML（tutorial/read/，lesson.css+read.css） | 11-reading-layer.md 第 4 轮 |
 | F4 | 硬约束：audit_book 钉死六段/H1/图片相对路径/无绝对路径；保护区一字不动 | audit_book.py、第 3 轮口径 |
 | F5 | flathub 候选版本：MarkText 0.23.0（MIT）/ Zettlr 4.10.0（GPL-3.0）/ Apostrophe 3.5（GPL）；apt 另有 ghostwriter 23.08.5、retext 8.0.2；Typora 仅官网 deb（付费闭源） | flatpak search / apt-cache |
 | F6 | MarkText 2022→2026.5 停更四年后复活：0.19.0（2026-05-28）→ 0.23.0（2026-10-21）连续发版；0.23.0 新增阅读模式/只读模式/可折叠标题/文档统计，支持自定义 CSS | GitHub releases + 多方报道 |

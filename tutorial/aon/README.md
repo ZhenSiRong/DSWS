@@ -33,8 +33,8 @@ L1 旧图由 `shots/render_flow.py` 渲染（**冻结**：不改、不重画）�
 ## 重跑与对账
 
 ```bash
-python3 manual/shots/render_flow_l2_l5.py    # 渲染 + CPM / 结构 / mmd 语法 / PNG 自检
-python3 manual/shots/check_aon_l2_l5.py      # 独立重算 CPM（逐轮松弛）+ PNG + OCR 断言
+python3 tutorial/shots/render_flow_l2_l5.py    # 渲染 + CPM / 结构 / mmd 语法 / PNG 自检
+python3 tutorial/shots/check_aon_l2_l5.py      # 独立重算 CPM（逐轮松弛）+ PNG + OCR 断言
 ```
 
 ## 与 D44 / D50 的关系

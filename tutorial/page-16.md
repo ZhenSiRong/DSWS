@@ -21,32 +21,32 @@
 
 <!-- verify: p16-lab-save -->
 ```bash
-scripts/lab save p16-before
+toolbox/scripts/lab save p16-before
 ```
 
 **第 2 步：先验规则本身。** 26 条测试 = 静态校验正例 + 每个违规码至少一条负例，秒级：
 
 <!-- verify: p16-pytest-guard -->
 ```bash
-backend/.venv/bin/python -m pytest backend/tests/generate/test_guard.py -q
+system/backend/.venv/bin/python -m pytest system/backend/tests/generate/test_guard.py -q
 ```
 
-**第 3 步：跑失败矩阵 + 16 码表。** 9 个场景各演一遍结局（码/类别/失败步骤要与 `fixtures/failures/scenarios.yaml` 一致）；**不需要 MySQL / LLM**——只替换了模型与数据库，校验是真的；括号是子 shell，跑完你还在仓库根目录：
+**第 3 步：跑失败矩阵 + 16 码表。** 9 个场景各演一遍结局（码/类别/失败步骤要与 `system/fixtures/failures/scenarios.yaml` 一致）；**不需要 MySQL / LLM**——只替换了模型与数据库，校验是真的；括号是子 shell，跑完你还在仓库根目录：
 
 <!-- verify: p16-failures-check -->
 ```bash
-(cd backend && .venv/bin/python -m app.scripts.failures --check)
+(cd system/backend && .venv/bin/python -m app.scripts.failures --check)
 ```
 
-**第 4 步：验 20 条语料的期望码，并数一遍码的分布。** `eval/probe_correction.py` 把每条错 SQL 真过一遍校验栈，检查“期望码 = 实际码”；`PYTHONPATH=backend` 只给这条命令临时加找包路径，不改任何文件。第二条管道从 20 行 JSON 里抠出 `expect_code` 再计数：
+**第 4 步：验 20 条语料的期望码，并数一遍码的分布。** `system/eval/probe_correction.py` 把每条错 SQL 真过一遍校验栈，检查“期望码 = 实际码”；`PYTHONPATH=system/backend` 只给这条命令临时加找包路径，不改任何文件。第二条管道从 20 行 JSON 里抠出 `expect_code` 再计数：
 
 <!-- verify: p16-probe-corpus -->
 ```bash
-PYTHONPATH=backend backend/.venv/bin/python eval/probe_correction.py | tail -1
-grep -o '"expect_code": "[A-Z_]*"' eval/correction.jsonl | awk -F'"' '{print $4}' | sort | uniq -c | sort -rn
+PYTHONPATH=system/backend system/backend/.venv/bin/python system/eval/probe_correction.py | tail -1
+grep -o '"expect_code": "[A-Z_]*"' system/eval/correction.jsonl | awk -F'"' '{print $4}' | sort | uniq -c | sort -rn
 ```
 
-**注意：** `eval/probe_correction.py` 里写的旧用法（`cd backend && .venv/bin/python ../eval/probe_correction.py`）会报 `No module named 'app'`——按上面 `PYTHONPATH=backend ...` 这条跑就是对的，报错不是环境坏了。
+**注意：** `system/eval/probe_correction.py` 里写的旧用法（`cd system/backend && .venv/bin/python ../eval/probe_correction.py`）会报 `No module named 'app'`——按上面 `PYTHONPATH=system/backend ...` 这条跑就是对的，报错不是环境坏了。
 
 ## 你应该看到
 
@@ -72,12 +72,12 @@ S6 PASS
 
 ![第 16 页 · 三条离线判据：26 passed + 失败矩阵 S6 PASS + 语料对账 {"total": 20, "mismatch": 0}](images/page-16-guard.png)
 
-> **“路线图”指什么**：这里指课程/`contracts/errors.yaml` 注释里的 S6 要求，不是另有一份外部路线图。
+> **“路线图”指什么**：这里指课程/`system/contracts/errors.yaml` 注释里的 S6 要求，不是另有一份外部路线图。
 
 ## 对账
 
 - **猜 1：10 种，不是 16。**
-    - 16 是 `contracts/errors.yaml` 里错误码的总数；20 条语料只覆盖**校验这一步能发出的** 10 个码——9 个静态校验码 + 1 个策略通道码 `SQL_REJECTED`。
+    - 16 是 `system/contracts/errors.yaml` 里错误码的总数；20 条语料只覆盖**校验这一步能发出的** 10 个码——9 个静态校验码 + 1 个策略通道码 `SQL_REJECTED`。
     - 剩下 6 个（`EMPTY_RESULT` / `LLM_REFUSAL` / `TIMEOUT` / `CANCELLED` / `SQL_EXECUTION_ERROR` / `INTERNAL_ERROR`）来自执行后、模型、取消和兜底，
     - 不在“校验拦下来”的名单里，所以本页不拿它们当判据。
 - **猜 2：3 条（c01/c02/c07），且错 SQL 不会被执行。**
@@ -89,24 +89,24 @@ S6 PASS
     - 执行前，错 SQL 没碰过数据库——
     - 没有慢查询、没有副作用风险，错误信息是契约里的中文码（不是 MySQL 方言），红叉落在 `validate_sql` 步骤，`class` 决定界面画红框/空态/取消，`retryable` 决定要不要自动修一次。
     - 执行报错则要真连库跑一遍，到那时 SQL 已经被“认为合格”，能给的只剩 `SQL_EXECUTION_ERROR`——名字丢了，位置也丢了。
-- **错误码是契约，不是文档装饰：** `contracts/errors.yaml` 是唯一事实源；`backend/tests/agent/test_error_alignment.py` 查五张表（错误码表 / `guard.py` 发出的码 / 提示词 / 策略契约 / 执行器）是不是同一批字面量，连“最多校正 1 次”这类参数也不许在代码里再写一遍。加一个码不入表、改名不同步，测试立刻红。
+- **错误码是契约，不是文档装饰：** `system/contracts/errors.yaml` 是唯一事实源；`system/backend/tests/agent/test_error_alignment.py` 查五张表（错误码表 / `guard.py` 发出的码 / 提示词 / 策略契约 / 执行器）是不是同一批字面量，连“最多校正 1 次”这类参数也不许在代码里再写一遍。加一个码不入表、改名不同步，测试立刻红。
 - **20 条语料 + 16 码 = 可复核判据：** 每条语料自带 `expect_code`，`probe` 用真校验栈重跑并给出 `{"total": 20, "mismatch": 0}`——先验尺子，再量东西；9 个场景再验整条流水线的结局（码/类别/失败步骤），`S6 PASS`。换个人重跑，红绿一样。
 
 > **你现在拥有**：一道执行前的门——每条错单都有名字（码）、有位置（失败步骤）、有处置（能不能重试）；判据盯的是“码对不对”，不是“有没有红叉”。
 
 ## 拆一刀
 
-1. 打开 `backend/app/generate/guard.py`，找到第 3 条「表与列存在」里的循环（搜 `for column in tree.find_all`），把 `for column in tree.find_all(exp.Column):` 改写成 `for column in []:  # 拆一刀：关掉列存在校验`——**只改 `guard.py` 这一处**，缩进别动；
-    - `backend/app/security/policy.py:460` 有一模一样的 `for column in tree.find_all(exp.Column):`，
+1. 打开 `system/backend/app/generate/guard.py`，找到第 3 条「表与列存在」里的循环（搜 `for column in tree.find_all`），把 `for column in tree.find_all(exp.Column):` 改写成 `for column in []:  # 拆一刀：关掉列存在校验`——**只改 `guard.py` 这一处**，缩进别动；
+    - `system/backend/app/security/policy.py:460` 有一模一样的 `for column in tree.find_all(exp.Column):`，
     - 别用 IDE 全局替换把它也拆了（两处一起拆会把第二道关也关掉，错 SQL 被放行到执行，实验结论就失真了）。
 
 2. 重跑第 2–4 步里的三条判据（`1 failed` 的是 `test_unknown_column_is_rejected`；秒数随机器变，看 passed/failed 就行；下面只留判红的那几行）：
 
 <!-- verify: p16-ablation-commands -->
 ```bash
-backend/.venv/bin/python -m pytest backend/tests/generate/test_guard.py -q
-(cd backend && .venv/bin/python -m app.scripts.failures --check)
-PYTHONPATH=backend backend/.venv/bin/python eval/probe_correction.py | grep -E "FAIL|total"
+system/backend/.venv/bin/python -m pytest system/backend/tests/generate/test_guard.py -q
+(cd system/backend && .venv/bin/python -m app.scripts.failures --check)
+PYTHONPATH=system/backend system/backend/.venv/bin/python system/eval/probe_correction.py | grep -E "FAIL|total"
 ```
 
 ```text
@@ -125,9 +125,9 @@ FAIL c07 expected SQL_UNKNOWN_COLUMN actual []
 
 <!-- verify: p16-lab-reset-restore -->
 ```bash
-scripts/lab reset p16-before --yes
-(cd backend && .venv/bin/python -m app.scripts.failures --check | tail -1)
-PYTHONPATH=backend backend/.venv/bin/python eval/probe_correction.py | tail -1
+toolbox/scripts/lab reset p16-before --yes
+(cd system/backend && .venv/bin/python -m app.scripts.failures --check | tail -1)
+PYTHONPATH=system/backend system/backend/.venv/bin/python system/eval/probe_correction.py | tail -1
 ```
 
 ```text

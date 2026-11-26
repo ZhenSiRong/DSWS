@@ -1,8 +1,8 @@
 # Schema 契约（自动生成）
 
 > 由 `python -m app.schema_contract --write-doc` 生成，请勿手改。
-> 语义事实源：`contracts/schema.contract.yaml`；
-> 物理结构与数据：`fixtures/dw.sql`（内存 SQLite 加载，不需要 MySQL）。
+> 语义事实源：`system/contracts/schema.contract.yaml`；
+> 物理结构与数据：`system/fixtures/dw.sql`（内存 SQLite 加载，不需要 MySQL）。
 
 ## 数据集
 
@@ -135,7 +135,7 @@ AOV = `SUM(fact_order.order_amount) / COUNT(DISTINCT fact_order.order_id)` = **2
 
 ## 负向夹具（必须红）
 
-这些是旧系统 `fixtures/legacy/*` 的真实缺陷。它们**不是**事实源；检查器必须持续把它们检出来，否则说明防线退化。
+这些是旧系统 `system/fixtures/legacy/*` 的真实缺陷。它们**不是**事实源；检查器必须持续把它们检出来，否则说明防线退化。
 
 | 代码 | 位置 | 说明 |
 |---|---|---|
@@ -157,7 +157,7 @@ AOV = `SUM(fact_order.order_amount) / COUNT(DISTINCT fact_order.order_id)` = **2
 ## 复现
 
 ```bash
-cd backend
+cd system/backend
 uv run python -m app.schema_contract --check
 uv run python -m app.schema_contract --check-legacy   # 预期退出码 1
 uv run python -m app.schema_contract --write-doc

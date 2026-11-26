@@ -9,7 +9,7 @@
 </head>
 <body>
 <main class="page">
-<p class="kicker">练本 · 阅读版（md 正典派生，改内容请改 manual/page-05.md）</p>
+<p class="kicker">练本 · 阅读版（md 正典派生，改内容请改 tutorial/page-05.md）</p>
 <h1>第 5 页 · 从一句话里抽出关键词</h1>
 <blockquote>
 <p><strong>城市坐标 · P5 前台接待台（交付物 ⑦）</strong>｜窗口后的接待员：把一句话拆成「地区 + 指标」两把钥匙。</p>
@@ -68,7 +68,7 @@ def query(q: Query):
 <ol start="2">
 <li>回终端 1 按 Ctrl+C 停掉，再用第 3 页那条命令原样重启：</li>
 </ol>
-<pre><code class="language-bash">backend/.venv/bin/python -m uvicorn lab.app:app --port 8000
+<pre><code class="language-bash">system/backend/.venv/bin/python -m uvicorn lab.app:app --port 8000
 </code></pre>
 <ol start="3">
 <li>在终端 2 发两个请求：一个短的，一个更长的（带一些跟查询无关的字；端口沿用你第 3 页实际启动的那个，默认 <code>8000</code>）：</li>
@@ -85,7 +85,7 @@ curl -s -X POST http://127.0.0.1:8000/api/query -H 'Content-Type: application/js
 <ul>
 <li>你猜对了吗？两个词：<code>华东</code>、<code>销售额</code>。<code>的</code>、<code>多少</code> 没进去——它们不在词表里，<code>if word in question</code> 对它们不成立。</li>
 <li><code>in</code> 是<strong>子串包含</strong>：只要那句话里出现了“销售额”这三个字就算命中，前后多几个字不影响结果。所以“华东的销售额是多少”和“华北销售额”抽出来的指标是同一个。</li>
-<li>再看顺序：代码按 <code>REGIONS + METRICS</code> 的顺序扫，地区永远排在指标前面，跟你问题里谁先出现无关。</li>
+<li>再看顺序：代码按 <code>REGIONS + METRICS</code> 的顺序扫，地区永远排在指标前面，跟你问题里谁先出现无关；<code>REGIONS</code> 的排列顺序本身无意义，和契约 <code>values</code> 的顺序不同不算矛盾。</li>
 <li>规则很笨，但可预测：同一个问题永远抽同一组词，你能对着输出逐字核对。这一页不用 AI，就是为了让“抽词”这一步能被你验算。</li>
 </ul>
 <blockquote>

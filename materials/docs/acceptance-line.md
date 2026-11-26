@@ -1,6 +1,6 @@
 # 教材可跟随性验收线 · T2 级考核自动线
 
-> T0/T1 是**逐页**的静态/离线契约核对（`docs/verify-line.md`，实现 `scripts/verify.py`）；T2 是**按级**的全栈考核：把 `manual/ACCEPTANCE.md` 的 L1–L5 拆成「脚本能安全自动跑的部分」+「必须人工/有破坏性的 MANUAL 步骤」。术语口径见 `GLOSSARY.md`「验收线术语」，决策见 `docs/adr/0002-followability-line.md`。
+> T0/T1 是**逐页**的静态/离线契约核对（`materials/docs/verify-line.md`，实现 `toolbox/scripts/verify.py`）；T2 是**按级**的全栈考核：把 `tutorial/ACCEPTANCE.md` 的 L1–L5 拆成「脚本能安全自动跑的部分」+「必须人工/有破坏性的 MANUAL 步骤」。术语口径见 `GLOSSARY.md`「验收线术语」，决策见 `materials/docs/adr/0002-followability-line.md`。
 
 ## 什么时候跑
 
@@ -10,15 +10,15 @@
 
 ## 前置
 
-- 仓库根、Docker + Compose v2、`backend/.venv`（`make install`）；L4/L5 的前端单测还要 `frontend/node_modules`（缺了记**可选 SKIP + WARN**，不阻塞）。
-- 只读栈检查要 `.env`（`make docker-env`）；L1/L2/L5 会 source `scripts/export-docker-env.sh` 校验凭据，**不写文件**。
+- 仓库根、Docker + Compose v2、`system/backend/.venv`（`make install`）；L4/L5 的前端单测还要 `system/frontend/node_modules`（缺了记**可选 SKIP + WARN**，不阻塞）。
+- 只读栈检查要 `.env`（`make docker-env`）；L1/L2/L5 会 source `toolbox/scripts/export-docker-env.sh` 校验凭据，**不写文件**。
 - 可在任意 cwd 调用：脚本自己定位仓库根。
 
 ## 用法与退出码
 
 ```bash
 make accept-l1        # … accept-l5（Makefile 目标；未就绪时直接调脚本）
-bash scripts/acceptance/level-l3.sh
+bash toolbox/scripts/acceptance/level-l3.sh
 ```
 
 | 退出码 | 末行 | 含义 |
@@ -47,12 +47,12 @@ bash scripts/acceptance/level-l3.sh
 
 ## 与其它门的关系
 
-- `manual/ACCEPTANCE.md`：判据原文唯一正典；本线只是它可自动化的子集，不替代逐页对账和 MANUAL 级考核，失败先按该文件 §8「失败时看哪」。
-- `make verify`（T1，`scripts/verify.py`）：逐页契约的离线核对，fail-closed；T2 是跨页/栈级的级考核，两者互补、不互相替代。
+- `tutorial/ACCEPTANCE.md`：判据原文唯一正典；本线只是它可自动化的子集，不替代逐页对账和 MANUAL 级考核，失败先按该文件 §8「失败时看哪」。
+- `make verify`（T1，`toolbox/scripts/verify.py`）：逐页契约的离线核对，fail-closed；T2 是跨页/栈级的级考核，两者互补、不互相替代。
 - `make audit` / `make docker-smoke`：能复用的直接调用，不复制实现。
 
 ## 失败排查
 
 - `SKIP`：先 `docker compose ps -a`；按第 13 页起栈（或补 `make install` / `make docker-env`）。
-- `FAIL`：脚本已回显命令与真实输出；按 `manual/ACCEPTANCE.md` 对应页的「你应该看到」和 §8 定位；`make verify` 先排掉页面契约层的断层。
-- 别在别人的栈上跑级考核/注入类步骤；并行验收用仓库副本 + 独立 compose 项目名 + 端口覆盖（page-13、`manual/review/replay-page-14.md`）。
+- `FAIL`：脚本已回显命令与真实输出；按 `tutorial/ACCEPTANCE.md` 对应页的「你应该看到」和 §8 定位；`make verify` 先排掉页面契约层的断层。
+- 别在别人的栈上跑级考核/注入类步骤；并行验收用仓库副本 + 独立 compose 项目名 + 端口覆盖（page-13、`tutorial/review/replay-page-14.md`）。

@@ -9,7 +9,7 @@
 - 宿主机需要 GNU Make、Python 3.8+、Bash 和 curl（Windows 上用 Git Bash）
   来运行 Make / smoke 命令。宿主机上的两个脚本（`generate_docker_env.py`、
   `smoke_checks.py`）用到 `Path.unlink(missing_ok=True)`——那是 3.8 才有的；
-  `scripts/find-python.sh` 会挑一个**版本够新**的解释器，太老的（2.7 / 3.6
+  `toolbox/scripts/find-python.sh` 会挑一个**版本够新**的解释器，太老的（2.7 / 3.6
   这类"跑得起来却跑不了脚本"的）会被跳过，并在报错里点名它的版本。
 - 首次构建需要网络：拉取基础镜像、npm 包、Python 包。
 - 建议至少 8 GB 内存（ES 堆固定 512 MB）。
@@ -67,7 +67,7 @@ make docker-smoke
 |---|---|---|
 | 首尾分片的到达时间差 ≥ 50 毫秒 | 流式 | 通过 |
 | 整个响应 < 200 毫秒就结束（时间差自然也小） | 太快，分辨不出来 | 重试几次；仍分辨不出就由 nginx 的生效配置定性 |
-| 其余 | 攒完了一次性到达 | 失败，并提示查 `docker/nginx.conf` 的 `proxy_buffering off` |
+| 其余 | 攒完了一次性到达 | 失败，并提示查 `system/docker/nginx.conf` 的 `proxy_buffering off` |
 
 "太快"这一档靠 nginx 的**生效配置**定性——那才是确定性的判据。要判的不是
 "整份配置里有没有出现过 `proxy_buffering off`"，而是**处理 `/api/` 请求的
@@ -85,7 +85,7 @@ make docker-smoke
 验收脚本会自己把它去掉。nginx 的代理配置转交的是**原始** URI，双斜杠原样
 打到后端就是 404，而症状只表现为"请求失败"，地址写歪了这件事没人提。
 
-这些检查放在 `scripts/smoke_checks.py` 里，且**不能用 `assert` 写**：
+这些检查放在 `toolbox/scripts/smoke_checks.py` 里，且**不能用 `assert` 写**：
 `python -O` 会把 `assert` 剥掉，验收脚本于是永远"通过"。
 
 验收脚本在动手之前还有两道闸：
@@ -93,7 +93,7 @@ make docker-smoke
 - **`.env` 里还是模板的占位密码（`change-me-*`）就直接判不通过**。Compose 的
   `${MYSQL_PASSWORD:?}` 只查"非空"，占位值照样让整个栈起来、验收照常通过——
   而那个密码就写在 `.env.example` 里，是公开的，谁都能连上库。先跑
-  `python scripts/generate_docker_env.py` 换掉它。
+  `python toolbox/scripts/generate_docker_env.py` 换掉它。
 - **拿不到完整的 nginx 生效配置就不判通过**：`nginx -T` 自己失败（退出码非 0），
   或者取回来的输出里没有 `# configuration file` 头（多半是取到一半就断了），
   都判不通过。SSE 那一档唯一的证据就是这份配置，半份配置比没有配置更糟。
@@ -160,7 +160,7 @@ ALL PRIVILEGES，正是 S5 要消除的那个越权入口；`backend` 只应该�
 - `MYSQL_ROOT_PASSWORD` / `MYSQL_PASSWORD` 只注入 `init` 和 MySQL；
   `backend` 只拿 `REBUILD_DW_RO_PASSWORD`。
 - **宿主 CLI**：`make stage2` / `make stage3` / `make stage5-live` 不会自动读
-  `.env`；先 `source scripts/export-docker-env.sh`，它会把 Compose 的随机密码和
+  `.env`；先 `source toolbox/scripts/export-docker-env.sh`，它会把 Compose 的随机密码和
   宿主机端口导出为 `REBUILD_*` 变量，成功时不打印任何内容。
 - **取值规则**（`source` 之后 shell 和 Compose 读到的必须是同一个字符串，
   否则容器能连上库、宿主 CLI 却只收到一句 `Access denied`）：
@@ -194,13 +194,13 @@ docker compose run --rm --no-deps init \
 docker compose up -d --force-recreate backend
 ```
 
-- **重新生成 `.env`**：`scripts/generate_docker_env.py` 默认**不覆盖**已存在的
+- **重新生成 `.env`**：`toolbox/scripts/generate_docker_env.py` 默认**不覆盖**已存在的
   `.env`（`make docker-env` 在 `.env` 存在时也直接跳过）。要覆盖就显式说：
 
 ```bash
-python scripts/generate_docker_env.py --dry-run        # 预览（密码显示为 ***）
-python scripts/generate_docker_env.py --force          # 覆盖，但保留已有的密码和配置
-python scripts/generate_docker_env.py --rotate-secrets # 换密码（见下）
+python toolbox/scripts/generate_docker_env.py --dry-run        # 预览（密码显示为 ***）
+python toolbox/scripts/generate_docker_env.py --force          # 覆盖，但保留已有的密码和配置
+python toolbox/scripts/generate_docker_env.py --rotate-secrets # 换密码（见下）
 ```
 
   `--force` **保留**已有的值：已经在跑的栈不会因为重新生成 `.env` 就连不上库。
@@ -220,8 +220,8 @@ python scripts/generate_docker_env.py --rotate-secrets # 换密码（见下）
 
 ```bash
 make docker-reset                                   # 删掉三个数据卷（会提示输入 yes）
-python scripts/generate_docker_env.py --rotate-secrets
-source scripts/export-docker-env.sh                 # 宿主 CLI 要用新密码
+python toolbox/scripts/generate_docker_env.py --rotate-secrets
+source toolbox/scripts/export-docker-env.sh                 # 宿主 CLI 要用新密码
 make docker-up
 ```
 
@@ -265,9 +265,9 @@ Compose（`docker compose --project-name <项目名> down -v`）：不指定的�
 
 `down -v` 删的不止是卷：容器和网络也一起没了，提示里写明了这一点。
 
-`fixtures/dw.sql` 通过 MySQL 的 `docker-entrypoint-initdb.d` 挂载导入，
+`system/fixtures/dw.sql` 通过 MySQL 的 `docker-entrypoint-initdb.d` 挂载导入，
 **只在数据卷为空的那一次**执行。卷里已经有数据时 MySQL 不会再跑这个脚本——
-改了 `fixtures/dw.sql` 却不生效，多半就是这个原因。重新导入要先
+改了 `system/fixtures/dw.sql` 却不生效，多半就是这个原因。重新导入要先
 `make docker-reset`（会删卷）。
 
 ## 6. 排障
@@ -277,14 +277,14 @@ Compose（`docker compose --project-name <项目名> down -v`）：不指定的�
 | 镜像拉取失败 | 默认镜像源不可达 | 改 `.env` 的 `*_IMAGE` 为可访问镜像源，再 `make docker-up` |
 | `init` 退出 1 | MySQL/ES 未就绪、密码不一致、S2 校验失败 | `docker compose logs init`；必要时 `docker compose run --rm --no-deps init` 重跑 |
 | `Access denied for user 'dw_reader'` | init 没跑完或密码已轮换 | `docker compose logs init`；重新执行 `init` |
-| 容器连库正常，宿主 CLI 却 `Access denied` | shell 里的凭据和 `.env` 不一致 | 告警里会指出是哪个变量对不上。`REBUILD_*` 重新 `source scripts/export-docker-env.sh` 即可；`MYSQL_PASSWORD` / `MYSQL_ROOT_PASSWORD` 是**已导出的** shell 值优先（Compose 就这么读——没 export 的它看不见），`unset` 掉那个旧变量再重新 `source` |
+| 容器连库正常，宿主 CLI 却 `Access denied` | shell 里的凭据和 `.env` 不一致 | 告警里会指出是哪个变量对不上。`REBUILD_*` 重新 `source toolbox/scripts/export-docker-env.sh` 即可；`MYSQL_PASSWORD` / `MYSQL_ROOT_PASSWORD` 是**已导出的** shell 值优先（Compose 就这么读——没 export 的它看不见），`unset` 掉那个旧变量再重新 `source` |
 | ES 容器反复退出（Linux） | `vm.max_map_count` 太小 | `sudo sysctl -w vm.max_map_count=262144` |
 | 8080 被占用 | 宿主机端口冲突 | 在 `.env` 改 `FRONTEND_HOST_PORT` |
 | 8100 被占用 | 容器后端与 `make dev-backend` 撞端口 | 见 2.1 节；或改 `.env` 的 `BACKEND_HOST_PORT` |
-| 改了 `fixtures/dw.sql` 但库里的数据没变 | 导入脚本只在空卷上跑一次 | `make docker-reset` 后重新 `make docker-up` |
+| 改了 `system/fixtures/dw.sql` 但库里的数据没变 | 导入脚本只在空卷上跑一次 | `make docker-reset` 后重新 `make docker-up` |
 | 改了 `.env` 里的密码，栈却起不来 | MySQL 只在首次初始化数据卷时用密码建账号，卷还在则新密码不生效 | `make docker-reset` 后重新 `make docker-up`（见第 4 节） |
 | 构建时 npm / pip 拉包失败或极慢 | 默认源不可达 | 改 `.env` 的 `NPM_REGISTRY` / `UV_INDEX_URL`，再 `make docker-up` |
-| 页面能开但 SSE 不流式 | Nginx 缓冲 | 确认 `docker/nginx.conf` 的 `proxy_buffering off`；重建 frontend |
+| 页面能开但 SSE 不流式 | Nginx 缓冲 | 确认 `system/docker/nginx.conf` 的 `proxy_buffering off`；重建 frontend |
 | `S2 FAIL: ... unknown analyzer [ik_max_word]` | 官方 ES 没有 IK | S2 会自动回退 `standard`；若仍失败看 init 日志 |
 | 查询一直 `INTERNAL_ERROR` | init 未成功，或只读账号不可用 | 先看 `docker compose ps` 与 `docker compose logs init` |
 
@@ -292,5 +292,5 @@ Compose（`docker compose --project-name <项目名> down -v`）：不指定的�
 
 - backend 固定单 worker：取消注册表是进程内状态，不能多副本。
 - ES 单节点、关闭鉴权，只适合单机；不要暴露到公网。
-- `fixtures/dw.sql` 是当前数据源；替换真实数据不在本部署范围内。
+- `system/fixtures/dw.sql` 是当前数据源；替换真实数据不在本部署范围内。
 - 不提供镜像仓库推送、多节点编排或高可用。

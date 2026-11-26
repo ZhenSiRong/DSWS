@@ -4,20 +4,20 @@
 
 一条命令重跑全部图（在仓库根目录）：
 
-    python3 manual/shots/render_l2_pages.py
+    python3 tutorial/shots/render_l2_pages.py
 
 做四件事：
 
-1. 在 `/tmp/shots-l2` 建一个**临时工作区**：拷入 `fixtures/`、`contracts/`、
-   `scripts/lab`、`backend/app`、`backend/.venv`、`docs/SCHEMA-CONTRACT.md`、
+1. 在 `/tmp/shots-l2` 建一个**临时工作区**：拷入 `system/fixtures/`、`system/contracts/`、
+   `toolbox/scripts/lab`、`system/backend/app`、`system/backend/.venv`、`materials/docs/SCHEMA-CONTRACT.md`、
    `compose.yaml`、`lab/`。页面命令全是相对路径，在临时工作区里逐字执行，
    所以图里不会出现 `/home/...` 这类绝对路径。
 2. 起一个临时 MySQL 容器 `shots-l2-mysql`（端口 3310；被占就顺延 3311 / 3312），
-   灌入 `fixtures/dw-real.sql`。**不碰**学生已有的 `lab-mysql` 容器和 3307 端口。
+   灌入 `system/fixtures/dw-real.sql`。**不碰**学生已有的 `lab-mysql` 容器和 3307 端口。
 3. 按三页正文真跑命令：
-   - 第 10 页：`scripts/lab save` → 灌 `dw-real.sql` → `dw-real.checks.sql` 对账
+   - 第 10 页：`toolbox/scripts/lab save` → 灌 `dw-real.sql` → `dw-real.checks.sql` 对账
      → `--check`（绿）→ 把副本里契约的 `expected_fact_rows` 改成 410 → `--check`（红）
-     → `scripts/lab reset` 还原 → 重灌 `dw.sql`；
+     → `toolbox/scripts/lab reset` 还原 → 重灌 `dw.sql`；
    - 第 11 页：写第 11 页版 `lab/app.py` → `python -m lab.app` → `--check`；
    - 第 12 页：写 `lab/db.py` + 第 12 页版 `lab/app.py` → 灌回 `dw-real.sql`
      → 接管验证（回 1000）→ `python -m lab.db` 七行自检（超时那行真等 5 秒）。
@@ -27,10 +27,10 @@
 
 输出（只写这四个文件）：
 
-    manual/images/page-10-checks.png     第 10 页 `dw-real.checks.sql` 对账输出
-    manual/images/page-10-gate.png       第 10 页 `--check` 绿 / 红两次运行
-    manual/images/page-11-contract.png   第 11 页 5 行 SQL + `S1 PASS`
-    manual/images/page-12-executor.png   第 12 页执行器自检 7 行（+ 接管验证）
+    tutorial/images/page-10-checks.png     第 10 页 `dw-real.checks.sql` 对账输出
+    tutorial/images/page-10-gate.png       第 10 页 `--check` 绿 / 红两次运行
+    tutorial/images/page-11-contract.png   第 11 页 5 行 SQL + `S1 PASS`
+    tutorial/images/page-12-executor.png   第 12 页执行器自检 7 行（+ 接管验证）
 
 两条约定：
 
@@ -38,10 +38,10 @@
   换成临时容器 `shots-l2-mysql`，截图里仍显示页面原文的 `lab-mysql`——学生照着
   页面敲的就是这个名字，图与页面才对得上。临时容器跑完 `docker rm -f`。
 - 第 10 页的 `expected_fact_rows: 115 → 410` 只改 `/tmp/shots-l2` 副本里的
-  `contracts/schema.contract.yaml`，仓库文件一个都不动。
+  `system/contracts/schema.contract.yaml`，仓库文件一个都不动。
 
 依赖（本机已装，不新装）：docker、google-chrome、ImageMagick convert/identify、
-仓库自带的 `backend/.venv`；OCR 自检可选依赖 tesseract（没装就跳过，主对账照做）。
+仓库自带的 `system/backend/.venv`；OCR 自检可选依赖 tesseract（没装就跳过，主对账照做）。
 """
 
 from __future__ import annotations
@@ -57,7 +57,7 @@ from pathlib import Path
 
 # ---------------------------------------------------------------- 常量
 
-HERE = Path(__file__).resolve().parent          # manual/shots
+HERE = Path(__file__).resolve().parent          # tutorial/shots
 REPO = HERE.parents[1]                          # 仓库根目录
 IMAGES = REPO / "manual" / "images"
 PAGE_MD = {
@@ -79,31 +79,31 @@ PAGE_BG = "#04070b"                             # 与 term_render.CSS 的 --page
 MYSQL_WARN = "mysql: [Warning] Using a password on the command line interface can be insecure."
 
 # 与页面「## 动手」逐字一致（改页面时这里要同步；脚本会断言它们真出现在页面里）
-CMD10_SAVE = "scripts/lab save p10-before"
+CMD10_SAVE = "toolbox/scripts/lab save p10-before"
 CMD10_IMPORT_REAL = (
     "docker exec -i lab-mysql mysql -uroot -plabpass "
-    "--default-character-set=utf8mb4 < fixtures/dw-real.sql"
+    "--default-character-set=utf8mb4 < system/fixtures/dw-real.sql"
 )
 CMD10_CHECKS = (
     "docker exec -i lab-mysql mysql -uroot -plabpass "
-    "--default-character-set=utf8mb4 < fixtures/dw-real.checks.sql"
+    "--default-character-set=utf8mb4 < system/fixtures/dw-real.checks.sql"
 )
-CMD_CHECK = "(cd backend && .venv/bin/python -m app.schema_contract --check)"
-CMD10_RESET = "scripts/lab reset p10-before --yes"
-CMD10_IMPORT_DEMO = "docker exec -i lab-mysql mysql -uroot -plabpass < fixtures/dw.sql"
+CMD_CHECK = "(cd system/backend && .venv/bin/python -m app.schema_contract --check)"
+CMD10_RESET = "toolbox/scripts/lab reset p10-before --yes"
+CMD10_IMPORT_DEMO = "docker exec -i lab-mysql mysql -uroot -plabpass < system/fixtures/dw.sql"
 CMD10_COUNT = (
     'docker exec lab-mysql mysql -uroot -plabpass -N -B dw '
     '-e "SELECT COUNT(*) FROM fact_order;"'
 )
-CMD11_APP = "backend/.venv/bin/python -m lab.app"
-CMD11_SAVE = "scripts/lab save p11-before"
-CMD11_RESET = "scripts/lab reset p11-before --yes"
+CMD11_APP = "system/backend/.venv/bin/python -m lab.app"
+CMD11_SAVE = "toolbox/scripts/lab save p11-before"
+CMD11_RESET = "toolbox/scripts/lab reset p11-before --yes"
 CMD12_IMPORT_REAL = CMD10_IMPORT_REAL
 CMD12_STEP3 = (
-    'backend/.venv/bin/python -c "from lab.app import run_sql; '
+    'system/backend/.venv/bin/python -c "from lab.app import run_sql; '
     "print(len(run_sql('SELECT * FROM dim_date')))\""
 )
-CMD12_SELFTEST = "backend/.venv/bin/python -m lab.db"
+CMD12_SELFTEST = "system/backend/.venv/bin/python -m lab.db"
 
 EXPECTED_CONTRACT_ROWS = "  expected_fact_rows: 115"
 REGION_VALUES_LINE = "          values: [华南, 华东, 西南, 华北, 华中]"
@@ -129,7 +129,7 @@ OCR_KEYWORDS = {
 
 # ---------------------------------------------------------------- 复用 term_render
 
-sys.dont_write_bytecode = True                  # 不在 manual/shots 里写 __pycache__
+sys.dont_write_bytecode = True                  # 不在 tutorial/shots 里写 __pycache__
 sys.path.insert(0, str(HERE))
 import term_render as tr  # noqa: E402
 
@@ -361,7 +361,7 @@ def preflight() -> tuple[int, Path]:
     if missing:
         sys.exit(f"缺少依赖：{', '.join(missing)}（本脚本不装新依赖）")
     if not (REPO / "backend" / ".venv" / "bin" / "python").exists():
-        sys.exit("backend/.venv 不存在；先按第 0 页准备好环境")
+        sys.exit("system/backend/.venv 不存在；先按第 0 页准备好环境")
 
     inspect = subprocess.run(
         ["docker", "image", "inspect", MYSQL_IMAGE],
@@ -384,8 +384,8 @@ def preflight() -> tuple[int, Path]:
     contract = (REPO / "contracts" / "schema.contract.yaml").read_text(encoding="utf-8")
     if EXPECTED_CONTRACT_ROWS not in contract:
         sys.exit("仓库契约不是 expected_fact_rows: 115，第 10 页对账的前提变了，先确认再重跑")
-    for path in ("fixtures/dw.sql", "fixtures/dw-real.sql",
-                 "fixtures/dw-real.checks.sql"):
+    for path in ("system/fixtures/dw.sql", "system/fixtures/dw-real.sql",
+                 "system/fixtures/dw-real.checks.sql"):
         if not (REPO / path).is_file():
             sys.exit(f"缺少 {path}")
 
@@ -429,7 +429,7 @@ def start_mysql(port: int) -> None:
          "-p", f"127.0.0.1:{port}:3306",
          "-e", "LANG=C.UTF-8",
          "-e", "MYSQL_ROOT_PASSWORD=labpass",
-         # 第 1 页的 docker run 还建了 didilili 账号：fixtures/dw.sql 末尾有一句
+         # 第 1 页的 docker run 还建了 didilili 账号：system/fixtures/dw.sql 末尾有一句
          # GRANT 给这个账号，没有它就灌不进演示库（第 10 页拆一刀 3 要用）。
          "-e", "MYSQL_USER=didilili",
          "-e", "MYSQL_PASSWORD=labpass",
@@ -751,7 +751,7 @@ def main() -> int:
                 "file": "page-10-checks.png",
                 "panes": [{
                     "title": "终端 · 第 10 页第 3 步：真数据对账"
-                             "（fixtures/dw-real.checks.sql 的真跑输出）",
+                             "（system/fixtures/dw-real.checks.sql 的真跑输出）",
                     "items": [
                         {"step": "10_checks", "part": "cmd"},
                         {"step": "10_checks", "part": "out"},
@@ -763,7 +763,7 @@ def main() -> int:
                 "panes": [
                     {
                         "title": "终端 · 第 4 步：换完真数据，门禁还是绿的"
-                                 "（核对的仍是 fixtures/dw.sql 旧快照）",
+                                 "（核对的仍是 system/fixtures/dw.sql 旧快照）",
                         "items": [
                             {"step": "10_green", "part": "cmd"},
                             {"step": "10_green", "part": "out"},

@@ -6,7 +6,7 @@
   "kicker": "D45 · 城市隐喻样例 · 一级「造」· 真楼嵌套",
   "one_liner": "我们不是在发明系统，是在一片空地上，为问题一座一座盖设施、一段一段接管网。",
   "image": "images/city-map-l1.png",
-  "rerun": "python3 manual/shots/render_city_map.py",
+  "rerun": "python3 tutorial/shots/render_city_map.py",
   "note": "单源：四区 / 10 件设施（3 座楼 + 1 块场地 + 5 个楼内房间 + 1 条流线）/ 12 件交付物 / 11 条道路 / 23 页标题都只改本文件；重跑渲染脚本会重建 city-map.html 与 titles-v2.md。artifacts 用 1–12，对应 completeness/v2 的 ①–⑫（渲染时转圈号）。流线 P8 用 flow_path + flow_width 定位，box 是由它派生的外接框（不是独立地块）。",
   "canvas": {
     "w": 1600,
@@ -763,7 +763,7 @@
       "lines": [
         "fact_order 115 行；华北 19 单（region_id = R004）",
         "金额口径：SUM(fact_order.order_amount)",
-        "入库：docker exec -i … < fixtures/dw.sql（-i 必加）"
+        "入库：docker exec -i … < system/fixtures/dw.sql（-i 必加）"
       ],
       "rect": {
         "x": 44,
@@ -875,7 +875,7 @@
       "page_id": "page-10",
       "level": "L2 换",
       "problem": "只有演示数据，凭什么说真的假不了？",
-      "solution": "把自己的数据域换进 fixtures/dw.sql，同步契约的行数 / 总额 / 日期域，再重建元知识",
+      "solution": "把自己的数据域换进 system/fixtures/dw.sql，同步契约的行数 / 总额 / 日期域，再重建元知识",
       "criterion": "`make stage1` → `S1 PASS`；`make stage2` → `S2 PASS`（dry-run→fresh→verify→幂等）"
     },
     {
@@ -883,7 +883,7 @@
       "page_id": "page-11",
       "level": "L2 换",
       "problem": "契约内联在页面里，改一处别处不知道，真的假不了吗？",
-      "solution": "换成 contracts/ 四份契约当唯一事实源：改契约 → 重生成 → 查新鲜度",
+      "solution": "换成 system/contracts/ 四份契约当唯一事实源：改契约 → 重生成 → 查新鲜度",
       "criterion": "`contracts_gen --check` → `S7 CONTRACT GEN PASS`（3 个文件与契约一致）"
     },
     {

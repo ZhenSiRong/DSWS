@@ -1,6 +1,6 @@
 # 图表可理解性优化计划（2026-11-09 确认版）
 
-> 类型：开发（过程）文档。设计产物落在 `design/`，本文只记录做法、判据与排期。
+> 类型：开发（过程）文档。设计产物落在 `materials/design/`，本文只记录做法、判据与排期。
 
 ## 1. 目标
 
@@ -18,7 +18,7 @@
 | 全书唯一图 | **33**（图 3-0 + 32 张技术图） |
 | 正文引用次数 | 57（图集章有重复引用） |
 | 图源 | `.mmd` / `.dot` + `.md` 说明 + `.svg` 成品 |
-| 渲染入口 | `design/scripts/render_all.py` |
+| 渲染入口 | `materials/design/scripts/render_all.py` |
 | 已做生活类比 | 1（图 3-0） |
 
 ## 3. 分轨（Q1）
@@ -49,7 +49,7 @@
 
 ### A 类：读图带
 
-后处理脚本 `design/scripts/add_reading_band.py`：
+后处理脚本 `materials/design/scripts/add_reading_band.py`：
 
 - 读取 SVG，增高 `height/viewBox`，把原内容整体下移；
 - 顶部加一条浅色带：`这张图回答：…` + `读图 1→2→3：…` + `失败：…`；
@@ -79,13 +79,13 @@
 
 | 产物 | 位置 |
 |---|---|
-| 读图路径数据（问题/1→2→3/失败） | `design/diagrams/reading-paths.yaml` |
-| 读图带注入脚本 | `design/scripts/add_reading_band.py` |
-| 更新后的 SVG | `design/diagrams/**/*.svg` |
-| 6 张漫画 | `design/book-editorial/figures/` |
-| 审计与盲测报告 | `pilot/figure-audit.md` |
-| 设计文档 | `design/design-doc.pdf`（32 图 + 地图，78 页） |
-| 开发教材 | `design/book-editorial/pdf/dev-book.pdf`（163 页，图集章改为索引） |
+| 读图路径数据（问题/1→2→3/失败） | `materials/design/diagrams/reading-paths.yaml` |
+| 读图带注入脚本 | `materials/design/scripts/add_reading_band.py` |
+| 更新后的 SVG | `materials/design/diagrams/**/*.svg` |
+| 6 张漫画 | `materials/design/book-editorial/figures/` |
+| 审计与盲测报告 | `materials/pilot/figure-audit.md` |
+| 设计文档 | `materials/design/design-doc.pdf`（32 图 + 地图，78 页） |
+| 开发教材 | `materials/design/book-editorial/pdf/dev-book.pdf`（163 页，图集章改为索引） |
 
 ## 8. 风险与回退
 
@@ -102,7 +102,7 @@
 2. 写 `add_reading_band.py`，先对 07/12/22 三张样张验证。
 3. A 类批量加带，重建 PDF，检查分页。
 4. 6 张漫画，门禁 + 复核。
-5. 盲测 + 学生抽检，写 `pilot/figure-audit.md`。
+5. 盲测 + 学生抽检，写 `materials/pilot/figure-audit.md`。
 6. 推送并更新 `DECISIONS.md` 状态。
 
 ---
@@ -111,9 +111,9 @@
 
 | 项 | 状态 | 证据 |
 |---|---|---|
-| 32 张图读图地图 | ✅ | `design/diagrams/reading-paths.json`；`design/inventory/diagram-catalog.md` |
-| 32 张图读图带 | ✅ | `design/scripts/add_reading_band.py`；SVG 根节点 `data-reading-band` |
-| design-doc.pdf | ✅ 78 页 | `design/design-doc.pdf` |
-| dev-book.pdf | ✅ 162 页，图集章改为索引 | `design/book-editorial/pdf/dev-book.pdf` |
+| 32 张图读图地图 | ✅ | `materials/design/diagrams/reading-paths.json`；`materials/design/inventory/diagram-catalog.md` |
+| 32 张图读图带 | ✅ | `materials/design/scripts/add_reading_band.py`；SVG 根节点 `data-reading-band` |
+| design-doc.pdf | ✅ 78 页 | `materials/design/design-doc.pdf` |
+| dev-book.pdf | ✅ 162 页，图集章改为索引 | `materials/design/book-editorial/pdf/dev-book.pdf` |
 | 6 张概念漫画 | ⬜ 待做 | B1：12/16/19/20/29/31 |
-| 三问盲测 + 学生抽检 | ⬜ 待做 | `pilot/figure-audit.md` |
+| 三问盲测 + 学生抽检 | ⬜ 待做 | `materials/pilot/figure-audit.md` |

@@ -25,7 +25,7 @@ import pytest
 from shellkit import fake_program, run_in_sh, to_shell_path, usable_sh
 
 ROOT = Path(__file__).resolve().parents[2]
-SMOKE = ROOT / "scripts" / "docker-smoke.sh"
+SMOKE = ROOT.parent / "toolbox" / "scripts" / "docker-smoke.sh"
 
 SH = usable_sh()
 
@@ -117,7 +117,7 @@ def _prepare(tmp_path: Path, env_body: str) -> Path:
     scripts_dir = tmp_path / "scripts"
     scripts_dir.mkdir(exist_ok=True)
     for name in ("docker-smoke.sh", "find-python.sh", "smoke_checks.py"):
-        source = ROOT / "scripts" / name
+        source = ROOT.parent / "toolbox" / "scripts" / name
         assert source.exists(), f"缺少 scripts/{name}"
         (scripts_dir / name).write_text(
             source.read_text(encoding="utf-8"), encoding="utf-8", newline="\n"

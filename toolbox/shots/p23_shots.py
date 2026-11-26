@@ -5,21 +5,21 @@
 
 在仓库根目录一条命令重跑：
 
-    python3 manual/shots/p23_shots.py
+    python3 tutorial/shots/p23_shots.py
 
-（栈已经起着、想跳过起停：`python3 manual/shots/p23_shots.py --reuse`，
+（栈已经起着、想跳过起停：`python3 tutorial/shots/p23_shots.py --reuse`，
 跑完不 down；正常重跑不加参数，脚本自己起栈、自己 `down -v`。）
 
 输出：
 
-    manual/images/page-23-frontend.png  真前端：问「华北销售额」→ 步骤轨 12 条（11 完成 + 1 未触发）
+    tutorial/images/page-23-frontend.png  真前端：问「华北销售额」→ 步骤轨 12 条（11 完成 + 1 未触发）
                                         + 结果表 41,099.5（浏览器按页面默认 8080 口径截图，图内无隔离端口）
-    manual/images/page-23-html.png      拆一刀：stop frontend 后换回 page-23.md 里那 17 行 HTML 入口，
+    tutorial/images/page-23-html.png      拆一刀：stop frontend 后换回 page-23.md 里那 17 行 HTML 入口，
                                         同一问题后 #out 停在 41099.5（无轨无表）
-    manual/images/page-23-demo.gif      真前端操作：输入 → 步骤轨亮起（生成SQL「执行中」约 6s）
+    tutorial/images/page-23-demo.gif      真前端操作：输入 → 步骤轨亮起（生成SQL「执行中」约 6s）
                                         → 结果表 41,099.5（约 7s 循环，真实时序录制）
 
-它按 runbook（manual/review/p23-runbook.md）与页面命令做五件事：
+它按 runbook（tutorial/review/p23-runbook.md）与页面命令做五件事：
 
 1. 起隔离栈 `-p p23shots`（隔开用户自己的 dsws-lab-ui / dsws-trace 栈）：
    mysql 13347 / ES 19247 / Qdrant 16347 / backend 18147 / frontend 18097，
@@ -39,14 +39,14 @@
    首/中/末帧对比证明有动画、末帧 OCR 读出 41,099.5。
 5. 收尾：删 `p23-html` 容器与目录、`compose down -v`、删临时工作区；
    `docker ps -a` 前后各拍一次 ID 快照，证明用户 24 个容器一个没动
-   （本来就要清那 0 个残留卷/网络）；`backend/uv.lock` 被改动就 `git checkout --`。
+   （本来就要清那 0 个残留卷/网络）；`system/backend/uv.lock` 被改动就 `git checkout --`。
 
 图里不出现用户名 / 主机名 / 绝对路径 / 隔离端口；两张 PNG 与 page-09 同口径
 （窗宽 1100px、1:1 像素、1px 灰边），中文逐字证据取自浏览器 DOM（本机 tesseract
 只有英文包，数字用 OCR 复核）。
 
 依赖（本机已装，不新装）：docker、google-chrome、ImageMagick、node、tesseract；
-仓库的 `frontend/node_modules/playwright-core` 与已缓存的 `shopkeeper-rebuild/*:local` 镜像。
+仓库的 `system/frontend/node_modules/playwright-core` 与已缓存的 `shopkeeper-rebuild/*:local` 镜像。
 """
 
 from __future__ import annotations
@@ -68,7 +68,7 @@ from pathlib import Path
 
 # ---------------------------------------------------------------- 常量
 
-HERE = Path(__file__).resolve().parent          # manual/shots
+HERE = Path(__file__).resolve().parent          # tutorial/shots
 REPO = HERE.parents[1]                          # 仓库根目录
 IMAGES = REPO / "manual" / "images"
 PAGE = REPO / "manual" / "page-23.md"
@@ -115,7 +115,7 @@ GIF_DEMO = IMAGES / "page-23-demo.gif"
 QUESTION = "华北销售额"
 
 # ---------------------------------------------------------------- 浏览器脚本
-# 由本脚本写进临时工作区再 `node` 执行（playwright-core 在 frontend/node_modules，
+# 由本脚本写进临时工作区再 `node` 执行（playwright-core 在 system/frontend/node_modules，
 # 通过 NODE_PATH 找到；本机没有 Playwright 自带浏览器，用系统 Chrome）。
 
 BROWSER_SHOT_JS = r"""'use strict';
@@ -623,7 +623,7 @@ def preflight(reuse: bool) -> None:
     if missing:
         sys.exit(f"缺少依赖：{', '.join(missing)}（本脚本不装新依赖）")
     if not (PLAYWRIGHT_CORE / "package.json").is_file():
-        sys.exit(f"找不到 {PLAYWRIGHT_CORE}（需要 frontend/node_modules/playwright-core）")
+        sys.exit(f"找不到 {PLAYWRIGHT_CORE}（需要 system/frontend/node_modules/playwright-core）")
     if not PAGE.is_file():
         sys.exit(f"找不到页面 {PAGE}")
     if not reuse:
@@ -1174,13 +1174,13 @@ def cleanup_workdir(work: Path) -> None:
 
 
 def restore_uv_lock() -> None:
-    proc = subprocess.run(["git", "status", "--porcelain", "backend/uv.lock"],
+    proc = subprocess.run(["git", "status", "--porcelain", "system/backend/uv.lock"],
                           capture_output=True, text=True, timeout=60, cwd=REPO)
     if proc.stdout.strip():
-        run_cmd(["git", "checkout", "--", "backend/uv.lock"], timeout=60, cwd=REPO)
-        say("    ✅ backend/uv.lock 有改动 → git checkout -- backend/uv.lock 已还原")
+        run_cmd(["git", "checkout", "--", "system/backend/uv.lock"], timeout=60, cwd=REPO)
+        say("    ✅ system/backend/uv.lock 有改动 → git checkout -- system/backend/uv.lock 已还原")
     else:
-        say("    ✅ backend/uv.lock 未改动")
+        say("    ✅ system/backend/uv.lock 未改动")
 
 
 def user_containers(ids: dict[str, str]) -> dict[str, str]:
@@ -1355,9 +1355,9 @@ def main() -> int:
     say("=" * 78)
     if ok:
         say(f"完成：{PNG_FRONTEND.name} / {PNG_HTML.name} / {GIF_DEMO.name}")
-        say(f"用时 {time.monotonic() - started:.1f}s；重跑：python3 manual/shots/p23_shots.py")
-        say("下一步（人工）：把三条 markdown 图片行嵌进 manual/page-23.md，"
-            "再跑 python3 manual/shots/audit_book.py 与 make audit。")
+        say(f"用时 {time.monotonic() - started:.1f}s；重跑：python3 tutorial/shots/p23_shots.py")
+        say("下一步（人工）：把三条 markdown 图片行嵌进 tutorial/page-23.md，"
+            "再跑 python3 tutorial/shots/audit_book.py 与 make audit。")
         return 0
     say("未完成：看上面的报错（栈/临时目录已尽力清理）")
     return 1

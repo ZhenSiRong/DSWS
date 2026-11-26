@@ -13,16 +13,16 @@
 
 | 项 | 事实 | 证据 |
 |---|---|---|
-| 参考仓库 | `git@github.com:ZhenSiRong/DSWS.git`，当前分支 `design/atlas` | `git remote -v` |
-| 工作流 | 真实 `langgraph.graph.StateGraph`，12 个节点与 `contracts/steps.yaml` 完全一致 | `backend/app/agent/graph.py`、`backend/tests/test_s6_langgraph.py:96` |
-| 校正闭环 | `correct_sql` 最多 **1** 次；校正后必须重过 `guard` + `policy` | `contracts/errors.yaml:42-48` |
+| 参考仓库 | `git@github.com:ZhenSiRong/DSWS.git`，当前分支 `materials/design/atlas` | `git remote -v` |
+| 工作流 | 真实 `langgraph.graph.StateGraph`，12 个节点与 `system/contracts/steps.yaml` 完全一致 | `system/backend/app/agent/graph.py`、`system/backend/tests/test_s6_langgraph.py:96` |
+| 校正闭环 | `correct_sql` 最多 **1** 次；校正后必须重过 `guard` + `policy` | `system/contracts/errors.yaml:42-48` |
 | 安全策略 | 36 条注入全拒、11 条零误杀、8 条 S4 基线 | 学生实测 `make stage5` |
-| 前端 | 重建版与线上原版均为 React 19；线上原版 Tailwind 3.4.17 | `frontend/package.json`、`deliverable/v2/original-frontend/package.json` |
+| 前端 | 重建版与线上原版均为 React 19；线上原版 Tailwind 3.4.17 | `system/frontend/package.json`、`materials/deliverable/v2/original-frontend/package.json` |
 | 5051 | nginx + docker compose；`/api/health` 200，`/api/steps` 返回 12 节点；构建于 2026-11-06 | `curl` |
-| LLM | `REBUILD_LLM_BASE_URL / _API_KEY / _MODEL`，兼容 DeepSeek | `backend/app/generate/provider.py:180-193`、README:119 |
+| LLM | `REBUILD_LLM_BASE_URL / _API_KEY / _MODEL`，兼容 DeepSeek | `system/backend/app/generate/provider.py:180-193`、README:119 |
 | 本地 Key | `DEEPSEEK_API_KEY` 在 `~/.bashrc`（未导出到当前进程） | `grep ~/.bashrc` |
 | 教材 | 207 页；`correct_sql` 出现 51 次，`validate_sql` 28 次；**`LangGraph` 出现 0 次** | `pdftotext` |
-| 视频 | 现有 46s / 1080p / 30fps，README 用 jsDelivr 外链 | `deliverable/v2/` |
+| 视频 | 现有 46s / 1080p / 30fps，README 用 jsDelivr 外链 | `materials/deliverable/v2/` |
 | PRD | 「12 节点 / 10 步」是 PRD 口径；仓库只有 12 节点，没有「10 步」的契约化定义 | `prd.md:7` |
 
 **由此得到两个真缺口：**
@@ -34,7 +34,7 @@
 
 ## 2. 验收口径：一致性测试（Conformance Suite）
 
-新建 `eval/conformance/`，对 **参考实现** 与 **学生产物** 跑同一套测试。
+新建 `system/eval/conformance/`，对 **参考实现** 与 **学生产物** 跑同一套测试。
 
 | 组 | 内容 | 通过线 | 权重 |
 |---|---|---|---|
@@ -67,7 +67,7 @@
 
 | 阶段 | 任务 | 工具 | 门禁 / 产出 | 回退 |
 |---|---|---|---|---|
-| **P0 冻结基线** | 锁定 main commit、契约、黄金集、5051 现状；把 `DEEPSEEK_API_KEY` 映射到 `REBUILD_LLM_*` | shell + `git` + `curl` | `eval/baseline.json`：参考实现跑出的 C1–C6 结果 | 基线不绿，先修环境不写教材 |
+| **P0 冻结基线** | 锁定 main commit、契约、黄金集、5051 现状；把 `DEEPSEEK_API_KEY` 映射到 `REBUILD_LLM_*` | shell + `git` + `curl` | `system/eval/baseline.json`：参考实现跑出的 C1–C6 结果 | 基线不绿，先修环境不写教材 |
 | **P1 教材审计** | 逐章抽取事实断言，回查 `file:line`；标出「书里有、代码没有」和「代码有、书里没有」 | `Grep/Read` + `pdftotext` | 缺口表（严重度 + 修法 + 验收点） | 有争议条目挂起，先不改 |
 | **P2 教材改写** | 补 LangGraph 图结构、12→10 分组、校正闭环、DeepSeek 接入、前端与部署 | `Edit` + `make_figure.sh` | 每章「事实可回溯」清单；图过自动门禁 + 逐字复核 | 按章节回滚 |
 | **P3 学生验证** | 6 个章节任务 + 1 个修复型 capstone；PDF-only、独立 worktree、hy3 low | CodeBuddy + worktree | 任务报告 + 协调方独立复跑 + C1–C6 | 卡点归因：教材/环境/学生 |
@@ -78,7 +78,7 @@
 ### P2 具体改动（按缺口排序）
 
 1. 新增「LangGraph 图」一节：`StateGraph`、12 节点、条件边 `validate_sql → run_sql / correct_sql / END`、`correct_sql → validate_sql`。
-2. 把「12 节点 / 10 步」写成显式映射表（哪 10 步、哪些节点合并），并落进 `contracts/steps.yaml` 的 `stage` 字段。
+2. 把「12 节点 / 10 步」写成显式映射表（哪 10 步、哪些节点合并），并落进 `system/contracts/steps.yaml` 的 `stage` 字段。
 3. 校正闭环单独成节：为什么最多 1 次、为什么必须重校验、为什么安全拒绝不参与校正。
 4. 补 DeepSeek/OpenAI 兼容接入与「无 Key 时显式 skipped」。
 5. 前端：React 19 + Tailwind，聊天式提问 + 结果表格 + 错误卡。
@@ -116,9 +116,9 @@
 |---|---|---|
 | 设计文档 ≥30 页 | `design-doc.pdf`（78 页）+ `dev-book.pdf`（163 页） | 已满足 |
 | 源代码 1 套 | 本仓库 `main` | 已满足 |
-| 开发手册 1 套 | `docs/SETUP-FROM-SCRATCH.md`（1131 行）+ README | 需确认是否单独成册 |
+| 开发手册 1 套 | `materials/docs/SETUP-FROM-SCRATCH.md`（1131 行）+ README | 需确认是否单独成册 |
 | 四项功能 | NL2SQL / LangGraph 12 节点 / 校正闭环 / React 19 + Tailwind | 线上已具备，需复验 |
-| 视频 | `deliverable/v2/*.mp4` + README 外链 | 需重录 |
+| 视频 | `materials/deliverable/v2/*.mp4` + README 外链 | 需重录 |
 
 ---
 

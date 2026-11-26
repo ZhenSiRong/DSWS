@@ -13,14 +13,14 @@
 | # | 装修 | 说明 |
 |---|---|---|
 | 1 | **第 9 页那 17 行 HTML** | `<form>` + `<pre>`，一行一个数——入口原型。 |
-| 2 | **`frontend/` 教学版重建前端** | compose 默认的 `frontend` 服务（默认端口 8080），「从零重建 · 教学版」界面、`12 个节点（10 个阶段）` 步骤轨，自带 40 条协议测试——它是**脚手架**，把系统结构摆在明面上。 |
-| 3 | **成熟版原版 `shopkeeper-agent`** | 交付时的样子（`deliverable/v2/original-frontend/`，React 19 + Tailwind 3.4.17 的构建产物 `dist/`）。 |
+| 2 | **`system/frontend/` 教学版重建前端** | compose 默认的 `frontend` 服务（默认端口 8080），「从零重建 · 教学版」界面、`12 个节点（10 个阶段）` 步骤轨，自带 40 条协议测试——它是**脚手架**，把系统结构摆在明面上。 |
+| 3 | **成熟版原版 `shopkeeper-agent`** | 交付时的样子（`materials/deliverable/v2/original-frontend/`，React 19 + Tailwind 3.4.17 的构建产物 `dist/`）。 |
 
 ![第 23 页 · 装修不换承重墙：左边是三种前端入口，右边是装修队：换门面，承重墙不动](images/page-23-visual.webp)
 
 ## 猜一猜
 
-动手前写下答案（都允许猜错）：① 成熟版和教学版是不是两套接口？把成熟版挂到同一个后端上，后端要不要配一份新的？② 换成成熟版之后，契约（`contracts/`）要不要改？
+动手前写下答案（都允许猜错）：① 成熟版和教学版是不是两套接口？把成熟版挂到同一个后端上，后端要不要配一份新的？② 换成成熟版之后，契约（`system/contracts/`）要不要改？
 
 ## 动手
 
@@ -49,10 +49,10 @@ docker run -d --name lab-mature --network shopkeeper-rebuild_default -p 127.0.0.
   "$(grep '^NGINX_IMAGE=' .env | cut -d= -f2)"
 ```
 
-**第 3 步：跑教学版脚手架的测试。** 这条判据测的是 `frontend/` 教学版；成熟版是构建产物 `dist/`，不带这套测试，也别在 `deliverable/v2/original-frontend/` 里跑。在仓库根目录跑（括号是子 shell，跑完还在根目录）：
+**第 3 步：跑教学版脚手架的测试。** 这条判据测的是 `system/frontend/` 教学版；成熟版是构建产物 `dist/`，不带这套测试，也别在 `materials/deliverable/v2/original-frontend/` 里跑。在仓库根目录跑（括号是子 shell，跑完还在根目录）：
 
 ```bash
-(cd frontend && npm test)
+(cd system/frontend && npm test)
 ```
 
 **第 4 步：对照着问。** 浏览器开 `http://127.0.0.1:8088`（成熟版）和 `http://127.0.0.1:8080`（教学版，默认端口；改过 `.env` 的 `FRONTEND_HOST_PORT` 用你的端口），两边都问「华北销售额」。
@@ -75,8 +75,8 @@ npm test：Tests  40 passed (40)（末行是 Duration）
 ## 对账
 
 - **猜 1：不是两套接口，后端一份都不用改。**
-    - 成熟版前端只认 `POST /api/query`（`deliverable/v2/original-frontend/src/lib/agentApi.ts`）：
-    - 同一条 SSE 流、同一套事件（happy 路径 23 条 `progress` + 1 条 `result`）、同一份 `contracts/`。
+    - 成熟版前端只认 `POST /api/query`（`materials/deliverable/v2/original-frontend/src/lib/agentApi.ts`）：
+    - 同一条 SSE 流、同一套事件（happy 路径 23 条 `progress` + 1 条 `result`）、同一份 `system/contracts/`。
     - 它的 `dist/` 里有一层薄适配：把契约的 `{columns, rows}` 渲染成自己的结果表、把 S7 的 step id 映成 12 个中文节点名——换算在浏览器里做，网络上一个字节没变。
 - **猜 2：契约不改，但成熟版不请求 `/api/steps`。**
     - 教学版 12 条步骤轨来自 `/api/steps`；成熟版把 12 节点拓扑写死在自己的组件里（`src/components/StepRail.tsx`），后端增删节点时成熟版要改这层映射。
@@ -85,7 +85,7 @@ npm test：Tests  40 passed (40)（末行是 Duration）
   - 8088 打不开 / `Conflict`：先看是不是同名容器残留——`docker rm -f lab-mature` 后重跑第 2 步；若是别的进程占着 8088（`ss -tlnp | grep 8088` 有输出），`rm` 没用，把第 2 步 `-p` 里的 8088 换成空端口（如 8089）重跑，浏览器地址同步改。
   - 8088 回 `502`：容器没进 compose 网络（用了默认 bridge），或项目名改过、`shopkeeper-rebuild_default` 不存在——`docker network ls | grep default` 查实际网络名。
   - 8080 连不上：教学版栈没起，或端口改过——按第 13 页查 `FRONTEND_HOST_PORT`；**别改 `compose.yaml`**。
-  - 结果不是 `41099.5`：数据库不是 `fixtures/dw.sql` 的演示集——`make docker-reset`（删数据卷、破坏性）→ `make docker-up` 重新 init（第 13 页），再问一句。
+  - 结果不是 `41099.5`：数据库不是 `system/fixtures/dw.sql` 的演示集——`make docker-reset`（删数据卷、破坏性）→ `make docker-up` 重新 init（第 13 页），再问一句。
 
 ## 拆一刀
 
@@ -133,7 +133,7 @@ function ask(question) {
 </script>
 ```
 
-**第 3 步：用教学版镜像的 nginx 占 8088，挂这个页面。** 反代配置（教学版镜像里的 `docker/nginx.conf`）沿用那一套，只把静态页换成刚写的 `index.html`；网络名同「动手」第 2 步（项目名改过先 `docker network ls | grep default`）：
+**第 3 步：用教学版镜像的 nginx 占 8088，挂这个页面。** 反代配置（教学版镜像里的 `system/docker/nginx.conf`）沿用那一套，只把静态页换成刚写的 `index.html`；网络名同「动手」第 2 步（项目名改过先 `docker network ls | grep default`）：
 
 ```bash
 docker run -d --name lab-mature --network shopkeeper-rebuild_default -p 127.0.0.1:8088:80 \

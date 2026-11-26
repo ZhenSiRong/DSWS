@@ -4,15 +4,15 @@
 
 在仓库根目录一条命令重跑：
 
-    python3 manual/shots/render_city_stages.py
+    python3 tutorial/shots/render_city_stages.py
 
 读（只读）：
-  `manual/city/stages-city.json`  四阶段定义（D44 造 / 换 / 审 / 守 + 横切系统 × 接线点，
+  `tutorial/city/stages-city.json`  四阶段定义（D44 造 / 换 / 审 / 守 + 横切系统 × 接线点，
                                   不用「每级长 5/3/4 件」的旧口径）
-  `manual/city/data.json`         城市几何单源（四区 / 十件设施 / 11 条道路 / 12 件交付物）；
+  `tutorial/city/data.json`         城市几何单源（四区 / 十件设施 / 11 条道路 / 12 件交付物）；
                                   四格共用这一套坐标，脚本只读、不改
 写：
-  `manual/images/city-4stages.png` 3200×2000（设计画布 1600×1000，4× 超采样后降采样到 2×）
+  `tutorial/images/city-4stages.png` 3200×2000（设计画布 1600×1000，4× 超采样后降采样到 2×）
 
 图在说什么（一句话）：
   **同一片城区、同一套坐标：L1 造骨架（壳），L2 换真数据与真部署（通水电网），
@@ -34,7 +34,7 @@
   重跑像素一致（PNG 不含时间戳等元数据），可反复核对 sha256。
 
 依赖：Python 3 + Pillow（PIL）、Noto Sans CJK SC（/usr/share/fonts/opentype/noto）。
-只写上面那一个 PNG；不回写 JSON、不动 manual/city/data.json。
+只写上面那一个 PNG；不回写 JSON、不动 tutorial/city/data.json。
 
 自检（脚本结束前打印）：
   ① 4 阶段齐全、名字 / 副题 / 横切系统 / 接线点数 / 徽章数 / 机制条数与 D44+D45 口径逐项一致；
@@ -58,7 +58,7 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
 
-HERE = Path(__file__).resolve().parent          # manual/shots
+HERE = Path(__file__).resolve().parent          # tutorial/shots
 REPO = HERE.parents[1]                          # 仓库根目录
 STAGES_PATH = REPO / "manual" / "city" / "stages-city.json"
 CITY_PATH = REPO / "manual" / "city" / "data.json"
@@ -1503,7 +1503,7 @@ def draw_bottom(sheet: Sheet, stages: dict) -> None:
     # 页脚
     sheet.text((M, 980), "D44 + D45 · 城市四阶段 · 同一片城区 / 同一坐标基准 · 12 件设施 × 横切系统",
                5.8, MUT, "Medium")
-    sheet.text((W - M, 980), "SHEET 01/01 · 重跑 python3 manual/shots/render_city_stages.py",
+    sheet.text((W - M, 980), "SHEET 01/01 · 重跑 python3 tutorial/shots/render_city_stages.py",
                5.8, MUT, "Medium", anchor="ra")
 
 

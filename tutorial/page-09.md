@@ -31,7 +31,7 @@
 1. 先让“容器里的 nginx”够得着你的服务。终端 1 按 Ctrl+C 停掉，把启动命令加一个参数再起：
 
 ```bash
-backend/.venv/bin/python -m uvicorn lab.app:app --host 0.0.0.0 --port 8000
+system/backend/.venv/bin/python -m uvicorn lab.app:app --host 0.0.0.0 --port 8000
 ```
 
 **为什么要改**：第 3 页那条命令默认只监听 `127.0.0.1`（只有你本机的进程连得上）。
@@ -118,7 +118,7 @@ docker run -d --name lab-nginx -p 127.0.0.1:8081:80 --add-host host.docker.inter
 - **你猜一条条还是一次给？** 一条条：点完约 0.4–0.6 秒，页面上会停在 `recall_value` / `merge_retrieved_info` 一带的步骤名（具体哪步随机器变）；1.8 秒后变成 `41099.5`。
 - **转发不改内容**：浏览器收到的就是第 8 页 `curl -N` 收到的那串字节，nginx 只负责转发。
 - **`proxy_buffering off` 这一行是保险**：nginx 默认会把后端响应先收着，攒一批再给你。
-- **攒起来的坏处**：真实系统的流要跑好几秒、内容也多得多，被攒起来就变成“等半天、然后一次性出现”，所以仓库里 `docker/nginx.conf` 的 `/api/` 也专门关了它。
+- **攒起来的坏处**：真实系统的流要跑好几秒、内容也多得多，被攒起来就变成“等半天、然后一次性出现”，所以仓库里 `system/docker/nginx.conf` 的 `/api/` 也专门关了它。
 - **看不出差别也照写**：你这条流只有约 1.2 KB、1.8 秒，两种配置下可能都看不出差别——但配置要按“会出问题”的那天写。
 - 拆一刀：把 nginx 删掉，再验一次主干。一条命令做完：
 

@@ -12,7 +12,7 @@
 
 > **五级版**：老图 `city-4stages.png` 是四阶段历史资产（不含 L5）；含 L5「装修」的五级版见 [`city-5stages.png`](images/city-5stages.png)，书内附录 D 使用它的可编辑源 `toolbox/book/city-stages/`。
 
-**页标题与页码由生成脚本从 `page-0X.md` 的 H1 提取并同步**：下表只写页码、设施、问题、方案、造什么和交付物编号，不手写页标题；改页标题只改正文，重跑 `python3 manual/shots/render_map.py` 即可。
+**页标题与页码由生成脚本从 `page-0X.md` 的 H1 提取并同步**：下表只写页码、设施、问题、方案、造什么和交付物编号，不手写页标题；改页标题只改正文，重跑 `python3 tutorial/shots/render_map.py` 即可。
 
 ## 十行对照（L1 的十页）
 
@@ -33,7 +33,7 @@
 
 ## 四阶段成熟度：同一片城区，一段一段接通管网
 
-> 口径同 `humen-desicions/09-ablation-course.md` **D44**：四级 = 造 / 换 / 审 / 守，10+4+4+5+1=24 页（前四个数 = D44 的四级 23 页，末位 +1 = **D50** 追加的 L5「装」体验层，page-23）。城市版四阶段的阶段名 / 一句话 / 横切系统与单源 [`city/stages-city.json`](city/stages-city.json) 逐字同源（[城市四阶段图](images/city-4stages.png) 与表同源）；改口径时 JSON 与本表四行要一起改，改完重跑 `python3 manual/shots/render_map.py` 做逐字校验。
+> 口径同 `materials/humen-desicions/09-ablation-course.md` **D44**：四级 = 造 / 换 / 审 / 守，10+4+4+5+1=24 页（前四个数 = D44 的四级 23 页，末位 +1 = **D50** 追加的 L5「装」体验层，page-23）。城市版四阶段的阶段名 / 一句话 / 横切系统与单源 [`city/stages-city.json`](city/stages-city.json) 逐字同源（[城市四阶段图](images/city-4stages.png) 与表同源）；改口径时 JSON 与本表四行要一起改，改完重跑 `python3 tutorial/shots/render_map.py` 做逐字校验。
 
 | 级 | 城市阶段 | 城市里长什么样 | 软件里对应（横切系统） | 学生动作 | 页 |
 |:--:|---|---|---|---|---|
@@ -66,7 +66,7 @@
 
 | 主线 | 打开 | 跑 / 点 | 看到 |
 |---|---|---|---|
-| ① NL2SQL 全链路（手工造 → 换真件） | [p5](page-05.md) → [p6](page-06.md) → [p7](page-07.md)；[p12](page-12.md) 收真执行器 | p6 `backend/.venv/bin/python -m lab.app`；p7 `curl -s -X POST http://127.0.0.1:8000/api/query -H 'Content-Type: application/json' -d '{"question":"华北销售额"}'` | p6 打印 5 行带 `JOIN` 的 SELECT；p7 末段 `"sales": 41099.5`；p12 回 `Decimal('1144735.50')` |
+| ① NL2SQL 全链路（手工造 → 换真件） | [p5](page-05.md) → [p6](page-06.md) → [p7](page-07.md)；[p12](page-12.md) 收真执行器 | p6 `system/backend/.venv/bin/python -m lab.app`；p7 `curl -s -X POST http://127.0.0.1:8000/api/query -H 'Content-Type: application/json' -d '{"question":"华北销售额"}'` | p6 打印 5 行带 `JOIN` 的 SELECT；p7 末段 `"sales": 41099.5`；p12 回 `Decimal('1144735.50')` |
 | ② LangGraph 工作流（12 节点 / 10 步） | [p21](page-21.md)（「深入探讨」小节）；[p8](page-08.md) 看流 | p21 `make stage7`；p8 `curl -sN -G 'http://127.0.0.1:8000/api/stream' --data-urlencode 'q=华北销售额'` | p21 末行 `S7 PASS`、`/api/steps = 12`（条件步骤 `correct_sql` = 条件边）；p8 12 条 progress + 1 条 result |
-| ③ 自校验自纠错（双保险，全书最强项） | [p16](page-16.md) → [p17](page-17.md) | p16 `pytest backend/tests/generate/test_guard.py -q`；p17 `pytest backend/tests/agent/test_correct.py -q`；真模型现场问「查询销售额大于平均销售额的商品」 | p16 `26 passed` + 16 个错误码 + 9 个场景 `S6 PASS`；p17 `14 passed`、`max_attempts: 1`、`trials≥3`；现场 `validate:error → correct:success(10.95s) → 二次 validate:success → 5 行`（[录屏](images/page-17-live-correct.gif)、[SSE](review/correction-live-trigger.sse)；**单次现场样例，不是成功率证据**，成功率按 `trials≥3` 多次采样写） |
-| ④（附）前端 React 19 + Tailwind（成熟版 3.4.17 / 教学版脚手架 4.3.4，装修不换承重墙） | [p23](page-23.md) | 浏览器开 `http://127.0.0.1:8088` 成熟版问一句；对照 `http://127.0.0.1:8080` 教学版；另开 `(cd frontend && npm test)` | 成熟版「电商问数 / shopkeeper-agent」聊天式提问 + 结果表 `41099.5`（无千分位）；8080 教学版同数值显示 `41,099.5`；`40 passed (40)` 是教学版脚手架的测试 |
+| ③ 自校验自纠错（双保险，全书最强项） | [p16](page-16.md) → [p17](page-17.md) | p16 `pytest system/backend/tests/generate/test_guard.py -q`；p17 `pytest system/backend/tests/agent/test_correct.py -q`；真模型现场问「查询销售额大于平均销售额的商品」 | p16 `26 passed` + 16 个错误码 + 9 个场景 `S6 PASS`；p17 `14 passed`、`max_attempts: 1`、`trials≥3`；现场 `validate:error → correct:success(10.95s) → 二次 validate:success → 5 行`（[录屏](images/page-17-live-correct.gif)、[SSE](materials/review/correction-live-trigger.sse)；**单次现场样例，不是成功率证据**，成功率按 `trials≥3` 多次采样写） |
+| ④（附）前端 React 19 + Tailwind（成熟版 3.4.17 / 教学版脚手架 4.3.4，装修不换承重墙） | [p23](page-23.md) | 浏览器开 `http://127.0.0.1:8088` 成熟版问一句；对照 `http://127.0.0.1:8080` 教学版；另开 `(cd system/frontend && npm test)` | 成熟版「电商问数 / shopkeeper-agent」聊天式提问 + 结果表 `41099.5`（无千分位）；8080 教学版同数值显示 `41,099.5`；`40 passed (40)` 是教学版脚手架的测试 |

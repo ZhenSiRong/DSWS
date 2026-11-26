@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # 把 editor.html 导出的 HTML 保存回项目（另存/覆盖）
-# 用法：scripts/design-save.sh 00 ~/Downloads/index.edited.html
-#       scripts/design-save.sh 00          # 只重建当前 index.html 的 PNG/WebP
+# 用法：toolbox/scripts/design-save.sh 00 ~/Downloads/index.edited.html
+#       toolbox/scripts/design-save.sh 00          # 只重建当前 index.html 的 PNG/WebP
 set -euo pipefail
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 PAGE="${1:?页号，如 00}"
 SRC="${2:-}"
 PAGE=$(printf '%02d' "$PAGE" 2>/dev/null || echo "$PAGE")

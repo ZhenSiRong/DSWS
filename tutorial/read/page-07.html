@@ -9,7 +9,7 @@
 </head>
 <body>
 <main class="page">
-<p class="kicker">练本 · 阅读版（md 正典派生，改内容请改 manual/page-07.md）</p>
+<p class="kicker">练本 · 阅读版（md 正典派生，改内容请改 tutorial/page-07.md）</p>
 <h1>第 7 页 · 把 SQL 真交给 MySQL</h1>
 <blockquote>
 <p><strong>城市坐标 · P7 取货通道（交付物 ⑨）</strong>｜取货单第一次真送进仓库：<code>41099.5</code> 从库里取出来，不再是屏幕上打印的一行字。</p>
@@ -25,7 +25,7 @@
 <p><code>/api/query</code> 回来的 JSON 里，<code>rows</code> 里的 <code>sales</code> 是数字 <code>41099.5</code>，还是带引号的字符串 <code>"41099.5"</code>？</p>
 <p>再想一步：如果 <code>lab-mysql</code> 容器没起，<code>curl</code> 会照样回 <code>41099.5</code>，还是回一句报错？</p>
 <h2>动手</h2>
-<p><strong>要改的文件</strong>还是 <code>lab/app.py</code>，三处。<code>pymysql</code> 已经在 <code>backend/.venv</code> 里（第 0 页 <code>make install</code> 装好的），不用再 <code>pip install</code>。</p>
+<p><strong>要改的文件</strong>还是 <code>lab/app.py</code>，三处。<code>pymysql</code> 已经在 <code>system/backend/.venv</code> 里（第 0 页 <code>make install</code> 装好的），不用再 <code>pip install</code>。</p>
 <p><strong>改完先按 Ctrl+S 保存</strong>，再回终端 1 重启；不保存就重启，服务跑的还是第 6 页的旧代码（症状见「对账」）。</p>
 <ol>
 <li>在文件开头的 import 区加一行，放在 <code>from fastapi import FastAPI</code> 上面：</li>
@@ -61,7 +61,7 @@ def query(q: Query):
             &quot;sql&quot;: sql, &quot;rows&quot;: run_sql(sql)}
 </code></pre>
 <p>回终端 1，按 Ctrl+C 停掉，再用<strong>你第 3 页实际用的那条启动命令</strong>重启（端口按你实际改过的；默认 <code>--port 8000</code>，下面 <code>curl</code> 里的 8000 也换成你的端口）：</p>
-<pre><code class="language-bash">backend/.venv/bin/python -m uvicorn lab.app:app --port 8000
+<pre><code class="language-bash">system/backend/.venv/bin/python -m uvicorn lab.app:app --port 8000
 </code></pre>
 <p>然后在终端 2 发一次请求：</p>
 <pre><code class="language-bash">curl -s -X POST http://127.0.0.1:8000/api/query -H 'Content-Type: application/json' -d '{&quot;question&quot;:&quot;华北销售额&quot;}'
@@ -69,7 +69,7 @@ def query(q: Query):
 <h2>你应该看到</h2>
 <pre><code>{&quot;question&quot;:&quot;华北销售额&quot;,&quot;keywords&quot;:[&quot;华北&quot;,&quot;销售额&quot;],&quot;sql&quot;:&quot;SELECT dim_region.region_name, SUM(fact_order.order_amount) AS sales\nFROM fact_order\nJOIN dim_region ON fact_order.region_id = dim_region.region_id\nWHERE dim_region.region_name = '华北'\nGROUP BY dim_region.region_name&quot;,&quot;rows&quot;:[{&quot;region_name&quot;:&quot;华北&quot;,&quot;sales&quot;:41099.5}]}
 </code></pre>
-<p><strong>这一行很长</strong>：<code>sql</code> 里那 5 行真换行被 JSON 表示成了 <code>\n</code>。你只核对最后一段 <code>rows</code>：<code>region_name</code> 是 <code>华北</code>，<code>sales</code> 是 <code>41099.5</code>。</p>
+<p><strong>这一行很长</strong>：<code>sql</code> 里那 5 行真换行被 JSON 表示成了 <code>\n</code>。整行只作形状参考；你只核对最后一段 <code>rows</code>：<code>region_name</code> 是 <code>华北</code>，<code>sales</code> 是 <code>41099.5</code>。</p>
 <p><strong>没有结尾换行</strong>：<code>curl -s</code> 不补换行，终端提示符可能紧贴在最后的 <code>}</code> 后面，内容对就行。</p>
 <p><img alt="第 7 页 · 真执行后 rows 里 41099.5 的真实输出" src="../images/page-07-rows.png" /></p>
 <h2>对账</h2>

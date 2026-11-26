@@ -4,13 +4,13 @@
 
 在仓库根目录一条命令重跑（同时出两张 PNG）：
 
-    python3 manual/shots/render_v2_sample.py
+    python3 tutorial/shots/render_v2_sample.py
 
-读：`manual/completeness/v2/data.json`（单源数据：12 件交付物 × 1–3 检验点）
-写：`manual/completeness/v2/sample-answer.png`  答案版，全部检验点 ■
-    `manual/completeness/v2/sample-blank.png`   空白版，方框留空，学生自己涂
+读：`tutorial/completeness/v2/data.json`（单源数据：12 件交付物 × 1–3 检验点）
+写：`tutorial/completeness/v2/sample-answer.png`  答案版，全部检验点 ■
+    `tutorial/completeness/v2/sample-blank.png`   空白版，方框留空，学生自己涂
 
-依据 `humen-desicions/09-ablation-course.md` 的 **D42**：
+依据 `materials/humen-desicions/09-ablation-course.md` 的 **D42**：
 行 = 具体交付物（container / db / data / process / endpoint / function / chain），
 每行显式写「位置」，1–3 个检验点，每点给「命令 + 期望输出」；
 勾满一行 = 这件东西建成，12 行全满 = 系统完备；先出单页样例供确认再全量。
@@ -18,7 +18,7 @@
 脚本做四件事：
 
 1. **逐条溯源校验**：每个检验点的「期望输出」必须能在 `evidence_source`
-   指向的 `manual/page-0X.md` 正文里逐字 grep 到（多行逐行查），并标出命中
+   指向的 `tutorial/page-0X.md` 正文里逐字 grep 到（多行逐行查），并标出命中
    的页内段落（「你应该看到」/「对账」/「重来一遍」等）。任一 FAIL 就
    退出码 1 —— **FAIL 只许修数据，不许改十页正文**。
    同时核对结构：12 件 × 每件 1–3 个检验点、依赖 id 存在、页面存在。
@@ -48,7 +48,7 @@ import sys
 import tempfile
 from pathlib import Path
 
-HERE = Path(__file__).resolve().parent          # manual/shots
+HERE = Path(__file__).resolve().parent          # tutorial/shots
 REPO = HERE.parents[1]                          # 仓库根目录
 V2_DIR = REPO / "manual" / "completeness" / "v2"
 DATA_PATH = V2_DIR / "data.json"
@@ -150,7 +150,7 @@ def section_at(line_no: int, secs: list[tuple[int, str]]) -> str:
 
 def load_data() -> dict:
     if not DATA_PATH.exists():
-        raise SystemExit(f"找不到数据文件 {DATA_PATH}（应在 manual/completeness/v2/data.json）")
+        raise SystemExit(f"找不到数据文件 {DATA_PATH}（应在 tutorial/completeness/v2/data.json）")
     try:
         data = json.loads(DATA_PATH.read_text(encoding="utf-8"))
     except json.JSONDecodeError as exc:
@@ -287,9 +287,9 @@ def header_html(data: dict, mode: str, total_cp: int, total_art: int) -> str:
         f'<div class="kicker">{rich(data["kicker"])}</div>'
         f'<h1>建成证明 <span class="v2">v2</span> · 物料清单 + 检验单</h1>'
         f'<div class="sub">{rich(data["subtitle"])}</div>'
-        f'<div class="meta">判据出处：{rich("manual/page-00…09.md 的「你应该看到」真跑输出")}'
+        f'<div class="meta">判据出处：{rich("tutorial/page-00…09.md 的「你应该看到」真跑输出")}'
         '　·　顺序如下（只作提示，不参与勾选）</div>'
-        f'<div class="meta">{rich("manual/flow.mmd 的 AON：A0→A3→A4→A5→A6→A7→A8→A9；"
+        f'<div class="meta">{rich("tutorial/flow.mmd 的 AON：A0→A3→A4→A5→A6→A7→A8→A9；"
                                   "数据支线 A0→A1→A2→A7 有浮动")}</div>'
         '</div>'
         '<div class="hdr-right">'

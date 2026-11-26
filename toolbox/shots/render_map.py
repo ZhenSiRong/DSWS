@@ -4,15 +4,15 @@
 
 在仓库根目录一条命令重跑：
 
-    python3 manual/shots/render_map.py
+    python3 tutorial/shots/render_map.py
 
 读：
-    `manual/city/data.json`       单源数据：10 件设施（P0–P9）+ 23 页标题 + 12 件交付物 + 四区 + 道路
-    `manual/city/stages-city.json` 城市四阶段单源（阶段名 / 一句话 / 横切系统 / 页段，必须存在）
-    `manual/page-00.md … 09.md`   只抽 H1（页标题与页码自动同步，不手写）
-    `manual/OVERVIEW.md`          四阶段城市口径与诚实三行（图与 Markdown 同源，逐字同步）
+    `tutorial/city/data.json`       单源数据：10 件设施（P0–P9）+ 23 页标题 + 12 件交付物 + 四区 + 道路
+    `tutorial/city/stages-city.json` 城市四阶段单源（阶段名 / 一句话 / 横切系统 / 页段，必须存在）
+    `tutorial/page-00.md … 09.md`   只抽 H1（页标题与页码自动同步，不手写）
+    `tutorial/OVERVIEW.md`          四阶段城市口径与诚实三行（图与 Markdown 同源，逐字同步）
 写：
-    `manual/images/map-city-vs-pages.png`（1600×1000 CSS @2x → 3200×2000，横向讲义）
+    `tutorial/images/map-city-vs-pages.png`（1600×1000 CSS @2x → 3200×2000，横向讲义）
 
 图在说什么（一句话）：**左边是城市里的一座设施（场地 / 楼 / 楼内房间 / 流线）与它回答的问题，
 右边是我们这一页真正造出来的东西，中间同号虚线把「比喻」和「交付物」钉在一起**；
@@ -34,7 +34,7 @@
   4. 成品 PNG：尺寸 3200×2000、非空、有橙色强调、左右两栏都有墨、无用户名/绝对路径/口令。
 
 依赖：本机 python3、google-chrome、Noto Sans CJK SC、Pillow（像素统计）。
-只写 `manual/images/map-city-vs-pages.png`；page-0X.md、city/ 与 OVERVIEW 正文之外的东西都不改。
+只写 `tutorial/images/map-city-vs-pages.png`；page-0X.md、city/ 与 OVERVIEW 正文之外的东西都不改。
 """
 
 from __future__ import annotations
@@ -48,7 +48,7 @@ import sys
 import tempfile
 from pathlib import Path
 
-HERE = Path(__file__).resolve().parent          # manual/shots
+HERE = Path(__file__).resolve().parent          # tutorial/shots
 REPO = HERE.parents[1]                          # 仓库根目录
 PAGES_DIR = REPO / "manual"
 CITY_DIR = PAGES_DIR / "city"
@@ -60,7 +60,7 @@ README_PATH = PAGES_DIR / "README.md"
 OUT_PNG = PAGES_DIR / "images" / "map-city-vs-pages.png"
 
 CHROME = "/usr/bin/google-chrome"
-RERUN = "python3 manual/shots/render_map.py"
+RERUN = "python3 tutorial/shots/render_map.py"
 
 DESIGN_W, DESIGN_H = 1600, 1000                 # CSS 设计画布（横版讲义）
 SCALE = 2
@@ -325,7 +325,7 @@ def load_stages_city(data: dict) -> list[dict]:
 def parse_overview(data: dict, titles: dict[str, dict], stages: list[dict]) -> dict:
     """读 OVERVIEW.md：H1 / 10 行对照 / 四阶段 / 诚实三行，并逐字对齐 city/data.json 与四阶段单源。"""
     if not OVERVIEW_PATH.exists():
-        fail("找不到 manual/OVERVIEW.md（本图的 Markdown 源页）")
+        fail("找不到 tutorial/OVERVIEW.md（本图的 Markdown 源页）")
     overview = OVERVIEW_PATH.read_text(encoding="utf-8")
     lines = overview.splitlines()
     errs: list[str] = []
@@ -900,8 +900,8 @@ def build_html(data: dict, titles: dict[str, dict], overview: dict) -> str:
     <div class="honest-lines">{honest_html}</div>
   </section>
   <footer>
-    <div>数据源 <b>manual/city/data.json</b> · 页标题由脚本从 <b>manual/page-0X.md</b> 提取 ·
-      城市全景 <b>manual/city/city-map.html</b></div>
+    <div>数据源 <b>tutorial/city/data.json</b> · 页标题由脚本从 <b>tutorial/page-0X.md</b> 提取 ·
+      城市全景 <b>tutorial/city/city-map.html</b></div>
     <div>重跑：<b>{esc(RERUN)}</b> · 零外链 / 系统 Noto Sans CJK</div>
   </footer>
 </div>
@@ -1165,9 +1165,9 @@ def check_hooks() -> None:
         warn.append("README.md 还残留旧工地版引用（map-house-vs-pages.png / map/data.json）")
     explorer = HERE / "build_explorer.py"
     if explorer.exists() and "map/data.json" in explorer.read_text(encoding="utf-8"):
-        warn.append("shots/build_explorer.py 仍读 manual/map/data.json（交互版换城市视图是另一条任务）")
+        warn.append("shots/build_explorer.py 仍读 tutorial/map/data.json（交互版换城市视图是另一条任务）")
     if (PAGES_DIR / "map" / "archive-house").is_dir():
-        ok.append("旧工地版已归档 manual/map/archive-house/")
+        ok.append("旧工地版已归档 tutorial/map/archive-house/")
     for line in ok:
         print(f"  ✓ 接入：{line}")
     for line in warn:
@@ -1215,9 +1215,9 @@ def main() -> int:
     check_hooks()
     print(f"\n✓ 完成：{OUT_PNG.relative_to(REPO)}  {OUT_W}×{OUT_H}  "
           f"{OUT_PNG.stat().st_size // 1024} KB")
-    print(f"  数据源：manual/city/data.json（D45，{len(info['facs'])} 设施 / "
+    print(f"  数据源：tutorial/city/data.json（D45，{len(info['facs'])} 设施 / "
           f"{len(info['titles'])} 页标题 / 12 件交付物）")
-    print(f"  四阶段：manual/city/stages-city.json（{' / '.join(s['name'] for s in stages)}，"
+    print(f"  四阶段：tutorial/city/stages-city.json（{' / '.join(s['name'] for s in stages)}，"
           "阶段名 / 一句话 / 横切系统与 OVERVIEW.md 同源）")
     print(f"  重跑：{RERUN}")
     return 0

@@ -10,7 +10,7 @@
 
 **旧入口不动**：第 7 页的 `POST /api/query` 保留不动——一个“憋到最后一次给”，一个“干一步报一步”，你正好对照。
 
-**步骤名有出处**：这 12 个步骤名不是现编的，`contracts/steps.yaml` 里就声明了这 12 个节点。
+**步骤名有出处**：这 12 个步骤名不是现编的，`system/contracts/steps.yaml` 里就声明了这 12 个节点。
 
 ![第 8 页 · 让答案一条条推送出来（SSE）：左边是事件流，右边是传送带：一件一件送出来，最后才给结果](images/page-08-visual.webp)
 
@@ -101,7 +101,7 @@ data: {"type": "result", "data": {"rows": [{"region_name": "华北", "sales": 41
 - **两条入口共用同一个 `run_sql`。**
 - **404 = 没保存 / 上一页没生效**：重启后 `GET /api/stream` 回 `{"detail":"Not Found"}`、`/health` 却正常，说明 `stream` 那段没进内存——多半是改完没 Ctrl+S 就重启，跑的仍是第 7 页代码。
 - **修法**：保存后再重启一次。
-- **真实契约里 `result` 还带 `columns`**（字段名和类型，画表格要用），见 `contracts/sse.schema.json`；这一页只发 `rows`，够第 9 页用。
+- **真实契约里 `result` 还带 `columns`**（字段名和类型，画表格要用），见 `system/contracts/sse.schema.json`；这一页只发 `rows`，够第 9 页用。
 
 > **你现在拥有**：一条把一次查询拆成 12 条 `progress` + 1 条 `result`、逐条推送的 SSE 流；它是第 9 页浏览器页面的数据源，只改“什么时候给你”，不改“给你什么”。
 

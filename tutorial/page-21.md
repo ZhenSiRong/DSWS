@@ -10,13 +10,13 @@
 >
 > **本页目标**：系统「现在在干什么、错在哪一步」靠哪三样证据说清，以及这些证据不能证明什么。
 >
-> **承接第 20 页**：先跑 `(cd backend && .venv/bin/python -m app.scripts.record_sse --check)`，看到 PASS 再开始本页（第 20 页的拆一刀没还原时，本页第 2 步只会红 `cancelled.json` 一条，红法与下面那 10 条不同）。
+> **承接第 20 页**：先跑 `(cd system/backend && .venv/bin/python -m app.scripts.record_sse --check)`，看到 PASS 再开始本页（第 20 页的拆一刀没还原时，本页第 2 步只会红 `cancelled.json` 一条，红法与下面那 10 条不同）。
 
 ## 这一页构建什么
 
 给一次问数装上**可对账的观测面**，靠三样证据说清「现在在干什么、错在哪一步」：
 
-- **进度**：12 条有名字的进度（`contracts/steps.yaml` 的 12 个节点）。
+- **进度**：12 条有名字的进度（`system/contracts/steps.yaml` 的 12 个节点）。
 - **目录端点**：`/api/steps` + `/api/errors`（12 步 / 16 码 / 3 类）。
 - **回放夹具**：14 条（9 个场景 + 取消是录制流，4 条手写）。
 
@@ -37,8 +37,8 @@
 
 <!-- verify: page21-lab-save -->
 ```bash
-scripts/lab save p21-before
-(cd backend && .venv/bin/python -c "
+toolbox/scripts/lab save p21-before
+(cd system/backend && .venv/bin/python -c "
 import json
 from fastapi.testclient import TestClient
 from app.scenarios.app import create_scenario_app
@@ -52,35 +52,35 @@ for sid in ('happy', 'llm_refusal'):
 ")
 ```
 
-**第 2 步：对账 14 条夹具。** `record_sse --check` 用今天的代码把 9 个场景 + 取消路径重录，和 `fixtures/sse/` 里的文件逐字节比；4 条手写夹具只与源码常量比。退出码 0 才算过：
+**第 2 步：对账 14 条夹具。** `record_sse --check` 用今天的代码把 9 个场景 + 取消路径重录，和 `system/fixtures/sse/` 里的文件逐字节比；4 条手写夹具只与源码常量比。退出码 0 才算过：
 
 <!-- verify: page21-record-sse -->
 ```bash
-(cd backend && .venv/bin/python -m app.scripts.record_sse --check)
+(cd system/backend && .venv/bin/python -m app.scripts.record_sse --check)
 ```
 
 **第 3 步：两组协议测试。** 第一条命令验夹具每一帧都合契约（14 条 × 形状 + 帧契约）；第二条验前端解析器与结果渲染。
 
-**前提**：`backend/.venv` 由第 0 页 `make install` 生成；`frontend/node_modules` 缺了就先 `npm ci`（要联网）。
+**前提**：`system/backend/.venv` 由第 0 页 `make install` 生成；`system/frontend/node_modules` 缺了就先 `npm ci`（要联网）。
 
-**lock 陷阱**：`frontend/package-lock.json` 不在 `lab` 白名单，若被改就 `git checkout -- frontend/package-lock.json` 还原：
+**lock 陷阱**：`system/frontend/package-lock.json` 不在 `lab` 白名单，若被改就 `git checkout -- system/frontend/package-lock.json` 还原：
 
 <!-- verify: page21-protocol-tests -->
 ```bash
-(cd backend && .venv/bin/python -m pytest tests/frontend/test_sse_fixtures.py -q)
-(cd frontend && npm test)
+(cd system/backend && .venv/bin/python -m pytest tests/frontend/test_sse_fixtures.py -q)
+(cd system/frontend && npm test)
 ```
 
-**第 4 步（可选）：`make stage7`。** 前提：本机装了 `uv` 且 `backend/.venv` 依赖已同步；不需要 MySQL / 浏览器。6 段门禁（契约新鲜度、夹具对账、`tests/frontend` 45 条、前端 40 条、前端构建、全后端 843 条 = 813 passed + 30 skipped；本页第 3 步只跑其中 30 条），本机实测约 54 秒，末行 `S7 PASS`；不跑不影响前面判据：
+**第 4 步（可选）：`make stage7`。** 前提：本机装了 `uv` 且 `system/backend/.venv` 依赖已同步；不需要 MySQL / 浏览器。6 段门禁（契约新鲜度、夹具对账、`tests/frontend` 45 条、前端 40 条、前端构建、全后端 843 条 = 813 passed + 30 skipped；本页第 3 步只跑其中 30 条），本机实测约 54 秒，末行 `S7 PASS`；不跑不影响前面判据：
 
 <!-- verify: page21-stage7 -->
 ```bash
 make stage7
 ```
 
-**`make stage7` 已 `uv run --frozen`，不会改 `backend/uv.lock`；只有脚本里的裸 `uv run`（`make stage3`、`make stage0-ui`、`make stage6-ui`）或手敲 `uv run` 才会按本机镜像源重写它。**
+**`make stage7` 已 `uv run --frozen`，不会改 `system/backend/uv.lock`；只有脚本里的裸 `uv run`（`make stage3`、`make stage0-ui`、`make stage6-ui`）或手敲 `uv run` 才会按本机镜像源重写它。**
 
-**它不在白名单**：`lab reset` 回显的“完全一致”只算白名单文件——仅当 `git status` 显示 lock 变脏时再 `git checkout -- backend/uv.lock` 单独还原（口径同第 15 / 19 页）。
+**它不在白名单**：`lab reset` 回显的“完全一致”只算白名单文件——仅当 `git status` 显示 lock 变脏时再 `git checkout -- system/backend/uv.lock` 单独还原（口径同第 15 / 19 页）。
 
 ## 你应该看到
 
@@ -148,9 +148,9 @@ S7 SSE RECORD PASS（14 个夹具与真实输出一致）
 
 你刚对账的 12 个节点，在代码里是一张编译出来的图。
 
-**声明**：`contracts/steps.yaml` 声明 12 个节点（`stages` 把它们按 10 步分组，是教学与验收的分组，SSE 仍每节点一条 `progress`）。
+**声明**：`system/contracts/steps.yaml` 声明 12 个节点（`stages` 把它们按 10 步分组，是教学与验收的分组，SSE 仍每节点一条 `progress`）。
 
-**挂节点**：`backend/app/agent/graph.py:428` 的 `StateGraph(AgentState)` 用 `add_node` 逐个挂上（8 个上下文节点 + 生成/校验/校正/执行各一，L430-436）。
+**挂节点**：`system/backend/app/agent/graph.py:428` 的 `StateGraph(AgentState)` 用 `add_node` 逐个挂上（8 个上下文节点 + 生成/校验/校正/执行各一，L430-436）。
 
 **串行主干**：`START → 8 个上下文节点串行 → generate_sql → validate_sql`（L438-442）。
 
@@ -164,13 +164,13 @@ S7 SSE RECORD PASS（14 个夹具与真实输出一致）
 | 第 16 页：执行前的守卫 | `validate_sql` 节点里的 guard + policy |
 | 第 17 页：一次重试的上限 | `validate_sql` 的条件边 → `correct_sql`，改完从回边再校验 |
 
-**为什么值得看**：图把「节点顺序」和「回边」变成可枚举的结构，测试能直接拿编译后的节点集合对契约（`backend/tests/test_s6_langgraph.py:96` 断言节点数 = 12）——这正是 PRD 说的「LangGraph 多节点工作流」。
+**为什么值得看**：图把「节点顺序」和「回边」变成可枚举的结构，测试能直接拿编译后的节点集合对契约（`system/backend/tests/test_s6_langgraph.py:96` 断言节点数 = 12）——这正是 PRD 说的「LangGraph 多节点工作流」。
 
-**指针**：完整图结构说明见 `design/book/chapters/20-s5-s8.md`；`backend/app/agent/graph.py:428-456`；本页不要求新增截图。
+**指针**：完整图结构说明见 `materials/design/book/chapters/20-s5-s8.md`；`system/backend/app/agent/graph.py:428-456`；本页不要求新增截图。
 
 ## 拆一刀
 
-打开 `backend/app/scripts/record_sse.py`，找到 `_normalize`（L195）。归一化是 L199–205 一整块：
+打开 `system/backend/app/scripts/record_sse.py`，找到 `_normalize`（L195）。归一化是 L199–205 一整块：
 
 - progress 分支 L201 `payload["duration_ms"] = FIXED_DURATION_MS`（12.5 在 L39 的常量里）；
 - error 分支 L205 `detail.pop("request_id", None)`。
@@ -181,7 +181,7 @@ S7 SSE RECORD PASS（14 个夹具与真实输出一致）
 
 <!-- verify: page21-ablation -->
 ```bash
-(cd backend && .venv/bin/python -m app.scripts.record_sse --check)
+(cd system/backend && .venv/bin/python -m app.scripts.record_sse --check)
 ```
 
 ```text
@@ -189,7 +189,7 @@ FAIL: SSE 夹具与真实输出不同步：
   - happy.json 与今天的真实输出不同步
 # 共 10 条：9 个场景 + cancelled；4 条手写一条不红（节选）
   - cancelled.json 与今天的真实输出不同步
-请运行：cd backend && uv run python -m app.scripts.record_sse
+请运行：cd system/backend && uv run python -m app.scripts.record_sse
 ```
 
 **为什么红**：`happy.json` 里那几帧是 `"duration_ms": 12.5`，今天录出来首个 duration 帧约 3.3、11 个带 duration 的 progress 帧全与 12.5 不同（0 到几十毫秒不等，每次不同）。
@@ -200,8 +200,8 @@ FAIL: SSE 夹具与真实输出不同步：
 
 <!-- verify: page21-lab-reset-restore -->
 ```bash
-scripts/lab reset p21-before --yes
-(cd backend && .venv/bin/python -m app.scripts.record_sse --check | tail -1)
+toolbox/scripts/lab reset p21-before --yes
+(cd system/backend && .venv/bin/python -m app.scripts.record_sse --check | tail -1)
 ```
 
 ```text

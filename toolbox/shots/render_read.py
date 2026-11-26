@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
-"""阅读版渲染：manual/page-XX.md → manual/read/page-XX.html。
+"""阅读版渲染：tutorial/page-XX.md → tutorial/read/page-XX.html。
 
 md 正典是唯一事实来源，本脚本只转换排版、不改内容（第 4 轮 Q2 修订后转正）。
-样式复用 assets/lesson.css ＋ assets/read.css，不新建样式体系。
+样式复用 materials/assets/lesson.css ＋ materials/assets/read.css，不新建样式体系。
 
 用法：
-    python3 manual/shots/render_read.py 17          # 单页
-    python3 manual/shots/render_read.py 13 18 21    # 多页
-    python3 manual/shots/render_read.py --all       # 全书 24 页
-    python3 manual/shots/render_read.py 17 --embed  # 自包含单文件（CSS/图片内嵌，可分享）
+    python3 tutorial/shots/render_read.py 17          # 单页
+    python3 tutorial/shots/render_read.py 13 18 21    # 多页
+    python3 tutorial/shots/render_read.py --all       # 全书 24 页
+    python3 tutorial/shots/render_read.py 17 --embed  # 自包含单文件（CSS/图片内嵌，可分享）
 
 默认输出相对链接（../images/、../../assets/），浏览器直接打开 file:// 即可；
---embed 输出到 manual/review/reading-layer-preview/pXX-read.html（预览/分享用）。
+--embed 输出到 tutorial/review/reading-layer-preview/pXX-read.html（预览/分享用）。
 """
 import argparse
 import base64
@@ -47,7 +47,7 @@ def render(page: str, embed: bool) -> Path:
               (ASSETS / "read.css").read_text(encoding="utf-8")
         head = f"<style>\n{css}\n</style>"
         body = embed_images(body)
-        out = MANUAL / "review/reading-layer-preview" / f"p{page}-read.html"
+        out = MANUAL / "materials/review/reading-layer-preview" / f"p{page}-read.html"
     else:
         head = ('<link rel="stylesheet" href="../../assets/lesson.css">\n'
                 '<link rel="stylesheet" href="../../assets/read.css">')
@@ -64,7 +64,7 @@ def render(page: str, embed: bool) -> Path:
 </head>
 <body>
 <main class="page">
-<p class="kicker">练本 · 阅读版（md 正典派生，改内容请改 manual/page-{page}.md）</p>
+<p class="kicker">练本 · 阅读版（md 正典派生，改内容请改 tutorial/page-{page}.md）</p>
 {body}
 </main>
 </body>

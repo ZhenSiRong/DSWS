@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """把已有的 page-NN/index.html 渲染成 out/poster.png + images/page-NN-visual.webp（不重建 index.html）。
 
-用法： python3 manual/designs/render_existing.py 00 [01 ...]
+用法： python3 tutorial/designs/render_existing.py 00 [01 ...]
 适用：在 editor.html 里改完、下载 HTML 覆盖 index.html 之后使用。
 """
 import subprocess, sys

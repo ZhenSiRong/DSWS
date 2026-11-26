@@ -4,7 +4,7 @@
 
 > **前置**
 >
-> **整栈在跑**：第 13 页的五个长驻服务 `docker compose ps` 里 `healthy`；`backend/.venv` 已由第 0 页 `make install` 建好。
+> **整栈在跑**：第 13 页的五个长驻服务 `docker compose ps` 里 `healthy`；`system/backend/.venv` 已由第 0 页 `make install` 建好。
 >
 > **不改代码**：本页**不改被跟踪的代码/契约**——`lab save` 只在 `.lab/` 下写快照（已被 gitignore）。
 >
@@ -16,7 +16,7 @@
 
 **审的顺序**：先写下判据，再让机器去撞。
 
-> **数字口径**：第 13 章 compose 首灌 `fixtures/dw.sql`（演示集 115 单），所以本章起 `41099.5`/115 是演示集口径；第 10–12 章的真数据在 lab 快照/另一套库里，互不影响。
+> **数字口径**：第 13 章 compose 首灌 `system/fixtures/dw.sql`（演示集 115 单），所以本章起 `41099.5`/115 是演示集口径；第 10–12 章的真数据在 lab 快照/另一套库里，互不影响。
 
 ![第 14 页 · 召回空了的答案，你凭什么信：左边是黄金集与检索存储，右边是图书馆：书架停了，索引卡还能兜底](images/page-14-visual.webp)
 
@@ -32,27 +32,27 @@
 **第 1 步：拍快照。** 本页不改被跟踪的代码/契约，拍一张是兜底（`lab save` 只往 `.lab/` 写快照，该目录已被 gitignore）；同名快照会被拒，重做本页就换个名字：
 <!-- verify: page14-lab-save -->
 ```bash
-scripts/lab save p14-before
+toolbox/scripts/lab save p14-before
 ```
 
 回显 `已保存快照 "p14-before"：169 个文件。`（169 数的是你工作区里的文件，因环境而异）。
 
-**第 2 步：先跑离线判据（不需要任何服务；解释器来自第 0 页 `make install` 建好的 `backend/.venv`）。**
+**第 2 步：先跑离线判据（不需要任何服务；解释器来自第 0 页 `make install` 建好的 `system/backend/.venv`）。**
 
 <!-- verify: page14-pytest-recall -->
 ```bash
-backend/.venv/bin/python -m pytest backend/tests/recall -q
+system/backend/.venv/bin/python -m pytest system/backend/tests/recall -q
 ```
 
-**两组字段**：黄金集是 `backend/tests/recall/golden.yaml` 里的 20 题，每题两组字段：`expected_*`（必须被召回；内部再分表/列/指标/取值四类）、`must_not`（不许出现）。
+**两组字段**：黄金集是 `system/backend/tests/recall/golden.yaml` 里的 20 题，每题两组字段：`expected_*`（必须被召回；内部再分表/列/指标/取值四类）、`must_not`（不许出现）。
 
 **三条主判据 + 两条汇总下限**：主判据是「该命中 / 不该出现 / 输出规模上限」；`test_golden.py` 还查 precision、recall 下限——允许额外候选，但不许把所有表/列/指标整片塞进上下文。
 
 **第 3 步：真跑 20 题。** `source` 把 `.env` 里的端口和密码导给宿主 CLI（成功时无输出）。
 
-**没 source 会红**：**新终端或重跑前先重新 `source scripts/export-docker-env.sh`**（或回第 13 页的 `.env` 口径），没 source 会红 `S2 FAIL: 缺少环境变量 REBUILD_MYSQL_PASSWORD…` 并提示先 source。
+**没 source 会红**：**新终端或重跑前先重新 `source toolbox/scripts/export-docker-env.sh`**（或回第 13 页的 `.env` 口径），没 source 会红 `S2 FAIL: 缺少环境变量 REBUILD_MYSQL_PASSWORD…` 并提示先 source。
 
-**`make stage3` 干什么**：会把“华北销售额”的召回结果写到 `/tmp/rebuild-s3-recall.yaml` 并打印前 40 行（`scripts/recall-demo.sh` 干的）。它要跑半分钟左右，别以为卡死。
+**`make stage3` 干什么**：会把“华北销售额”的召回结果写到 `/tmp/rebuild-s3-recall.yaml` 并打印前 40 行（`toolbox/scripts/recall-demo.sh` 干的）。它要跑半分钟左右，别以为卡死。
 
 **栈被停过会红**：红在第一条 `S2 FAIL: 读取 manifest 失败：(2003, "Can't connect to MySQL server on '127.0.0.1' ([Errno 111] Connection refused)")`。恢复分三档：
 
@@ -62,7 +62,7 @@ backend/.venv/bin/python -m pytest backend/tests/recall -q
 
 <!-- verify: page14-export-env-stage3 -->
 ```bash
-source scripts/export-docker-env.sh
+source toolbox/scripts/export-docker-env.sh
 make stage3
 ```
 
@@ -96,7 +96,7 @@ S3 PASS
 ## 对账
 
 - **猜 1：不会失败**——照常回一个数（拆一刀会真验）。
-    - **走哪条路**：主链路 `POST /api/query` 用的是 `backend/app/agent/orchestrator.py` 里默认的 `OfflineContextBuilder`。
+    - **走哪条路**：主链路 `POST /api/query` 用的是 `system/backend/app/agent/orchestrator.py` 里默认的 `OfflineContextBuilder`。
     - **读什么**：8 个阶段只读契约（表粒度、字段角色、枚举值域），不打开 ES/Qdrant 连接。
 - **猜 2：20 题全中**。`41 passed = 18 条离线测试 + 20 条“每题过判据” + 3 条汇总断言（precision/recall 下限）`。
     - **会掉的条件**：有题漏召回（召回 0 条）或多出不该有的字段/指标（召回错条），`41` 就会掉。
@@ -119,7 +119,7 @@ S3 PASS
 
 本页的刀：把检索停掉，看哪些成功是契约兜底、哪些是机器硬撑。
 
-**动手前确认还在同一个终端、且已 `source scripts/export-docker-env.sh`**（新终端先补一次）。
+**动手前确认还在同一个终端、且已 `source toolbox/scripts/export-docker-env.sh`**（新终端先补一次）。
 
 **没 source 的红法**：直接跑 pytest 会先红 `Failed: REBUILD_INTEGRATION=1 但服务不可用：{'mysql': False, …}`，那不是黄金集变红。
 
@@ -144,7 +144,7 @@ data: {"type": "result", "data": {"columns": [{"name": "销售额", "type": "num
 3. **再看召回这条路。** 把黄金集的真检索单跑一遍（就是 `make stage3` 的第 2 步），20 题整片变红：
 <!-- verify: page14-pytest-recall-integration -->
 ```bash
-(cd backend && REBUILD_INTEGRATION=1 .venv/bin/python -m pytest -q tests/recall)
+(cd system/backend && REBUILD_INTEGRATION=1 .venv/bin/python -m pytest -q tests/recall)
 ```
 ```text
 18 passed, 23 errors in 0.58s
@@ -165,7 +165,7 @@ until docker compose ps elasticsearch | grep -q '(healthy)'; do sleep 2; done   
 ```
 **回绿**：再跑一次 `make stage3` 回到 `S3 PASS`（本页实测过）。
 
-**快照留着**：本页没改被跟踪的代码/契约，`scripts/lab reset` 用不上，快照留给重做本页兜底：
+**快照留着**：本页没改被跟踪的代码/契约，`toolbox/scripts/lab reset` 用不上，快照留给重做本页兜底：
 <!-- verify: page14-stage3-regreen -->
 ```bash
 make stage3
