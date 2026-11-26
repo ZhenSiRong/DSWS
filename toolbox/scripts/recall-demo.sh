@@ -27,5 +27,5 @@ if [ -z "$QUERY" ]; then
   exit 1
 fi
 
-cd "$ROOT/backend"
+cd "$ROOT/system/backend"
 uv run python -m app.scripts.recall "$QUERY" > "$OUT"

@@ -28,7 +28,7 @@ SNAP_DIR="$LAB_DIR/snapshots"
 # 白名单：只跟踪这些路径。目录不存在就跳过（并在 manifest 里记一笔）。
 # lab/ 必须在内：L2–L4 学生的主要产物（lab/app.py、lab/db.py）就在这里，
 # 拆坏执行器之后要能靠 reset 还原自己的代码，否则安全底线在最关键的目录上失效。
-WHITELIST=(contracts compose.yaml lab backend/app backend/tests fixtures frontend/src)
+WHITELIST=(system/contracts compose.yaml lab system/backend/app system/backend/tests system/fixtures system/frontend/src)
 # 与 WHITELIST 一一对应的类型；路径当前不存在时也要在 manifest 里记对类型。
 WHITELIST_KIND=(dir file dir dir dir dir dir)
 
@@ -753,7 +753,7 @@ toolbox/scripts/lab —— 教学用快照与回滚（只管文件，不碰 git�
      （--no-safety 可关闭，不建议）。
 
 白名单（只跟踪这些路径）：
-  contracts/  compose.yaml  lab/  backend/app/  backend/tests/  fixtures/  frontend/src/
+  system/contracts/  compose.yaml  lab/  system/backend/app/  system/backend/tests/  system/fixtures/  system/frontend/src/
 永不入快照（也不会被 reset 删）：.env  .env.*  .venv  node_modules  __pycache__  .git
 快照只读：同名 save 会被拒绝，不会覆盖已有快照。
 

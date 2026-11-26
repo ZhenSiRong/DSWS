@@ -64,7 +64,7 @@ wait_for() {
 }
 
 echo "== 启动临时场景后端 :$API_PORT =="
-start_bg "$LOG_DIR/api.pid" "$LOG_DIR/api.log" "$ROOT/backend" \
+start_bg "$LOG_DIR/api.pid" "$LOG_DIR/api.log" "$ROOT/system/backend" \
   "uv run python -m app.scenarios.app --host 127.0.0.1 --port $API_PORT"
 
 if ! wait_for "http://127.0.0.1:$API_PORT/api/health" 60; then
@@ -74,7 +74,7 @@ if ! wait_for "http://127.0.0.1:$API_PORT/api/health" 60; then
 fi
 
 echo "== 启动临时前端 :$WEB_PORT =="
-start_bg "$LOG_DIR/web.pid" "$LOG_DIR/web.log" "$ROOT/frontend" \
+start_bg "$LOG_DIR/web.pid" "$LOG_DIR/web.log" "$ROOT/system/frontend" \
   "env VITE_DEV_PROXY_TARGET=http://127.0.0.1:$API_PORT npm run dev -- --port $WEB_PORT --strictPort"
 
 if ! wait_for "http://127.0.0.1:$WEB_PORT/" 80; then
@@ -84,5 +84,5 @@ if ! wait_for "http://127.0.0.1:$WEB_PORT/" 80; then
 fi
 
 echo "== 浏览器验收 :$WEB_PORT =="
-cd "$ROOT/frontend"
+cd "$ROOT/system/frontend"
 BASE_URL="http://127.0.0.1:$WEB_PORT" npm run test:ui

@@ -10,44 +10,44 @@
 
 ```mermaid
 gantt
-    title 进度看板 · 2026-11-24（橙线 = 今天）
+    title 进度看板 · 2026-11-26（橙线 = 今天）
     dateFormat YYYY-MM-DD
     axisFormat %m-%d
     todayMarker stroke-width:3px,stroke:#e65100
 
     section closed
-    grill 选型 12/13（各三轮）        :done, s1, 2026-11-24, 1d
-    GLOSSARY 三词条 + ADR 0001        :done, s2, 2026-11-24, 1d
-    进度看板（本图）        :done, s3, 2026-11-24, 1d
-    进度护栏接入 hooks        :done, s4, 2026-11-24, 1d
+    grill 选型 12/13（各三轮）        :done, s1, 2026-11-26, 1d
+    GLOSSARY 三词条 + ADR 0001        :done, s2, 2026-11-26, 1d
+    进度看板（本图）        :done, s3, 2026-11-26, 1d
+    进度护栏接入 hooks        :done, s4, 2026-11-26, 1d
 
     section marktext
-    flatpak 安装 0.23.0        :done, m1, 2026-11-24, 1d
+    flatpak 安装 0.23.0        :done, m1, 2026-11-26, 1d
     五条验收（保存不改写 / audit）        :m2, after m1, 1d
     用户肉眼裁决        :m3, after m2, 1d
 
     section css-iteration
-    read-serve.sh（livereload）        :done, c1, 2026-11-24, 1d
+    read-serve.sh（livereload）        :done, c1, 2026-11-26, 1d
     read.css 首轮调优（devtools）        :c2, after c1, 1d
 
     section grapesjs-pilot
-    editor.html + 8 块注册        :done, g1, 2026-11-24, 1d
+    editor.html + 8 块注册        :done, g1, 2026-11-26, 1d
     p17 导入与点选重构        :done, g2, after g1, 1d
     六条判据验收        :g3, after g2, 1d
     闸门 G4：转正 or 回退        :milestone, g4, after g3, 1d
 
     section reading-layer
-    p21 余 8 处长段        :done, r1, 2026-11-24, 1d
+    p21 余 8 处长段        :done, r1, 2026-11-26, 1d
     A13/A18 并行支路        :done, r2, after r1, 1d
     B 批 5 页        :done, r3, after r2, 1d
     C 快通 12 页        :done, r4, after r3, 1d
 
     section verify-line
-    verify 核心：toolbox/scripts/verify.py + p17 契约与注解（T0/T1）        :done, v1, 2026-11-24, 1d
+    verify 核心：toolbox/scripts/verify.py + p17 契约与注解（T0/T1）        :done, v1, 2026-11-26, 1d
     verify 接线：Makefile/pre-commit/GitHub Actions/checks 文档        :done, v2, after v1, 1d
-    T2 级考核脚本：toolbox/scripts/acceptance/level-*.sh + make accept-*        :done, v3, 2026-11-24, 1d
-    术语与 ADR：GLOSSARY 四词 + ADR 0002 + materials/docs/verify-line.md        :done, v4, 2026-11-24, 1d
-    契约全覆盖：coverage： static + 24 页契约（8 blocks / 16 static，15 offline 块）        :done, v5, 2026-11-24, 1d
+    T2 级考核脚本：toolbox/scripts/acceptance/level-*.sh + make accept-*        :done, v3, 2026-11-26, 1d
+    术语与 ADR：GLOSSARY 四词 + ADR 0002 + materials/docs/verify-line.md        :done, v4, 2026-11-26, 1d
+    契约全覆盖：coverage： static + 24 页契约（8 blocks / 16 static，15 offline 块）        :done, v5, 2026-11-26, 1d
 ```
 
 ## 读图规则

@@ -232,7 +232,7 @@ audit:
 		exit 1; \
 	else echo "  OK: system/backend/uv.lock matches the repository"; fi
 	@echo "== 4/5 secrets: tutorial/ must not contain zhensirong or /home/ =="
-	@hits=$$(grep -rnIE 'zhensirong|/home/' manual --exclude='*.py' --exclude-dir=review 2>/dev/null); rc=$$?; \
+	@hits=$$(grep -rnIE 'zhensirong|/home/' tutorial --exclude='*.py' 2>/dev/null); rc=$$?; \
 		if [ $$rc -eq 0 ]; then \
 			echo "AUDIT FAIL: tutorial/ contains local username or home path (student material must not ship it)"; \
 			echo "$$hits"; \
@@ -241,7 +241,7 @@ audit:
 		elif [ $$rc -ne 1 ]; then \
 			echo "AUDIT ERROR: secret scan failed (grep rc=$$rc)"; exit 1; \
 		fi; \
-		staged=$$(git diff --cached --name-only --diff-filter=ACMR -- manual | grep -Ev '^materials/review/|\.py$$'); \
+		staged=$$(git diff --cached --name-only --diff-filter=ACMR -- tutorial | grep -Ev '\.py$$'); \
 		for f in $$staged; do \
 			hit=$$(git show ":$$f" 2>/dev/null | grep -nIE 'zhensirong|/home/'); \
 			if [ -n "$$hit" ]; then \

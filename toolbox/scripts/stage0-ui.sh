@@ -47,7 +47,7 @@ echo "== 启动临时后端 :$API_PORT =="
 # S6 把 /api/query 从"永远成功的假流"换成了真流水线，假流搬到了 app/scenarios。
 # S0 冒烟断言的是那条假流的固定数据（4 行地区汇总），所以这里起场景后端；
 # 起 app.main 的话要连 MySQL，而且真实数据是 5 个地区，断言必红。
-start_bg "$LOG_DIR/api.pid" "$LOG_DIR/api.log" "$ROOT/backend" \
+start_bg "$LOG_DIR/api.pid" "$LOG_DIR/api.log" "$ROOT/system/backend" \
   "uv run python -m app.scenarios.app --host 127.0.0.1 --port $API_PORT"
 
 # 不用 $(seq 1 60)：seq 在 macOS/BSD 上不存在（那边是 jot），命令替换展开
@@ -69,7 +69,7 @@ if ! curl -sf "http://127.0.0.1:$API_PORT/api/health" >/dev/null; then
 fi
 
 echo "== 启动临时前端 :$WEB_PORT =="
-start_bg "$LOG_DIR/web.pid" "$LOG_DIR/web.log" "$ROOT/frontend" \
+start_bg "$LOG_DIR/web.pid" "$LOG_DIR/web.log" "$ROOT/system/frontend" \
   "env VITE_DEV_PROXY_TARGET=http://127.0.0.1:$API_PORT npm run dev -- --port $WEB_PORT --strictPort"
 
 attempt=1
@@ -88,5 +88,5 @@ if ! curl -sf "http://127.0.0.1:$WEB_PORT/" >/dev/null; then
 fi
 
 echo "== 冒烟测试 :$WEB_PORT =="
-cd "$ROOT/frontend"
+cd "$ROOT/system/frontend"
 BASE_URL="http://127.0.0.1:$WEB_PORT" npm run test:ui

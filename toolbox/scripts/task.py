@@ -1042,8 +1042,7 @@ def find_mermaid_js() -> Path:
     import os
     env = os.environ.get("MERMAID_JS")
     cands = [Path(env)] if env else []
-    cands += [REPO / "design" / "assets" / "mermaid.min.js",
-              REPO / "assets" / "mermaid.min.js"]
+    cands += [REPO / "materials" / "assets" / "mermaid.min.js"]
     for c in cands:
         if c.exists():
             return c

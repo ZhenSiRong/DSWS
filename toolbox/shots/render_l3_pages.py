@@ -4,7 +4,7 @@
 
 一条命令重跑全部图（在仓库根目录）：
 
-    python3 tutorial/shots/render_l3_pages.py
+    python3 toolbox/shots/render_l3_pages.py
 
 做四件事：
 
@@ -55,8 +55,8 @@
 
 调试用（不参与正常流程）：
 
-    python3 tutorial/shots/render_l3_pages.py --keep            留 /tmp/shots-l3b 和栈
-    python3 tutorial/shots/render_l3_pages.py --render-only FILE 用捕获缓存只重渲染图
+    python3 toolbox/shots/render_l3_pages.py --keep            留 /tmp/shots-l3b 和栈
+    python3 toolbox/shots/render_l3_pages.py --render-only FILE 用捕获缓存只重渲染图
 """
 
 from __future__ import annotations
@@ -83,12 +83,12 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent          # tutorial/shots
 REPO = HERE.parents[1]                          # 仓库根目录
-IMAGES = REPO / "manual" / "images"
+IMAGES = REPO / "tutorial" / "images"
 PAGE_MD = {
-    14: REPO / "manual" / "page-14.md",
-    15: REPO / "manual" / "page-15.md",
-    16: REPO / "manual" / "page-16.md",
-    17: REPO / "manual" / "page-17.md",
+    14: REPO / "tutorial" / "page-14.md",
+    15: REPO / "tutorial" / "page-15.md",
+    16: REPO / "tutorial" / "page-16.md",
+    17: REPO / "tutorial" / "page-17.md",
 }
 
 WORK = Path("/tmp/shots-l3b")                    # 临时副本（隔离，跑完删）
@@ -141,7 +141,7 @@ OCR_KEYWORDS = {
 EMBED_LINES = {
     14: [
         "![第 14 页 · `make stage3` 真输出：S2 VERIFY PASS → 41 passed → 813 passed, 30 skipped → S3 PASS](images/page-14-stage3.png)",
-        "![第 14 页 · 停掉 Elasticsearch 后：POST /api/query 仍回 41099.5；20 题黄金集 18 passed, 23 errors](images/page-14-stop-es.png)",
+        "![第 14 页 · 停掉 Elasticsearch 后：POST /api/query 仍回 41099.5；黄金集所在测试组 18 passed, 23 errors（共 41 条）](images/page-14-stop-es.png)",
     ],
     15: [
         "![第 15 页 · `make baseline` 两段对照：绿 基线：10/10 通过（拒答 2）→ 拆一刀后红 基线：8/10 通过（拒答 2）](images/page-15-baseline.png)",
@@ -151,7 +151,6 @@ EMBED_LINES = {
     ],
     17: [
         "![第 17 页 · 14 passed + S6 PASS（corrected 期望 result 实际 result）+ 9、11 重试标记统计](images/page-17-correct.png)",
-        "![第 17 页 · 拆一刀关掉纠错后：pytest 5 failed, 9 passed + 失败矩阵只红 corrected + 语料 mismatch 0（哪条判据抓到了、哪条没抓到）](images/page-17-ablation.png)",
     ],
 }
 
@@ -360,7 +359,7 @@ def preflight() -> None:
                if shutil.which(tool) is None]
     if missing:
         sys.exit(f"缺少依赖：{', '.join(missing)}（本脚本不装新依赖）")
-    if not (REPO / "backend" / ".venv" / "bin" / "python").exists():
+    if not (REPO / "system" / "backend" / ".venv" / "bin" / "python").exists():
         sys.exit("system/backend/.venv 不存在；先按第 0 页准备好环境")
     if not (REPO / ".env").is_file():
         sys.exit("缺少 .env；先按第 13 页 `make docker-env` 生成")
@@ -849,7 +848,7 @@ CMD17_ABL_PROBE = CMD16_PROBE
 
 
 def patch_contract_gmv(work: Path) -> None:
-    path = work / "contracts" / "schema.contract.yaml"
+    path = work / "system" / "contracts" / "schema.contract.yaml"
     text = path.read_text(encoding="utf-8")
     anchor = "  - name: GMV\n"
     if text.count(anchor) != 1:
@@ -865,7 +864,7 @@ def patch_contract_gmv(work: Path) -> None:
 
 
 def patch_correct_off(work: Path) -> None:
-    path = work / "backend" / "app" / "agent" / "correct.py"
+    path = work / "system" / "backend" / "app" / "agent" / "correct.py"
     text = path.read_text(encoding="utf-8")
     anchor = "    contract = table or load_error_table()\n    policy = contract.correction\n"
     if text.count(anchor) != 1:

@@ -12,8 +12,8 @@
 <body>
 <main class="page"><nav class="rb-nav"><a href="../read/page-16.html">← 上一页</a><a href="#rb-toc">目录</a><a href="../read/page-18.html">下一页 →</a></nav><div class="rb-progress"><span></span></div><nav class="rb-toc" id="rb-toc"><p class="rb-toc-title">本页目录</p><ul><li><a href="#sec-1">这一页构建什么</a></li><li><a href="#sec-2">猜一猜</a></li><li><a href="#sec-3">动手</a></li><li><a href="#sec-4">你应该看到</a></li><li><a href="#sec-5">对账</a></li><li><a href="#sec-6">拆一刀（L3 级考核）</a></li></ul></nav><p class="kicker">练本 · 阅读版（md 正典派生，改内容请改 manual/page-17.md）</p><h1>第 17 页 · 审纠错：一次重试能修好什么、修不好什么</h1><div class="rb-callout note">
 <p><strong>前置</strong></p>
-<p><strong>还原上一页</strong>：确认第 16 页的拆一刀已用 <code>scripts/lab reset p16-before --yes</code> 还原——否则第 2 步会变成 <code>1 failed, 13 passed</code>、没有 <code>S6 PASS</code>、probe <code>mismatch: 3</code>。</p>
-<p><strong>可执行自查</strong>：<code>(cd backend &amp;&amp; .venv/bin/python -m app.scripts.failures --check | tail -2)</code> 应见 <code>S6 PASS</code>；不是就先 <code>scripts/lab reset p16-before --yes</code> 再往下。</p>
+<p><strong>还原上一页</strong>：确认第 16 页的拆一刀已用 <code>toolbox/scripts/lab reset p16-before --yes</code> 还原——否则第 2 步会变成 <code>1 failed, 13 passed</code>、没有 <code>S6 PASS</code>、probe <code>mismatch: 3</code>。</p>
+<p><strong>可执行自查</strong>：<code>(cd backend &amp;&amp; .venv/bin/python -m app.scripts.failures --check | tail -2)</code> 应见 <code>S6 PASS</code>；不是就先 <code>toolbox/scripts/lab reset p16-before --yes</code> 再往下。</p>
 <p><strong>第 1–5 步全离线</strong>：14 条单元测试、9 个失败场景、20 条纠错语料全在离线跑——不需要 MySQL / ES / Qdrant、不需要 <code>.env</code>、也不需要模型 key。只有第 6 步要真模型 + 开栈（可选，没配 key / 没起栈就跳过）。</p>
 <p><strong>在哪跑</strong>：命令都在仓库根目录、同一个终端里整段连续执行；括号是子 shell，跑完你还在仓库根目录。</p>
 </div><h2 id="sec-1">这一页构建什么</h2><p>把纠错（<code>correct_sql</code>）当成<strong>一次有上限的赌博</strong>来审：只重试 1 次、只对可重试错误生效、改出来的 SQL 必须重新过静态校验与安全策略。</p><p><strong>怎么考核</strong>：本页是 L3（审）的最后一页。不是“把页面做完”，而是拆掉纠错后能说清：<strong>哪条判据抓到了、哪条没抓到</strong>。审过的标准不是“红变绿”，是写下“触发几次、成功几次、失败长什么样”，换个人重跑得到同一组数。</p><p><strong>为什么“纠正成功”不能当判据</strong>：触发取决于模型是否生成可重试错误，<strong>不能稳定复现、不能当判据</strong>。</p><ul>
@@ -22,7 +22,7 @@
 </ul><figure class="rb-comic"><img alt="纠错 = 一次有上限的赌博：机器人写错 SQL 冒汗，老师只给一枚「1」令牌" src="../images/page-17-comic-one-retry.webp"/><figcaption>▲ 纠错 = 一次有上限的赌博：只重试 1 次、只对可重试错误生效；令牌用完就交回原错码，改出来的 SQL 还要重新过校验与安全策略。</figcaption></figure><h2 id="sec-2">猜一猜</h2><ol>
 <li>20 条纠错语料里，写着“重试后仍失败”的条目有几条——0 条、9 条、还是 11 条？</li>
 <li>真实模型的“纠正成功”能稳定复现吗——判据能写“已修复 / 成功率 100%”，还是只能写“3 次里几次过”？</li>
-</ol><h2 id="sec-3">动手</h2><div class="rb-step"><div class="rb-step-num">1</div><div><strong>第 1 步：拍快照。</strong> 拆一刀要改纠错代码，先留退路。回显 <code>已保存快照 "p17-before"：169 个文件。</code>（数字因工作区而异）：</div></div><div class="rb-code"><button class="rb-copy" type="button">复制</button><pre><code class="language-bash">scripts/lab save p17-before
+</ol><h2 id="sec-3">动手</h2><div class="rb-step"><div class="rb-step-num">1</div><div><strong>第 1 步：拍快照。</strong> 拆一刀要改纠错代码，先留退路。回显 <code>已保存快照 "p17-before"：169 个文件。</code>（数字因工作区而异）：</div></div><div class="rb-code"><button class="rb-copy" type="button">复制</button><pre><code class="language-bash">toolbox/scripts/lab save p17-before
 </code></pre></div><p><strong>命名陷阱</strong>：同名快照会被拒，重做本页就换个名字；<strong>重做换名后，拆一刀里 <code>reset</code> 的名字也要一起换</strong>——照抄旧名会回滚掉中间改动，只有 <code>pre-reset-*</code> 快照能救。</p><div class="rb-step"><div class="rb-step-num">2</div><div><strong>第 2 步：先验校正器这一层。</strong> 14 条测试钉住四件事，秒级：</div></div><ul>
 <li>提示词 8 个槽位；</li>
 <li>可重试才进闭环；</li>
@@ -129,7 +129,7 @@ FAIL: 1 项不符合预期
 <li><strong><code>pytest</code> 5 条红</strong>：它们都在断言“校正入口会产出候选 / 把校正器的拒答原因带回来”，入口一短路全红。</li>
 <li><strong>失败矩阵 9 个场景只红 <code>corrected</code> 一格</strong>：它是唯一靠“校正成功”才拿得到 <code>result</code> 的场景；另外两个可重试失败（<code>sql_syntax</code> / <code>sql_unknown_column</code>）本来就以原码收尾。</li>
 <li><strong><code>probe</code> 的 20 条语料照绿</strong>：它量的是 guard/policy 发什么码，不量校正做没做。</li>
-</ul><p>级考核要的答案就在这里：<strong>单元判据和失败矩阵抓到了，语料判据没抓到</strong>。</p><p><strong>还原并回绿</strong>：<code>reset</code> 会先拍一张 <code>pre-reset-…</code> 安全快照；第 1 步若换过快照名，这里的名字也要同步换。只贴末行，跑完回到 <code>14 passed in 0.11s</code> + <code>S6 PASS</code>（同第 2、3 步）：</p><div class="rb-code"><button class="rb-copy" type="button">复制</button><pre><code class="language-bash">scripts/lab reset p17-before --yes
+</ul><p>级考核要的答案就在这里：<strong>单元判据和失败矩阵抓到了，语料判据没抓到</strong>。</p><p><strong>还原并回绿</strong>：<code>reset</code> 会先拍一张 <code>pre-reset-…</code> 安全快照；第 1 步若换过快照名，这里的名字也要同步换。只贴末行，跑完回到 <code>14 passed in 0.11s</code> + <code>S6 PASS</code>（同第 2、3 步）：</p><div class="rb-code"><button class="rb-copy" type="button">复制</button><pre><code class="language-bash">toolbox/scripts/lab reset p17-before --yes
 backend/.venv/bin/python -m pytest backend/tests/agent/test_correct.py -q | tail -1
 (cd backend &amp;&amp; .venv/bin/python -m app.scripts.failures --check | tail -1)
 </code></pre></div><p>结论：<strong>纠错只负责一件事——把“可重试的失败”捞回来一次；捞回来就是 <code>corrected</code> 的 <code>result</code>，捞不回来就是最初那个错码。</strong></p><p><strong>L3 四页的判据合起来看</strong>：P14 的检索黄金集、P15 的 10 题基线、P16 的 20 条错单码、P17 的 <code>corrected</code> 场景，各量一层，才是“机器靠不靠谱”的答案。真实模型的成功态只能靠多次采样，单次演示会骗人。</p></main>
