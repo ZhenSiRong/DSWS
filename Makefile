@@ -1,4 +1,4 @@
-.PHONY: install doctor doctor-v dev-backend dev-frontend stage0 stage0-ui stage1 stage2 stage3 stage4 stage5 stage5-live stage6 stage6-ui stage7 stage7-ui baseline audit verify verify-fast accept-l1 accept-l2 accept-l3 accept-l4 accept-l5 install-hooks docker-env docker-env-require docker-up docker-down docker-logs docker-smoke docker-reset book book-html book-pdf
+.PHONY: install doctor doctor-v dev-backend dev-frontend stage0 stage0-ui stage1 stage2 stage3 stage4 stage5 stage5-live stage6 stage6-ui stage7 stage7-ui baseline audit verify verify-fast accept-l1 accept-l2 accept-l3 accept-l4 accept-l5 install-hooks docker-env docker-env-require docker-up docker-down docker-logs docker-smoke docker-reset book book-html book-pdf deliverables
 
 install:
 	cd system/backend && uv sync --frozen
@@ -311,3 +311,7 @@ install-hooks:
 	@echo "  pre-commit 会检查：24 页结构审计 / system/system/backend/uv.lock / staged manual 敏感串 / 任务台账 / 页面契约 T0（verify.py --fast）"
 	@echo "  临时绕过（不推荐）：git commit --no-verify"
 	@echo "  停用：git config --unset core.hooksPath"
+
+# PRD 三类交付物：设计文档 / 源码 / 教程文档，各自打包
+deliverables:
+	@python3 toolbox/scripts/build_deliverables.py

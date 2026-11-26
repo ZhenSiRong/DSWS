@@ -62,7 +62,7 @@ materials/
 
 ## 根目录
 
-`README.md`（总入口）、`AGENTS.md`（导航）、`GLOSSARY.md`（术语）、`Makefile`（命令入口）、
+`deliverables/`（PRD 三类交付物快照，`make deliverables` 生成）、`README.md`（总入口）、`AGENTS.md`（导航）、`GLOSSARY.md`（术语）、`Makefile`（命令入口）、
 `PROJECT-MAP.md`（本文件）、`.github/`、`.githooks/`、`.env.example`。
 
 ## 兼容软链（过渡，别在新代码里用）

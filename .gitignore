@@ -71,3 +71,11 @@ system/frontend/node_modules
 
 # 五级城市可编辑设计的渲染产物
 /toolbox/book/city-stages/out/
+
+/deliverables/design-doc/
+
+/deliverables/source-code/
+
+/deliverables/tutorial-doc/
+
+/deliverables/packages/
