@@ -1,0 +1,54 @@
+chain: correction
+kicker: A 类设计文档 · 纠错链
+title: SQL 写错了，让它改几次？
+growth: 补考不是设计出来的：从 v1 到 v4
+lead: 左页看设计怎么长出来：每一格是「做法 → 被什么打脸 → 补上了什么」；右页才是今天的设计与证据。
+sources: 'tutorial/page-17.md · system/contracts/errors.yaml · system/backend/app/agent/correct.py
+  · graph.py · materials/deliverable/PRD-对照表.md #3 · 图 12/31'
+versions:
+- badge: v1
+  name: 出错就交卷
+  desc: 校验一红就终止，不给模型第二次机会。
+  fail: 把「改得对」的错和安全拒绝判成同刑；拆掉纠错 5 failed / 9 passed。
+  add: 一次补考入口 correct_sql
+- badge: v2
+  name: 谁都能补考
+  desc: 任何失败都丢回模型「改一下」，改完直接执行。
+  fail: 被拒 SQL 回模型等于给注入开重试口子；真跑改完列名仍错。
+  add: 可重试白名单（6 个码：SQL_SYNTAX / SQL_UNKNOWN_COLUMN / SQL_UNKNOWN_TABLE / SQL_CONSTANT_PROJECTION / SQL_MISSING_ORDER_BY / SQL_MISSING_LIMIT）
+- badge: v3
+  name: 白名单补考
+  desc: 只对 6 个可重试错误补考，但改出来的 SQL 直接执行。
+  fail: '不复检等于豁免安检；补考不保证成功，PRD #3 那次真跑 16.31s 仍失败。'
+  add: 改完重过 guard（SQL 粗筛）+ policy（AST 安全复查；AST=SQL 拆成语法树），上限 N
+- badge: v4
+  name: 有界闭环
+  desc: 最多补考 1 次、重过两道关、原错保留；边界全写进契约。
+  fail: N=1 没做 sweep 实验；长期成功率无统计，单次演示不能当判据。
+  add: 当前设计（N=1 是当前值）
+answer_title: 一次有边界的补考
+answer: 不是「多试几次」，是一次有边界的补考：只给可重试错误、最多 N 次、改完重过 guard + policy。
+answer_small: 补考上限 N（契约名 correction.max_attempts）= 1，是当前值不是原则；不可动的是四条边界：可重试白名单、重校验、安全拒绝不重试、attempts 可观测。
+fig: materials/design/diagrams/02-runtime/12-s6-correction-state.svg
+figcap: 图 12 · S6（失败/校正门禁）校正闭环状态机：可重试才进「校验 → 校正 → 校验」唯一回退边（graph.py 条件路由）；上限 N=1（当前值）；执行失败不回退。失败注入与错误码映射见图 31。
+ev:
+- - E1 · 0 次不够
+  - 拆掉就红
+  - p17 拆一刀：关掉 propose_correction 入口，14 条里 5 条红；失败矩阵 9 场景只红 corrected 一格。
+  - 5 failed, 9 passed · corrected 期望 result 实际 SQL_SYNTAX
+- - E2 · 拒绝不补考
+  - SQL_REJECTED 永不回模型
+  - 被拒的 SQL 再喂模型「改一下」等于给注入开重试口子；20 条语料 9 条 expect=rejected 根本不进补考。16 码 = 6 可重试 + 10 不可重试。
+  - errors.yaml retryable=false · 36/36 注入被拒（见安全链，p19）
+- - E3 · 改完必须复检
+  - 重过 guard + policy
+  - 'PRD #3 那次真跑 16.31s，校正后列名仍不在契约——补考不保证成功；原错留在 detail.original_sql。'
+  - '14 passed · S6 PASS · PRD #3 触发=true / 成功=false'
+checks:
+- (cd system/backend && .venv/bin/python -m pytest tests/agent/test_correct.py -q) → 14 passed
+- (cd system/backend && .venv/bin/python -m app.scripts.failures --check) → S6 PASS
+- 拆一刀（照 page-17）：把 correct.py 的 propose_correction 入口短路返回 attempted=False → 5 failed, 9 passed
+- grep '"retryable"' system/eval/correction.jsonl → 11 true / 9 false（语料 20 条 = 11 可重试 + 9 拒绝；是条数不是码数）
+unknown: 'N=1 为什么不是 2？没有 N=0/1/2/3 等成本 sweep，成本/时延曲线 [未知]；长期成功率无统计（PRD #3 那次补考失败、v2 那次成功，单次演示都不能当判据）。'
+take: 带走一句话：先定边界——哪些错误可重试、每次复检什么——再用数据选 N；「自动重试」四个字里没有设计。
+tags: '[记录] page-17 / PRD #3 / 契约  [代码可证] correct.py / graph.py / errors.py  [重构] v1–v4 生长时间线  [未知] N-sweep / 长期成功率'

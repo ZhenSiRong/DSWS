@@ -1,0 +1,80 @@
+chain: runtime
+title: 服务启动，靠盲等，还是靠健康条件和失败停点？
+note: >-
+  教学编撰声明（D57）：本链生长时间线（v1→v4）是教学重构，不是 commit 历史；
+  终态结论一律由代码/契约/真跑证据锚定，证据缺口照标 unknown。
+  status 口径：verified = 本轮真跑 probe 或本轮/重放记录里的真跑证据（probe 写复核命令）；
+  inferred = 仅代码/契约可证；unknown = 证据缺口。RUN2–RUN4 的证据是 page-13 重放记录，本轮（2026-11-27）未起真栈复跑。
+items:
+  - id: RUN1
+    claim: "启动按健康条件依赖，不按启动顺序：三存储 healthy → init 退出 0（completed_successfully）→ backend healthy → frontend"
+    type: invariant
+    sources:
+      - compose.yaml#depends_on（5 处 condition：init 等 mysql/elasticsearch/qdrant 的 service_healthy ×3；backend 等 init 的 service_completed_successfully；frontend 等 backend 的 service_healthy）
+      - tutorial/page-13.md（对账：depends_on 的健康检查）
+    probe:
+      - docker compose config --quiet
+    ablation:
+      - "把 backend 的 condition 从 service_completed_successfully 改成 service_started：compose 能起，但 init 失败时 backend 照样接客——『Started ≠ healthy』的 v2 打脸复现"
+    status: verified
+  - id: RUN2
+    claim: "init 是一次性初始化：等三存储健康、开通并验证只读账号、校验元知识（不对就重建），退出码 0 才放行 backend；restart: \"no\"，非零退出即失败"
+    type: decision
+    sources:
+      - 'compose.yaml#init（restart: "no"，healthcheck/depends_on 三处 service_healthy）'
+      - system/backend/app/scripts/docker_init.py（文件头：等待依赖 → 开通只读账号 → 校验/重建 S2 元知识）
+      - tutorial/page-13.md（真跑记录：init Exited (0)；对账「init 为什么必须一次性」）
+    probe:
+      - docker compose ps -a（应见 init 一行 Exited (0)）
+      - make docker-smoke（第 3/8 步核 init 正常退出；需真栈）
+    ablation:
+      - "把 init 换成常驻服务：初始化成功与否没有信号、白占资源（page-13 对账口径）；init 非 0 退出时 backend 起不来——失败停点生效"
+    status: verified
+  - id: RUN3
+    claim: "失败停在下游之前：存储不 healthy 停在 init 前；init 非 0 停在 backend 前；backend 不 healthy 停在 frontend 前（图 27 的三级停点）"
+    type: invariant
+    sources:
+      - compose.yaml（depends_on condition 链）
+      - materials/design/diagrams/05-deployment/27-startup-order.svg（figcap：三级失败停点）
+      - tutorial/page-13.md（拆一刀记录：删 init 段后 smoke 第 3/8 红）
+    probe:
+      - make docker-smoke（第 3/8 步「五个长驻服务 healthy + init 正常退出」）
+    ablation:
+      - "删掉 compose.yaml 的 init 整段（含 backend 指向 init 的三行 depends_on）：docker-smoke 在 3/8 红『init 没有成功退出』——page-13 拆一刀实测；只删 init 不删三行则 compose 直接报 depends on undefined service"
+    status: verified
+  - id: RUN4
+    claim: "起得来 ≠ 部署好：smoke 8 步逐条验（health、init 退出码、/api/steps=12、真查询、nginx 关缓冲、只读账号、S2 对账 + init 幂等），up 成功只说明容器建起来了"
+    type: descriptive
+    sources:
+      - toolbox/scripts/docker-smoke.sh（1/8–8/8 与 init 幂等段）
+      - tutorial/page-13.md（真跑记录：DOCKER SMOKE PASS；8 步各防什么表）
+    probe:
+      - make docker-smoke
+    ablation:
+      - "只看 docker compose ps 全 healthy + /api/health 200：删 init 的假象下这两样都绿，但下一次从零初始化没人做——page-13 拆一刀实测的『假象』段"
+    status: verified
+    probe_note: '真栈补验 2026-11-27：make docker-smoke 8/8 PASS（health、init 退出码、/api/steps=12、真查询、nginx 关缓冲、只读账号、S2 对账+init 幂等）；live up 时序 +5s/+22s/+27s/+34s/+39s 实测'
+  - id: RUN5
+    claim: "init 等待不是纯 sleep：条件轮询 interval 2s、每存储 timeout 180s 上限（--timeout 可改 [当前值]）"
+    type: descriptive
+    sources:
+      - "system/backend/app/scripts/docker_init.py:87（timeout_s: float = 180.0, interval_s: float = 2.0）"
+      - system/backend/app/scripts/docker_init.py:150（--timeout 默认 180，帮助文本「等待每个存储就绪的秒数」）
+    probe:
+      - grep -n "timeout_s\|interval_s" system/backend/app/scripts/docker_init.py
+    ablation:
+      - "把 interval_s 改大或 timeout_s 改 1：等待行为当场变（轮询变慢 / 秒超时）——参数是 [当前值]，不是设计原则"
+    status: verified
+    probe_note: '真栈补验 2026-11-27：docker_init.py:87 timeout_s=180.0/interval_s=2.0；失败注入实测 init 打出「等待超时（180s）」'
+  - id: RUN6
+    claim: "失败停点已实证：失败注入（--scale mysql=0）→ init 等待超时 Exited(1)、backend/frontend 从未启动，恢复后 20s 全绿；启动耗时不是设计承诺。nuance：scale=0 时 compose 把 service_healthy 当空满足放行 init，「停在 init 前」由 docker_init 自身 180s 超时兜底"
+    type: descriptive
+    sources:
+      - materials/design/decision-growth/runtime/data.yaml#unknown
+      - Makefile#docker-smoke（真栈验收入口）
+    probe:
+      - make docker-up && make docker-smoke
+    ablation:
+      - "失败注入实测（--scale mysql=0）：init 等待超时 Exited(1)、backend/frontend 从未启动，恢复后 20s 全绿；注意 scale=0 时 compose 把 service_healthy 当空满足放行 init，真正的停点由 docker_init 的 180s 超时兜底（不是 compose 条件拦截）"
+    status: verified
+    probe_note: '真栈补验 2026-11-27：失败停点注入（--scale mysql=0）→ init 等待超时 Exited(1)，backend/frontend 从未启动；恢复后 20s 全绿。nuance：scale=0 时 compose 将 service_healthy 当空满足放行 init，停点由 docker_init 180s 超时兜底'

@@ -1,0 +1,57 @@
+chain: runtime
+kicker: A 类设计文档 · 运行链
+title: 服务启动，靠盲等，还是靠健康条件和失败停点？
+growth: 启动顺序不是设计出来的，是被假绿逼出来的
+lead: 左页看设计怎么长出来：每一格是「做法 → 被什么打脸 → 补上了什么」；右页才是今天的设计与证据。
+sources: tutorial/page-13.md · compose.yaml · system/backend/app/scripts/docker_init.py
+  · 图 27
+versions:
+- badge: v1
+  name: sleep 30
+  desc: 固定等一会儿，库总会起来。
+  fail: 慢、假绿（看着全绿其实没起）；库没起来也可能继续，失败后不知道停在哪。
+  add: depends_on
+- badge: v2
+  name: depends_on 顺序
+  desc: compose 按顺序拉容器，就算依赖完成。
+  fail: Started ≠ healthy；init 可能比库快，backend 可能没初始化就接客。
+  add: healthcheck
+- badge: v3
+  name: healthcheck
+  desc: 存储给出健康信号，init 等 service_healthy。
+  fail: up 成功 ≠ 部署好；init 失败/一次性没验，端口/SSE 也没测。
+  add: 失败停点 + init 退出 0 + smoke
+- badge: v4
+  name: 失败停点 + 灰度验收
+  desc: 每级条件化，失败停下游前；init 一次性，smoke 8 步。
+  fail: 失败注入打脸出 nuance：scale=0 时 compose 把 service_healthy 当空满足，停点靠 docker_init 180s 超时兜底；启动耗时不是设计承诺。
+  add: 当前设计（真栈 2026-11-27 验证）
+answer_title: 失败停在下游之前
+answer: 不是盲等，是条件轮询 + 超时上限；失败停在下游之前。
+answer_small: 三存储 healthy → init 退出 0 → backend healthy → frontend；init 内部还有 2s 条件轮询与 180s 上限（[当前值]），不是纯 sleep。
+fig: materials/design/diagrams/05-deployment/27-startup-order.svg
+figcap: 图 27 · 启动顺序与失败停点：存储不 healthy 停 init 前；init 非 0 停 backend 前；backend 不 healthy
+  停 frontend 前。
+ev:
+- - E1 · 条件可读
+  - compose config 通过
+  - 解析出 mysql/ES/Qdrant healthcheck；init 等 service_healthy；backend 等 init completed；frontend
+    等 backend healthy。
+  - docker compose config → 0
+- - E2 · 一次性 init
+  - Exited (0) 才能放行
+  - init 等三存储、开通只读、校验元知识；失败不退出 0，backend 不启动。
+  - page-13：init Exited (0)
+- - E3 · 起得来≠部署好
+  - smoke 8 步
+  - 健康、init 退出码、端口、SSE 缓冲都要单独验；up 成功只说明容器建起来了。
+  - DOCKER SMOKE 8/8 PASS（2026-11-27 真栈实测）
+checks:
+- docker compose config --quiet → 0
+- docker compose ps -a → 期望 5 running + init Exited (0)
+- make docker-smoke（前置：docker compose up -d，约 1 分钟；风险：会起/停容器；预期：8 步全过）
+- 拆一刀（page-13 有记录）：删掉 compose.yaml 的 init 整段（含 backend 三行 depends_on）→ make docker-smoke 期望 3/8 红「init 没有成功退出」
+- 失败注入：docker compose up -d --scale mysql=0 → 期望 init 打出「等待超时（180s）」Exited(1)、backend/frontend 未启动（2026-11-27 已实测）
+unknown: 已实证：真栈 live up / 失败注入（2026-11-27）：--scale mysql=0 → init 等待超时 Exited(1)、backend/frontend 从未启动，恢复后 20s 全绿；nuance——scale=0 时 compose 把 service_healthy 当空满足放行 init，「停在 init 前」由 docker_init 的 180s 超时兜底。init 内部 2s 条件轮询 + 180s 上限（[当前值]）实测打出「等待超时（180s）」；仍未知：失败注入只做了 mysql=0 一个场景，其余失败模式（ES/Qdrant 宕机等）未注入；启动耗时不是设计承诺。
+take: 带走一句话：启动不是“等”，是“每一级给出可判定条件，失败停在下游之前”。
+tags: '[记录] page-13 / compose  [代码可证] healthcheck/condition  [已实证] live up / 失败注入（真栈 2026-11-27）  [未知] 其余失败模式注入'

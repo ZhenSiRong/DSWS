@@ -1,0 +1,57 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><title>一份契约，怎么让 SQL、三存储、文档不打架？</title><style>
+:root { --ink:#211b15; --muted:#6f6557; --paper:#fbf7ee; --line:#d9cebb; --red:#a9362a; --green:#2f5d46; --orange:#c2410c; --mono:"Noto Sans Mono CJK SC",monospace; --sans:"Noto Sans Mono CJK SC","Noto Sans CJK SC",sans-serif; }
+* { box-sizing:border-box; } html,body { margin:0; background:#ddd6c7; }
+.spread { position:relative; width:3200px; height:1170px; background:#ddd6c7; font-family:var(--sans); color:var(--ink); overflow:hidden; }
+.page { position:absolute; top:25px; width:1540px; height:1120px; background:var(--paper); padding:34px 42px 28px; overflow:hidden; }
+.page.one { left:25px; } .page.two { left:1610px; }
+.page.two h1 { font-size:44px; }
+.page:after { content:attr(data-page); position:absolute; right:28px; bottom:16px; font-family:var(--mono); font-size:10px; color:var(--muted); }
+.kicker { margin:0; font-family:var(--mono); font-size:14px; font-weight:700; color:var(--orange); letter-spacing:1.3px; }
+.kicker span { border:1px solid var(--orange); padding:2px 6px; margin-left:7px; }
+h1 { margin:10px 0 0; font-size:50px; line-height:1.08; letter-spacing:-.5px; }
+.lead { margin:12px 0 0; font-size:18px; line-height:1.55; color:var(--muted); }
+.rule { height:2px; background:var(--ink); margin:18px 0 14px; }
+/* page one — 2×2 生长格（D57） */
+.grid2 { display:grid; grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr; gap:12px; margin-top:4px; height:770px; }
+.vcell { border:1px solid var(--line); background:#fffdf8; padding:14px 16px 12px; position:relative; display:flex; flex-direction:column; }
+.vcell:before { content:""; position:absolute; left:-1px; top:0; bottom:0; width:6px; background:var(--red); }
+.vcell.v2:before { background:#b7791f; } .vcell.v3:before { background:#8a6d3b; } .vcell.v4:before { background:var(--green); }
+.vbadge { font-family:var(--mono); font-size:17px; font-weight:800; color:#fff; background:var(--red); padding:3px 10px; align-self:flex-start; }
+.vcell.v2 .vbadge { background:#b7791f; } .vcell.v3 .vbadge { background:#8a6d3b; } .vcell.v4 .vbadge { background:var(--green); }
+.vbody h3 { margin:10px 0 0; font-size:22px; line-height:1.2; }
+.vbody p { margin:6px 0 0; font-size:13px; line-height:1.5; color:#4a4135; }
+.vfail { margin-top:8px; font-size:12px; line-height:1.45; color:var(--red); }
+.vadd { margin-top:auto; padding-top:8px; border-top:1px dashed var(--line); font-size:12px; line-height:1.45; color:var(--green); }
+.vadd b { display:block; font-family:var(--mono); font-size:9px; color:var(--muted); margin-bottom:2px; }
+.assume { margin-top:12px; border-top:2px solid var(--ink); padding-top:7px; font-size:10.5px; line-height:1.5; color:var(--muted); }
+.assume b { color:var(--ink); }
+.foot { position:absolute; left:42px; right:42px; bottom:8px; border-top:1px solid var(--line); padding-top:6px; font-size:9px; line-height:1.45; color:var(--muted); font-family:var(--mono); }
+/* page two */
+.answer { margin-top:12px; border-left:6px solid var(--green); background:#f1f6ef; padding:12px 14px; font-size:21px; line-height:1.4; font-weight:800; }
+.answer small { display:block; font-size:12px; font-weight:400; color:var(--muted); margin-top:4px; }
+.p2grid { display:grid; grid-template-columns:690px 1fr; gap:14px; margin-top:11px; }
+.figure { border:1px solid var(--line); background:#fff; padding:5px; }
+.figure img { width:auto; max-width:100%; max-height:520px; display:block; margin:0 auto; }
+.figcap { margin-top:4px; font-size:10px; line-height:1.4; color:#443b2f; }
+.evidence { display:flex; flex-direction:column; gap:7px; }
+.ev { border:1px solid var(--line); background:#fffdf8; padding:8px 10px; }
+.ev .tag { font-family:var(--mono); font-size:8px; color:var(--red); }
+.ev h3 { margin:3px 0 0; font-size:14px; line-height:1.2; } .ev p { margin:3px 0 0; font-size:10px; line-height:1.35; color:#4a4135; }
+.ev .out { margin-top:4px; border-top:1px dashed var(--line); padding-top:3px; font-family:var(--mono); font-size:8.5px; line-height:1.35; color:var(--ink); }
+.checks { margin-top:10px; border:1px solid var(--ink); background:#fff; padding:8px 10px; display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.checks h3 { margin:0 0 3px; font-size:13px; } .checks .cmd { font-family:var(--mono); font-size:8.5px; line-height:1.45; }
+.unknown { margin-top:8px; border:1px dashed #d2b5ae; padding:7px 9px; background:#fff8f4; font-size:10px; line-height:1.4; color:#5b473c; }
+.unknown b { color:var(--red); }
+.take { margin-top:8px; background:var(--ink); color:#fff; padding:8px 11px; font-size:16px; line-height:1.35; font-weight:800; }
+.tags { display:flex; gap:4px; flex-wrap:wrap; margin-top:6px; } .tg { font-family:var(--mono); font-size:7.5px; border:1px solid var(--line); color:var(--muted); padding:1px 4px; }
+</style></head><body><div class="spread">
+<section class="page one" data-page="A 类设计文档 · 契约链 · 1/2"><p class="kicker">A 类设计文档 · 契约链<span>渐进稿</span></p><h1>契约不是设计出来的，是被漂移逼出来的</h1><p class="lead">左页看设计怎么长出来：每一格是「做法 → 被什么打脸 → 补上了什么」；右页才是今天的设计与证据。</p><div class="rule"></div>
+<div class="grid2"><div class="vcell v1"><div class="vbadge">v1</div><div class="vbody"><h3>各模块手写</h3><p>每个模块自己维护 schema/常量，能跑就行。</p><div class="vfail">被打脸：改一处，别处不一定跟着变；lab/app.py 的 REGIONS/METRICS 就是遗留反例。</div></div><div class="vadd"><b>补上</b>单一 DDL</div></div><div class="vcell v2"><div class="vbadge">v2</div><div class="vbody"><h3>DDL 为源</h3><p>一份建表 SQL，其他从 DDL 猜。</p><div class="vfail">被打脸：表结构对齐了，但指标公式、值域、别名、列—指标关系没有家。</div></div><div class="vadd"><b>补上</b>契约 YAML + BuildPlan（契约派生的构建计划）</div></div><div class="vcell v3"><div class="vbadge">v3</div><div class="vbody"><h3>契约 YAML</h3><p>表/列/指标/值域/列—指标进同一份契约，BuildPlan 派生三存储。</p><div class="vfail">被打脸：所有值都往 ES 写会制造噪声；examples 被误当全集。</div></div><div class="vadd"><b>补上</b>值域分类：enum/open vs range</div></div><div class="vcell v4"><div class="vbadge">v4 · 当前</div><div class="vbody"><h3>值域分类 + 三存储</h3><p>只有 enum/低基数 open 同步完整值；range/主键/外键不写 ES。</p><div class="vfail">被打脸：门禁读 DDL 快照、不读运行库；换真数据会假绿（看着全绿，其实没验到真数据）。</div></div><div class="vadd"><b>补上</b>当前设计 + 假绿边界</div></div></div>
+<div class="assume"><b>编撰声明：这些版本是教学重构（D57），不是 commit 历史或逐日日记；终态由右页代码/契约锚定，后续 reconciler 只改叙事、不改源码/配置。</b></div>
+<div class="foot">来源：tutorial/page-10.md · tutorial/page-11.md · system/contracts/schema.contract.yaml · system/backend/app/build/* · 图 15/16/19<br>左页只负责“怎么长出来”；右页是终态设计 + 本地证据 + 可重跑命令。</div></section>
+<section class="page two" data-page="A 类设计文档 · 契约链 · 2/2"><p class="kicker">A 类设计文档 · 契约链<span>证据与落地</span></p><h1>改一处，全都惊动</h1><div class="answer">不是“配置集中”，是让 system 的派生链从同一棵契约树上长出来。<small>契约 → BuildPlan → Meta/ES/Qdrant → 文档/门禁；这里的消费者是 system 派生链，不是教学遗留的手抄常量。</small></div>
+<div class="p2grid"><div><div class="figure"><img src="file:///home/zhensirong/VM-Share/DSWS-design-lab/materials/design/diagrams/03-data/16-three-store-layout.svg" alt="设计图"><div class="figcap">图 16 · 同一份契约落到三存储：dimension + enum/open 进 ES；range/主键/外键/度量不写。</div></div></div><div class="evidence"><div class="ev"><div class="tag">E1 · 契约门禁</div><h3>S1（契约门禁）PASS / 59 passed</h3><p>改契约 expected_fact_rows 115→410，门禁立刻红 FAIL: 1；改回去才绿。</p><div class="out">make stage1 → S1 PASS</div></div><div class="ev"><div class="tag">E2 · 三存储派生</div><h3>dry-run 计数</h3><p>5 表 / 24 列 / 6 指标 / 9 列—指标；ES 76；Qdrant 98+22；0 writes。</p><div class="out">--dry-run → 0 writes</div></div><div class="ev"><div class="tag">E3 · 假绿边界</div><h3>门禁只读 DDL 快照</h3><p>换运行库真数据不会自动让门禁看新库；这个边界必须写进设计。</p><div class="out">page-10：115 行快照 vs 410 行运行库</div></div></div></div>
+<div class="checks"><div><h3>今天怎么验</h3><div class="cmd">make stage1 → S1 PASS / 59 passed</div><div class="cmd">(cd system/backend && uv run --frozen python -m app.build_meta_knowledge --dry-run) → 5 表/24 列/6 指标/9 列—指标，ES 76，Qdrant 98+22，0 writes</div><div class="cmd">① 编辑 system/contracts/schema.contract.yaml 把 expected_fact_rows 115→410；② make stage1 → 期望 FAIL: 1（改回才绿）</div><div class="cmd">make stage2（先 source toolbox/scripts/export-docker-env.sh）→ S2 VERIFY PASS + IDEMPOTENT NOOP 0 writes（2026-11-27 实测）</div></div><div><h3>证据状态</h3><div class="cmd"><span class="tg">[记录] page-10/11 / 契约</span><span class="tg">[代码可证] plan.py / stores</span><span class="tg">[已实证] fresh 写三存储 S2 VERIFY PASS</span><span class="tg">[未知] C3 隔离消融</span></div></div></div>
+<div class="unknown"><b>未知 / 反悔点：</b>已实证：S2 fresh 写入三存储（2026-11-27 真栈 make stage2：S2 VERIFY PASS，fresh 计数与 dry-run 一致；二次构建 0 writes）；仍未知：C3 值域分类的隔离消融（改 _should_sync）未做。值域阈值 1000 是低基数阈值（不同取值 ≤1000 的列才把完整值同步 ES；[当前值]）；lab/app.py 仍手写 REGIONS/METRICS（教学遗留，不纳入单源 claim）。</div><div class="take">带走一句话：契约的价值不在“少写一份配置”，在“改一处，所有消费者必须一起被惊动”。</div>
+<div class="foot">来源：tutorial/page-10.md · tutorial/page-11.md · system/contracts/schema.contract.yaml · system/backend/app/build/* · 图 15/16/19<br>右页：一张设计图 + 一组本地证据 + 可重跑命令；没有证据的“行业惯例”不进来。</div></section>
+</div></body></html>

@@ -1,0 +1,120 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 820" width="1200" height="820" font-family="Noto Sans Mono CJK SC, Noto Sans CJK SC, monospace">
+  <!-- 用户旅程图 · 从源码推导（system/backend + system/frontend） -->
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#211b15"/>
+    </marker>
+    <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#a9362a"/>
+    </marker>
+    <style>
+      .box  { fill:#fffdf8; stroke:#211b15; stroke-width:2; }
+      .boxr { fill:#fdf3ec; stroke:#a9362a; stroke-width:2; }
+      .boxg { fill:#f1f6ef; stroke:#2f5d46; stroke-width:2; }
+      .t1   { font-size:21px; font-weight:700; fill:#211b15; }
+      .t2   { font-size:15px; fill:#6f6557; }
+      .sec  { font-size:17px; font-weight:700; fill:#c2410c; }
+      .ln   { stroke:#211b15; stroke-width:2.5; fill:none; marker-end:url(#a); }
+      .lnr  { stroke:#a9362a; stroke-width:2; fill:none; marker-end:url(#ar); stroke-dasharray:7 5; }
+      .lnl  { stroke:#a9362a; stroke-width:2; fill:none; marker-end:url(#ar); }
+      .al   { font-size:14px; fill:#a9362a; }
+      .note { font-size:13px; fill:#6f6557; }
+    </style>
+  </defs>
+  <rect x="0" y="0" width="1200" height="820" fill="#ffffff"/>
+
+  <!-- 分段标题 -->
+  <text class="sec" x="30" y="42">前端 · 提问入口</text>
+  <text class="sec" x="30" y="242">后端 · LangGraph 12 节点 / 10 步（graph.py · build_agent_graph，节点 id 逐字来自 contracts/steps.yaml）</text>
+  <text class="sec" x="30" y="572">SSE 出口 · 前端渲染</text>
+
+  <!-- 第一行：① ② ③ ④ -->
+  <g>
+    <rect class="box" x="30" y="60" width="255" height="92" rx="8"/>
+    <text class="t1" x="48" y="94">① 输入中文问题</text>
+    <text class="t2" x="48" y="124">Composer.tsx · Composer</text>
+
+    <rect class="box" x="330" y="60" width="275" height="92" rx="8"/>
+    <text class="t1" x="348" y="94">② POST /api/query</text>
+    <text class="t2" x="348" y="124">api.ts · streamQuery</text>
+
+    <rect class="box" x="650" y="60" width="265" height="92" rx="8"/>
+    <text class="t1" x="668" y="94">③ 建立 SSE 流</text>
+    <text class="t2" x="668" y="124">main.py · query() → _stream()</text>
+
+    <rect class="box" x="960" y="60" width="212" height="92" rx="8"/>
+    <text class="t1" x="978" y="94">④ 上下文 8 节点</text>
+    <text class="t2" x="978" y="118">graph.py（步 1–6）</text>
+    <text class="t2" x="978" y="140">extract…add_extra</text>
+
+    <path class="ln" d="M285,106 L330,106"/>
+    <path class="ln" d="M605,106 L650,106"/>
+    <path class="ln" d="M915,106 L960,106"/>
+  </g>
+
+  <!-- ④ → ⑤ 折线 -->
+  <path class="ln" d="M1066,152 L1066,196 L140,196 L140,268"/>
+
+  <!-- 第二行：⑤ ⑥ ⑧ + 循环 ⑦ -->
+  <g>
+    <rect class="box" x="30" y="268" width="270" height="92" rx="8"/>
+    <text class="t1" x="48" y="302">⑤ generate_sql</text>
+    <text class="t2" x="48" y="326">pipeline.py · draft_sql</text>
+    <text class="t2" x="48" y="348">（步 7 · 生成 SQL）</text>
+
+    <rect class="boxg" x="345" y="268" width="300" height="92" rx="8"/>
+    <text class="t1" x="363" y="302">⑥ validate_sql</text>
+    <text class="t2" x="363" y="326">validate.py · 双关</text>
+    <text class="t2" x="363" y="348">guard 语义 + policy 安全（步 8）</text>
+
+    <rect class="boxr" x="345" y="452" width="300" height="92" rx="8"/>
+    <text class="t1" x="363" y="486">⑦ correct_sql（条件）</text>
+    <text class="t2" x="363" y="510">correct.py · propose_correction</text>
+    <text class="t2" x="363" y="532">最多 1 次 · 校正后回 ⑥ 重验（步 9）</text>
+
+    <rect class="box" x="880" y="268" width="292" height="92" rx="8"/>
+    <text class="t1" x="898" y="302">⑧ run_sql</text>
+    <text class="t2" x="898" y="326">executor.py · ReadOnlyExecutor</text>
+    <text class="t2" x="898" y="348">dw_reader 只读（步 10）</text>
+
+    <path class="ln" d="M300,314 L345,314"/>
+    <path class="ln" d="M645,314 L880,314"/>
+    <text class="al" x="700" y="300">通过</text>
+
+    <!-- ⑥ ⇄ ⑦ -->
+    <path class="lnl" d="M420,360 L420,452"/>
+    <text class="al" x="430" y="412">可重试（retryable）</text>
+    <path class="lnl" d="M570,452 L570,360"/>
+    <text class="al" x="452" y="442">重新校验</text>
+
+    <!-- 不可重试 → error -->
+    <path class="lnr" d="M495,360 L495,610"/>
+    <text class="al" x="505" y="596">不可重试 / 超次 → error（有名字）</text>
+  </g>
+
+  <!-- ⑧ → ⑨ 折线 -->
+  <path class="ln" d="M1026,360 L1026,610 L370,610 L370,628"/>
+
+  <!-- 第三行：⑨ ⑩ ⑪ -->
+  <g>
+    <rect class="box" x="30" y="628" width="310" height="92" rx="8"/>
+    <text class="t1" x="48" y="662">⑨ SSE 事件流回</text>
+    <text class="t2" x="48" y="686">orchestrator.py · events()</text>
+    <text class="t2" x="48" y="708">必以 result 或 error 收尾</text>
+
+    <rect class="box" x="415" y="628" width="315" height="92" rx="8"/>
+    <text class="t1" x="433" y="662">⑩ 按契约解析</text>
+    <text class="t2" x="433" y="686">api.ts · SseParser</text>
+    <text class="t2" x="433" y="708">parseAgentEvent（sse.schema.json）</text>
+
+    <rect class="boxg" x="805" y="628" width="367" height="92" rx="8"/>
+    <text class="t1" x="823" y="662">⑪ 渲染旅程终态（App.tsx）</text>
+    <text class="t2" x="823" y="686">StepRail 步骤条 · ResultTable 结果表</text>
+    <text class="t2" x="823" y="708">ErrorCard 错误卡（errors.yaml 码→人话）</text>
+
+    <path class="ln" d="M340,674 L415,674"/>
+    <path class="ln" d="M730,674 L805,674"/>
+  </g>
+
+  <text class="note" x="30" y="778">图例：绿框 = 双保险校验；红框 = 条件步骤（不触发时显式 skipped）；虚线 = 失败路径。每一步都锚定真实文件 · 符号。</text>
+</svg>

@@ -1,0 +1,99 @@
+chain: journey
+items:
+  - id: J1
+    claim: 一次问数 = 一张 12 节点图，节点 id 逐字来自 contracts/steps.yaml，按 10 个 stage 分组；前端步骤目录同源（GET /api/steps 下发，不硬编码）。
+    type: invariant
+    sources:
+      - system/backend/app/agent/graph.py#AGENT_STEP_IDS,build_agent_graph
+      - system/contracts/steps.yaml#stages,steps
+      - system/backend/app/main.py#get_steps
+    probe:
+      - (cd system/backend && .venv/bin/python -m pytest tests/test_steps_stages.py tests/test_s6_langgraph.py -q)  # 已跑：9 passed
+    ablation:
+      - "把 steps.yaml 里任一节点 id 改名：test_steps_stages 应红（图与契约漂移被机器抓住）"
+    status: verified
+  - id: J2
+    claim: SSE 流一定以 result 或 error 收尾；任何异常都被兜成 INTERNAL_ERROR，绝不静默结束。
+    type: invariant
+    sources:
+      - system/backend/app/agent/orchestrator.py#AgentRunner.events,_finish
+      - system/backend/app/main.py#_stream
+    probe:
+      - (cd system/backend && .venv/bin/python -m pytest tests/test_s6_langgraph.py tests/test_steps_stages.py -q)  # 已跑：9 passed
+    ablation:
+      - "删掉 events() 的 except Exception 兜底：无收尾流的用例应红"
+    status: verified
+  - id: J3
+    claim: validate_sql 是双关：guard（语义：表/列/常量投影/单语句）+ policy（安全：白名单/禁 DDL-DML/集合运算/危险函数）；拒绝在 run_sql 之前就变成有名字的错误事件。
+    type: invariant
+    sources:
+      - system/backend/app/agent/validate.py#validate_sql,DEFAULT_GATES
+      - system/backend/app/generate/guard.py#check_sql
+      - system/backend/app/security/policy.py#enforce
+      - system/backend/app/agent/graph.py#_validate_node
+    probe:
+      - (cd system/backend && .venv/bin/python -m pytest tests/test_s6_langgraph.py tests/test_steps_stages.py -q)  # 已跑：9 passed
+      - (cd system/backend && .venv/bin/python -m pytest tests/security/ -q)  # 已跑：179 passed / 2 skipped
+    ablation:
+      - "把 DEFAULT_GATES 里的 policy 关去掉：注入/越权类用例应红（SQL 不再被拒）"
+    status: verified
+  - id: J4
+    claim: "correct_sql 最多 1 次（补考上限 N，契约 correction.max_attempts 写在契约里）、校正后回 validate_sql 重新校验；SQL_REJECTED（retryable: false）永不进入 correction。"
+    type: invariant
+    sources:
+      - system/backend/app/agent/correct.py#propose_correction
+      - system/backend/app/agent/graph.py#_route_after_validate,_correct_node
+      - system/contracts/errors.yaml#correction
+    probe:
+      - (cd system/backend && .venv/bin/python -m pytest tests/test_s6_langgraph.py tests/test_steps_stages.py -q)  # 已跑：9 passed
+    ablation:
+      - "把 errors.yaml 的 SQL_REJECTED retryable 改成 true：安全用例应红（拒绝进校正闭环）"
+    status: verified
+  - id: J5
+    claim: run_sql 拒绝不连库；执行账号 dw_reader 仅 SELECT、显式去掉 MULTI_STATEMENTS、SET SESSION max_execution_time 会话超时。
+    type: invariant
+    sources:
+      - system/backend/app/security/executor.py#ReadOnlyExecutor.execute,_default_connector,_prepare_session
+      - system/backend/app/security/account.py#show_grants,verify_account
+    probe:
+      - (cd system/backend && .venv/bin/python -m pytest tests/security/ -q)  # 已跑：179 passed / 2 skipped（2 skipped = 拒答题 OUT_OF_RANGE/UNSUPPORTED_INTENT 的 runtime skip，不是真库用例）
+    ablation:
+      - "删掉 execute() 里的 enforce 前置：被拒 SQL 将连库执行，安全用例应红"
+    status: verified
+  - id: J6
+    claim: 前端按契约解析事件：未知类型忽略留痕（不是失败）、坏帧报 PROTOCOL_ERROR、流无终态事件补 STREAM_INCOMPLETE；HTTP 状态分流成人话。
+    type: descriptive
+    sources:
+      - system/frontend/src/lib/api.ts#parseAgentEvent,SseParser,streamQuery,httpError
+      - system/frontend/src/App.tsx#ask
+    probe:
+      - (cd system/frontend && npm test)  # 已跑：40 passed（sse 26 + result 14）
+    ablation:
+      - "把 parseAgentEvent 的 unknown_type 分支改回抛错：sse.test.ts 应红"
+    status: verified
+  - id: J7
+    claim: "结果表不猜类型：列类型来自契约 result.data.columns[].type；空结果（EMPTY_RESULT, class: empty）是空态不标红；历史「伪 SQL 当数据行」有止损卡。"
+    type: descriptive
+    sources:
+      - system/frontend/src/components/ResultTable.tsx#formatCell
+      - system/frontend/src/lib/result.ts#looksLikePseudoError
+      - system/backend/app/agent/orchestrator.py#_finish_execution
+      - system/backend/app/agent/errors.py#EMPTY_RESULT
+    probe:
+      - (cd system/frontend && npm test)  # 已跑：40 passed（sse 26 + result 14）
+    ablation:
+      - "把 EMPTY_RESULT 的 class 从 empty 改成 failure：前端空结果会被标红（与 FP-8 结论相反）"
+    status: verified
+  - id: J8
+    claim: MySQL 3024→TIMEOUT 已真库实测转正；1205/1317 未真触发（仅参数化单测）；SHOW GRANTS 只读校验已由安全链 S6 真库实证；执行期间取消丢结果的竞态无真并发测试。
+    type: descriptive
+    sources:
+      - system/backend/app/security/executor.py#_ERROR_CODE_MAP,_CLIENT_TIMEOUT_CODES
+      - system/backend/app/security/account.py#verify_account
+      - system/backend/app/agent/graph.py#_run_node
+    probe:
+      - (cd system/backend && .venv/bin/python -m pytest tests/security/ -q)  # 2 skipped = 拒答题（OUT_OF_RANGE/UNSUPPORTED_INTENT）的 runtime skip，不是真库用例（旧表述已废）
+    ablation:
+      - "（暂无实测 ablation）1205/1317 真触发一次应映射 TIMEOUT（待实测）；撤销 dw_reader 的 SELECT 应触发 1142→SQL_EXECUTION_ERROR（1142 本身已由安全链真库实测）"
+    status: unknown
+    probe_note: 'probe 2026-11-27：3024→TIMEOUT 真库实测转正；1205/1317 未真触发（仅参数化单测）；真并发取消竞态无测试。注意：tests/security 的 2 skipped 是拒答题 runtime skip，不是真库用例（旧表述已废）'

@@ -60,6 +60,8 @@
 | D51 | 装修对象=成熟版原版前端 | L5 装修终点是 `materials/deliverable/v2/original-frontend/`（原版 shopkeeper-agent，React 19 + Tailwind 3.4.17）；教学版重建前端降为脚手架（8080 对照）；拆一刀=成熟版换回 17 行 HTML 仍出 41099.5 | `09-ablation-course.md` §D51 |
 | D52 | 执行轨迹可视化 | 左=真前端界面 / 右=同一次真跑的 settrace 行级轨迹；18–25s 慢节奏；资产归 p23（`page-23-exec-trace.*`）；p17 不放此图，改"学习者自录工具"方向；C（pdb 离线）留附录/答辩 | `09-ablation-course.md` §D52；`QA-DECISIONS.md` R6 |
 | D50 | 24 页全书：L5「装」体验层 | 不重编号，末尾追加 page-23（第 23 页）；配比 10+4+4+5+1=24；L5 = 第五个横切系统（体验层）只 1 页（装修不改变承重墙）；拆一刀 = 前端换回第 9 页 17 行 HTML，同一问题仍出 41099.5 | `09-ablation-course.md` §D50 |
+| D56 | 设计文档范围与装配 | 整份设计文档 = A 类 5 链渐进稿（纠错/安全/契约/运行/用户旅程设计，旅程从源码推导）+ 合入主 PDF（≥30 页、不含 B/C 类页）→ `deliverables/design-doc/`；B/C 类不做；源码/开发手册同达万无一失的可交付直接标准；github 远程同标准交付 | `15-design-growth-doc.md` §D56 |
+| D57 | 渐进稿版式与教学编撰 | 左页 2×2 v1–v4（Z 字；每格「做法+打脸+补上」，v4=当前）+ 右页终态证据；教学编撰放行、须带编撰声明；reconciler 只改叙事不改源码/源配置 | `15-design-growth-doc.md` §D57 |
 
 ## 2. 评审证据
 

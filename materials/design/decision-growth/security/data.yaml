@@ -1,0 +1,54 @@
+chain: security
+kicker: A 类设计文档 · 安全链
+title: SQL 安全，靠模型自觉、策略，还是数据库？
+growth: 安全不是一次设计出来的：从 v1 到 v4
+lead: 左页看设计怎么长出来：每一格是「做法 → 被什么打脸 → 补上了什么」；右页才是今天的设计与证据。
+sources: tutorial/page-19.md · system/contracts/sql.policy.yaml · system/backend/app/security/*
+  · 图 22/23/24
+versions:
+- badge: v1
+  name: 信模型
+  desc: 把 prompt 写成“只生成 SELECT”，模型返回什么就执行什么。
+  fail: UNION、多语句、可执行注释都能绕过；没有任何执行前检查。
+  add: 只读账号 + 静态 guard（SQL 粗筛）
+- badge: v2
+  name: 只读账号 + guard
+  desc: dw_reader（只读执行账号）只有 SELECT，再加单语句/只读/表列检查。
+  fail: 挡写不挡读：合法 SELECT 仍可越权读/外带；集合运算与危险函数仍能钻。
+  add: 安全 policy（AST 安全复查）：AST（SQL 拆成语法树）六关
+- badge: v3
+  name: policy 六关
+  desc: 按类别拒绝 + 白名单放行 + 自动 LIMIT；拒绝不连库。
+  fail: 错误形状不统一，策略拒绝的 retryable 边界容易被误读。
+  add: 统一 ChannelError 16 码 / 3 class
+- badge: v4
+  name: 三层防线 + 出口
+  desc: guard / policy / dw_reader 各自拒绝，ChannelError 统一出口。
+  fail: 真库只读验证此前缺位（现已实证 SHOW GRANTS / 1142）；语料有限，不代表所有攻击。
+  add: 当前设计
+answer_title: 三层防线，一个出口
+answer: 不是“一道更严的关”，是三层独立防线（guard / policy / dw_reader）+ 一个统一出口。
+answer_small: 契约白名单是 policy 的输入；guard / policy / dw_reader 各自拒绝；ChannelError 负责出口。
+fig: materials/design/diagrams/04-security/22-sql-policy-flow.svg
+figcap: 图 22 · 策略内部六关（单语句 → 只读 → 表白/列白 → 无常量 → 排序/LIMIT → 收尾）；六关不是三层本身；拒绝不连库。
+ev:
+- - E1 · 拒绝有据
+  - 36/36 注入被拒
+  - 安全语料按类别覆盖多语句、UNION、可执行注释、危险函数等。
+  - 36/36 + 11/11 放行 + 8/8 基线
+- - E2 · 不只策略
+  - 只读账号兜底
+  - 策略软件被绕过时，执行账号仍无写权限；旧 didilili（教材遗留的旧 ALL 权限账号，负向例子）的 ALL 是负向入口。
+  - dw_reader：仅 SELECT [真库实证 SHOW GRANTS / 1142]
+- - E3 · 失败可展示
+  - 16 码 / 3 class
+  - 策略拒绝统一 SQL_REJECTED，细因放 reason_code；取消/空结果/失败分开。16 码 = 6 可重试 + 10 不可重试。
+  - p19 / p16 / p17 真跑
+checks:
+- make stage5（第 5 阶段门禁）→ 期望 813 passed / 30 skipped · S5（安全门禁）PASS
+- (cd system/backend && uv run --frozen python -m app.scripts.security --check) → 期望 36/36 拒绝、11/11 放行、8/8 基线
+- 拆一刀（跑法照 page-19 拆一刀记录）：临时把 sql.policy.yaml 的一条类别规则注释掉 → 期望该类别注入被放行、语料计数变红
+- (cd system/backend && .venv/bin/python -m app.scripts.failures --check) → S6（失败/校正门禁）PASS，sql_rejected 场景以 SQL_REJECTED 收尾、校正未触发（即永不进 correction）
+unknown: 已实证：真库 SHOW GRANTS / UPDATE 1142（dw_reader = USAGE + SELECT ON dw.*，UPDATE 得 1142；2026-11-27 真栈）；仍未知：注入语料是有限集合，不能证明“所有攻击”。
+take: 带走一句话：不是让模型变安全，是不信任它的输出——先白名单，再只读，最后统一报错。
+tags: '[记录] page-19 / 契约 / 代码  [代码可证] guard / policy / account  [已实证] 真库 SHOW GRANTS / 1142  [未知] 能否挡住语料外攻击'

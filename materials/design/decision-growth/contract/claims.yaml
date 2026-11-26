@@ -1,0 +1,91 @@
+chain: contract
+title: 一份契约，怎么让 SQL、三存储、文档不打架？
+note: >-
+  教学编撰声明（D57）：本链生长时间线（v1→v4）是教学重构，不是 commit 历史；
+  终态结论一律由代码/契约/真跑证据锚定，证据缺口照标 unknown。
+  status 口径：verified = 本轮真跑 probe 或本轮/重放记录里的真跑证据（probe 写复核命令）；
+  inferred = 仅代码/契约可证；unknown = 证据缺口。
+items:
+  - id: C1
+    claim: "契约门禁能拦住契约漂移：改 expected_fact_rows 115→410 门禁立刻 FAIL: 1，改回去才绿（S1 PASS / 59 passed）"
+    type: invariant
+    sources:
+      - "system/contracts/schema.contract.yaml#dataset（expected_fact_rows: 115）"
+      - system/backend/app/schema_contract.py（--check 三段门禁）
+      - tutorial/page-10.md（第 5 步探针与真跑输出）
+    probe:
+      - (cd system/backend && .venv/bin/python -m app.schema_contract --check)
+    ablation:
+      - "把 expected_fact_rows 115 改成 410 再跑 --check：[DATASET_ROW_COUNT] FAIL: 1（page-10 拆一刀实测）；改回 115 才回 S1 PASS"
+    status: verified
+  - id: C2
+    claim: "三存储从同一棵契约树派生（BuildPlan）：5 表 / 24 列 / 6 指标 / 9 列—指标；ES 76 条值；Qdrant 98 列点 + 22 指标点；dry-run 0 writes"
+    type: invariant
+    sources:
+      - system/backend/app/build/plan.py#BuildPlan.counts（tables/columns/metrics/column_metrics/es_values/qdrant_*）
+      - system/backend/app/build_meta_knowledge.py#_print_plan
+      - system/contracts/schema.contract.yaml（契约树本体）
+    probe:
+      - (cd system/backend && .venv/bin/python -m app.build_meta_knowledge --dry-run)
+    ablation:
+      - "在 schema.contract.yaml 里删掉一个 metric：dry-run 的 metrics=6 与 column_metrics=9 应同时变，Meta/ES/Qdrant 计数一起动——只动一处的写法被 BuildPlan 派生链消掉"
+    status: verified
+  - id: C3
+    claim: "值域分类决定 ES 同步面：只有 enum/低基数 open 的维度列同步完整值；range / 主键 / 外键 / 度量不写 ES（低基数阈值 max_value_docs=1000：不同取值 ≤1000 的列才把完整值同步 ES [当前值]）"
+    type: decision
+    sources:
+      - system/backend/app/build/plan.py#_should_sync（role=dimension 且 kind ∈ {enum, open} 且 0 < distinct ≤ max_value_docs）
+      - system/backend/app/build/config.py:83（REBUILD_MAX_VALUE_DOCS，默认 1000 [当前值]）
+      - materials/design/diagrams/03-data/16-three-store-layout.svg（图 16 figcap：dimension + enum/open 进 ES；range/主键/外键/度量不写）
+    probe:
+      - (cd system/backend && .venv/bin/python -m app.build_meta_knowledge --dry-run)
+    ablation:
+      - "把 _should_sync 改成全同步：dry-run 的 ES values 计数暴涨（range/主键值涌入），低基数过滤的意义当场可见"
+    status: inferred
+    probe_note: 'probe 2026-11-27：dry-run 计数一致但隔离消融（改 _should_sync）未做——维持 inferred'
+  - id: C4
+    claim: "门禁只读 DDL 快照（fixtures/dw.sql 装进内存 SQLite），不读运行库——运行库换 410 行真数据，门禁仍按 115 行快照报绿（假绿边界）"
+    type: invariant
+    sources:
+      - system/backend/app/schema_contract.py（DDL_PATH = fixtures/dw.sql；load_ddl 装内存 SQLite；文件头「不需要 MySQL / Docker」）
+      - tutorial/page-10.md（对账：115 行快照 vs 410 行运行库三份数据在说话）
+    probe:
+      - docker exec -i lab-mysql mysql -uroot -plabpass < system/fixtures/dw-real.sql && (cd system/backend && .venv/bin/python -m app.schema_contract --check)
+    ablation:
+      - "换真数据后把 expected_fact_rows 改 410：立刻 FAIL: 1——正好证明门禁核对的是快照不是运行库（page-10 实测）"
+    status: verified
+  - id: C5
+    claim: "lab/app.py 的 REGIONS/METRICS 是教学遗留手抄常量，不纳入单源 claim；单源派生链的消费者是 system 的 build 派生链"
+    type: descriptive
+    sources:
+      - tutorial/page-11.md（尾注：extract_keywords 里的 REGIONS/METRICS 还是写死的，属于后续演进方向）
+      - materials/design/decision-growth/contract/data.yaml#unknown（教学遗留，不纳入单源 claim）
+    probe:
+      - grep -n "REGIONS\|METRICS" lab/app.py
+    ablation:
+      - "若把 lab/app.py 的手抄常量当单源证据：契约删掉一个 region，手抄处照常工作——漂移复现，这正是 page-11 要拆的反面"
+    status: verified
+    probe_note: '真栈补验 2026-11-27：grep lab/app.py 实证 REGIONS(:12)/METRICS(:13) 手抄常量在场（L1 学生产物已从快照恢复）'
+  - id: C6
+    claim: "文档从契约派生且被新鲜度门禁把关：materials/docs/SCHEMA-CONTRACT.md 必须与契约一致，过期即 S1 红"
+    type: decision
+    sources:
+      - system/backend/app/schema_contract.py（--write-doc / --check-doc）
+      - tutorial/page-11.md（S1 输出含「文档新鲜度」段）
+    probe:
+      - (cd system/backend && .venv/bin/python -m app.schema_contract --check)
+    ablation:
+      - "手改契约某个 formula 不跑 --write-doc：--check 第 3/3 文档新鲜度红——文档漂移被门禁抓住"
+    status: verified
+  - id: C7
+    claim: "S2 fresh 真写三存储已实证（S2 VERIFY PASS：fresh 计数与 dry-run 一致；IDEMPOTENT NOOP 0 writes）；值域阈值 1000 是低基数阈值（不同取值 ≤1000 的列才把完整值同步 ES）[当前值]，不是原则"
+    type: descriptive
+    sources:
+      - materials/design/decision-growth/contract/data.yaml#unknown
+      - Makefile#stage2（dry-run → --fresh 重建 → --verify 对账 → 二次构建零写入）
+    probe:
+      - make stage2
+    ablation:
+      - "fresh 写入若与 dry-run 计数不一致（5/24/6/9、ES 76、Qdrant 98+22），--verify 对账应红——真栈 make stage2 已实测对账一致（S2 VERIFY PASS），计数漂移时红法仍是判据"
+    status: verified
+    probe_note: '真栈补验 2026-11-27：make stage2（source export-docker-env.sh 后）S2 VERIFY PASS（fresh 写三存储计数与 dry-run 一致）+ IDEMPOTENT NOOP 0 writes'

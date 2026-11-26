@@ -23,19 +23,20 @@
 
 ## 唯一的回退边
 
-`校验 → 校正 → 校验` 是全图**唯一**的环，条件写死在 `orchestrator.py` L305：
+`校验 → 校正 → 校验` 是全图**唯一**的环，条件在 `graph.py` `_route_after_validate`（L309–L317）：
 
 ```python
-if attempts >= max_attempts or not failure.retryable:
-    ... 终止
-correction_attempted = True
-proposal = yield from self._correct(...)
-attempts += 1
-continue          # 回到循环顶部，重新校验
+def route(state: AgentState) -> str:
+    failure = state.get("failure")
+    if failure is None:
+        return RUN_STEP
+    if failure.retryable and state.get("attempts", 0) < deps.max_attempts:
+        return CORRECT_STEP
+    return END
 ```
 
 - `max_attempts` 来自 `contracts/errors.yaml` 的 `correction.max_attempts: 1`。
-- `retryable` 来自错误码表：`SQL_REJECTED` / `SQL_NOT_READ_ONLY` / `SQL_MULTIPLE_STATEMENTS` / `SQL_EMPTY` / `EMPTY_RESULT` / `TIMEOUT` / `CANCELLED` / `LLM_REFUSAL` 都是 `false`。
+- `retryable` 来自错误码表：`SQL_REJECTED` / `SQL_NOT_READ_ONLY` / `SQL_MULTIPLE_STATEMENTS` / `SQL_EMPTY` / `EMPTY_RESULT` / `TIMEOUT` / `CANCELLED` / `LLM_REFUSAL` / `SQL_EXECUTION_ERROR` / `INTERNAL_ERROR` 共 10 码是 `false`；`SQL_SYNTAX` 等 6 码是 `true`。
 - 重试必须**重新过 guard + policy**（`revalidate: true`，`revalidate_with: [guard, policy]`）——校正后的 SQL 不享受任何豁免。
 
 ## `retryable=false` 为什么直接终止
@@ -46,7 +47,7 @@ continue          # 回到循环顶部，重新校验
 
 | 结论 | 状态 | 出处 |
 |---|---|---|
-| 只有一条回退边，且最多 1 次 | ✅ | `orchestrator.py` L282、L305–L340 |
+| 只有一条回退边，且最多 1 次 | ✅ | `graph.py` `_route_after_validate`（L309–L317） |
 | `retryable` 从错误码表读 | ✅ | `backend/app/agent/errors.py` L292 |
 | `max_attempts: 1` + `revalidate` | ✅ | `contracts/errors.yaml` `correction` 段 |
 | 执行阶段失败不校正 | ✅ | `orchestrator.py` L392–L415 |

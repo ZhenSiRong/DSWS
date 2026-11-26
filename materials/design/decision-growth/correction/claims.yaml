@@ -1,0 +1,81 @@
+# 纠错链 claims（design-doc-growth §3.1 schema）
+# status 口径：verified = 2026-11-27 本轮 probe 真跑通过，或消融有独立复核记录；
+#              inferred = 只有真跑记录/证据文件、本轮未重跑；unknown = 证据缺口，不用行业惯例补。
+chain: correction
+items:
+- id: C1
+  claim: '安全拒绝永不补考：SQL_REJECTED 的 retryable=false，被拒 SQL 不回模型（回模型等于给注入开重试口子）。'
+  type: invariant
+  sources:
+  - 'system/contracts/errors.yaml#L28-L30（注释）· L42-L48（correction 段）· L52-L56（SQL_REJECTED）'
+  - 'system/backend/app/agent/correct.py#L176（not error.retryable 直接不尝试）'
+  - 'system/backend/app/agent/graph.py#L309-L317（_route_after_validate：retryable 才进 CORRECT_STEP）'
+  - 'materials/design/diagrams/06-testing/31-failure-injection.md（sql_rejected 行）'
+  probe:
+  - '(cd system/backend && .venv/bin/python -m app.scripts.failures --check) — 2026-11-27 真跑 → S6 PASS（9 场景含 sql_rejected 以 SQL_REJECTED 收尾、校正未触发）'
+  ablation:
+  - '把 errors.yaml 里 SQL_REJECTED.retryable 改成 true：failures --check / 安全用例红（sql_rejected 场景进补考，与安全链 S1 同口径）；system/eval/build_datasets.py 对账也会报错退出（expect 与 retryable 错位）——两视角。'
+  status: verified
+- id: C2
+  claim: '校正有界且回退唯一：「校验 → 校正 → 校验」是全图唯一回退边，补考上限 N（契约名 correction.max_attempts）= 1（当前值），attempts 在 graph 状态计数。'
+  type: invariant
+  sources:
+  - 'system/contracts/errors.yaml#L42-L48（correction.max_attempts = 1）'
+  - 'system/backend/app/agent/graph.py#L309-L317（route：retryable 且 attempts < max_attempts 才进校正）'
+  - 'system/backend/app/agent/correct.py#L150-L183（propose_correction：三条件短路，policy.max_attempts < 1 直接拒）'
+  - 'materials/design/diagrams/02-runtime/12-s6-correction-state.md（唯一的回退边）'
+  probe:
+  - '(cd system/backend && .venv/bin/python -m pytest tests/agent/test_correct.py -q) — 2026-11-27 真跑 → 14 passed'
+  ablation:
+  - '拆一刀（tutorial/page-17.md）：在 propose_correction 入口短路返回 attempted=False → 5 failed, 9 passed，失败矩阵 9 场景只红 corrected 一格（p17 记录，materials/review/adversarial-page-17-v2.md 逐字复现）。'
+  status: verified
+- id: C3
+  claim: '校正产物不豁免安检：改出来的 SQL 重新过 guard + policy，原始 SQL 一直留在 detail.original_sql。'
+  type: invariant
+  sources:
+  - 'system/contracts/errors.yaml#L42-L48（revalidate = true / revalidate_with = [guard, policy]）'
+  - 'system/backend/app/agent/correct.py#L23（原始 SQL 留 detail.original_sql）· errors.py#L344-L357'
+  - 'system/backend/app/agent/graph.py#L282-L302（校正后回 validate_sql，gates=DEFAULT_GATES 无豁免）'
+  - 'tutorial/page-17.md（对账：两道关）'
+  probe:
+  - '(cd system/backend && .venv/bin/python -m pytest tests/agent/test_correct.py -q) — 2026-11-27 真跑 → 14 passed（含「改完能重过校验」断言）'
+  ablation:
+  - '绕过复检让校正产物直接执行：test_correct.py 中「重过校验」相关断言应红；guard/policy 拒绝路径退回 SQL_REJECTED 的对账失配。'
+  status: verified
+- id: C4
+  claim: '20 条纠错语料是「该不该进补考」的名单（11 进 / 9 拒），不是成功率——语料里一条重试结局都没有。'
+  type: descriptive
+  sources:
+  - 'system/eval/correction.jsonl（20 行）'
+  - 'tutorial/page-17.md（对账：猜 1；build_datasets.py 用 errors.yaml 逐条校验 expect 与 retryable）'
+  - 'system/contracts/errors.yaml（16 码 = 6 可重试 + 10 不可重试；6 个 retryable=true 的码：SQL_SYNTAX / SQL_UNKNOWN_COLUMN / SQL_UNKNOWN_TABLE / SQL_CONSTANT_PROJECTION / SQL_MISSING_ORDER_BY / SQL_MISSING_LIMIT）'
+  probe:
+  - 'grep -o ''"retryable": [a-z]*'' system/eval/correction.jsonl | sort | uniq -c — 2026-11-27 真跑 → 9 false / 11 true'
+  ablation:
+  - '把任一 expect=corrected 条目的错误码换成非 retryable 码：build_datasets.py 对账报错——名单由契约校验兜底。'
+  status: verified
+- id: C5
+  claim: '真实补考不保证成功，单次演示不能当判据：成功率只能按 trials≥3 多次采样写，分母是触发校正次数。'
+  type: decision
+  sources:
+  - 'materials/deliverable/PRD-对照表.md#3（触发=true、纠正成功=false，真跑 16.31s 后仍 SQL_UNKNOWN_COLUMN）'
+  - 'materials/deliverable/v2/README-v2.md:172 + evidence/v2-natural-correct-success.sse（v2 单次复现过成功态）'
+  - 'tutorial/page-17.md（对账：猜 2；live_probe.py 五类口径，成功率分母 success+fail）'
+  probe:
+  - '(curl POST /api/query ×3 并按五类记账) — 需真模型 + 开栈（page-17 第 6 步），本轮未跑'
+  ablation: []
+  status: unknown
+  probe_note: 'probe 2026-11-27：需真模型 POST /api/query ×3 记账，REBUILD_LLM_* 为空未跑——inferred→unknown（真模型采样未跑）'
+
+- id: C6
+  claim: '为什么恰好 N=1 而不是 2：缺 N=0/1/2/3 等成本 sweep（最终通过率 / 延迟 / 成本 / 安全拒绝数），当前值没有实验依据。'
+  type: decision
+  sources:
+  - 'system/contracts/errors.yaml#L43（max_attempts = 1——当前值）'
+  - 'system/backend/app/agent/errors.py#L232-L236（max_attempts < 1 直接判非法，N=0 不能只改契约）'
+  - 'tutorial/page-17.md（判据只写多次采样，不写「已修复」）'
+  probe:
+  - '待做：固定语料跑 N=0/1/2/3 sweep，比较通过率/延迟/成本/安全拒绝数后再改 max_attempts'
+  ablation: []
+  status: unknown
+  probe_note: 'probe 2026-11-27：N=0/1/2/3 sweep 待做（N=0 需改代码+契约）——维持 unknown'

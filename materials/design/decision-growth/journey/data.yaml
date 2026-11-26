@@ -1,0 +1,55 @@
+chain: journey
+kicker: A 类设计文档 · 用户旅程设计
+title: 用户旅程，是一问一答，还是一场有名字的接力？
+growth: 旅程不是一次画出来的：从 v1 到 v4
+lead: 左页看旅程怎么长出来：每一格是「做法 → 被什么打脸 → 补上了什么」；右页才是今天的旅程与证据。
+sources: system/backend/app/agent/graph.py · system/contracts/steps.yaml · system/backend/app/security/executor.py
+  · system/frontend/src/lib/api.ts · prd.md（NL2SQL / 12 节点 10 步 / React 19 + Tailwind）
+versions:
+- badge: v1
+  name: 一问一答 · 白屏等待
+  desc: 提问后界面静止；成功一次性给表，失败只有一句话，用户不知道系统在干什么。
+  fail: 慢查询像死机；失败没名字、还可能静默收尾——假流里永远成功，真失败一个都测不出。
+  add: SSE 流式进度：每节点一条 progress
+- badge: v2
+  name: 流式进度 + 步骤条
+  desc: 12 节点逐个发 progress，前端步骤条推进，旅程第一次「看得见」。
+  fail: 条件步骤 correct_sql 永远灰着（审计 D4）；错误形状不统一，失败事件收不干净。
+  add: 显式 skipped + errors.yaml 错误码契约
+- badge: v3
+  name: 有名字的错误 + 一次校正
+  desc: 错误分 3 类，retryable 决定校正；correct_sql 最多 1 次、校正后重验，SQL_REJECTED 不重试。
+  fail: 取消被当成完成（旧 App.tsx:149）；422/500 都显示「无法连接」（F11）；未知事件当失败（F3）。
+  add: 取消独立状态 + 按码说人话 + 未知类型留痕
+- badge: v4
+  name: 契约驱动的全程旅程
+  desc: steps/errors/SSE 契约是唯一事实源；事件运行时校验，结果表按契约类型渲染，空结果是空态。
+  fail: 1205/1317 超时映射未真触发（仅参数化单测，3024 已实测）、并发竞态未实测；历史「伪 SQL 当数据行」仍靠止损卡（前端兜底提示卡）兜底。
+  add: 当前设计
+answer_title: 一场有名字的接力
+answer: 旅程不是一问一答，是 12 节点图上的接力：每步有名字，失败收得住。
+answer_small: 中文提问 → POST /api/query（main.py:query）→ LangGraph 12 节点 / 10 步（graph.py + steps.yaml）→ validate_sql 双关 ⇄ correct_sql ≤1 次（=补考上限 N，契约 correction.max_attempts = 1 [当前值]）→ dw_reader（只读执行账号）只读执行 → SSE → 前端按契约渲染。
+fig: materials/design/decision-growth/journey/journey-map.svg
+figcap: 图 · 问数用户旅程（源码推导）：① 输入问题 → ② streamQuery → ③ SSE 流 → ④–⑧ LangGraph（8 上下文节点 → generate_sql → validate_sql ⇄ correct_sql → run_sql·dw_reader）→ ⑨–⑪ SSE 收尾 → 契约解析 → 步骤条/结果表/错误卡。
+ev:
+- - E1 · 每步有真事
+  - 12 节点 / 10 步同源
+  - 节点 id 逐字来自 steps.yaml；屏幕每一步对应图里真跑过的节点，没有先发事件再假装做事。12 个节点分属 steps.yaml 的 10 个 stage 分组（第 2 阶段「召回」含 3 个节点：列/值/指标）；correct_sql（第 9 阶段）是条件节点，界面在 12 个节点格上标「1 条件步」；图注 ①–⑪ 是旅程场景序号，不是节点数。
+  - pytest test_steps_stages + test_s6_langgraph → 9 passed
+- - E2 · 双保险有边界
+  - 校验两道关 · 校正一次
+  - validate_sql = guard（SQL 粗筛）+ policy（AST 安全复查；AST=SQL 拆成语法树）；校正后回 validate 重验；SQL_REJECTED 永不进 correction，次数写在契约里。16 码 = 6 可重试 + 10 不可重试。
+  - 'errors.yaml → correction.max_attempts = 1（代码可证）'
+- - E3 · 流必收尾 · 表不猜类型
+  - 契约校验 + 类型渲染
+  - SseParser/parseAgentEvent 按 sse.schema.json 运行时校验；列类型来自契约，空结果=空态不标红。
+  - npm test → 40 passed（sse 26 + result 14）
+checks:
+- (cd system/backend && .venv/bin/python -m pytest tests/test_steps_stages.py tests/test_s6_langgraph.py -q) → 9 passed
+- (cd system/frontend && npm test) → 40 passed
+- (cd system/backend && .venv/bin/python -m pytest tests/security/ -q) → 179 passed / 2 skipped（2 skipped = 拒答题 OUT_OF_RANGE/UNSUPPORTED_INTENT 的 runtime skip）
+- 'curl -N -X POST http://127.0.0.1:8000/api/query -H ''Content-Type: application/json'' -d ''{"query":"华北地区销售额是多少？"}''  # 前置：起栈；预期：逐节点 progress，以 result/error 收尾'
+- 拆一刀（未跑，预期红）：把 steps.yaml 任一节点 id 改名 → test_steps_stages 红（图与契约漂移被机器抓住）
+unknown: 真库侧部分实证（2026-11-27）：MySQL 3024→TIMEOUT 真库实测转正，SHOW GRANTS 只读校验已由安全链 S6 真库实证；1205/1317 未真触发（仅参数化单测）、执行期间取消丢结果的竞态无真并发测试；v1–v4 生长线是教学编撰（D57），无真实 commit 史料。
+take: 带走一句话：好旅程不是「回答得快」，而是每一步都有名字——进度看得见、错误读得懂、失败收得住。
+tags: '[记录] steps.yaml / errors.yaml  [代码可证] graph.py / validate.py / executor.py / api.ts  [已实证] 3024→TIMEOUT · SHOW GRANTS  [未知] 1205/1317 · 并发竞态'

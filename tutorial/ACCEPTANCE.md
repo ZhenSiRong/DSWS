@@ -9,7 +9,7 @@
 - **已知环境坑**（重放报告实测）：① 带裸 `uv run` 的 `make stage3` / `stage0-ui` / `stage6-ui`（脚本里没有 `--frozen`）或手敲 `uv run` 会按本机镜像源重写 `system/backend/uv.lock`（`lab reset` 管不到它）——`git status` 显示变脏再 `git checkout -- system/backend/uv.lock`；Makefile 直接调的 `stage*` 都已 `uv run --frozen`，不会脏（[page-15](page-15.md)、[page-19](page-19.md)、[page-21](page-21.md)）；② ES 默认低/高/洪水水位 85% / 90% / 95%：85–89% 只告警、写入与 S2/S3 正常，≥90% 高水位才危险（不再分配分片）、≥95% 索引转只读（`materials/review/replay-page-14.md`），别把盘跑满；③ 别在别人的栈上做级考核，要并行验收就用仓库副本 + 独立 compose 项目名 + 端口覆盖（见 `materials/review/replay-page-14.md`、`materials/review/replay-page-18.md`）。
 
 ## 1. 结构审计（任何环境可做）
-`python3 tutorial/shots/audit_book.py` 是离线只读审计：查 24 页 H1/六段、代码围栏成对、图片引用、敏感串、`tutorial/README.md` 坏链；只验结构、不验判据真假。期望末行（来源 `shots/audit_book.py`）：
+`python3 toolbox/shots/audit_book.py` 是离线只读审计：查 24 页 H1/六段、代码围栏成对、图片引用、敏感串、`tutorial/README.md` 坏链；只验结构、不验判据真假。期望末行（来源 `shots/audit_book.py`）：
 
 ```text
 页面：24/24 通过；README 坏链：0

@@ -1,0 +1,58 @@
+%% 阅读层全书铺开 AON（单代号 / PDM）—— 第 4 轮渐进式铺开计划
+%% 节点 = 活动（工期为估算，分钟）；箭线 = FS 依赖；橙色 = 关键路径
+%% 关键路径：R0 → A21 → GA → RA → B20/B19 → GB → RB → C → GC → RC → F，总工期 155 分钟（估）
+%% 浮动：A13/A18 各 5；B23/B15 各 3；B10 5。工期只表达依赖与顺序，不是验收时限。
+%% 渲染：python3 toolbox/scripts/render_reading_aon.py（独立重算 CPM 并核对节点标注）
+flowchart LR
+    R0["R0 阅读版转正<br/>工期 0（已完成）<br/>ES0 EF0 / LS0 LF0<br/>判据：render_read.py + read.css 落地"]
+    A21["A21 p21 重写<br/>工期 25（估）<br/>ES0 EF25 / LS0 LF25<br/>判据：8 处长段 ≤200 字"]
+    A13["A13 p13 重写<br/>工期 20（估）<br/>ES0 EF20 / LS5 LF25<br/>判据：6 处长段 ≤200 字"]
+    A18["A18 p18 重写<br/>工期 20（估）<br/>ES0 EF20 / LS5 LF25<br/>判据：6 处长段 ≤200 字"]
+    GA["GA 批A闸门<br/>工期 10（估）<br/>ES25 EF35 / LS25 LF35<br/>判据：audit 24/24 + 代码块一致 + 保护区 + HTML"]
+    RA{{"RA 用户复核 A<br/>工期 5（估）<br/>ES35 EF40 / LS35 LF40<br/>判据：用户认可阅读版观感"}}
+    B20["B20 p20 重写<br/>工期 15（估）<br/>ES40 EF55 / LS40 LF55<br/>判据：5 处长段 ≤200 字"]
+    B19["B19 p19 重写<br/>工期 15（估）<br/>ES40 EF55 / LS40 LF55<br/>判据：5 处长段 ≤200 字"]
+    B23["B23 p23 重写<br/>工期 12（估）<br/>ES40 EF52 / LS43 LF55<br/>判据：4 处长段 ≤200 字"]
+    B15["B15 p15 重写<br/>工期 12（估）<br/>ES40 EF52 / LS43 LF55<br/>判据：4 处长段 ≤200 字"]
+    B10["B10 p10 重写<br/>工期 10（估）<br/>ES40 EF50 / LS45 LF55<br/>判据：3 处长段 ≤200 字"]
+    GB["GB 批B闸门<br/>工期 10（估）<br/>ES55 EF65 / LS55 LF65<br/>判据：同 GA 四道闸门"]
+    RB{{"RB 用户复核 B<br/>工期 5（估）<br/>ES65 EF70 / LS65 LF70<br/>判据：用户认可阅读版观感"}}
+    C["C 快通 12 页<br/>工期 60（估）<br/>ES70 EF130 / LS70 LF130<br/>判据：09/00/07/22/06/08/14/01/05/11/12/03"]
+    GC["GC 批C闸门<br/>工期 10（估）<br/>ES130 EF140 / LS130 LF140<br/>判据：四道闸门 + L1 SPEC 硬预算"]
+    RC{{"RC 用户复核 C<br/>工期 5（估）<br/>ES140 EF145 / LS140 LF145<br/>判据：用户认可阅读版观感"}}
+    F["F 收尾<br/>工期 10（估）<br/>ES145 EF155 / LS145 LF155<br/>判据：--all 全书 + TODO 勾销 + 文档收口"]
+
+    R0 --> A21
+    R0 --> A13
+    R0 --> A18
+    A21 --> GA
+    A13 --> GA
+    A18 --> GA
+    GA --> RA
+    RA --> B20
+    RA --> B19
+    RA --> B23
+    RA --> B15
+    RA --> B10
+    B20 --> GB
+    B19 --> GB
+    B23 --> GB
+    B15 --> GB
+    B10 --> GB
+    GB --> RB
+    RB --> C
+    C --> GC
+    GC --> RC
+    RC --> F
+
+    %% 节点样式：橙 = 关键路径；灰 = 有浮动；绿菱形 = 用户复核里程碑
+    classDef crit fill:#fff3e0,stroke:#e65100,stroke-width:2px,color:#333333
+    classDef norm fill:#f6f7f9,stroke:#8a9098,stroke-width:1px,color:#333333
+    classDef review fill:#e8f2ec,stroke:#1f6b4a,stroke-width:2px,color:#333333
+    class R0,A21,GA,B20,B19,GB,C,GC,F crit
+    class A13,A18,B23,B15,B10 norm
+    class RA,RB,RC review
+
+    %% linkStyle 序号 = 箭线书写顺序（从 0 起）；关键箭线橙、非关键灰
+    linkStyle 0,3,6,7,8,12,13,17,18,19,20,21 stroke:#e65100,stroke-width:3px
+    linkStyle 1,2,4,5,9,10,11,14,15,16 stroke:#9aa0a6,stroke-width:1.5px

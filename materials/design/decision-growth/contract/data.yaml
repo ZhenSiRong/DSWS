@@ -1,0 +1,54 @@
+chain: contract
+kicker: A 类设计文档 · 契约链
+title: 一份契约，怎么让 SQL、三存储、文档不打架？
+growth: 契约不是设计出来的，是被漂移逼出来的
+lead: 左页看设计怎么长出来：每一格是「做法 → 被什么打脸 → 补上了什么」；右页才是今天的设计与证据。
+sources: tutorial/page-10.md · tutorial/page-11.md · system/contracts/schema.contract.yaml
+  · system/backend/app/build/* · 图 15/16/19
+versions:
+- badge: v1
+  name: 各模块手写
+  desc: 每个模块自己维护 schema/常量，能跑就行。
+  fail: 改一处，别处不一定跟着变；lab/app.py 的 REGIONS/METRICS 就是遗留反例。
+  add: 单一 DDL
+- badge: v2
+  name: DDL 为源
+  desc: 一份建表 SQL，其他从 DDL 猜。
+  fail: 表结构对齐了，但指标公式、值域、别名、列—指标关系没有家。
+  add: 契约 YAML + BuildPlan（契约派生的构建计划）
+- badge: v3
+  name: 契约 YAML
+  desc: 表/列/指标/值域/列—指标进同一份契约，BuildPlan 派生三存储。
+  fail: 所有值都往 ES 写会制造噪声；examples 被误当全集。
+  add: 值域分类：enum/open vs range
+- badge: v4
+  name: 值域分类 + 三存储
+  desc: 只有 enum/低基数 open 同步完整值；range/主键/外键不写 ES。
+  fail: 门禁读 DDL 快照、不读运行库；换真数据会假绿（看着全绿，其实没验到真数据）。
+  add: 当前设计 + 假绿边界
+answer_title: 改一处，全都惊动
+answer: 不是“配置集中”，是让 system 的派生链从同一棵契约树上长出来。
+answer_small: 契约 → BuildPlan → Meta/ES/Qdrant → 文档/门禁；这里的消费者是 system 派生链，不是教学遗留的手抄常量。
+fig: materials/design/diagrams/03-data/16-three-store-layout.svg
+figcap: 图 16 · 同一份契约落到三存储：dimension + enum/open 进 ES；range/主键/外键/度量不写。
+ev:
+- - E1 · 契约门禁
+  - S1（契约门禁）PASS / 59 passed
+  - '改契约 expected_fact_rows 115→410，门禁立刻红 FAIL: 1；改回去才绿。'
+  - make stage1 → S1 PASS
+- - E2 · 三存储派生
+  - dry-run 计数
+  - 5 表 / 24 列 / 6 指标 / 9 列—指标；ES 76；Qdrant 98+22；0 writes。
+  - --dry-run → 0 writes
+- - E3 · 假绿边界
+  - 门禁只读 DDL 快照
+  - 换运行库真数据不会自动让门禁看新库；这个边界必须写进设计。
+  - page-10：115 行快照 vs 410 行运行库
+checks:
+- make stage1 → S1 PASS / 59 passed
+- (cd system/backend && uv run --frozen python -m app.build_meta_knowledge --dry-run) → 5 表/24 列/6 指标/9 列—指标，ES 76，Qdrant 98+22，0 writes
+- '① 编辑 system/contracts/schema.contract.yaml 把 expected_fact_rows 115→410；② make stage1 → 期望 FAIL: 1（改回才绿）'
+- make stage2（先 source toolbox/scripts/export-docker-env.sh）→ S2 VERIFY PASS + IDEMPOTENT NOOP 0 writes（2026-11-27 实测）
+unknown: 已实证：S2 fresh 写入三存储（2026-11-27 真栈 make stage2：S2 VERIFY PASS，fresh 计数与 dry-run 一致；二次构建 0 writes）；仍未知：C3 值域分类的隔离消融（改 _should_sync）未做。值域阈值 1000 是低基数阈值（不同取值 ≤1000 的列才把完整值同步 ES；[当前值]）；lab/app.py 仍手写 REGIONS/METRICS（教学遗留，不纳入单源 claim）。
+take: 带走一句话：契约的价值不在“少写一份配置”，在“改一处，所有消费者必须一起被惊动”。
+tags: '[记录] page-10/11 / 契约  [代码可证] plan.py / stores  [已实证] fresh 写三存储 S2 VERIFY PASS  [未知] C3 隔离消融'

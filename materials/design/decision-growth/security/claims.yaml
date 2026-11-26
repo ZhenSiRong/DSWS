@@ -1,0 +1,98 @@
+chain: security
+title: SQL 安全，靠模型自觉、策略，还是数据库？
+note: >-
+  教学编撰声明（D57）：本链生长时间线（v1→v4）是教学重构，不是 commit 历史；
+  终态结论一律由代码/契约/真跑证据锚定，证据缺口照标 unknown。
+  status 口径：verified = 本轮真跑 probe 或本轮/重放记录里的真跑证据（probe 写复核命令）；
+  inferred = 仅代码/契约可证；unknown = 证据缺口。
+items:
+  - id: S1
+    claim: "策略拒绝的 SQL（SQL_REJECTED）绝不送回模型重试，永不进入 correct_sql 校正闭环"
+    type: invariant
+    sources:
+      - "system/contracts/errors.yaml#codes.SQL_REJECTED（retryable: false）"
+      - "system/contracts/errors.yaml#correction（max_attempts: 1，校正后重跑 guard/policy）"
+      - system/backend/app/agent/graph.py:316（failure.retryable 才进校正分支）
+      - system/backend/app/agent/correct.py（文件头：SQL_REJECTED 不参与校正）
+    probe:
+      - (cd system/backend && .venv/bin/python -m app.scripts.failures --check)
+    ablation:
+      - "把 system/contracts/errors.yaml 里 SQL_REJECTED 的 retryable 改成 true：failures --check 的 sql_rejected 场景与安全用例应红——被拒 SQL 会被送进 correction，等于给注入开重试口子"
+    status: verified
+  - id: S2
+    claim: "执行前策略按精确原因码全拒注入语料且零误杀：36/36 拒 + 11/11 放 + 8/8 S4 基线过策略"
+    type: invariant
+    sources:
+      - tutorial/page-19.md（第 2 步判据与真跑输出）
+      - system/backend/app/scripts/security.py（--check 逐条比对原因码）
+      - system/backend/app/security/policy.py
+      - system/contracts/sql.policy.yaml#errors.reason_codes
+    probe:
+      - (cd system/backend && .venv/bin/python -m app.scripts.security --check)
+    ablation:
+      - "把 sql.policy.yaml 的 forbid_executable_comments 改成 false 重跑 --check：两行变成『竟然被放行了』（/*! ... */ 服务端会执行、解析器看不见）——page-19 拆一刀实测口径"
+    status: verified
+  - id: S3
+    claim: "拒绝按『整类拒 + 白名单放行』，不是黑名单逐个补：集合运算/可执行注释按 AST 构造整类拒，表/列只放行契约派生白名单"
+    type: decision
+    sources:
+      - "system/contracts/sql.policy.yaml#statement（forbid_set_operations / forbid_executable_comments / allowed_roots: Select）"
+      - system/contracts/sql.policy.yaml 头注（白名单不在这里，由 contracts/schema.contract.yaml 派生）
+      - tutorial/page-19.md（对账：整类拒 vs 逐个补）
+    probe:
+      - (cd system/backend && PYTHONUNBUFFERED=1 .venv/bin/python -m app.scripts.security --corpus) 2>&1 | grep -E "multi_statement|executable_comment|union|语料："
+    ablation:
+      - "把 forbid_set_operations 改成 false：漏到执行 0 条（根节点必须是 SELECT 兜住），但 2 条 UNION 的原因码从 SQL_FORBIDDEN_CONSTRUCT 退化成 SQL_NOT_READ_ONLY，门禁 FAIL: 2——page-19 拆一刀实测"
+    status: verified
+  - id: S4
+    claim: "安全不是一道关，是三层独立防线各自拒绝：guard（S4 静态校验）/ policy（六关）/ dw_reader（只读账号），且策略拒绝发生在连库之前"
+    type: decision
+    sources:
+      - system/backend/app/security/pipeline.py（generate → enforce → execute；enforce 不过就是 SQL_REJECTED）
+      - system/backend/app/agent/validate.py:5（guard = app.generate.guard.check_sql 的静态校验）
+      - system/contracts/sql.policy.yaml 头注（executor 连库之前先过策略）
+      - tutorial/page-19.md（对账：静态校验问『对不对』、策略问『危不危险』、账号管『能不能写』）
+    probe:
+      - (cd system/backend && .venv/bin/python -m app.scripts.security --check)
+    ablation:
+      - "拆掉第 16 页的列存在校验（guard 层）时，policy 的列白名单接住（SQL_UNKNOWN_COLUMN 退化成 SQL_REJECTED）——page-16/19 实测口径；只留一层的候选被 E1/E2 剪掉"
+    status: verified
+  - id: S5
+    claim: "失败出口统一：策略拒绝对外只暴露 SQL_REJECTED，细因放 reason_code；错误码表 16 码（6 可重试 + 10 不可重试）/ 3 class（failure 14 / empty 1 / cancelled 1），取消与空结果与失败分开"
+    type: decision
+    sources:
+      - "system/contracts/sql.policy.yaml#errors（channel_code: SQL_REJECTED + 8 个 reason_codes）"
+      - system/contracts/errors.yaml（16 个码，class 取值 failure/empty/cancelled）
+      - tutorial/page-16.md / tutorial/page-17.md（p19 / p16 / p17 真跑口径）
+    probe:
+      - (cd system/backend && .venv/bin/python -m app.scripts.failures --check)
+    ablation:
+      - "把 channel_code 拆回多个对外码：下游（第 16/17 页的状态机与重试判定）要为每种失败各写分支，errors.yaml 与 SSE 契约的码表比对会红"
+    status: verified
+  - id: S6
+    claim: "执行账号 dw_reader 在 dw 上只有 SELECT（真库已实证：SHOW GRANTS = USAGE + SELECT ON dw.*，UPDATE/INSERT 实测 ERROR 1142）；旧 didilili 的 ALL 是负向对照，吻合"
+    type: invariant
+    sources:
+      - "system/contracts/sql.policy.yaml#account（user: dw_reader，grants: [SELECT]）"
+      - system/backend/app/security/account.py:31（FORBIDDEN_GRANT_PATTERNS；SHOW GRANTS 校验）
+      - system/fixtures/dw.sql:9（GRANT ALL PRIVILEGES ON dw.* TO 'didilili'@'%'——负向对照）
+    probe:
+      - make docker-smoke（第 7/8 步只读账号验证；需真栈）
+      - docker exec lab-mysql mysql -uroot -plabpass -e "SHOW GRANTS FOR 'dw_reader'@'%'"
+    ablation:
+      - "给 dw_reader 补一条 GRANT UPDATE：make docker-smoke 第 7/8 应红；或在真库上 UPDATE 一条应得 1142（1142 已实测）"
+    status: verified
+    probe_note: '真栈补验 2026-11-27：SHOW GRANTS FOR ''dw_reader''@''%'' = USAGE + SELECT ON dw.*；UPDATE/INSERT 实测 ERROR 1142；didilili=ALL 负向对照吻合'
+  - id: S7
+    claim: "真库只读验证缺口已关闭（SHOW GRANTS / UPDATE 1142 已实证）；注入语料是有限集合（36 条），不能证明挡住『所有攻击』——这是边界陈述而非缺口"
+    type: descriptive
+    sources:
+      - materials/design/decision-growth/security/data.yaml#unknown
+      - system/backend/app/security/corpus.py（语料是固定清单）
+    probe:
+      - make docker-smoke（真栈起来后第 7/8 步）
+      - (cd system/backend && .venv/bin/python -m app.scripts.security --check)
+    ablation:
+      - "语料外的新变体（如编码绕过）若穿透策略，security --check 仍绿——语料边界就是这条 claim 的反悔点"
+    status: verified
+    probe_note: '真栈补验 2026-11-27：真库缺口关闭（SHOW GRANTS/1142 已实证）；「语料有限不代表所有攻击」是边界陈述而非缺口'

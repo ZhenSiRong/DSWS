@@ -1,7 +1,7 @@
 meta:
   host: zhensirong-NMH-WXX9
   repo: /home/zhensirong/VM-Share/DSWS-design-lab
-  updated_at: 2026-11-24T22:38+08:00
+  updated_at: 2026-11-27T03:21+08:00
   render:
     doc: materials/humen-desicions/14-progress-gantt.md
     png: materials/humen-desicions/progress-gantt.png
@@ -533,8 +533,8 @@ tasks:
     report: null
     at: 2026-11-23T23:38+08:00
     overridden: true
-    override_reason: root 实施接线：Makefile toolbox/verify/accept、pre-commit T0、GitHub Actions、materials/docs/checks；已实测
-      make toolbox/verify/audit/pre-commit/T2 L3-L4
+    override_reason: root 实施接线：Makefile toolbox/verify/accept、pre-commit T0、GitHub
+      Actions、materials/docs/checks；已实测 make toolbox/verify/audit/pre-commit/T2 L3-L4
 - id: v3
   title: T2 级考核脚本：toolbox/scripts/acceptance/level-*.sh + make accept-*
   group: verify-line
@@ -617,3 +617,38 @@ tasks:
     overridden: false
     override_reason: null
   reopen_reason: 证据判据写成了散文，check 复核不到；重钉成输出里真实出现的字面量
+- id: dg1
+  title: 整份设计文档交付（D56/D57：5 链渐进稿+合入主 PDF+三件套可交付）
+  group: design-doc
+  depends_on: []
+  status: done
+  blocked_reason: null
+  failed_reason: null
+  started_at: 2026-11-27T00:49+08:00
+  ended_at: 2026-11-27T03:21+08:00
+  approx: false
+  worktree: /home/zhensirong/VM-Share/DSWS-design-lab-dg1
+  branch: task/dg1
+  agent: kimi-code
+  session_id: None
+  provenance: zhensirong-NMH-WXX9@/home/zhensirong/VM-Share/DSWS-design-lab-dg1&kimi-code
+    -s None
+  evidence:
+  - kind: file
+    path: materials/design/decision-growth/README.md
+    criterion: 对抗线 R5+R6 连续两轮 0 blocker
+  - kind: file
+    path: materials/design/design-doc.pdf
+    criterion: ''
+  - kind: cmd
+    run: python3 toolbox/shots/audit_book.py
+    criterion: 页面：24/24 通过；README 坏链：0
+  review:
+    verdict: null
+    reviewer: null
+    report: null
+    at: 2026-11-27T03:21+08:00
+    overridden: true
+    override_reason: 主 worktree（continue-iterate）完成，R5+R6 连续零阻断复审；task/dg1 worktree
+      未实体化
+  reopen_reason: 重钉可命中的证据判据（原判据描述性文字无法被现场核对）

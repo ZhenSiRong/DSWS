@@ -14,11 +14,11 @@
       kind: manual 的块只做命令同步校验，不执行。
       证据文件 mtime 比页面旧 → warn（--strict 变 fail）。
 
-契约目录：tutorial/verify/contracts/<page>.yaml
+契约目录：toolbox/verify/contracts/<page>.yaml
 页面注解：在 ```bash 围栏前一行写 <!-- verify: <marker> -->（中间允许一个空行）。
 可见输出绑定：在 ```text 围栏前一行写 <!-- verify-out: <marker> ... -->，
 把 page_contains 的 token 锚定到该围栏（而不是全页任意位置）。
-schema 与规则说明见 tutorial/verify/README.md。
+schema 与规则说明见 toolbox/verify/README.md。
 
 命令归一化规则（页面块内容与契约 cmd 用同一规则比较）：
   1. 统一换行为 \\n（\\r\\n / \\r → \\n）；
@@ -974,7 +974,7 @@ def build_json_payload(
             "mode": mode,
             "strict": strict,
             "no_contracts": True,
-            "message": "无契约：tutorial/verify/contracts/ 不存在或为空",
+            "message": "无契约：toolbox/verify/contracts/ 不存在或为空",
             "contract_dir": contract_dir_rel,
             "exit_code": exit_code,
         }
@@ -1122,7 +1122,7 @@ def main(argv: list[str] | None = None, root: Path | None = None) -> int:
         return 2
 
     if not files:
-        message = "无契约：tutorial/verify/contracts/ 不存在或为空，跳过验收。"
+        message = "无契约：toolbox/verify/contracts/ 不存在或为空，跳过验收。"
         payload = build_json_payload(
             [], fast=args.fast, strict=args.strict, duration=time.monotonic() - started,
             exit_code=0, no_contracts=True, contract_dir_rel=contracts_rel,

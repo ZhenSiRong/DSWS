@@ -83,10 +83,9 @@ def manifest(cat: Path, title: str, notes: list[str]) -> None:
 def build_design() -> None:
     cat = OUT / "design-doc"
     copy(ROOT / "materials" / "design" / "design-doc.pdf", cat / "design-doc.pdf")
-    copy(ROOT / "materials" / "design" / "design-doc-30.pdf", cat / "design-doc-30.pdf")
     manifest(cat, "设计文档 · DSWS 电商问数智能体", [
-        "`design-doc.pdf`：78 页完整设计文档（32 张图 + 读图地图）",
-        "`design-doc-30.pdf`：30 图 / 32 页精选版，供快速评审",
+        "`design-doc.pdf`：决策生长版（A 类 5 链渐进稿 + A 类图页 + 速查/claims/汇总，≥30 页）",
+        "B/C 类图页与旧 `design-doc-30.pdf` 精选版按 D56 不入卷（2026-11-27）",
         "已移除 `dsws-design-atlas.pdf`：它是废弃的教程/图集文档，不是设计文档",
     ])
 
@@ -142,9 +141,9 @@ def main() -> int:
     (OUT / "README.md").write_text(
         "# PRD 三类交付物\n\n"
         "| 目录 | 内容 | 单独打包 |\n|---|---|---|\n"
-        "| `design-doc/` | 78 页设计文档 + 30 图精选（32 页） | `materials/packages/design-doc.zip` |\n"
-        "| `source-code/` | `system/` + Makefile + `.env.example` | `materials/packages/source-code.zip` |\n"
-        "| `tutorial-doc/` | 24 章教程 md + 成书 HTML/PDF | `materials/packages/tutorial-doc.zip` |\n\n"
+        "| `design-doc/` | 决策生长版设计文档（A 类 5 链渐进稿，≥30 页） | `deliverables/packages/design-doc.zip` |\n"
+        "| `source-code/` | `system/` + Makefile + `.env.example` | `deliverables/packages/source-code.zip` |\n"
+        "| `tutorial-doc/` | 24 章教程 md + 成书 HTML/PDF | `deliverables/packages/tutorial-doc.zip` |\n\n"
         "生成：`make deliverables`；三个目录互不依赖，可分别拷走/压缩。\n",
         encoding="utf-8",
     )

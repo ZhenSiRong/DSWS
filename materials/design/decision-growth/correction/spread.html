@@ -1,0 +1,57 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><title>SQL 写错了，让它改几次？</title><style>
+:root { --ink:#211b15; --muted:#6f6557; --paper:#fbf7ee; --line:#d9cebb; --red:#a9362a; --green:#2f5d46; --orange:#c2410c; --mono:"Noto Sans Mono CJK SC",monospace; --sans:"Noto Sans Mono CJK SC","Noto Sans CJK SC",sans-serif; }
+* { box-sizing:border-box; } html,body { margin:0; background:#ddd6c7; }
+.spread { position:relative; width:3200px; height:1170px; background:#ddd6c7; font-family:var(--sans); color:var(--ink); overflow:hidden; }
+.page { position:absolute; top:25px; width:1540px; height:1120px; background:var(--paper); padding:34px 42px 28px; overflow:hidden; }
+.page.one { left:25px; } .page.two { left:1610px; }
+.page.two h1 { font-size:44px; }
+.page:after { content:attr(data-page); position:absolute; right:28px; bottom:16px; font-family:var(--mono); font-size:10px; color:var(--muted); }
+.kicker { margin:0; font-family:var(--mono); font-size:14px; font-weight:700; color:var(--orange); letter-spacing:1.3px; }
+.kicker span { border:1px solid var(--orange); padding:2px 6px; margin-left:7px; }
+h1 { margin:10px 0 0; font-size:50px; line-height:1.08; letter-spacing:-.5px; }
+.lead { margin:12px 0 0; font-size:18px; line-height:1.55; color:var(--muted); }
+.rule { height:2px; background:var(--ink); margin:18px 0 14px; }
+/* page one — 2×2 生长格（D57） */
+.grid2 { display:grid; grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr; gap:12px; margin-top:4px; height:770px; }
+.vcell { border:1px solid var(--line); background:#fffdf8; padding:14px 16px 12px; position:relative; display:flex; flex-direction:column; }
+.vcell:before { content:""; position:absolute; left:-1px; top:0; bottom:0; width:6px; background:var(--red); }
+.vcell.v2:before { background:#b7791f; } .vcell.v3:before { background:#8a6d3b; } .vcell.v4:before { background:var(--green); }
+.vbadge { font-family:var(--mono); font-size:17px; font-weight:800; color:#fff; background:var(--red); padding:3px 10px; align-self:flex-start; }
+.vcell.v2 .vbadge { background:#b7791f; } .vcell.v3 .vbadge { background:#8a6d3b; } .vcell.v4 .vbadge { background:var(--green); }
+.vbody h3 { margin:10px 0 0; font-size:22px; line-height:1.2; }
+.vbody p { margin:6px 0 0; font-size:13px; line-height:1.5; color:#4a4135; }
+.vfail { margin-top:8px; font-size:12px; line-height:1.45; color:var(--red); }
+.vadd { margin-top:auto; padding-top:8px; border-top:1px dashed var(--line); font-size:12px; line-height:1.45; color:var(--green); }
+.vadd b { display:block; font-family:var(--mono); font-size:9px; color:var(--muted); margin-bottom:2px; }
+.assume { margin-top:12px; border-top:2px solid var(--ink); padding-top:7px; font-size:10.5px; line-height:1.5; color:var(--muted); }
+.assume b { color:var(--ink); }
+.foot { position:absolute; left:42px; right:42px; bottom:8px; border-top:1px solid var(--line); padding-top:6px; font-size:9px; line-height:1.45; color:var(--muted); font-family:var(--mono); }
+/* page two */
+.answer { margin-top:12px; border-left:6px solid var(--green); background:#f1f6ef; padding:12px 14px; font-size:21px; line-height:1.4; font-weight:800; }
+.answer small { display:block; font-size:12px; font-weight:400; color:var(--muted); margin-top:4px; }
+.p2grid { display:grid; grid-template-columns:690px 1fr; gap:14px; margin-top:11px; }
+.figure { border:1px solid var(--line); background:#fff; padding:5px; }
+.figure img { width:auto; max-width:100%; max-height:520px; display:block; margin:0 auto; }
+.figcap { margin-top:4px; font-size:10px; line-height:1.4; color:#443b2f; }
+.evidence { display:flex; flex-direction:column; gap:7px; }
+.ev { border:1px solid var(--line); background:#fffdf8; padding:8px 10px; }
+.ev .tag { font-family:var(--mono); font-size:8px; color:var(--red); }
+.ev h3 { margin:3px 0 0; font-size:14px; line-height:1.2; } .ev p { margin:3px 0 0; font-size:10px; line-height:1.35; color:#4a4135; }
+.ev .out { margin-top:4px; border-top:1px dashed var(--line); padding-top:3px; font-family:var(--mono); font-size:8.5px; line-height:1.35; color:var(--ink); }
+.checks { margin-top:10px; border:1px solid var(--ink); background:#fff; padding:8px 10px; display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.checks h3 { margin:0 0 3px; font-size:13px; } .checks .cmd { font-family:var(--mono); font-size:8.5px; line-height:1.45; }
+.unknown { margin-top:8px; border:1px dashed #d2b5ae; padding:7px 9px; background:#fff8f4; font-size:10px; line-height:1.4; color:#5b473c; }
+.unknown b { color:var(--red); }
+.take { margin-top:8px; background:var(--ink); color:#fff; padding:8px 11px; font-size:16px; line-height:1.35; font-weight:800; }
+.tags { display:flex; gap:4px; flex-wrap:wrap; margin-top:6px; } .tg { font-family:var(--mono); font-size:7.5px; border:1px solid var(--line); color:var(--muted); padding:1px 4px; }
+</style></head><body><div class="spread">
+<section class="page one" data-page="A 类设计文档 · 纠错链 · 1/2"><p class="kicker">A 类设计文档 · 纠错链<span>渐进稿</span></p><h1>补考不是设计出来的：从 v1 到 v4</h1><p class="lead">左页看设计怎么长出来：每一格是「做法 → 被什么打脸 → 补上了什么」；右页才是今天的设计与证据。</p><div class="rule"></div>
+<div class="grid2"><div class="vcell v1"><div class="vbadge">v1</div><div class="vbody"><h3>出错就交卷</h3><p>校验一红就终止，不给模型第二次机会。</p><div class="vfail">被打脸：把「改得对」的错和安全拒绝判成同刑；拆掉纠错 5 failed / 9 passed。</div></div><div class="vadd"><b>补上</b>一次补考入口 correct_sql</div></div><div class="vcell v2"><div class="vbadge">v2</div><div class="vbody"><h3>谁都能补考</h3><p>任何失败都丢回模型「改一下」，改完直接执行。</p><div class="vfail">被打脸：被拒 SQL 回模型等于给注入开重试口子；真跑改完列名仍错。</div></div><div class="vadd"><b>补上</b>可重试白名单（6 个码：SQL_SYNTAX / SQL_UNKNOWN_COLUMN / SQL_UNKNOWN_TABLE / SQL_CONSTANT_PROJECTION / SQL_MISSING_ORDER_BY / SQL_MISSING_LIMIT）</div></div><div class="vcell v3"><div class="vbadge">v3</div><div class="vbody"><h3>白名单补考</h3><p>只对 6 个可重试错误补考，但改出来的 SQL 直接执行。</p><div class="vfail">被打脸：不复检等于豁免安检；补考不保证成功，PRD #3 那次真跑 16.31s 仍失败。</div></div><div class="vadd"><b>补上</b>改完重过 guard（SQL 粗筛）+ policy（AST 安全复查；AST=SQL 拆成语法树），上限 N</div></div><div class="vcell v4"><div class="vbadge">v4 · 当前</div><div class="vbody"><h3>有界闭环</h3><p>最多补考 1 次、重过两道关、原错保留；边界全写进契约。</p><div class="vfail">被打脸：N=1 没做 sweep 实验；长期成功率无统计，单次演示不能当判据。</div></div><div class="vadd"><b>补上</b>当前设计（N=1 是当前值）</div></div></div>
+<div class="assume"><b>编撰声明：这些版本是教学重构（D57），不是 commit 历史或逐日日记；终态由右页代码/契约锚定，后续 reconciler 只改叙事、不改源码/配置。</b></div>
+<div class="foot">来源：tutorial/page-17.md · system/contracts/errors.yaml · system/backend/app/agent/correct.py · graph.py · materials/deliverable/PRD-对照表.md #3 · 图 12/31<br>左页只负责“怎么长出来”；右页是终态设计 + 本地证据 + 可重跑命令。</div></section>
+<section class="page two" data-page="A 类设计文档 · 纠错链 · 2/2"><p class="kicker">A 类设计文档 · 纠错链<span>证据与落地</span></p><h1>一次有边界的补考</h1><div class="answer">不是「多试几次」，是一次有边界的补考：只给可重试错误、最多 N 次、改完重过 guard + policy。<small>补考上限 N（契约名 correction.max_attempts）= 1，是当前值不是原则；不可动的是四条边界：可重试白名单、重校验、安全拒绝不重试、attempts 可观测。</small></div>
+<div class="p2grid"><div><div class="figure"><img src="file:///home/zhensirong/VM-Share/DSWS-design-lab/materials/design/diagrams/02-runtime/12-s6-correction-state.svg" alt="设计图"><div class="figcap">图 12 · S6（失败/校正门禁）校正闭环状态机：可重试才进「校验 → 校正 → 校验」唯一回退边（graph.py 条件路由）；上限 N=1（当前值）；执行失败不回退。失败注入与错误码映射见图 31。</div></div></div><div class="evidence"><div class="ev"><div class="tag">E1 · 0 次不够</div><h3>拆掉就红</h3><p>p17 拆一刀：关掉 propose_correction 入口，14 条里 5 条红；失败矩阵 9 场景只红 corrected 一格。</p><div class="out">5 failed, 9 passed · corrected 期望 result 实际 SQL_SYNTAX</div></div><div class="ev"><div class="tag">E2 · 拒绝不补考</div><h3>SQL_REJECTED 永不回模型</h3><p>被拒的 SQL 再喂模型「改一下」等于给注入开重试口子；20 条语料 9 条 expect=rejected 根本不进补考。16 码 = 6 可重试 + 10 不可重试。</p><div class="out">errors.yaml retryable=false · 36/36 注入被拒（见安全链，p19）</div></div><div class="ev"><div class="tag">E3 · 改完必须复检</div><h3>重过 guard + policy</h3><p>PRD #3 那次真跑 16.31s，校正后列名仍不在契约——补考不保证成功；原错留在 detail.original_sql。</p><div class="out">14 passed · S6 PASS · PRD #3 触发=true / 成功=false</div></div></div></div>
+<div class="checks"><div><h3>今天怎么验</h3><div class="cmd">(cd system/backend && .venv/bin/python -m pytest tests/agent/test_correct.py -q) → 14 passed</div><div class="cmd">(cd system/backend && .venv/bin/python -m app.scripts.failures --check) → S6 PASS</div><div class="cmd">拆一刀（照 page-17）：把 correct.py 的 propose_correction 入口短路返回 attempted=False → 5 failed, 9 passed</div><div class="cmd">grep '"retryable"' system/eval/correction.jsonl → 11 true / 9 false（语料 20 条 = 11 可重试 + 9 拒绝；是条数不是码数）</div></div><div><h3>证据状态</h3><div class="cmd"><span class="tg">[记录] page-17 / PRD #3 / 契约</span><span class="tg">[代码可证] correct.py / graph.py / errors.py</span><span class="tg">[重构] v1–v4 生长时间线</span><span class="tg">[未知] N-sweep / 长期成功率</span></div></div></div>
+<div class="unknown"><b>未知 / 反悔点：</b>N=1 为什么不是 2？没有 N=0/1/2/3 等成本 sweep，成本/时延曲线 [未知]；长期成功率无统计（PRD #3 那次补考失败、v2 那次成功，单次演示都不能当判据）。</div><div class="take">带走一句话：先定边界——哪些错误可重试、每次复检什么——再用数据选 N；「自动重试」四个字里没有设计。</div>
+<div class="foot">来源：tutorial/page-17.md · system/contracts/errors.yaml · system/backend/app/agent/correct.py · graph.py · materials/deliverable/PRD-对照表.md #3 · 图 12/31<br>右页：一张设计图 + 一组本地证据 + 可重跑命令；没有证据的“行业惯例”不进来。</div></section>
+</div></body></html>

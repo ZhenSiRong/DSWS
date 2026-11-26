@@ -1,0 +1,57 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><title>服务启动，靠盲等，还是靠健康条件和失败停点？</title><style>
+:root { --ink:#211b15; --muted:#6f6557; --paper:#fbf7ee; --line:#d9cebb; --red:#a9362a; --green:#2f5d46; --orange:#c2410c; --mono:"Noto Sans Mono CJK SC",monospace; --sans:"Noto Sans Mono CJK SC","Noto Sans CJK SC",sans-serif; }
+* { box-sizing:border-box; } html,body { margin:0; background:#ddd6c7; }
+.spread { position:relative; width:3200px; height:1170px; background:#ddd6c7; font-family:var(--sans); color:var(--ink); overflow:hidden; }
+.page { position:absolute; top:25px; width:1540px; height:1120px; background:var(--paper); padding:34px 42px 28px; overflow:hidden; }
+.page.one { left:25px; } .page.two { left:1610px; }
+.page.two h1 { font-size:44px; }
+.page:after { content:attr(data-page); position:absolute; right:28px; bottom:16px; font-family:var(--mono); font-size:10px; color:var(--muted); }
+.kicker { margin:0; font-family:var(--mono); font-size:14px; font-weight:700; color:var(--orange); letter-spacing:1.3px; }
+.kicker span { border:1px solid var(--orange); padding:2px 6px; margin-left:7px; }
+h1 { margin:10px 0 0; font-size:50px; line-height:1.08; letter-spacing:-.5px; }
+.lead { margin:12px 0 0; font-size:18px; line-height:1.55; color:var(--muted); }
+.rule { height:2px; background:var(--ink); margin:18px 0 14px; }
+/* page one — 2×2 生长格（D57） */
+.grid2 { display:grid; grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr; gap:12px; margin-top:4px; height:770px; }
+.vcell { border:1px solid var(--line); background:#fffdf8; padding:14px 16px 12px; position:relative; display:flex; flex-direction:column; }
+.vcell:before { content:""; position:absolute; left:-1px; top:0; bottom:0; width:6px; background:var(--red); }
+.vcell.v2:before { background:#b7791f; } .vcell.v3:before { background:#8a6d3b; } .vcell.v4:before { background:var(--green); }
+.vbadge { font-family:var(--mono); font-size:17px; font-weight:800; color:#fff; background:var(--red); padding:3px 10px; align-self:flex-start; }
+.vcell.v2 .vbadge { background:#b7791f; } .vcell.v3 .vbadge { background:#8a6d3b; } .vcell.v4 .vbadge { background:var(--green); }
+.vbody h3 { margin:10px 0 0; font-size:22px; line-height:1.2; }
+.vbody p { margin:6px 0 0; font-size:13px; line-height:1.5; color:#4a4135; }
+.vfail { margin-top:8px; font-size:12px; line-height:1.45; color:var(--red); }
+.vadd { margin-top:auto; padding-top:8px; border-top:1px dashed var(--line); font-size:12px; line-height:1.45; color:var(--green); }
+.vadd b { display:block; font-family:var(--mono); font-size:9px; color:var(--muted); margin-bottom:2px; }
+.assume { margin-top:12px; border-top:2px solid var(--ink); padding-top:7px; font-size:10.5px; line-height:1.5; color:var(--muted); }
+.assume b { color:var(--ink); }
+.foot { position:absolute; left:42px; right:42px; bottom:8px; border-top:1px solid var(--line); padding-top:6px; font-size:9px; line-height:1.45; color:var(--muted); font-family:var(--mono); }
+/* page two */
+.answer { margin-top:12px; border-left:6px solid var(--green); background:#f1f6ef; padding:12px 14px; font-size:21px; line-height:1.4; font-weight:800; }
+.answer small { display:block; font-size:12px; font-weight:400; color:var(--muted); margin-top:4px; }
+.p2grid { display:grid; grid-template-columns:690px 1fr; gap:14px; margin-top:11px; }
+.figure { border:1px solid var(--line); background:#fff; padding:5px; }
+.figure img { width:auto; max-width:100%; max-height:520px; display:block; margin:0 auto; }
+.figcap { margin-top:4px; font-size:10px; line-height:1.4; color:#443b2f; }
+.evidence { display:flex; flex-direction:column; gap:7px; }
+.ev { border:1px solid var(--line); background:#fffdf8; padding:8px 10px; }
+.ev .tag { font-family:var(--mono); font-size:8px; color:var(--red); }
+.ev h3 { margin:3px 0 0; font-size:14px; line-height:1.2; } .ev p { margin:3px 0 0; font-size:10px; line-height:1.35; color:#4a4135; }
+.ev .out { margin-top:4px; border-top:1px dashed var(--line); padding-top:3px; font-family:var(--mono); font-size:8.5px; line-height:1.35; color:var(--ink); }
+.checks { margin-top:10px; border:1px solid var(--ink); background:#fff; padding:8px 10px; display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.checks h3 { margin:0 0 3px; font-size:13px; } .checks .cmd { font-family:var(--mono); font-size:8.5px; line-height:1.45; }
+.unknown { margin-top:8px; border:1px dashed #d2b5ae; padding:7px 9px; background:#fff8f4; font-size:10px; line-height:1.4; color:#5b473c; }
+.unknown b { color:var(--red); }
+.take { margin-top:8px; background:var(--ink); color:#fff; padding:8px 11px; font-size:16px; line-height:1.35; font-weight:800; }
+.tags { display:flex; gap:4px; flex-wrap:wrap; margin-top:6px; } .tg { font-family:var(--mono); font-size:7.5px; border:1px solid var(--line); color:var(--muted); padding:1px 4px; }
+</style></head><body><div class="spread">
+<section class="page one" data-page="A 类设计文档 · 运行链 · 1/2"><p class="kicker">A 类设计文档 · 运行链<span>渐进稿</span></p><h1>启动顺序不是设计出来的，是被假绿逼出来的</h1><p class="lead">左页看设计怎么长出来：每一格是「做法 → 被什么打脸 → 补上了什么」；右页才是今天的设计与证据。</p><div class="rule"></div>
+<div class="grid2"><div class="vcell v1"><div class="vbadge">v1</div><div class="vbody"><h3>sleep 30</h3><p>固定等一会儿，库总会起来。</p><div class="vfail">被打脸：慢、假绿（看着全绿其实没起）；库没起来也可能继续，失败后不知道停在哪。</div></div><div class="vadd"><b>补上</b>depends_on</div></div><div class="vcell v2"><div class="vbadge">v2</div><div class="vbody"><h3>depends_on 顺序</h3><p>compose 按顺序拉容器，就算依赖完成。</p><div class="vfail">被打脸：Started ≠ healthy；init 可能比库快，backend 可能没初始化就接客。</div></div><div class="vadd"><b>补上</b>healthcheck</div></div><div class="vcell v3"><div class="vbadge">v3</div><div class="vbody"><h3>healthcheck</h3><p>存储给出健康信号，init 等 service_healthy。</p><div class="vfail">被打脸：up 成功 ≠ 部署好；init 失败/一次性没验，端口/SSE 也没测。</div></div><div class="vadd"><b>补上</b>失败停点 + init 退出 0 + smoke</div></div><div class="vcell v4"><div class="vbadge">v4 · 当前</div><div class="vbody"><h3>失败停点 + 灰度验收</h3><p>每级条件化，失败停下游前；init 一次性，smoke 8 步。</p><div class="vfail">被打脸：失败注入打脸出 nuance：scale=0 时 compose 把 service_healthy 当空满足，停点靠 docker_init 180s 超时兜底；启动耗时不是设计承诺。</div></div><div class="vadd"><b>补上</b>当前设计（真栈 2026-11-27 验证）</div></div></div>
+<div class="assume"><b>编撰声明：这些版本是教学重构（D57），不是 commit 历史或逐日日记；终态由右页代码/契约锚定，后续 reconciler 只改叙事、不改源码/配置。</b></div>
+<div class="foot">来源：tutorial/page-13.md · compose.yaml · system/backend/app/scripts/docker_init.py · 图 27<br>左页只负责“怎么长出来”；右页是终态设计 + 本地证据 + 可重跑命令。</div></section>
+<section class="page two" data-page="A 类设计文档 · 运行链 · 2/2"><p class="kicker">A 类设计文档 · 运行链<span>证据与落地</span></p><h1>失败停在下游之前</h1><div class="answer">不是盲等，是条件轮询 + 超时上限；失败停在下游之前。<small>三存储 healthy → init 退出 0 → backend healthy → frontend；init 内部还有 2s 条件轮询与 180s 上限（[当前值]），不是纯 sleep。</small></div>
+<div class="p2grid"><div><div class="figure"><img src="file:///home/zhensirong/VM-Share/DSWS-design-lab/materials/design/diagrams/05-deployment/27-startup-order.svg" alt="设计图"><div class="figcap">图 27 · 启动顺序与失败停点：存储不 healthy 停 init 前；init 非 0 停 backend 前；backend 不 healthy 停 frontend 前。</div></div></div><div class="evidence"><div class="ev"><div class="tag">E1 · 条件可读</div><h3>compose config 通过</h3><p>解析出 mysql/ES/Qdrant healthcheck；init 等 service_healthy；backend 等 init completed；frontend 等 backend healthy。</p><div class="out">docker compose config → 0</div></div><div class="ev"><div class="tag">E2 · 一次性 init</div><h3>Exited (0) 才能放行</h3><p>init 等三存储、开通只读、校验元知识；失败不退出 0，backend 不启动。</p><div class="out">page-13：init Exited (0)</div></div><div class="ev"><div class="tag">E3 · 起得来≠部署好</div><h3>smoke 8 步</h3><p>健康、init 退出码、端口、SSE 缓冲都要单独验；up 成功只说明容器建起来了。</p><div class="out">DOCKER SMOKE 8/8 PASS（2026-11-27 真栈实测）</div></div></div></div>
+<div class="checks"><div><h3>今天怎么验</h3><div class="cmd">docker compose config --quiet → 0</div><div class="cmd">docker compose ps -a → 期望 5 running + init Exited (0)</div><div class="cmd">make docker-smoke（前置：docker compose up -d，约 1 分钟；风险：会起/停容器；预期：8 步全过）</div><div class="cmd">拆一刀（page-13 有记录）：删掉 compose.yaml 的 init 整段（含 backend 三行 depends_on）→ make docker-smoke 期望 3/8 红「init 没有成功退出」</div><div class="cmd">失败注入：docker compose up -d --scale mysql=0 → 期望 init 打出「等待超时（180s）」Exited(1)、backend/frontend 未启动（2026-11-27 已实测）</div></div><div><h3>证据状态</h3><div class="cmd"><span class="tg">[记录] page-13 / compose</span><span class="tg">[代码可证] healthcheck/condition</span><span class="tg">[已实证] live up / 失败注入（真栈 2026-11-27）</span><span class="tg">[未知] 其余失败模式注入</span></div></div></div>
+<div class="unknown"><b>未知 / 反悔点：</b>已实证：真栈 live up / 失败注入（2026-11-27）：--scale mysql=0 → init 等待超时 Exited(1)、backend/frontend 从未启动，恢复后 20s 全绿；nuance——scale=0 时 compose 把 service_healthy 当空满足放行 init，「停在 init 前」由 docker_init 的 180s 超时兜底。init 内部 2s 条件轮询 + 180s 上限（[当前值]）实测打出「等待超时（180s）」；仍未知：失败注入只做了 mysql=0 一个场景，其余失败模式（ES/Qdrant 宕机等）未注入；启动耗时不是设计承诺。</div><div class="take">带走一句话：启动不是“等”，是“每一级给出可判定条件，失败停在下游之前”。</div>
+<div class="foot">来源：tutorial/page-13.md · compose.yaml · system/backend/app/scripts/docker_init.py · 图 27<br>右页：一张设计图 + 一组本地证据 + 可重跑命令；没有证据的“行业惯例”不进来。</div></section>
+</div></body></html>

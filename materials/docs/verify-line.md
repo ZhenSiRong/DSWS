@@ -2,8 +2,8 @@
 
 > 解决「教材修订后跟做断层」：页面里的命令/路径/输出与仓库实现或环境脱节，学生照做失败。
 > 术语口径见 `GLOSSARY.md`「验收线术语」；决策与被否选项见 `materials/docs/adr/0002-followability-line.md`。
-> 实现位置：`toolbox/scripts/verify.py`（T0/T1）、`tutorial/verify/contracts/`（页面契约）、`toolbox/scripts/acceptance/`（T2）。
-> 页面契约的 schema 以 `tutorial/verify/README.md` 为准；本文是设计/使用说明，不复制全文。
+> 实现位置：`toolbox/scripts/verify.py`（T0/T1）、`toolbox/verify/contracts/`（页面契约）、`toolbox/scripts/acceptance/`（T2）。
+> 页面契约的 schema 以 `toolbox/verify/README.md` 为准；本文是设计/使用说明，不复制全文。
 
 ## 1. 拦什么：五类断层
 
@@ -30,7 +30,7 @@
 
 ## 3. 页面契约（摘要）
 
-每页一个 `tutorial/verify/contracts/page-XX.yaml`（如 `page-17.yaml`）；页面内用 HTML 注释 `<!-- verify: <marker> -->` 标出可验块，渲染不可见。
+每页一个 `toolbox/verify/contracts/page-XX.yaml`（如 `page-17.yaml`）；页面内用 HTML 注释 `<!-- verify: <marker> -->` 标出可验块，渲染不可见。
 
 契约只存「关键行/数字」，不存全量 stdout；至少要能对上：块标记与页内命令（两处必须一致）、`kind`、期望退出码与关键行、静态路径/符号、证据；可选 `page_contains` 把页面可见关键输出锚定到页面的 ` <!-- verify-out: <marker> --> ` text 围栏（只在别处出现不算）。
 
@@ -38,13 +38,13 @@
 - **`kind: manual`**：GUI 点选、交互、真模型块，留给 T2 人工判据。
 - **`coverage: static`**：整栈页（全要 docker / 端口 / 真模型）用；契约只挂 `static.paths` / `static.symbols`，页面不写块注解，T0 只证明「页面引用的文件与符号还在」，T1 不执行——是诚实降级，不是执行通过。
 
-字段名与校验规则以 `tutorial/verify/README.md` 为准。反假绿的硬规矩：页面块里的命令必须与契约命令一致；故意改基线时，页面、契约、证据放同一个 commit，并在提交说明里写清原因。
+字段名与校验规则以 `toolbox/verify/README.md` 为准。反假绿的硬规矩：页面块里的命令必须与契约命令一致；故意改基线时，页面、契约、证据放同一个 commit，并在提交说明里写清原因。
 
 ## 4. 给新页加契约（步骤）
 
 1. 选块：只选「离线可跑、输出能用关键行断言」的块；GUI/交互/真模型先标 `manual`，留给 T2。
 2. 页内标块：在块旁加 `<!-- verify: <marker> -->`（HTML 注释，渲染不可见）。
-3. 建契约：`tutorial/verify/contracts/page-XX.yaml`，写命令、`kind`、期望退出码与关键行、静态路径/符号、证据；页面可见的关键输出写进 `page_contains`（schema 见 `tutorial/verify/README.md`）。
+3. 建契约：`toolbox/verify/contracts/page-XX.yaml`，写命令、`kind`、期望退出码与关键行、静态路径/符号、证据；页面可见的关键输出写进 `page_contains`（schema 见 `toolbox/verify/README.md`）。
 4. 自检：`python3 toolbox/scripts/verify.py --fast` 过静态；再 `python3 toolbox/scripts/verify.py` 真跑离线块。
 5. 基线变更：改页面命令/输出时，同 commit 改契约与证据并说明原因。
 6. 接 T2：需要整栈上验的 `manual` 块，落到对应级 `toolbox/scripts/acceptance/level-l*.sh`（破坏性步骤标 `MANUAL`，人照 `tutorial/ACCEPTANCE.md` 做）。
