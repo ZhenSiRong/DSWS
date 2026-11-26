@@ -13,7 +13,7 @@
 | 3 | SQL 自校验 validate_sql + 自纠错 correct_sql（失败自动重试） | ⚠️ 部分达成 | 00:53–01:43 | `frames/seg-03.png`（先红：校验SQL ✗、校正SQL 执行中）；`frames/seg-03-final.png`（校正SQL 完成 16.31s，错误卡含「已校正 1 次」）；`evidence/r_rank_browser.sse` | **双保险机制真实存在且被真实触发**：validate_sql 红 → correct_sql 真跑一次（16.31s，第二次 LLM 调用）→ 重写后列名仍不在契约 → 命名错误 SQL_UNKNOWN_COLUMN。即**触发=true、纠正成功=false**——校正闭环可用，但本次真实运行未复现「先红后绿成功」的完整闭环 |
 | 4 | 安全边界（越权/写操作/危险 SQL 被拒） | ✅ 真实达成 | 01:45–02:36 | `frames/seg-04.png`：错误卡 SQL_REJECTED + 原因码 SQL_FORBIDDEN_CONSTRUCT；`evidence/r_union_browser.sse` | 无。UNION 在连库前被拦，策略拒绝不参与校正（校正SQL「未触发」，符合设计）。云端探针另证 UPDATE 企图 → LLM_REFUSAL（`/opt/dsws/evidence/p_write.sse`） |
 | 5 | React 19 + Tailwind 现代化前端（聊天式提问 + 可视化结果表格） | ⚠️ 部分达成 | 00:05–00:29 与 02:38–02:59 | `frames/seg-01.png` / `frames/seg-05.png`：string/number 列型徽标、千分位右对齐、「复制结果（JSON）」 | **React 19 达成**（`"react": "^19.0.0"`）；**v1 的 `frontend/` 未使用 Tailwind**（package.json 无 tailwindcss），前端为手写 CSS + 设计令牌（`frontend/src/styles.css`）；v2 成熟版 `deliverable/v2/original-frontend/package.json` 有 `tailwindcss: ^3.4.17`。功能形态（聊天式 + 结果表）达成，技术栈与 PRD 措辞不符 |
-| 6 | 数量要求：设计文档 ≥30 页 | ✅ | —（非视频项） | `design/book/pdf/dsws-design-atlas.pdf` **180 页** | 无 |
+| 6 | 数量要求：设计文档 ≥30 页 | ✅ | —（非视频项） | `design/design-doc.pdf` **78 页**（另 `design-doc-30.pdf` 32 页精选） | 无。`dsws-design-atlas.pdf` 是废弃的教程/图集文档，不再作为设计文档证据 |
 | 7 | 数量要求：源代码 1 套 | ✅ | — | 云端 `/opt/dsws/repo` + 本仓库 `frontend/`、`backend/` | 无 |
 | 8 | 数量要求：开发手册 1 套 | ✅ | 设计书 + `README`（云端仓库精简版）+ 契约文件 `contracts/steps.yaml` | 无 |
 
