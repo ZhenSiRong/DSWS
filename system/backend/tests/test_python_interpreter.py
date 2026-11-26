@@ -222,10 +222,10 @@ def _smoke_fixture(tmp_path: Path) -> Path:
     （包括真实的 .env）都跟它无关了。
     """
     repo = tmp_path / "repo"
-    (repo / "scripts").mkdir(parents=True)
+    (repo / "toolbox" / "scripts").mkdir(parents=True)
     for name in ("docker-smoke.sh", "find-python.sh", "smoke_checks.py"):
-        shutil.copy(ROOT.parent / "toolbox" / "scripts" / name, repo / "scripts" / name)
-    return repo / "scripts" / "docker-smoke.sh"
+        shutil.copy(ROOT.parent / "toolbox" / "scripts" / name, repo / "toolbox" / "scripts" / name)
+    return repo / "toolbox" / "scripts" / "docker-smoke.sh"
 
 
 @pytest.mark.skipif(BASH is None, reason="没有可用的 bash 来跑这个脚本")
@@ -360,11 +360,11 @@ def test_make_docker_env_reports_unusable_interpreter(tmp_path: Path) -> None:
     用户完全看不出是自己的 python3 是假的。
     """
     repo = tmp_path / "repo"
-    (repo / "scripts").mkdir(parents=True)
+    (repo / "toolbox" / "scripts").mkdir(parents=True)
     shutil.copy(MAKEFILE, repo / "Makefile")
-    shutil.copy(GENERATE_ENV, repo / "scripts" / "generate_docker_env.py")
+    shutil.copy(GENERATE_ENV, repo / "toolbox" / "scripts" / "generate_docker_env.py")
     if FIND_PYTHON.exists():
-        shutil.copy(FIND_PYTHON, repo / "scripts" / "find-python.sh")
+        shutil.copy(FIND_PYTHON, repo / "toolbox" / "scripts" / "find-python.sh")
     shutil.copy(ROOT / ".env.example", repo / ".env.example")
 
     bin_dir = tmp_path / "bin"

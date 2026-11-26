@@ -1025,7 +1025,7 @@ def test_the_acceptance_checker_has_no_assert_statements() -> None:
 
 def test_the_smoke_script_has_no_bare_asserts() -> None:
     """shell 脚本里也不许藏着 `python -c "assert ..."` 这种写法。"""
-    script = (ROOT.parent / "toolbox" / "scripts" / "docker-smoke.sh").read_text(encoding="utf-8")
+    script = (REPO / "toolbox" / "scripts" / "docker-smoke.sh").read_text(encoding="utf-8")
     offenders = []
     for number, line in enumerate(script.splitlines(), start=1):
         code = line.split("#", 1)[0]

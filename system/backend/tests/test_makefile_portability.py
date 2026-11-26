@@ -116,7 +116,7 @@ def test_a_dot_in_the_key_does_not_match_a_different_banner(tmp_path: Path) -> N
     查找横幅用的是 ``sed -n "s/^${key}|//p"``：``.`` 能匹配任意一个字符，
     于是键 ``a.b`` 会把 ``aXb`` 一起匹上，印出来的是别人的横幅。
     """
-    scripts = tmp_path / "scripts"
+    scripts = tmp_path / "toolbox" / "scripts"
     scripts.mkdir()
     shutil.copy(SAY, scripts / "say.sh")
     (scripts / "banners.txt").write_text(

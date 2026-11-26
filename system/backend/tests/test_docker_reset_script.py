@@ -175,8 +175,8 @@ def _repo(
     还得有测试自己的 ``.env`` 和 ``compose.yaml``。
     """
     root = tmp_path / "repo"
-    (root / "scripts").mkdir(parents=True)
-    (root / "scripts" / "docker-reset.sh").write_bytes(RESET.read_bytes())
+    (root / "toolbox" / "scripts").mkdir(parents=True)
+    (root / "toolbox" / "scripts" / "docker-reset.sh").write_bytes(RESET.read_bytes())
     if env_file is not None:
         (root / ".env").write_text(env_file, encoding="utf-8")
     if compose is not None:
@@ -192,7 +192,7 @@ def _run_in(root: Path, tmp_path: Path, answer: str = "no") -> tuple:
 
     result = run_in_sh(
         SH or "sh",
-        root / "scripts" / "docker-reset.sh",
+        root / "toolbox" / "scripts" / "docker-reset.sh",
         bin_dir,
         stdin=answer + "\n",
     )
