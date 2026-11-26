@@ -1,3 +1,5 @@
+> **历史实验（2026-11-26 归档）**：本任务书是旧版式实验；六套 `design/book/pdf/dsws-design-atlas.pdf` 已归档到 `../DSWS-archive/2026-11-25/style-lab-atlas-deprecated/`，不再作为设计文档交付。实际的 `dsws-style-*.pdf` 样张/预览仍保留作历史证据。
+
 # 书稿排版风格样张 · 共用任务书
 
 你是一位书籍设计师 + WeasyPrint 排版工程师。任务：在指定的工作树里，为《DSWS 从零到一》做一套完整样张（封面 + 目录 + `00-front` + `20-s5-s8`），并构建 PDF。**不要只换配色**；要有一套完整的版式系统。

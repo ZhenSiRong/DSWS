@@ -82,3 +82,6 @@ system/frontend/node_modules
 
 # 废弃图集（历史构建产物，不再入库）
 /materials/design/book/pdf/dsws-design-atlas*.pdf
+
+# style-lab 旧版式实验的 atlas 产物
+/materials/design/style-lab/*/design/book/pdf/dsws-design-atlas.pdf
