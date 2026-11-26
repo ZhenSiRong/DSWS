@@ -10,6 +10,8 @@
 
 > 城市版的 L1 全景见 [`city/city-map.html`](city/city-map.html)（四区 / 十设施 / 十二件交付物，单源 [`city/data.json`](city/data.json)）；本页把 L1 十页并排成一条城建流水线。
 
+> **五级版**：老图 `city-4stages.png` 是四阶段历史资产（不含 L5）；含 L5「装修」的五级版见 [`city-5stages.png`](images/city-5stages.png)，书内附录 D 使用它的可编辑源 `toolbox/book/city-stages/`。
+
 **页标题与页码由生成脚本从 `page-0X.md` 的 H1 提取并同步**：下表只写页码、设施、问题、方案、造什么和交付物编号，不手写页标题；改页标题只改正文，重跑 `python3 manual/shots/render_map.py` 即可。
 
 ## 十行对照（L1 的十页）

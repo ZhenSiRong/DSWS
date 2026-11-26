@@ -314,7 +314,7 @@ def city_plates_block(images: dict[str, Path], image_dir: str, embed: bool) -> s
             f'<figcaption>{html.escape(plate["caption"])}</figcaption></figure>'
         )
     intro = """<p>两张城市全景图（<code>city-5stages.png</code> / <code>city-map-24.png</code>）按 A4 可读性拆成图版：
-五级各取一整列，横向阅读，不切断文字；24 页城市图拆成总览 + A1–B4 八块放大图。网页版原图仍是整张：
+五级各取一整列，横向阅读，不切断文字；24 页城市图按语义拆成总览 + 6 个分区图版（市政 / 仓储 / 服务北 / 服务南 / 门户 / 改造层），不按 4×2 均分切。网页版原图仍是整张：
 <code>tutorial/OVERVIEW.md</code> 与 <code>tutorial/city/</code>；书里只放拆分后的图版。</p>"""
     return f'''<section class="chapter city-plates" id="city-plates">
 <header class="ch-head">

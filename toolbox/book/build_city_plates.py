@@ -37,17 +37,16 @@ STAGE_W = 592
 STAGE_TOP = (280, 760)      # y, height
 STAGE_BOTTOM = (1000, 700)  # y, height; 与 top 重叠 40px，切页不丢行
 
-MAP_LABELS = [
-    ("A1", "西北 · 市政配套 / 仓库北", 20, 70),
-    ("A2", "中北 · 仓库 / 服务北", 810, 70),
-    ("A3", "东北 · 服务 / 门户北", 1600, 70),
-    ("A4", "东 · 门户 / 成熟前端", 2390, 70),
-    ("B1", "西南 · 仓储 / 数据底座", 20, 970),
-    ("B2", "中南 · 服务中 / 执行器", 810, 970),
-    ("B3", "东南 · 审计 / 安防", 1600, 970),
-    ("B4", "东 · 改造层 / 市民入口", 2390, 970),
+# 语义图版：不按 4×2 均分切；每个区域是一张可独立阅读的图版。
+# 坐标是 design canvas（1600×1000），CROP 时乘 2 到 3200×2000。
+MAP_PLATES = [
+    ("map-02-municipal", "市政配套区：P0 场地 / 3307 · 8000 · 8081", (20, 96, 420, 214)),
+    ("map-03-storage", "仓储区：P1 / P2 / P10 / P18 / 数据底座", (20, 300, 420, 644)),
+    ("map-04-service-north", "服务区北：查询 / 生成 / 执行（P3–P7 / P11 / P12）", (432, 96, 732, 540)),
+    ("map-05-service-south", "服务区南：审计 / 安防 / 观测（P14–P22）", (432, 610, 732, 336)),
+    ("map-06-portal", "门户区：P9 / P13 / P23 / 成熟前端", (1154, 96, 428, 430)),
+    ("map-07-registry", "改造层登记处：14 件交付物 + 设施索引", (1154, 520, 428, 440)),
 ]
-MAP_TILE = (810, 930)
 
 
 def sha(path: Path) -> str:
@@ -109,24 +108,25 @@ def main() -> int:
             "source": "tutorial/images/city-5stages.png", "sha256": sha(bottom_path),
         })
 
-    overview = OUT / "map-overview.png"
-    overview_with_grid(MAP, overview)
     stage_plates = [p for p in plates if p["kind"] == "stage"]
-    plates = []
-    plates.append({
-        "file": overview.name, "kind": "overview",
-        "caption": "24 页城市设施全景总览（A1–B4 为下页放大图版的定位网格）",
-        "source": "tutorial/images/city-map-24.png", "sha256": sha(overview),
-    })
+    plates = [{
+        "file": "map-01-overview.png", "kind": "overview",
+        "caption": "24 页城市设施全景总览（分区图版见 D-12–D-17）",
+        "source": "tutorial/images/city-map-24.png", "sha256": sha(MAP),
+    }]
     plates.extend(stage_plates)
     map_img = Image.open(MAP).convert("RGB")
-    for i, (label, desc, x, y) in enumerate(MAP_LABELS, start=10):
-        tile = map_img.crop((x, y, min(x + MAP_TILE[0], map_img.width), min(y + MAP_TILE[1], map_img.height)))
-        path = OUT / f"map-{label}.png"
-        tile.save(path)
+    for idx, (name, desc, rect) in enumerate(MAP_PLATES):
+        if rect is None:
+            path = OUT / f"{name}.png"
+            map_img.save(path)
+        else:
+            x, y, w, h = (int(v * 2) for v in rect)
+            path = OUT / f"{name}.png"
+            map_img.crop((x, y, min(x + w, map_img.width), min(y + h, map_img.height))).save(path)
         plates.append({
-            "file": path.name, "kind": "map", "label": label,
-            "caption": f"城市全景 {label}：{desc}",
+            "file": path.name, "kind": "map", "label": name,
+            "caption": f"{desc}",
             "source": "tutorial/images/city-map-24.png", "sha256": sha(path),
         })
 

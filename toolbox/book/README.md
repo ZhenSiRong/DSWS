@@ -67,6 +67,6 @@ uv run --offline --with weasyprint python3 toolbox/book/render_pdf.py \
 - `tutorial/images/city-4stages.png` 是旧的网页四阶段图（历史资产，保留）。
 - 书里的五级图由 `toolbox/book/city-stages/index.html`（可编辑 HTML，1600×1000）生成：
   `python3 toolbox/book/build_city_stages.py` → `tutorial/images/city-5stages.png`（3200×2000）。
-- 每级在书里拆成「上：城市俯瞰/阶段说明」「下：横切系统/判据」两页；24 页城市图拆成总览 + A1–B4 八块。
+- 每级在书里拆成「上：城市俯瞰/阶段说明」「下：横切系统/判据」两页；24 页城市图不再 4×2 均分，而是总览 + 6 个语义区（市政 / 仓储 / 服务北 / 服务南 / 门户 / 改造层）。
 - `toolbox/book/city-stages/editor.html` 可直接打开编辑（双击文字、拖动图层、导出 HTML）。
-- 生成物 `toolbox/book/.plates/` 是 A4 图版缓存，不进 git。
+- 生成物 `toolbox/book/.plates/` 是 A4 图版缓存，不进 git；五级图的可编辑源/编辑器在 `toolbox/book/city-stages/`。
