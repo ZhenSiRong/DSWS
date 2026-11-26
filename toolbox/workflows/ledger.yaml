@@ -146,7 +146,7 @@ tasks:
   review:
     verdict: pass
     reviewer: builtin-codereview
-    report: /home/zhensirong/VM-Share/DSWS-design-lab/workflows/reviews/m1.md
+    report: /home/zhensirong/VM-Share/DSWS-design-lab/toolbox/workflows/reviews/m1.md
     at: 2026-11-23T17:58+08:00
     overridden: false
     override_reason: null
@@ -227,7 +227,7 @@ tasks:
   review:
     verdict: pass
     reviewer: builtin-codereview
-    report: /home/zhensirong/VM-Share/DSWS-design-lab/workflows/reviews/c1.md
+    report: /home/zhensirong/VM-Share/DSWS-design-lab/toolbox/workflows/reviews/c1.md
     at: 2026-11-23T19:46+08:00
     overridden: false
     override_reason: null
@@ -275,22 +275,22 @@ tasks:
     -s manual-g1
   evidence:
   - kind: file
-    path: tutorial/rebuild/editor.html
+    path: materials/rebuild/editor.html
     criterion: grapesjs.init
   - kind: cmd
-    run: grep -c 'bm.add(' tutorial/rebuild/editor.html
+    run: grep -c 'bm.add(' materials/rebuild/editor.html
     criterion: '8'
   - kind: file
-    path: tutorial/rebuild/rebuild.css
+    path: materials/rebuild/rebuild.css
     criterion: rb-callout
   - kind: file
-    path: tutorial/rebuild/vendor/grapes.min.js
+    path: materials/rebuild/vendor/grapes.min.js
     criterion: ''
   milestone: false
   review:
     verdict: pass
     reviewer: builtin-codereview
-    report: /home/zhensirong/VM-Share/DSWS-design-lab/workflows/reviews/g1.md
+    report: /home/zhensirong/VM-Share/DSWS-design-lab/toolbox/workflows/reviews/g1.md
     at: 2026-11-23T19:56+08:00
     overridden: false
     override_reason: null
@@ -313,22 +313,22 @@ tasks:
     -s manual-g2
   evidence:
   - kind: file
-    path: tutorial/rebuild/page-17.rebuild.html
+    path: materials/rebuild/page-17.rebuild.html
     criterion: 派生基线
   - kind: cmd
-    run: grep -c 'class="rb-code"' tutorial/rebuild/page-17.rebuild.html
+    run: grep -c 'class="rb-code"' materials/rebuild/page-17.rebuild.html
     criterion: '12'
   - kind: file
-    path: tutorial/rebuild/rebuild.js
+    path: materials/rebuild/rebuild.js
     criterion: clipboard
   - kind: cmd
-    run: grep -c 'toolbox/scripts/lab reset p17-before --yes' tutorial/rebuild/page-17.rebuild.html
+    run: grep -c 'toolbox/scripts/lab reset p17-before --yes' materials/rebuild/page-17.rebuild.html
     criterion: '1'
   milestone: false
   review:
     verdict: pass
     reviewer: builtin-codereview
-    report: /home/zhensirong/VM-Share/DSWS-design-lab/workflows/reviews/g2.md
+    report: /home/zhensirong/VM-Share/DSWS-design-lab/toolbox/workflows/reviews/g2.md
     at: 2026-11-23T20:15+08:00
     overridden: false
     override_reason: null
@@ -604,7 +604,7 @@ tasks:
     run: make verify
     criterion: T1 PASS
   - kind: cmd
-    run: python3 tutorial/shots/audit_book.py
+    run: python3 toolbox/shots/audit_book.py
     criterion: 页面：24/24 通过；README 坏链：0
   - kind: cmd
     run: python3 toolbox/scripts/tests/test_verify.py
@@ -612,7 +612,7 @@ tasks:
   review:
     verdict: pass
     reviewer: null
-    report: /home/zhensirong/VM-Share/DSWS-design-lab/workflows/reviews/v5.md
+    report: /home/zhensirong/VM-Share/DSWS-design-lab/toolbox/workflows/reviews/v5.md
     at: 2026-11-24T22:38+08:00
     overridden: false
     override_reason: null

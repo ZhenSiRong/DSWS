@@ -72,10 +72,11 @@ def test_skips_an_interpreter_that_exists_but_cannot_run(tmp_path: Path) -> None
     assert FIND_PYTHON.exists(), "缺少 scripts/find-python.sh"
     bin_dir = tmp_path / "bin"
     bin_dir.mkdir()
+    fake_program(bin_dir, "uv", "exit 1")
     _fake_python(bin_dir, "python3", exit_code=49)
     good = _fake_python(bin_dir, "python", exit_code=0)
 
-    result = run_in_sh(SH or "sh", FIND_PYTHON, bin_dir)
+    result = run_in_sh(SH or "sh", FIND_PYTHON, bin_dir, base_path=[])
 
     assert result.returncode == 0, result.stderr
     chosen = result.stdout.strip()
@@ -97,10 +98,11 @@ def test_fails_when_no_interpreter_can_run(tmp_path: Path) -> None:
     assert FIND_PYTHON.exists(), "缺少 scripts/find-python.sh"
     bin_dir = tmp_path / "bin"
     bin_dir.mkdir()
+    fake_program(bin_dir, "uv", "exit 1")
     _fake_python(bin_dir, "python3", exit_code=49)
     _fake_python(bin_dir, "python", exit_code=49)
 
-    result = run_in_sh(SH or "sh", FIND_PYTHON, bin_dir)
+    result = run_in_sh(SH or "sh", FIND_PYTHON, bin_dir, base_path=[])
 
     assert result.returncode != 0
     assert result.stdout.strip() == ""
@@ -112,10 +114,11 @@ def test_the_failure_explains_which_interpreters_were_tried(tmp_path: Path) -> N
     assert FIND_PYTHON.exists(), "缺少 scripts/find-python.sh"
     bin_dir = tmp_path / "bin"
     bin_dir.mkdir()
+    fake_program(bin_dir, "uv", "exit 1")
     _fake_python(bin_dir, "python3", exit_code=49)
     _fake_python(bin_dir, "python", exit_code=49)
 
-    result = run_in_sh(SH or "sh", FIND_PYTHON, bin_dir)
+    result = run_in_sh(SH or "sh", FIND_PYTHON, bin_dir, base_path=[])
 
     assert result.returncode != 0
     assert "python" in result.stderr.lower(), result.stderr
@@ -126,10 +129,11 @@ def test_prefers_python3_when_it_works(tmp_path: Path) -> None:
     assert FIND_PYTHON.exists(), "缺少 scripts/find-python.sh"
     bin_dir = tmp_path / "bin"
     bin_dir.mkdir()
+    fake_program(bin_dir, "uv", "exit 1")
     _fake_python(bin_dir, "python3", exit_code=0)
     _fake_python(bin_dir, "python", exit_code=0)
 
-    result = run_in_sh(SH or "sh", FIND_PYTHON, bin_dir)
+    result = run_in_sh(SH or "sh", FIND_PYTHON, bin_dir, base_path=[])
 
     assert result.returncode == 0, result.stderr
     assert Path(result.stdout.strip()).name == "python3"
@@ -152,10 +156,11 @@ def test_skips_an_interpreter_that_is_too_old(tmp_path: Path) -> None:
     assert FIND_PYTHON.exists(), "缺少 scripts/find-python.sh"
     bin_dir = tmp_path / "bin"
     bin_dir.mkdir()
+    fake_program(bin_dir, "uv", "exit 1")
     _fake_python_with_version(bin_dir, "python3", "3.6")
     good = _fake_python(bin_dir, "python", exit_code=0)
 
-    result = run_in_sh(SH or "sh", FIND_PYTHON, bin_dir)
+    result = run_in_sh(SH or "sh", FIND_PYTHON, bin_dir, base_path=[])
 
     assert result.returncode == 0, result.stderr
     chosen = result.stdout.strip()
@@ -173,10 +178,11 @@ def test_the_failure_names_the_version_it_found(tmp_path: Path) -> None:
     assert FIND_PYTHON.exists(), "缺少 scripts/find-python.sh"
     bin_dir = tmp_path / "bin"
     bin_dir.mkdir()
+    fake_program(bin_dir, "uv", "exit 1")
     _fake_python_with_version(bin_dir, "python3", "3.6")
     _fake_python_with_version(bin_dir, "python", "2.7")
 
-    result = run_in_sh(SH or "sh", FIND_PYTHON, bin_dir)
+    result = run_in_sh(SH or "sh", FIND_PYTHON, bin_dir, base_path=[])
 
     assert result.returncode != 0
     assert result.stdout.strip() == ""
@@ -195,11 +201,12 @@ def test_smoke_surfaces_why_the_interpreter_was_rejected(tmp_path: Path) -> None
     smoke = _smoke_fixture(tmp_path)
     bin_dir = tmp_path / "bin"
     bin_dir.mkdir()
+    fake_program(bin_dir, "uv", "exit 1")
     _fake_python_with_version(bin_dir, "python3", "3.6")
     _fake_python_with_version(bin_dir, "python", "3.6")
     fake_program(bin_dir, "docker", "exit 0")
 
-    result = run_in_sh(BASH or "bash", smoke, bin_dir)
+    result = run_in_sh(BASH or "bash", smoke, bin_dir, base_path=["/usr/bin", "/bin"])
 
     assert result.returncode != 0
     assert "3.6" in result.stderr, result.stderr
@@ -222,7 +229,7 @@ def _smoke_fixture(tmp_path: Path) -> Path:
     （包括真实的 .env）都跟它无关了。
     """
     repo = tmp_path / "repo"
-    (repo / "toolbox" / "scripts").mkdir(parents=True)
+    (repo / "toolbox" / "scripts").mkdir(parents=True, exist_ok=True)
     for name in ("docker-smoke.sh", "find-python.sh", "smoke_checks.py"):
         shutil.copy(ROOT.parent / "toolbox" / "scripts" / name, repo / "toolbox" / "scripts" / name)
     return repo / "toolbox" / "scripts" / "docker-smoke.sh"
@@ -240,6 +247,7 @@ def test_smoke_reports_unusable_interpreter_before_touching_docker(
     smoke = _smoke_fixture(tmp_path)
     bin_dir = tmp_path / "bin"
     bin_dir.mkdir()
+    fake_program(bin_dir, "uv", "exit 1")
     _fake_python(bin_dir, "python3", exit_code=49)
     _fake_python(bin_dir, "python", exit_code=49)
     docker_log = tmp_path / "docker.log"
@@ -247,7 +255,7 @@ def test_smoke_reports_unusable_interpreter_before_touching_docker(
     # 万一走到了健康检查循环，sleep 得是空的，否则测试要等 6 分钟。
     fake_program(bin_dir, "sleep", "exit 0")
 
-    result = run_in_sh(BASH or "bash", smoke, bin_dir)
+    result = run_in_sh(BASH or "bash", smoke, bin_dir, base_path=["/usr/bin", "/bin"])
 
     assert result.returncode != 0
     assert "python3" in result.stderr, result.stderr
@@ -272,11 +280,12 @@ def test_smoke_reports_the_interpreter_problem_even_without_a_dotenv(
     smoke = _smoke_fixture(tmp_path)
     bin_dir = tmp_path / "bin"
     bin_dir.mkdir()
+    fake_program(bin_dir, "uv", "exit 1")
     _fake_python(bin_dir, "python3", exit_code=49)
     _fake_python(bin_dir, "python", exit_code=49)
     fake_program(bin_dir, "docker", "exit 0")
 
-    result = run_in_sh(BASH or "bash", smoke, bin_dir)
+    result = run_in_sh(BASH or "bash", smoke, bin_dir, base_path=["/usr/bin", "/bin"])
 
     assert result.returncode != 0
     assert "python3" in result.stderr, result.stderr
@@ -289,12 +298,13 @@ def test_smoke_still_reports_a_missing_dotenv(tmp_path: Path) -> None:
     smoke = _smoke_fixture(tmp_path)
     bin_dir = tmp_path / "bin"
     bin_dir.mkdir()
+    fake_program(bin_dir, "uv", "exit 1")
     # 解释器是好的：预检要能放行它，好让 .env 的检查真的被走到。
     _fake_python(bin_dir, "python3", exit_code=0)
     fake_program(bin_dir, "curl", "exit 0")
     fake_program(bin_dir, "docker", "exit 0")
 
-    result = run_in_sh(BASH or "bash", smoke, bin_dir)
+    result = run_in_sh(BASH or "bash", smoke, bin_dir, base_path=["/usr/bin", "/bin"])
 
     assert result.returncode != 0
     assert ".env" in result.stderr, result.stderr
@@ -319,12 +329,13 @@ def test_smoke_does_not_double_the_slash_in_the_base_url(
 
     bin_dir = tmp_path / "bin"
     bin_dir.mkdir()
+    fake_program(bin_dir, "uv", "exit 1")
     _fake_python(bin_dir, "python3", exit_code=0)
     url_log = tmp_path / "urls.log"
     fake_program(bin_dir, "curl", f'echo "$@" >> "{to_shell_path(url_log)}"')
     fake_program(bin_dir, "docker", "exit 0")
 
-    run_in_sh(BASH or "bash", smoke, bin_dir)
+    run_in_sh(BASH or "bash", smoke, bin_dir, base_path=["/usr/bin", "/bin"])
 
     urls = url_log.read_text(encoding="utf-8") if url_log.exists() else ""
     assert urls, "脚本一个 URL 都没请求过，用例没验到东西"
@@ -360,15 +371,16 @@ def test_make_docker_env_reports_unusable_interpreter(tmp_path: Path) -> None:
     用户完全看不出是自己的 python3 是假的。
     """
     repo = tmp_path / "repo"
-    (repo / "toolbox" / "scripts").mkdir(parents=True)
+    (repo / "toolbox" / "scripts").mkdir(parents=True, exist_ok=True)
     shutil.copy(MAKEFILE, repo / "Makefile")
     shutil.copy(GENERATE_ENV, repo / "toolbox" / "scripts" / "generate_docker_env.py")
     if FIND_PYTHON.exists():
         shutil.copy(FIND_PYTHON, repo / "toolbox" / "scripts" / "find-python.sh")
-    shutil.copy(ROOT / ".env.example", repo / ".env.example")
+    shutil.copy(ROOT.parent / ".env.example", repo / ".env.example")
 
     bin_dir = tmp_path / "bin"
     bin_dir.mkdir()
+    fake_program(bin_dir, "uv", "exit 1")
     _fake_python(bin_dir, "python3", exit_code=49)
     _fake_python(bin_dir, "python", exit_code=49)
 

@@ -27,10 +27,10 @@ from pathlib import Path
 
 import pytest
 
-ROOT = Path(__file__).resolve().parents[2]
-MAKEFILE = ROOT.parent / "Makefile"
-SAY = ROOT.parent / "toolbox" / "scripts" / "say.sh"
-BANNERS = ROOT.parent / "toolbox" / "scripts" / "banners.txt"
+ROOT = Path(__file__).resolve().parents[3]
+MAKEFILE = ROOT / "Makefile"
+SAY = ROOT / "toolbox" / "scripts" / "say.sh"
+BANNERS = ROOT / "toolbox" / "scripts" / "banners.txt"
 
 
 def _usable_sh() -> str | None:
@@ -117,7 +117,7 @@ def test_a_dot_in_the_key_does_not_match_a_different_banner(tmp_path: Path) -> N
     于是键 ``a.b`` 会把 ``aXb`` 一起匹上，印出来的是别人的横幅。
     """
     scripts = tmp_path / "toolbox" / "scripts"
-    scripts.mkdir()
+    scripts.mkdir(parents=True, exist_ok=True)
     shutil.copy(SAY, scripts / "say.sh")
     (scripts / "banners.txt").write_text(
         "aXb|这是另一个键的横幅\n"
@@ -142,7 +142,7 @@ def test_the_ui_scripts_agree_on_where_their_logs_go() -> None:
     就死在 mktemp 上，报的还是一句 "failed to create directory via template"，
     看不出是路径写死了。
     """
-    scripts = sorted((ROOT.parent / "toolbox" / "scripts").glob("stage*-ui.sh"))
+    scripts = sorted((ROOT / "toolbox" / "scripts").glob("stage*-ui.sh"))
     assert scripts, "找不到 stage*-ui.sh"
 
     for path in scripts:
@@ -176,7 +176,7 @@ def test_the_ui_scripts_do_not_assume_setsid_exists() -> None:
     脚本要像 stage6-ui.sh / stage7-ui.sh 那样：先 ``command -v setsid``，
     没有就退化成普通后台进程。
     """
-    for path in sorted((ROOT.parent / "toolbox" / "scripts").glob("stage*-ui.sh")):
+    for path in sorted((ROOT / "toolbox" / "scripts").glob("stage*-ui.sh")):
         text = path.read_text(encoding="utf-8")
         if "setsid" not in text:
             continue
@@ -192,7 +192,7 @@ def test_the_scripts_do_not_depend_on_seq() -> None:
     脚本立刻失败，报的还是"后端启动失败"，真正的原因（seq 不存在）
     一个字都不提。
     """
-    for path in sorted((ROOT.parent / "toolbox" / "scripts").glob("*.sh")):
+    for path in sorted((ROOT / "toolbox" / "scripts").glob("*.sh")):
         lines = path.read_text(encoding="utf-8").splitlines()
         for number, line in enumerate(lines, 1):
             stripped = line.strip()

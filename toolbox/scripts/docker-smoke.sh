@@ -29,7 +29,7 @@ fail() {
 # find-python.sh 的诊断**不要**丢：它说得出"版本太老（3.6）"这种具体原因，
 # 而这里的消息只能说出大方向——用户照着大方向去装一个新的 Python，
 # 装完还是同样的错，方向就指错了。
-PYTHON="$(sh "$ROOT/scripts/find-python.sh" || true)"
+PYTHON="$(sh "$ROOT/toolbox/scripts/find-python.sh" || true)"
 if [ -z "$PYTHON" ]; then
   fail "宿主机找不到可用的 Python 解释器（python3 / python 跑不起来，或版本低于 3.8）：验收脚本要用它解析 JSON、检查 SSE 分片。Windows 上 AppData/Local/Microsoft/WindowsApps 里的 python3 是 Microsoft Store 的转发器，跑不起来；请用 Git Bash 并装好能真正执行的 Python 3.8 以上"
 fi
@@ -91,7 +91,7 @@ attempt=1
 # 脚本会立刻带着"health 未就绪"失败——比真正的原因更难查。
 while [ "$attempt" -le 180 ]; do
   if curl -fsS "$BASE/api/health" 2>/dev/null \
-    | "$PYTHON" "$ROOT/scripts/smoke_checks.py" health \
+    | "$PYTHON" "$ROOT/toolbox/scripts/smoke_checks.py" health \
     >/dev/null 2>&1; then
     healthy=1
     break
@@ -102,7 +102,7 @@ done
 if [ "$healthy" -ne 1 ]; then
   # 最后一次的失败原因要说出来：轮询时把 stderr 吞了，免得刷 180 遍。
   curl -fsS "$BASE/api/health" 2>/dev/null \
-    | "$PYTHON" "$ROOT/scripts/smoke_checks.py" health \
+    | "$PYTHON" "$ROOT/toolbox/scripts/smoke_checks.py" health \
     || true
   fail "360 秒内 /api/health 未就绪"
 fi
@@ -116,7 +116,7 @@ services_ready=0
 attempt=1
 while [ "$attempt" -le 60 ]; do
   if docker compose ps -a --format "{{.Service}}\t{{.State}}\t{{.Health}}\t{{.ExitCode}}" \
-    | "$PYTHON" "$ROOT/scripts/smoke_checks.py" services >/dev/null 2>&1; then
+    | "$PYTHON" "$ROOT/toolbox/scripts/smoke_checks.py" services >/dev/null 2>&1; then
     services_ready=1
     break
   fi
@@ -126,18 +126,18 @@ done
 if [ "$services_ready" -ne 1 ]; then
   # 最后一次不吞输出，把到底哪个服务没达标打出来
   docker compose ps -a --format "{{.Service}}\t{{.State}}\t{{.Health}}\t{{.ExitCode}}" \
-    | "$PYTHON" "$ROOT/scripts/smoke_checks.py" services || true
+    | "$PYTHON" "$ROOT/toolbox/scripts/smoke_checks.py" services || true
   fail "120 秒内服务状态没齐"
 fi
 STATUS_TABLE="$(docker compose ps -a --format "{{.Service}}\t{{.State}}\t{{.Health}}\t{{.ExitCode}}")" \
   || fail "docker compose ps 失败：栈是不是根本没起来？"
 printf '%s\n' "$STATUS_TABLE" \
-  | "$PYTHON" "$ROOT/scripts/smoke_checks.py" services \
+  | "$PYTHON" "$ROOT/toolbox/scripts/smoke_checks.py" services \
   || fail "服务状态不满足要求"
 
 echo "== 4/8 /api/steps = 12 =="
 curl -fsS "$BASE/api/steps" > /dev/null || fail "/api/steps 请求失败"
-"$PYTHON" "$ROOT/scripts/smoke_checks.py" steps "$BASE" \
+"$PYTHON" "$ROOT/toolbox/scripts/smoke_checks.py" steps "$BASE" \
   || fail "/api/steps 的步骤数不对"
 
 echo "== 5/8 经 ${BASE} 发起真实查询（结果非空；是否流式由 nginx 生效配置把关） =="
@@ -169,7 +169,7 @@ fi
 # 这一步验的是"查得到结果"，不是"一定是流式"：响应快到 200 毫秒内就
 # 结束的时候，从时间上分辨不出流式与否——那一档交给 nginx 的生效配置
 # 定性，没拿到配置就判不通过（没有证据不等于通过）。
-SSE_OUTPUT="$("$PYTHON" "$ROOT/scripts/smoke_checks.py" sse "$BASE" \
+SSE_OUTPUT="$("$PYTHON" "$ROOT/toolbox/scripts/smoke_checks.py" sse "$BASE" \
   --nginx-conf "$NGINX_CONF_FILE")" \
   || fail "SSE 查询没有通过流式与结果检查"
 printf '%s\n' "$SSE_OUTPUT"
@@ -180,7 +180,7 @@ echo "== 6/8 nginx 的 /api/ 代理确实关着缓冲 =="
 # 改成 on、而另一个 location（比如 /static/）留着 off，那一条照样"通过"，
 # SSE 实际已经被攒成整包。要判的是处理 /api/ 请求的那个 location 的**生效值**
 # （含 server / http 块上的继承，以及被 include 进来的文件）。
-"$PYTHON" "$ROOT/scripts/smoke_checks.py" nginx <"$NGINX_CONF_FILE" \
+"$PYTHON" "$ROOT/toolbox/scripts/smoke_checks.py" nginx <"$NGINX_CONF_FILE" \
   || fail "nginx 的生效配置里，处理 /api/ 的 location 没有 proxy_buffering off：SSE 会被攒成一个整包再发"
 
 echo "== 7/8 只读账号验证 =="

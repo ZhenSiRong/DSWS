@@ -637,7 +637,7 @@ def _nginx_dump(*sections: tuple[str, str]) -> str:
 
 def test_nginx_accepts_the_repository_configuration() -> None:
     """仓库自己的 nginx.conf 必须能通过——它就是部署用的那份。"""
-    body = (ROOT / "docker" / "nginx.conf").read_text(encoding="utf-8")
+    body = (REPO / "system" / "docker" / "nginx.conf").read_text(encoding="utf-8")
     dump = _nginx_dump(("/etc/nginx/conf.d/default.conf", body))
     assert smoke.check_nginx(dump) == 0
 

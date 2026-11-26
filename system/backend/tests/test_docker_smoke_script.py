@@ -115,7 +115,7 @@ server {
 def _prepare(tmp_path: Path, env_body: str) -> Path:
     """在临时目录里摆一套 scripts/ 和 .env，返回验收脚本的路径。"""
     scripts_dir = tmp_path / "toolbox" / "scripts"
-    scripts_dir.mkdir(exist_ok=True)
+    scripts_dir.mkdir(parents=True, exist_ok=True)
     for name in ("docker-smoke.sh", "find-python.sh", "smoke_checks.py"):
         source = ROOT.parent / "toolbox" / "scripts" / name
         assert source.exists(), f"缺少 scripts/{name}"

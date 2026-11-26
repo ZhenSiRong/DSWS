@@ -213,46 +213,46 @@ docker-reset: docker-env-require
 # （子命令自身退出码 1；GNU make 对 recipe 失败统一返回 2）。
 # 1) 24 页结构 / 图引用 / README 坏链（audit_book.py）
 # 2) git diff --check 空白错误
-# 3) system/system/backend/uv.lock 必须与仓库一致（本机 uv 镜像源会按 index 重写 registry URL，
+# 3) system/backend/uv.lock 必须与仓库一致（本机 uv 镜像源会按 index 重写 registry URL，
 #    而 toolbox/scripts/lab 快照白名单不含它，所以只能靠 git 还原）
 # 4) tutorial/ 不得泄露用户名 / 家目录（排除 materials/review/ 证据报告与 *.py 校验脚本）
 # 5) 任务台账准确性：done 钉证据 + 依赖/review/甘特身份（task.py check）
 audit:
-	@echo "== 1/5 结构审计：24 页 / 图引用 / README 坏链 =="
-	@python3 toolbox/shots/audit_book.py || { echo "AUDIT FAIL：结构审计未通过（明细见上）"; exit 1; }
-	@echo "== 2/5 空白错误：git diff --check =="
+	@echo "== 1/5 structure: 24 pages / images / README links =="
+	@python3 toolbox/shots/audit_book.py || { echo "AUDIT FAIL: structural audit failed (see above)"; exit 1; }
+	@echo "== 2/5 whitespace: git diff --check =="
 	@git diff --check; rc=$$?; \
-		if [ $$rc -ne 0 ]; then echo "AUDIT FAIL：git diff --check 报空白错误（见上，修好再跑）"; exit 1; fi; \
-		echo "  OK：无空白错误"
-	@echo "== 3/5 system/system/backend/uv.lock 是否被 uv 改写 =="
-	@if ! git diff --quiet -- system/system/backend/uv.lock || ! git diff --cached --quiet -- system/system/backend/uv.lock; then \
-		echo "AUDIT FAIL：system/system/backend/uv.lock 被改写（uv 按本机镜像源重写 registry URL，lab 快照不覆盖它）"; \
-		echo "  修复：git checkout -- system/system/backend/uv.lock"; \
-		echo "  （若已 git add：git restore --staged --worktree system/system/backend/uv.lock）"; \
+		if [ $$rc -ne 0 ]; then echo "AUDIT FAIL: git diff --check found whitespace errors (fix and rerun)"; exit 1; fi; \
+		echo "  OK: no whitespace errors"
+	@echo "== 3/5 uv.lock: not rewritten by uv =="
+	@if ! git diff --quiet -- system/backend/uv.lock || ! git diff --cached --quiet -- system/backend/uv.lock; then \
+		echo "AUDIT FAIL: system/backend/uv.lock was rewritten (uv rewrites registry URLs; lab snapshots do not cover it)"; \
+		echo "  Fix: git checkout -- system/backend/uv.lock"; \
+		echo "  (if staged: git restore --staged --worktree system/backend/uv.lock)"; \
 		exit 1; \
-	else echo "  OK：system/system/backend/uv.lock 与仓库一致"; fi
-	@echo "== 4/5 敏感串：tutorial/ 不得出现 zhensirong 或 /home/ =="
+	else echo "  OK: system/backend/uv.lock matches the repository"; fi
+	@echo "== 4/5 secrets: tutorial/ must not contain zhensirong or /home/ =="
 	@hits=$$(grep -rnIE 'zhensirong|/home/' manual --exclude='*.py' --exclude-dir=review 2>/dev/null); rc=$$?; \
 		if [ $$rc -eq 0 ]; then \
-			echo "AUDIT FAIL：tutorial/ 出现敏感串（泄露本机用户名 / 家目录，学生材料不可提交）"; \
+			echo "AUDIT FAIL: tutorial/ contains local username or home path (student material must not ship it)"; \
 			echo "$$hits"; \
-			echo "  说明：materials/review/ 证据报告与 *.py 校验/生成脚本不在检查范围（见 materials/docs/checks.md）"; \
+			echo "  Note: materials/review/ reports and *.py checker/generator scripts are excluded (see materials/docs/checks.md)"; \
 			exit 1; \
 		elif [ $$rc -ne 1 ]; then \
-			echo "AUDIT ERROR：敏感串扫描失败（grep rc=$$rc）"; exit 1; \
+			echo "AUDIT ERROR: secret scan failed (grep rc=$$rc)"; exit 1; \
 		fi; \
 		staged=$$(git diff --cached --name-only --diff-filter=ACMR -- manual | grep -Ev '^materials/review/|\.py$$'); \
 		for f in $$staged; do \
 			hit=$$(git show ":$$f" 2>/dev/null | grep -nIE 'zhensirong|/home/'); \
 			if [ -n "$$hit" ]; then \
-				echo "AUDIT FAIL：已暂存的 manual 文件含敏感串：$$f"; \
+				echo "AUDIT FAIL: staged manual file contains a secret: $$f"; \
 				echo "$$hit"; exit 1; \
 			fi; \
 		done; \
-		echo "  OK：tutorial/ 无敏感串"
-	@echo "== 5/5 任务台账准确性：done 钉证据 + 依赖/review/甘特身份 =="
-	@python3 toolbox/scripts/task.py check --quick || { echo "AUDIT FAIL：任务台账漂移（done 无证据/review，或甘特旧于台账，见上）"; exit 1; }
-	@echo "AUDIT PASS：5/5 全绿（结构 / 空白 / uv.lock / 敏感串 / 台账）"
+		echo "  OK: tutorial/ has no secrets"
+	@echo "== 5/5 task ledger: done evidence + dependencies/review/gantt identity =="
+	@python3 toolbox/scripts/task.py check --quick || { echo "AUDIT FAIL: task ledger drift (done without evidence/review, or stale gantt; see above)"; exit 1; }
+	@echo "AUDIT PASS: 5/5 green (structure / whitespace / uv.lock / secrets / ledger)"
 
 # 新手册：tutorial/ 正典 → 自包含 HTML + A4 PDF（管线在 toolbox/book/）
 BOOK_OUT := materials/deliverable/tutorial-book
@@ -305,12 +305,12 @@ accept-l5:
 
 # 启用仓库级 pre-commit 护栏：只写本仓库 git 局部配置，不动全局配置。
 install-hooks:
-	@test -x .githooks/pre-commit || { echo "缺少可执行的 .githooks/pre-commit：先 git checkout -- .githooks/ 或 chmod +x .githooks/pre-commit" >&2; exit 1; }
+	@test -x .githooks/pre-commit || { echo "Missing executable .githooks/pre-commit: git checkout -- .githooks/ or chmod +x .githooks/pre-commit" >&2; exit 1; }
 	@git config core.hooksPath .githooks
-	@echo "已启用：core.hooksPath=.githooks（仅本仓库，未改全局配置）"
-	@echo "  pre-commit 会检查：24 页结构审计 / system/system/backend/uv.lock / staged manual 敏感串 / 任务台账 / 页面契约 T0（verify.py --fast）"
-	@echo "  临时绕过（不推荐）：git commit --no-verify"
-	@echo "  停用：git config --unset core.hooksPath"
+	@echo "Enabled: core.hooksPath=.githooks (this repository only)"
+	@echo "  pre-commit checks: 24-page structure / system/backend/uv.lock / staged manual secrets / task ledger / page contract T0 (verify.py --fast)"
+	@echo "  Temporary bypass (not recommended): git commit --no-verify"
+	@echo "  Disable: git config --unset core.hooksPath"
 
 # PRD 三类交付物：设计文档 / 源码 / 教程文档，各自打包
 deliverables:

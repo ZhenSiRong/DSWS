@@ -15,7 +15,7 @@
 set -u
 
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
-BANNERS="$ROOT/scripts/banners.txt"
+BANNERS="$ROOT/toolbox/scripts/banners.txt"
 
 key="${1:-}"
 if [ -z "$key" ]; then

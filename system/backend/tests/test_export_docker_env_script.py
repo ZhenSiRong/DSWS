@@ -123,7 +123,7 @@ def _clean_env(extra: dict[str, str] | None = None) -> dict[str, str]:
 def _prepare(tmp_path: Path, env_body: str) -> Path:
     """在临时目录里放一份 .env 与脚本，返回脚本路径。"""
     scripts_dir = tmp_path / "toolbox" / "scripts"
-    scripts_dir.mkdir(exist_ok=True)
+    scripts_dir.mkdir(parents=True, exist_ok=True)
     target = scripts_dir / "export-docker-env.sh"
     target.write_text(SCRIPT.read_text(encoding="utf-8"), encoding="utf-8")
     (tmp_path / ".env").write_text(env_body, encoding="utf-8")
@@ -328,7 +328,7 @@ def test_ignores_a_comment_line_that_starts_with_spaces(tmp_path: Path) -> None:
 def test_leaves_no_helper_functions_behind(tmp_path: Path) -> None:
     """source 完不留下一堆 ``_export_docker_env_*`` 的函数。"""
     scripts_dir = tmp_path / "toolbox" / "scripts"
-    scripts_dir.mkdir(exist_ok=True)
+    scripts_dir.mkdir(parents=True, exist_ok=True)
     target = scripts_dir / "export-docker-env.sh"
     target.write_text(SCRIPT.read_text(encoding="utf-8"), encoding="utf-8")
     (tmp_path / ".env").write_text(BASE_ENV, encoding="utf-8")

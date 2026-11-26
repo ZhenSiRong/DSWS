@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# scripts/lab —— 教学用快照 / 回滚 CLI（D33 安全底线；D46 第 6 条「lab 最先做」）
+# toolbox/scripts/lab —— 教学用快照 / 回滚 CLI（D33 安全底线；D46 第 6 条「lab 最先做」）
 #
 # 学生只用三条主命令：
-#   scripts/lab save <名字>            给白名单路径拍快照
-#   scripts/lab diff <名字>            看工作区比快照多了 / 少了 / 改了什么
-#   scripts/lab reset <名字> --yes     把白名单文件恢复成快照的样子
+#   toolbox/scripts/lab save <名字>            给白名单路径拍快照
+#   toolbox/scripts/lab diff <名字>            看工作区比快照多了 / 少了 / 改了什么
+#   toolbox/scripts/lab reset <名字> --yes     把白名单文件恢复成快照的样子
 # 辅助：list（列快照）、help（一屏说明）
 #
 # 为什么这么小：L2–L4 每页的「拆一刀」只需要"改坏了能一句话回到拆之前"。
@@ -220,7 +220,7 @@ validate_name() {
   local name="$1"
   case "$name" in
     '')
-      usage_error "名字不能为空。例：scripts/lab save before-schema"
+      usage_error "名字不能为空。例：toolbox/scripts/lab save before-schema"
       ;;
     *[!A-Za-z0-9._-]*)
       usage_error "名字 '$name' 含非法字符。只能用字母、数字、点、下划线、短横线（例：before-schema）。"
@@ -240,12 +240,12 @@ require_snapshot() {
   local name="$1" dir="$SNAP_DIR/$name"
   if [ ! -d "$dir" ]; then
     die "找不到快照 \"$name\"。" \
-        "先看有哪些：scripts/lab list
-想给当前工作区拍一张：scripts/lab save $name"
+        "先看有哪些：toolbox/scripts/lab list
+想给当前工作区拍一张：toolbox/scripts/lab save $name"
   fi
   if [ ! -f "$dir/manifest.json" ] || [ ! -d "$dir/tree" ]; then
     die "快照 \"$name\" 不完整（缺 manifest.json 或 tree/），不敢用它恢复。" \
-        "删掉它再重拍：rm -rf .lab/snapshots/$name && scripts/lab save $name"
+        "删掉它再重拍：rm -rf .lab/snapshots/$name && toolbox/scripts/lab save $name"
   fi
 }
 
@@ -323,8 +323,8 @@ save_snapshot() {
   mkdir -p -- "$SNAP_DIR" || die "建不了快照目录：$SNAP_DIR" "检查 .lab/ 的权限或磁盘空间。"
   if [ -e "$SNAP_DIR/$name" ]; then
     die "同名快照 \"$name\" 已存在，不能覆盖（快照只读）。" \
-        "换一个名字：scripts/lab save ${name}-2
-先看已有快照：scripts/lab list"
+        "换一个名字：toolbox/scripts/lab save ${name}-2
+先看已有快照：toolbox/scripts/lab list"
   fi
 
   ensure_tmp
@@ -417,8 +417,8 @@ save_snapshot() {
   if [ -e "$SNAP_DIR/$name" ]; then
     rm -rf -- "$staging"
     die "同名快照 \"$name\" 已存在，不能覆盖（快照只读）。" \
-        "换一个名字：scripts/lab save ${name}-2
-先看已有快照：scripts/lab list"
+        "换一个名字：toolbox/scripts/lab save ${name}-2
+先看已有快照：toolbox/scripts/lab list"
   fi
   if ! mv -- "$staging" "$SNAP_DIR/$name"; then
     rm -rf -- "$staging"
@@ -451,7 +451,7 @@ whitelist_absent_list() {
 
 cmd_save() {
   if [ $# -ne 1 ]; then
-    usage_error "save 需要一个快照名字。例：scripts/lab save before-schema"
+    usage_error "save 需要一个快照名字。例：toolbox/scripts/lab save before-schema"
   fi
   local name="$1"
   validate_name "$name"
@@ -459,7 +459,7 @@ cmd_save() {
   printf '已保存快照 "%s"：%s 个文件。\n' "$name" "$SAVED_COUNT"
   report_skipped_whitelist "$(whitelist_absent_list)"
   printf '  位置：.lab/snapshots/%s/（快照只读，同名 save 会被拒绝）\n' "$name"
-  printf '  下一步：改你的代码，然后 scripts/lab diff %s\n' "$name"
+  printf '  下一步：改你的代码，然后 toolbox/scripts/lab diff %s\n' "$name"
 }
 
 # ---------------------------------------------------------------------------
@@ -468,7 +468,7 @@ cmd_save() {
 
 cmd_list() {
   if [ ! -d "$SNAP_DIR" ]; then
-    printf '还没有任何快照。先给当前工作区拍一张：\n  scripts/lab save before-change\n'
+    printf '还没有任何快照。先给当前工作区拍一张：\n  toolbox/scripts/lab save before-change\n'
     return 0
   fi
   ensure_tmp
@@ -495,7 +495,7 @@ cmd_list() {
   done
 
   if [ "$total" -eq 0 ]; then
-    printf '还没有任何快照。先给当前工作区拍一张：\n  scripts/lab save before-change\n'
+    printf '还没有任何快照。先给当前工作区拍一张：\n  toolbox/scripts/lab save before-change\n'
     return 0
   fi
   printf '共 %s 张快照（新的在前）：\n' "$total"
@@ -504,7 +504,7 @@ cmd_list() {
     printf '  %-26s %s（%s）  %s 个文件  git %s\n' \
       "$name" "${time_display/T/ }" "$(human_age "$time_unix")" "$count" "$short"
   done
-  printf '\n要恢复哪张：scripts/lab reset <名字> --yes（先不加 --yes 看计划）\n'
+  printf '\n要恢复哪张：toolbox/scripts/lab reset <名字> --yes（先不加 --yes 看计划）\n'
   if [ "$bad" -gt 0 ]; then
     printf '注意：有 %s 个快照目录缺 manifest.json，已跳过。\n' "$bad"
   fi
@@ -516,7 +516,7 @@ cmd_list() {
 
 cmd_diff() {
   if [ $# -ne 1 ]; then
-    usage_error "diff 需要一个快照名字。例：scripts/lab diff before-schema"
+    usage_error "diff 需要一个快照名字。例：toolbox/scripts/lab diff before-schema"
   fi
   local name="$1"
   validate_name "$name"
@@ -568,7 +568,7 @@ cmd_diff() {
       print_file_diff "$snap/tree/$rel" /dev/null "a/$rel" "/dev/null"
     done < "$deleted"
   fi
-  printf '\n要回到快照 "%s"：scripts/lab reset %s --yes\n' "$name" "$name"
+  printf '\n要回到快照 "%s"：toolbox/scripts/lab reset %s --yes\n' "$name" "$name"
 }
 
 # ---------------------------------------------------------------------------
@@ -617,7 +617,7 @@ cmd_reset() {
     esac
   done
   if [ -z "$name" ]; then
-    usage_error "reset 需要一个快照名字。例：scripts/lab reset before-schema --yes"
+    usage_error "reset 需要一个快照名字。例：toolbox/scripts/lab reset before-schema --yes"
   fi
   validate_name "$name"
   require_snapshot "$name"
@@ -650,8 +650,8 @@ cmd_reset() {
 
   if [ "$assume_yes" -eq 0 ]; then
     printf '\n没有 --yes，一个文件都没动。\n'
-    printf '确认上面就是要做的，再执行：\n  scripts/lab reset %s --yes\n' "$name"
-    printf '想先看逐行 diff：scripts/lab diff %s\n' "$name"
+    printf '确认上面就是要做的，再执行：\n  toolbox/scripts/lab reset %s --yes\n' "$name"
+    printf '想先看逐行 diff：toolbox/scripts/lab diff %s\n' "$name"
     exit 2
   fi
 
@@ -662,7 +662,7 @@ cmd_reset() {
     safety="$(safe_unique_snapshot_name "pre-reset-$(date +%Y%m%d-%H%M%S)")"
     if ! save_snapshot "$safety"; then
       die "安全快照没拍成，已中止恢复，工作区一个文件都没动。" \
-          "检查磁盘空间/权限后重试；也可以先 scripts/lab save 手动拍一张。"
+          "检查磁盘空间/权限后重试；也可以先 toolbox/scripts/lab save 手动拍一张。"
     fi
     safety_count="$SAVED_COUNT"
     printf '\n已先拍安全快照 "%s"（恢复前的现场，%s 个文件）。\n' "$safety" "$safety_count"
@@ -709,7 +709,7 @@ cmd_reset() {
     print_changed_list "仍缺失（未能写回）" "+" "$post_del" >&2
     print_changed_list "仍不同（未能覆盖）" "~" "$post_mod" >&2
     if [ -n "$safety" ]; then
-      printf '先别继续改：可以回退到恢复前现场：scripts/lab reset %s --yes --no-safety\n' "$safety" >&2
+      printf '先别继续改：可以回退到恢复前现场：toolbox/scripts/lab reset %s --yes --no-safety\n' "$safety" >&2
     fi
     exit 1
   fi
@@ -726,7 +726,7 @@ cmd_reset() {
   fi
   if [ -n "$safety" ]; then
     printf '安全快照："%s"（%s 个文件）\n' "$safety" "$safety_count"
-    printf '  想撤销这次恢复：scripts/lab reset %s --yes --no-safety\n' "$safety"
+    printf '  想撤销这次恢复：toolbox/scripts/lab reset %s --yes --no-safety\n' "$safety"
   fi
   printf '现在工作区与快照 "%s" 完全一致。\n' "$name"
 }
@@ -737,15 +737,15 @@ cmd_reset() {
 
 print_help() {
   cat <<'EOF'
-scripts/lab —— 教学用快照与回滚（只管文件，不碰 git）
+toolbox/scripts/lab —— 教学用快照与回滚（只管文件，不碰 git）
 
 学生只用三条主命令：
-  scripts/lab save <名字>                 给当前白名单文件拍一张快照
-  scripts/lab diff <名字>                 看工作区比快照多了 / 少了 / 改了什么
-  scripts/lab reset <名字> --yes          把白名单文件恢复成快照的样子
+  toolbox/scripts/lab save <名字>                 给当前白名单文件拍一张快照
+  toolbox/scripts/lab diff <名字>                 看工作区比快照多了 / 少了 / 改了什么
+  toolbox/scripts/lab reset <名字> --yes          把白名单文件恢复成快照的样子
 
-  scripts/lab list                        列出已有快照（名字、时间、文件数、git HEAD）
-  scripts/lab help                        看这一页
+  toolbox/scripts/lab list                        列出已有快照（名字、时间、文件数、git HEAD）
+  toolbox/scripts/lab help                        看这一页
 
 两条安全规则：
   1) reset 必须先看计划：不加 --yes 只打印"会删除 / 写回 / 覆盖什么"，一个文件都不动。
@@ -763,7 +763,7 @@ EOF
 
 usage_error() {
   error "$1"
-  printf '看用法：scripts/lab help\n' >&2
+  printf '看用法：toolbox/scripts/lab help\n' >&2
   exit 2
 }
 
@@ -780,7 +780,7 @@ main() {
     help|-h|--help|"") print_help ;;
     *)
       error "不认识的命令：$cmd"
-      printf '可用命令：save / list / diff / reset / help（看用法：scripts/lab help）\n' >&2
+      printf '可用命令：save / list / diff / reset / help（看用法：toolbox/scripts/lab help）\n' >&2
       exit 2
       ;;
   esac

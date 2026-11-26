@@ -40,10 +40,10 @@ from pathlib import Path
 import yaml
 
 REPO = Path(__file__).resolve().parents[2]
-LEDGER = REPO / "workflows" / "ledger.yaml"
-REVIEWS = REPO / "workflows" / "reviews"
-DEFAULT_DOC = REPO / "workflows" / "gantt.md"
-DEFAULT_PNG = REPO / "workflows" / "gantt.png"
+LEDGER = REPO / "toolbox" / "workflows" / "ledger.yaml"
+REVIEWS = REPO / "toolbox" / "workflows" / "reviews"
+DEFAULT_DOC = REPO / "toolbox" / "workflows" / "gantt.md"
+DEFAULT_PNG = REPO / "toolbox" / "workflows" / "gantt.png"
 AGENTS = ["opencode2", "codebuddy", "qoder"]
 TAGS = {"done", "active", "crit", "milestone"}
 
@@ -1097,7 +1097,7 @@ DONE_EVIDENCE = {
 
 
 def cmd_migrate(args) -> int:
-    doc = REPO / "humen-desicions" / "14-progress-gantt.md"
+    doc = REPO / "materials" / "humen-desicions" / "14-progress-gantt.md"
     if not doc.exists():
         raise SystemExit(f"缺 {doc}")
     m = re.search(r"```mermaid\n(.*?)```", doc.read_text(encoding="utf-8"), re.S)
