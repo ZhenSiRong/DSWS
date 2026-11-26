@@ -3,7 +3,7 @@
 
 用法：python3 toolbox/scripts/build_deliverables.py
 产物（gitignored）：
-  deliverables/design-doc/    设计文档（180 页 atlas + 30 页摘要）
+  deliverables/design-doc/    设计文档（78 页完整 + 30 图精选 32 页）
   deliverables/source-code/   可部署源码（system/ + Makefile + .env.example）
   deliverables/tutorial-doc/  教程文档（tutorial/ 正典 + HTML/PDF 成书）
   deliverables/packages/{design-doc,source-code,tutorial-doc}.zip
@@ -82,12 +82,12 @@ def manifest(cat: Path, title: str, notes: list[str]) -> None:
 
 def build_design() -> None:
     cat = OUT / "design-doc"
-    copy(ROOT / "materials" / "design" / "book" / "pdf" / "dsws-design-atlas.pdf", cat / "dsws-design-atlas.pdf")
+    copy(ROOT / "materials" / "design" / "design-doc.pdf", cat / "design-doc.pdf")
     copy(ROOT / "materials" / "design" / "design-doc-30.pdf", cat / "design-doc-30.pdf")
-    manifest(cat, "设计文档 · DSWS 从零到一", [
-        "`dsws-design-atlas.pdf`：180 页正式设计图集（PRD ≥30 页要求）",
-        "`design-doc-30.pdf`：30 页摘要，供快速评审",
-        "正典在 `materials/design/`；本目录只是交付快照",
+    manifest(cat, "设计文档 · DSWS 电商问数智能体", [
+        "`design-doc.pdf`：78 页完整设计文档（32 张图 + 读图地图）",
+        "`design-doc-30.pdf`：30 图 / 32 页精选版，供快速评审",
+        "已移除 `dsws-design-atlas.pdf`：它是废弃的教程/图集文档，不是设计文档",
     ])
 
 
@@ -140,7 +140,7 @@ def main() -> int:
     (OUT / "README.md").write_text(
         "# PRD 三类交付物\n\n"
         "| 目录 | 内容 | 单独打包 |\n|---|---|---|\n"
-        "| `design-doc/` | 180 页设计图集 + 30 页摘要 | `packages/design-doc.zip` |\n"
+        "| `design-doc/` | 78 页设计文档 + 30 图精选（32 页） | `packages/design-doc.zip` |\n"
         "| `source-code/` | `system/` + Makefile + `.env.example` | `packages/source-code.zip` |\n"
         "| `tutorial-doc/` | 24 章教程 md + 成书 HTML/PDF | `packages/tutorial-doc.zip` |\n\n"
         "生成：`make deliverables`；三个目录互不依赖，可分别拷走/压缩。\n",
