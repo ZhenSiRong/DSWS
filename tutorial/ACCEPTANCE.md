@@ -4,7 +4,7 @@
 
 ## 0. 前置
 - **环境**：Docker 已运行；`uv`、Node.js LTS + npm、GNU Make、curl 齐（[page-00](page-00.md)「提前说明」）。`make install` 后 `make doctor` 末行 `12/12 通过`（page-00）。整栈建议至少 8 GB 内存（ES 堆固定 512 MB，来源 `../docs/DOCKER-DEPLOY.md` §1），并留出镜像与 ES 索引的磁盘空间（见下方水位坑）。
-- **端口**：L1 用 3307 / 8000 / 8081（page-00 的端口三行）；L2 起 compose 用 3306 / 9200 / 6333 / 8100 / 8080（[page-13](page-13.md) 第 3 步）。被占就改 `.env` 里对应的 `*_HOST_PORT`，**别改 `compose.yaml`**（page-13）。
+- **端口**：L1 用 3307 / 8000 / 8081（page-00 的端口三行）；L2 起 compose 用 3307 / 9200 / 6333 / 8100 / 8080（[page-13](page-13.md) 第 3 步）。被占就改 `.env` 里对应的 `*_HOST_PORT`，**别改 `compose.yaml`**（page-13）。
 - **整栈与耗时**：p13 的级考核与 p22 要整栈；`make docker-up` 第一次构建约 8 分钟（page-13 实测）。L3 的 p15–p17、L4 的 p19–p21 判据大多离线（各页前置）。
 - **已知环境坑**（重放报告实测）：① 带裸 `uv run` 的 `make stage3` / `stage0-ui` / `stage6-ui`（脚本里没有 `--frozen`）或手敲 `uv run` 会按本机镜像源重写 `backend/uv.lock`（`lab reset` 管不到它）——`git status` 显示变脏再 `git checkout -- backend/uv.lock`；Makefile 直接调的 `stage*` 都已 `uv run --frozen`，不会脏（[page-15](page-15.md)、[page-19](page-19.md)、[page-21](page-21.md)）；② ES 默认低/高/洪水水位 85% / 90% / 95%：85–89% 只告警、写入与 S2/S3 正常，≥90% 高水位才危险（不再分配分片）、≥95% 索引转只读（`review/replay-page-14.md`），别把盘跑满；③ 别在别人的栈上做级考核，要并行验收就用仓库副本 + 独立 compose 项目名 + 端口覆盖（见 `review/replay-page-14.md`、`review/replay-page-18.md`）。
 

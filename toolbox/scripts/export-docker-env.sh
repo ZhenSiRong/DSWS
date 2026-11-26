@@ -576,7 +576,7 @@ _export_docker_env_llm_timeout="$_export_docker_env_resolved"
 _export_docker_env_resolve_port \
   "$_export_docker_env_mysql_port" \
   "$_export_docker_env_prev_mysql_port" \
-  "$_export_docker_env_mysql_port_state" 3306 MYSQL_HOST_PORT
+  "$_export_docker_env_mysql_port_state" 3307 MYSQL_HOST_PORT
 _export_docker_env_mysql_port="$_export_docker_env_resolved"
 
 _export_docker_env_resolve_port \

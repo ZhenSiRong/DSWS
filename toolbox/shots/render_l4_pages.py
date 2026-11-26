@@ -101,7 +101,7 @@ CONTAINER_PREFIX = "shopkeeper-rebuild"          # 页面里的容器名前缀
 INIT_CONTAINER = f"{CONTAINER_PREFIX}-init-1"
 SERVICES = ("mysql", "elasticsearch", "qdrant", "backend", "frontend")
 
-# 隔离端口（任务约定；页面默认值 3306/9200/6333/8100/8080 一个都不占）
+# 隔离端口（任务约定；页面默认值 3307/9200/6333/8100/8080 一个都不占）
 HOST_PORTS = {
     "MYSQL_HOST_PORT": 13347,
     "ES_HOST_PORT": 19247,
@@ -111,7 +111,7 @@ HOST_PORTS = {
 }
 # 执行侧端口 → 页面默认端口（渲染时换回，图里只出现页面原文端口）
 DISPLAY_PORTS = {
-    HOST_PORTS["MYSQL_HOST_PORT"]: 3306,
+    HOST_PORTS["MYSQL_HOST_PORT"]: 3307,
     HOST_PORTS["ES_HOST_PORT"]: 9200,
     HOST_PORTS["QDRANT_HOST_PORT"]: 6333,
     HOST_PORTS["BACKEND_HOST_PORT"]: 8100,

@@ -9,7 +9,7 @@
 | 2. `cd backend && ...` 跑完 shell 停在 `backend/`，后续 `scripts/lab`、`backend/.venv/...` 全 exit 127 | `&&` 不回退目录；页面命令块没有 `cd ..` 回仓库根 | 一律写子 shell `(cd backend && ...)`；整段跑完 `pwd` 必须在仓库根 | `review/replay-page-11.md:25` |
 | 3. 门禁明明红，`echo $?` 却是 0 | 管道末尾的命令是 `tail`，`$?` 拿到的是它的 0 | 看 `${PIPESTATUS[0]}`，或命令后加 `; echo "gate=${PIPESTATUS[0]}"` | `review/replay-page-19.md:23` |
 | 4. 磁盘水位告警：ES 报 `low disk watermark`（85%）；85–89% 只告警、写入与整栈验收照常跑；≥90% 高水位才危险（不再分配分片），≥95% 索引转只读 | ES 默认低/高/洪水水位 85% / 90% / 95%；一套 build + 索引再吃数 GB | 85–89% 可继续跑，别把盘跑到 ≥90%；隔离栈可临时关 watermark（`compose.lab-ui.yaml` 有先例）或清盘 | `review/replay-page-14.md:69`、`review/replay-page-13.md:49` |
-| 5. 起栈报端口占用、smoke 连不上 | 3306/9200/6333/8100/8080 常被既有栈占（`make doctor` 只查 3307/8000/8081） | 改 `.env` 的 `*_HOST_PORT`（含 `FRONTEND_BIND`），别改 `compose.yaml` 的默认 | `review/replay-page-13.md:29,44` |
+| 5. 起栈报端口占用、smoke 连不上 | 3307/9200/6333/8100/8080 常被既有栈占（`make doctor` 只查 3307/8000/8081） | 改 `.env` 的 `*_HOST_PORT`（含 `FRONTEND_BIND`），别改 `compose.yaml` 的默认 | `review/replay-page-13.md:29,44` |
 | 6. DB 被改（如 `GRANT ALL`）、`uv.lock` 被改，`lab reset` 后仍红/仍脏 | 快照只覆盖白名单文件；数据库、容器、卷、`uv.lock` 都不在内 | DB 重灌 `fixtures/`（`make docker-reset` 后重灌）；`uv.lock` 用 git checkout | `review/replay-page-18.md:16,17`、`review/replay-page-19.md:15`（边界见 `docs/lab.md` §限制） |
 | 7. `record_sse --check` 红后照提示重录，`--check` 变绿但判据失效 | 重录 = 用当前坏代码覆盖夹具，噪音被写成「基线」→ 假绿 | 不重录；`scripts/lab reset <快照> --yes` 还原代码后重跑 `--check` | `review/replay-page-20.md:25` |
 | 8. 拆一刀红得比页面多，或实验结论失真 | 同名代码/公式在多处（`policy.py:460` 也有一行同款；GMV 公式还出现在 AOV、件单价） | 页面写文件名+行号；只改那一行，禁用全局替换/模糊搜索 | `review/replay-page-16.md:31`、`review/replay-page-15.md:33` |

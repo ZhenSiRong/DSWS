@@ -46,19 +46,19 @@ make docker-env
 
 | 服务 | 端口 | 说明 |
 |---|---|---|
-| MySQL | `3306` | 第 1 页绕开 3306 就是因为它常被本机 MySQL 占着 |
+| MySQL | `3307` | 与第 1 页保持一致；仍被本机 MySQL 占用就改 `.env` 的 `MYSQL_HOST_PORT` |
 | ES | `9200` | |
 | Qdrant | `6333` | |
 | backend | `8100` | |
 | frontend | `8080` | 和第 9 页手动的 `8081` 不是一个（编排重新分了门牌号） |
 
-> **3306 默认有坑**：第 1 章让你绕开 3306，是因为本机常见 MySQL 占用它；第 13 章 `.env` 默认仍是 3306。若本机已装 MySQL，先把 `MYSQL_HOST_PORT` 改成 `3307`（或别的空闲端口）再 `make docker-up`，否则容器会起不来。
+> **默认避开 3306**：第 1 章就因为本机常见 MySQL 占 3306 才用 3307；第 13 章 `.env` 默认也改成 3307。若 3307 仍被占，再把 `MYSQL_HOST_PORT` 改到别的空闲端口。
 
 **被占就改 `.env`**：改对应那行（`MYSQL_HOST_PORT` / `ES_HOST_PORT` / `QDRANT_HOST_PORT` / `BACKEND_HOST_PORT` / `FRONTEND_HOST_PORT`），**别改 `compose.yaml`**，改完重跑 `make docker-up`；smoke 会自己问 compose 前端实际端口。
 
 **`FRONTEND_BIND`**：默认 `0.0.0.0`——前端是唯一对外入口，这会让局域网里的机器也能访问；只在本机调试就改成 `127.0.0.1`（其余四个端口本来就只绑本机）。
 
-**起之前先自查**：`ss -tlnp | grep -E ':(3306|9200|6333|8100|8080) '`——有输出就是被占，改 `.env` 里对应的 `*_HOST_PORT`。
+**起之前先自查**：`ss -tlnp | grep -E ':(3307|9200|6333|8100|8080) '`——有输出就是被占，改 `.env` 里对应的 `*_HOST_PORT`。
 
 **第 4 步：起整座城。**
 ```bash
