@@ -51,8 +51,8 @@ th { background:#efe7d6; text-align:left; }
 .cover { page:cover; height:210mm; background:#2c2620; color:#f5efe2; padding:28mm 24mm; }
 .cover h1 { font-size:30pt; color:#fff; } .cover .sub { font-size:13pt; color:#d9cdb7; margin-top:6mm; }
 .cover .meta { position:absolute; bottom:20mm; left:24mm; right:24mm; font-size:9.5pt; color:#bfb39c; }
-img.spread-half { width:100%; display:block; border:0.4pt solid #cfc2ab; }
-.figwrap { text-align:center; } .figwrap img { max-width:100%; max-height:150mm; }
+img.spread-half { width:auto; max-width:100%; max-height:148mm; display:block; margin:0 auto; border:0.4pt solid #cfc2ab; }
+.figwrap { text-align:center; } .figwrap img { max-width:100%; max-height:148mm; width:auto; height:auto; }
 .figcap { font-size:8.5pt; color:#6f6557; margin-top:2mm; }
 .foot { font-size:8pt; color:#8a7c66; margin-top:3mm; }
 .pagebreak { page-break-after: always; }
@@ -62,9 +62,14 @@ img.spread-half { width:100%; display:block; border:0.4pt solid #cfc2ab; }
 
 def half_images(chain: str, tmp: Path) -> tuple[Path, Path]:
     png = BASE / chain / "spread.png"
+    # 截图带 --force-device-scale-factor=1.25，实际宽 4000：按真实宽度对半裁
+    info = subprocess.run(["identify", "-format", "%w %h", str(png)],
+                          check=True, capture_output=True, text=True).stdout.split()
+    w, h = int(info[0]), int(info[1])
+    half = w // 2
     left, right = tmp / f"{chain}-L.png", tmp / f"{chain}-R.png"
-    for src, dst, off in ((png, left, "+0+0"), (png, right, "+1600+0")):
-        subprocess.run(["convert", str(src), "-crop", "1600x1170" + off, "+repage", str(dst)],
+    for src, dst, off in ((png, left, "+0+0"), (png, right, f"+{half}+0")):
+        subprocess.run(["convert", str(src), "-crop", f"{half}x{h}" + off, "+repage", str(dst)],
                        check=True, capture_output=True, timeout=60)
     return left, right
 
