@@ -1,0 +1,241 @@
+# 用户旅程图 · 从源码推导（system/backend + system/frontend）
+# 11 步横向时间线 chips：① 输入 → ② POST /api/query → ③ 路由·建立 SSE 流 → ④ 上下文 8 节点
+# → ⑤ 生成 → ⑥ 校验 ⇄ ⑦ 校正 → ⑧ 执行 → ⑨ SSE → ⑩ 解析 → ⑪ 渲染
+# 每步下挂「文件:符号」小字；⑦ 校正回退边橙虚线。
+
+direction: right
+
+classes: {
+  gate: { style.fill: "#f3ece0"; style.stroke: "#a8926a"; style.font-color: "#4a3f2c"; style.stroke-width: 2 }
+  pass: { style.fill: "#e7efe8"; style.stroke: "#2f5d46"; style.font-color: "#244636"; style.stroke-width: 2 }
+  danger: { style.fill: "#f6e8e6"; style.stroke: "#a9362a"; style.font-color: "#7c2a22"; style.stroke-width: 2 }
+  store: { style.fill: "#e8eef0"; style.stroke: "#3d6270"; style.font-color: "#24414c"; style.stroke-width: 2 }
+  note: { style.fill: "#f7f4ee"; style.stroke: "#b9ab93"; style.font-color: "#6f6557"; style.stroke-width: 2 }
+  plain: { style.fill: "#fdfbf7"; style.stroke: "#6b5d49"; style.font-color: "#211b15"; style.stroke-width: 2 }
+}
+
+title: "问数用户旅程（源码推导）· 11 步锚点 ①–⑪ · LangGraph 12 节点 / 10 步同源" {
+  shape: text
+  style.font-size: 20
+  style.bold: true
+  style.font-color: "#211b15"
+}
+
+# ── 泳道一：前端 · 提问入口 ──
+
+ph1: "前端 · 提问入口" {
+  style.fill: "#faf7f0"
+  style.stroke: "#b9ab93"
+  style.border-radius: 8
+  direction: right
+
+  s1: {
+    style.opacity: 0
+    direction: down
+    chip: "① 输入中文问题" { class: plain; style.bold: true; style.font-size: 15 }
+    cap: "Composer.tsx · Composer" { class: note; shape: text; style.font-size: 11 }
+  }
+  s2: {
+    style.opacity: 0
+    direction: down
+    chip: "② POST /api/query" { class: plain; style.bold: true; style.font-size: 15 }
+    cap: "api.ts · streamQuery" { class: note; shape: text; style.font-size: 11 }
+  }
+  s3: {
+    style.opacity: 0
+    direction: down
+    chip: "③ 路由 · 建立 SSE 流" { class: plain; style.bold: true; style.font-size: 15 }
+    cap: "main.py · query() → _stream()" { class: note; shape: text; style.font-size: 11 }
+  }
+  s4: {
+    style.opacity: 0
+    direction: down
+    chip: "④ 上下文 8 节点" { class: plain; style.bold: true; style.font-size: 15 }
+    cap: "graph.py（步 1–6）\nextract…add_extra" { class: note; shape: text; style.font-size: 11 }
+  }
+}
+
+# ── 泳道二：后端 · LangGraph ──
+
+ph2: "后端 · LangGraph 12 节点 / 10 步（graph.py · build_agent_graph，节点 id 逐字来自 contracts/steps.yaml）" {
+  style.fill: "#faf7f0"
+  style.stroke: "#b9ab93"
+  style.border-radius: 8
+  direction: right
+
+  s5: {
+    style.opacity: 0
+    direction: down
+    chip: "⑤ generate_sql" { class: plain; style.bold: true; style.font-size: 15 }
+    cap: "pipeline.py · draft_sql\n（步 7 · 生成 SQL）" { class: note; shape: text; style.font-size: 11 }
+  }
+  s6: {
+    style.opacity: 0
+    direction: down
+    chip: "⑥ validate_sql" { class: pass; style.bold: true; style.font-size: 15 }
+    cap: "validate.py · 双关\nguard 语义 + policy 安全（步 8）" { class: note; shape: text; style.font-size: 11 }
+  }
+  s7: {
+    style.opacity: 0
+    direction: down
+    chip: "⑦ correct_sql（条件）" { class: danger; style.bold: true; style.font-size: 15 }
+    cap: "correct.py · propose_correction\n最多 1 次 · 校正后回 ⑥ 重验（步 9）" { class: note; shape: text; style.font-size: 11 }
+  }
+  s8: {
+    style.opacity: 0
+    direction: down
+    chip: "⑧ run_sql" { class: plain; style.bold: true; style.font-size: 15 }
+    cap: "executor.py · ReadOnlyExecutor\ndw_reader 只读（步 10）" { class: note; shape: text; style.font-size: 11 }
+  }
+}
+
+# ── 泳道三：SSE 出口 · 前端渲染 ──
+
+ph3: "SSE 出口 · 前端渲染" {
+  style.fill: "#faf7f0"
+  style.stroke: "#b9ab93"
+  style.border-radius: 8
+  direction: right
+
+  s9: {
+    style.opacity: 0
+    direction: down
+    chip: "⑨ SSE 事件流回" { class: plain; style.bold: true; style.font-size: 15 }
+    cap: "orchestrator.py · events()\n必以 result 或 error 收尾" { class: note; shape: text; style.font-size: 11 }
+  }
+  s10: {
+    style.opacity: 0
+    direction: down
+    chip: "⑩ 按契约解析" { class: plain; style.bold: true; style.font-size: 15 }
+    cap: "api.ts · SseParser\nparseAgentEvent（sse.schema.json）" { class: note; shape: text; style.font-size: 11 }
+  }
+  s11: {
+    style.opacity: 0
+    direction: down
+    chip: "⑪ 渲染旅程终态（App.tsx）" { class: pass; style.bold: true; style.font-size: 15 }
+    cap: "StepRail 步骤条 · ResultTable 结果表\nErrorCard 错误卡（errors.yaml 码→人话）" { class: note; shape: text; style.font-size: 11 }
+  }
+}
+
+# ── 主链箭头 ──
+
+s1.chip -> s2.chip { style.stroke-width: 2 }
+s2.chip -> s3.chip { style.stroke-width: 2 }
+s3.chip -> s4.chip { style.stroke-width: 2 }
+s4.chip -> s5.chip { style.stroke-width: 2 }
+s5.chip -> s6.chip { style.stroke-width: 2 }
+s6.chip -> s8.chip: "通过" {
+  style.stroke-width: 2
+  style.stroke: "#2f5d46"
+}
+s8.chip -> s9.chip { style.stroke-width: 2 }
+s9.chip -> s10.chip { style.stroke-width: 2 }
+s10.chip -> s11.chip { style.stroke-width: 2 }
+
+# ── ⑥ ⇄ ⑦ 校验—校正环 ──
+
+s6.chip -> s7.chip: "可重试（retryable）" {
+  style.stroke-width: 2
+  style.stroke: "#a9362a"
+}
+s7.chip -> s6.chip: "重新校验 · 校正后回 ⑥ 重验（校正回退边）" {
+  style.stroke-width: 2
+  style.stroke: "#c2410c"
+  style.stroke-dash: 3
+}
+
+# ── 失败路径 ──
+
+s6.chip -> s9.chip: "不可重试 / 超次 → error（有名字）" {
+  style.stroke-width: 2
+  style.stroke: "#a9362a"
+  style.stroke-dash: 3
+}
+
+# ── 口径说明 ──
+
+notes: "口径说明（便签）" {
+  class: note
+  direction: down
+  style.border-radius: 8
+
+  n1: "12 个节点分属 steps.yaml 的 10 个 stage 分组（第 2 阶段「召回」含 3 个节点：列/值/指标）；correct_sql（第 9 阶段）是条件节点，界面在 12 个节点格上标「1 条件步」；图注 ①–⑪ 是旅程场景序号，不是节点数。" {
+    class: note
+    shape: text
+    style.font-size: 12
+  }
+  n2: "validate_sql = guard（SQL 粗筛）+ policy（AST 安全复查）；校正后回 validate 重验；SQL_REJECTED 永不进 correction，次数写在契约里（correction.max_attempts = 1 [当前值]）。16 码 = 6 可重试 + 10 不可重试。" {
+    class: note
+    shape: text
+    style.font-size: 12
+  }
+  n3: "SSE 流必以 result 或 error 收尾，异常兜成 INTERNAL_ERROR，绝不静默（orchestrator.py · AgentRunner.events）。" {
+    class: note
+    shape: text
+    style.font-size: 12
+  }
+}
+
+# ── 图例 ──
+
+legend: "图例 · 用户旅程图怎么读" {
+  style.fill: "#faf7f0"
+  style.stroke: "#b9ab93"
+  style.border-radius: 8
+  direction: right
+
+  lg1: "旅程一步 chip" {
+    class: plain
+    style.font-size: 12
+  }
+  lg1_t: "横向时间线一步；下挂「文件:符号」小字锚定真实源码" {
+    shape: text
+    class: note
+    style.font-size: 12
+  }
+  lg2: "绿框" {
+    class: pass
+    style.font-size: 12
+  }
+  lg2_t: "双保险校验（⑥ validate_sql）/ 终态渲染（⑪）" {
+    shape: text
+    class: note
+    style.font-size: 12
+  }
+  lg3: "红框" {
+    class: danger
+    style.font-size: 12
+  }
+  lg3_t: "条件步骤（⑦ correct_sql，不触发时显式 skipped）" {
+    shape: text
+    class: note
+    style.font-size: 12
+  }
+  lg4: "橙虚线" {
+    class: plain
+    style.stroke: "#c2410c"
+    style.stroke-dash: 3
+    style.font-size: 12
+  }
+  lg4_t: "校正回退边：⑦ 校正后回 ⑥ 重新校验" {
+    shape: text
+    class: note
+    style.font-size: 12
+  }
+  lg5: "红虚线" {
+    class: plain
+    style.stroke: "#a9362a"
+    style.stroke-dash: 3
+    style.font-size: 12
+  }
+  lg5_t: "失败路径：不可重试 / 超次 → error（有名字）" {
+    shape: text
+    class: note
+    style.font-size: 12
+  }
+  lg6: "图例原注：绿框 = 双保险校验；红框 = 条件步骤（不触发时显式 skipped）；虚线 = 失败路径。每一步都锚定真实文件 · 符号。" {
+    shape: text
+    class: note
+    style.font-size: 12
+  }
+}

@@ -1,0 +1,245 @@
+# 19 · 值域分类决策树（哪些列写 ES）
+# 只有「维度列 + enum 或低基数 open」逐值写 ES 并置 sync_values=1；
+# range / 主键 / 外键 / 度量一律 sync_values=0，不写 ES。
+
+direction: down
+
+classes: {
+  gate: { style.fill: "#f3ece0"; style.stroke: "#a8926a"; style.font-color: "#4a3f2c"; style.stroke-width: 2 }
+  pass: { style.fill: "#e7efe8"; style.stroke: "#2f5d46"; style.font-color: "#244636"; style.stroke-width: 2 }
+  danger: { style.fill: "#f6e8e6"; style.stroke: "#a9362a"; style.font-color: "#7c2a22"; style.stroke-width: 2 }
+  store: { style.fill: "#e8eef0"; style.stroke: "#3d6270"; style.font-color: "#24414c"; style.stroke-width: 2 }
+  note: { style.fill: "#f7f4ee"; style.stroke: "#b9ab93"; style.font-color: "#6f6557"; style.stroke-width: 2 }
+  plain: { style.fill: "#fdfbf7"; style.stroke: "#6b5d49"; style.font-color: "#211b15"; style.stroke-width: 2 }
+  leaf: { style.border-radius: 14; style.stroke-width: 2 }
+}
+
+title: "19 · 值域分类决策树（哪些列写 ES）· 阈值 max_value_docs 默认 1000" {
+  shape: text
+  style.font-size: 20
+  style.bold: true
+  style.font-color: "#211b15"
+}
+
+# ── 入口 ──
+
+S: "契约列 value_domain" {
+  class: plain
+  style.bold: true
+}
+
+# ── 判定节点（shape: diamond）──
+
+R: "role = dimension ?" {
+  shape: diamond
+  class: gate
+}
+
+K: "value_domain.kind 是什么？" {
+  shape: diamond
+  class: gate
+}
+
+O: "distinct 基数 ≤ 1000？（0 < n ≤ max_value_docs，默认 1000）" {
+  shape: diamond
+  class: gate
+}
+
+# ── 中间步骤（圆角框）──
+
+E: "枚举列 · 取 distinct 全集" {
+  class: [gate; leaf]
+}
+
+E2: "低基数开放文本 · 取 distinct 全集" {
+  class: [gate; leaf]
+}
+
+W: "逐值生成 ValueDoc（id = column_id.value）" {
+  class: [pass; leaf]
+  style.bold: true
+}
+
+# ── 叶子结论（圆角框：写 ES / 不写 ES）──
+
+X1: "不写 ES（主键 / 外键 / 度量 / 超阈值）\nsync_values=false" {
+  class: [danger; leaf]
+}
+
+X2: "不写 ES（range / id / foreign_key）\nsync_values=false" {
+  class: [danger; leaf]
+}
+
+# ── 落点（存储与元数据字段）──
+
+ES: "ES value_index_rebuild\n76 篇文档（enum 41 值 + open 35 值）" {
+  shape: cylinder
+  class: store
+}
+
+SY: "column_info.sync_values = 1" {
+  class: [pass; leaf]
+}
+
+N: "column_info.sync_values = 0" {
+  class: [note; leaf]
+}
+
+T: "examples 仍只存前 10 条\n完整值域只在 ES" {
+  class: [note; leaf]
+}
+
+Q: "S3 关键词召回\nvalue 命中的 column_id" {
+  class: [note; leaf]
+}
+
+U: "Meta 只描述结构\n不承诺值域已索引" {
+  class: [note; leaf]
+}
+
+# ── 判定边 ──
+
+S -> R
+R -> X1: "否：主键 / 外键 / 度量" {
+  style.stroke-width: 2
+}
+R -> K: "是" {
+  style.stroke-width: 2
+}
+K -> E: "enum" {
+  style.stroke-width: 2
+}
+K -> O: "open" {
+  style.stroke-width: 2
+}
+K -> X2: "range / id / foreign_key" {
+  style.stroke-width: 2
+}
+O -> E2: "是：如 customer_name 20 值、product_name 15 值" {
+  style.stroke-width: 2
+}
+O -> X1: "否：超过阈值 1000" {
+  style.stroke-width: 2
+}
+E -> W: "写 ES" {
+  style.stroke-width: 2
+}
+E2 -> W: "写 ES" {
+  style.stroke-width: 2
+}
+W -> ES {
+  style.stroke-width: 3
+}
+W -> SY {
+  style.stroke-width: 2
+}
+X1 -> N {
+  style.stroke-width: 2
+  style.stroke: "#a9362a"
+}
+X2 -> N {
+  style.stroke-width: 2
+  style.stroke: "#a9362a"
+}
+SY -> T {
+  style.stroke-width: 2
+}
+ES -> Q {
+  style.stroke-width: 2
+}
+N -> U {
+  style.stroke-width: 2
+}
+
+# ── 口径说明 ──
+
+notes: "口径说明（便签）" {
+  class: note
+  direction: down
+  style.border-radius: 8
+
+  n1: "每个 ValueDoc.id = column_id.value，写入 value_index_rebuild，字段为 id / value / column_id。" {
+    class: note
+    shape: text
+    style.font-size: 12
+  }
+  n2: "sync_values 是写入 column_info 的布尔列，记录「这列的完整取值是否已经进了 ES」；目前是元数据记录，不是 S3 的运行时开关（S3 读 Meta 的 examples 并显式带 examples_truncated=True）。" {
+    class: note
+    shape: text
+    style.font-size: 12
+  }
+  n3: "date_id、month、day、order_amount 属 range / id / foreign_key 类，一律不写 ES；range 列将来需要范围检索，必须改契约与 S2 规则，而不是手工往 ES 塞文档。" {
+    class: note
+    shape: text
+    style.font-size: 12
+  }
+  n4: "76 篇 ES 文档是本数据集的结果（enum 41 值 + open 35 值），不是固定常量；换数据集计数会变，但规则不变。" {
+    class: note
+    shape: text
+    style.font-size: 12
+  }
+  n5: "兜底 payload 里 examples=[]、sync_values=False（recall/catalog.py）；Meta 的 examples 显式截断前 10 条（EXAMPLES_LIMIT = 10），S3 不能把它当全集。" {
+    class: note
+    shape: text
+    style.font-size: 12
+  }
+}
+
+# ── 图例 ──
+
+legend: "图例 · 决策树（值域分类）怎么读" {
+  style.fill: "#faf7f0"
+  style.stroke: "#b9ab93"
+  style.border-radius: 8
+  direction: right
+
+  lg1: "判定？" {
+    shape: diamond
+    class: gate
+    style.font-size: 12
+  }
+  lg1_t: "菱形 = 判定节点（role 是什么？kind 是什么？基数 ≤ 1000？）" {
+    shape: text
+    class: note
+    style.font-size: 12
+  }
+  lg2: "写 ES" {
+    class: pass
+    class: leaf
+    style.font-size: 12
+  }
+  lg2_t: "圆角绿框 = 叶子结论「写 ES」，逐值生成 ValueDoc" {
+    shape: text
+    class: note
+    style.font-size: 12
+  }
+  lg3: "不写 ES" {
+    class: danger
+    class: leaf
+    style.font-size: 12
+  }
+  lg3_t: "圆角红框 = 叶子结论「不写 ES」，sync_values=false" {
+    shape: text
+    class: note
+    style.font-size: 12
+  }
+  lg4: "存储" {
+    shape: cylinder
+    class: store
+    style.font-size: 12
+  }
+  lg4_t: "圆柱 = 存储落点（ES value_index_rebuild）" {
+    shape: text
+    class: note
+    style.font-size: 12
+  }
+  lg5: "便签" {
+    class: note
+    style.font-size: 12
+  }
+  lg5_t: "灰便签 = 口径说明与元数据字段（sync_values / examples）" {
+    shape: text
+    class: note
+    style.font-size: 12
+  }
+}

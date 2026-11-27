@@ -1,0 +1,81 @@
+direction: down
+classes: {
+  plain: { style.fill: "#fdfbf7"; style.stroke: "#6b5d49"; style.font-color: "#211b15"; style.border-radius: 4 }
+  danger: { style.fill: "#f6e8e6"; style.stroke: "#a9362a"; style.font-color: "#7c2a22"; style.border-radius: 4 }
+  empty: { style.fill: "#f7f4ee"; style.stroke: "#b9ab93"; style.font-color: "#6f6557"; style.border-radius: 4 }
+  cancel: { style.fill: "#f5f3ff"; style.stroke: "#7c3aed"; style.font-color: "#4c1d95"; style.border-radius: 4 }
+  gate: { style.fill: "#f3ece0"; style.stroke: "#a8926a"; style.font-color: "#4a3f2c"; style.border-radius: 4 }
+  note: { style.fill: "#f7f4ee"; style.stroke: "#b9ab93"; style.font-color: "#6f6557"; style.border-radius: 8 }
+  chip: { style.fill: "#f6e8e6"; style.stroke: "#a9362a"; style.font-color: "#7c2a22"; style.border-radius: 4; style.stroke-width: 2 }
+  chippass: { style.fill: "#e7efe8"; style.stroke: "#2f5d46"; style.font-color: "#244636"; style.border-radius: 4; style.stroke-width: 2 }
+  dangeredge: { style.stroke: "#a9362a"; style.stroke-width: 2; style.font-color: "#7c2a22" }
+  passedge: { style.stroke: "#2f5d46"; style.stroke-width: 2; style.font-color: "#244636" }
+  emptyedge: { style.stroke: "#b9ab93"; style.stroke-width: 2; style.font-color: "#6f6557" }
+  canceledge: { style.stroke: "#7c3aed"; style.stroke-width: 2; style.font-color: "#4c1d95" }
+}
+
+ROOT: "contracts/errors.yaml\n16 码 / 3 class" { class: plain }
+
+fail: "failure · 14 码 · 红框 + 失败步骤红叉" {
+  style.fill: "#f6e8e6"; style.stroke: "#a9362a"; style.font-color: "#7c2a22"; style.border-radius: 8
+  direction: down
+  fr: "retryable = true · 6 码 · 可校正一次（correct_sql）" {
+    style.fill: "#fdfbf7"; style.stroke: "#2f5d46"; style.font-color: "#244636"; style.border-radius: 8
+    grid-columns: 3
+    f1: "SQL_SYNTAX" { class: chippass }
+    f2: "SQL_UNKNOWN_COLUMN" { class: chippass }
+    f3: "SQL_UNKNOWN_TABLE" { class: chippass }
+    f4: "SQL_CONSTANT_PROJECTION" { class: chippass }
+    f5: "SQL_MISSING_ORDER_BY" { class: chippass }
+    f6: "SQL_MISSING_LIMIT" { class: chippass }
+  }
+  fn: "retryable = false · 8 码 · 校正不适用，直接进错误通道" {
+    style.fill: "#fdfbf7"; style.stroke: "#a9362a"; style.font-color: "#7c2a22"; style.border-radius: 8
+    grid-columns: 4
+    n1: "SQL_REJECTED" { class: chip }
+    n2: "LLM_REFUSAL" { class: chip }
+    n3: "TIMEOUT" { class: chip }
+    n4: "SQL_NOT_READ_ONLY" { class: chip }
+    n5: "SQL_MULTIPLE_STATEMENTS" { class: chip }
+    n6: "SQL_EMPTY" { class: chip }
+    n7: "SQL_EXECUTION_ERROR" { class: chip }
+    n8: "INTERNAL_ERROR" { class: chip }
+  }
+  fr -> fn: "6 / 10 分野" { class: dangeredge }
+}
+
+empty: "empty · 1 码 · 空态卡，不标红（审计 FP-8）" {
+  style.fill: "#f7f4ee"; style.stroke: "#b9ab93"; style.font-color: "#6f6557"; style.border-radius: 8
+  direction: down
+  e1: "EMPTY_RESULT\n查询成功但没有数据" { class: empty }
+}
+
+canc: "cancelled · 1 码 · 取消态，既不算 done 也不算失败" {
+  style.fill: "#f5f3ff"; style.stroke: "#7c3aed"; style.font-color: "#4c1d95"; style.border-radius: 8
+  direction: down
+  k1: "CANCELLED\n用户主动停止" { class: cancel }
+}
+
+CH: "ChannelError · 统一失败形状\nto_event() → SSE 事件" { class: gate }
+
+SPLIT: "retryable 分野 6 / 10：6 码可校正 vs 10 码不可重试\n校正：max_attempts=1 · prompt=correct_sql · revalidate=true，产物必须重过 guard 与 policy\n不可重试 10 码 = failure 8 码 + EMPTY_RESULT + CANCELLED\nSQL_REJECTED 永不可重试：拿被拒 SQL 去问模型「改一下」等于给注入开重试口子" { class: note }
+
+ROOT -> fail: "按 class 分组" { class: dangeredge }
+ROOT -> empty: "按 class 分组" { class: emptyedge }
+ROOT -> canc: "按 class 分组" { class: canceledge }
+
+fr -> CH: "correct_sql 最多 1 次\n重过 guard + policy" { class: passedge }
+fn -> CH: "直接进错误通道" { class: dangeredge }
+e1 -> CH: "空态事件" { class: emptyedge }
+k1 -> CH: "取消事件" { class: canceledge }
+
+legend: "图例 · 错误码分类怎么读" {
+  style.fill: "#faf7f0"; style.stroke: "#b9ab93"; style.border-radius: 8
+  direction: right
+  lg1: "红 = failure 失败（14 码）" { class: danger }
+  lg2: "灰 = empty 空结果（不标红）" { class: empty }
+  lg3: "紫 = cancelled 用户取消" { class: cancel }
+  lg4: "橙 = 统一错误通道" { class: gate }
+  lg5: "绿芯片 = retryable=true，可校正一次" { class: chippass }
+  lg6: "红芯片 = retryable=false，不可重试" { class: chip }
+}

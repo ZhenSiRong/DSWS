@@ -1,0 +1,93 @@
+direction: down
+classes: {
+  gate: { style.fill: "#f3ece0"; style.stroke: "#a8926a"; style.font-color: "#4a3f2c"; style.stroke-width: 2 }
+  pass: { style.fill: "#e7efe8"; style.stroke: "#2f5d46"; style.font-color: "#244636"; style.stroke-width: 2 }
+  danger: { style.fill: "#f6e8e6"; style.stroke: "#a9362a"; style.font-color: "#7c2a22"; style.stroke-width: 2 }
+  store: { style.fill: "#e8eef0"; style.stroke: "#3d6270"; style.font-color: "#24414c"; style.stroke-width: 2 }
+  note: { style.fill: "#f7f4ee"; style.stroke: "#b9ab93"; style.font-color: "#6f6557"; style.stroke-width: 2 }
+  plain: { style.fill: "#fdfbf7"; style.stroke: "#6b5d49"; style.font-color: "#211b15"; style.stroke-width: 2 }
+  gateedge: { style.stroke: "#a8926a"; style.stroke-width: 3; style.font-color: "#4a3f2c" }
+  stopedge: { style.stroke: "#a9362a"; style.stroke-width: 2; style.font-color: "#7c2a22" }
+}
+
+intro: "docker compose up 是一道四级闸门：三存储 healthy → init 退出 0 → backend healthy → frontend 启动；任何一级不过，后面的服务都不会起来" {
+  class: note
+  style.border-radius: 8
+}
+
+trigger: "Operator · make docker-up → Compose 按 depends_on 拉起" { class: note; style.border-radius: 8 }
+
+p1: "阶段 1 · 三存储 healthy" {
+  style.fill: "#fdfbf7"; style.stroke: "#6b5d49"; style.stroke-width: 2; style.border-radius: 8
+  direction: right
+  mysql: "MySQL\nmysqladmin ping\n5s × 60 · start_period 30s" { class: store; shape: cylinder }
+  es: "Elasticsearch\n_cluster/health?wait_for_status=yellow\n10s × 30 · start_period 30s" { class: store; shape: cylinder }
+  qdrant: "Qdrant\n/readyz 返回 200 · 10s × 30\nstart_period 10s · 要求 ≥ v1.5.0" { class: store; shape: cylinder }
+}
+
+p2: "阶段 2 · init（docker_init.py）" {
+  style.fill: "#fdfbf7"; style.stroke: "#6b5d49"; style.stroke-width: 2; style.border-radius: 8
+  direction: right
+  i1: "depends_on 三存储\nservice_healthy" { class: plain }
+  i2: "轮询三项就绪\n每项最多 180s" { class: plain }
+  i3: "开通 dw_reader\n验证只读" { class: plain }
+  i4: "--verify 元知识" { class: gate }
+  i5: "校验失败才 --fresh 重建三存储\n+ 再次 --verify" { class: note }
+  i6: "退出 0\n（verify 通过则 skip rebuild）" { class: pass }
+  i1 -> i2: "" { style.stroke-width: 2 }
+  i2 -> i3: "" { style.stroke-width: 2 }
+  i3 -> i4: "" { style.stroke-width: 2 }
+  i4 -> i6: "通过" { style.stroke-width: 2 }
+  i4 -> i5: "校验失败" { style.stroke-width: 2 }
+  i5 -> i6: "再 verify 过" { style.stroke-width: 2 }
+}
+
+p3: "阶段 3 · backend" {
+  style.fill: "#fdfbf7"; style.stroke: "#6b5d49"; style.stroke-width: 2; style.border-radius: 8
+  direction: right
+  b1: "depends_on init\nservice_completed_successfully\n只有 init 退出 0 才启动" { class: plain }
+  b2: "/api/health · healthy" { class: pass }
+  b3: "固定单 worker\n取消注册表是进程内状态" { class: note }
+  b1 -> b2: "" { style.stroke-width: 2 }
+}
+
+p4: "阶段 4 · frontend" {
+  style.fill: "#fdfbf7"; style.stroke: "#6b5d49"; style.stroke-width: 2; style.border-radius: 8
+  direction: right
+  f1: "depends_on backend: service_healthy" { class: plain }
+  f2: "/healthz · healthy" { class: pass }
+  f1 -> f2: "" { style.stroke-width: 2 }
+}
+
+p5: "阶段 5 · smoke 验收" {
+  style.fill: "#fdfbf7"; style.stroke: "#6b5d49"; style.stroke-width: 2; style.border-radius: 8
+  direction: right
+  s1: "5 healthy + init Exited (0)" { class: pass }
+  s2: "四级闸门全过 → 交付确认" { class: pass }
+  s1 -> s2: "" { style.stroke-width: 2 }
+}
+
+stop1: "停点 1 · init 不会被拉起" { class: danger }
+stop2: "停点 2 · backend 不会启动" { class: danger }
+stop3: "停点 3 · frontend 不会启动" { class: danger }
+
+trigger -> p1: "" { class: gateedge }
+p1 -> p2: "闸门 1 · healthy 3/3" { class: gateedge }
+p2 -> p3: "闸门 2 · init 退出 0" { class: gateedge }
+p3 -> p4: "闸门 3 · /api/health healthy" { class: gateedge }
+p4 -> p5: "闸门 4 · /healthz healthy" { class: gateedge }
+
+p1 -> stop1: "存储不 healthy → 停在 init 前" { class: stopedge }
+p2 -> stop2: "init 非 0 → 停在 backend 前" { class: stopedge }
+p3 -> stop3: "backend 不 healthy → 停在 frontend 前" { class: stopedge }
+
+legend: "图例 · 启动时序怎么读" {
+  style.fill: "#faf7f0"; style.stroke: "#b9ab93"; style.border-radius: 8
+  direction: right
+  lg1: "大框 = 阶段泳道（phase），自上而下按启动顺序" { class: plain }
+  lg2: "圆柱 = 存储 healthy 检查" { class: store; shape: cylinder }
+  lg3: "tan 小框 = 闸门判定点（--verify 元知识）" { class: gate }
+  lg4: "绿 = 通过 / healthy 收尾" { class: pass }
+  lg5: "粗 tan 箭头 = 闸门条件（过闸才进下一阶段）" { class: plain; style.stroke: "#a8926a"; style.stroke-width: 3 }
+  lg6: "红箭头 + 红框 = 失败停点（下一服务不启动）" { class: danger }
+}

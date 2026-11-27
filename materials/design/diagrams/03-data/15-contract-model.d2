@@ -1,0 +1,182 @@
+# 15 · 契约模型（表 / 列 / 指标 / 值域 / 列—指标）
+# schema.contract.yaml 把表、列、指标、值域、列—指标关系建模成五个对象；
+# 列—指标关系共 9 条，是 6 个指标 relevant_columns 的并集。
+
+direction: right
+
+classes: {
+  gate: { style.fill: "#f3ece0"; style.stroke: "#a8926a"; style.font-color: "#4a3f2c"; style.stroke-width: 2 }
+  pass: { style.fill: "#e7efe8"; style.stroke: "#2f5d46"; style.font-color: "#244636"; style.stroke-width: 2 }
+  danger: { style.fill: "#f6e8e6"; style.stroke: "#a9362a"; style.font-color: "#7c2a22"; style.stroke-width: 2 }
+  store: { style.fill: "#e8eef0"; style.stroke: "#3d6270"; style.font-color: "#24414c"; style.stroke-width: 2 }
+  note: { style.fill: "#f7f4ee"; style.stroke: "#b9ab93"; style.font-color: "#6f6557"; style.stroke-width: 2 }
+  plain: { style.fill: "#fdfbf7"; style.stroke: "#6b5d49"; style.font-color: "#211b15"; style.stroke-width: 2 }
+}
+
+title: "15 · 契约模型（表 / 列 / 指标 / 值域 / 列—指标）· dry-run 计数 5 表 / 24 列 / 6 指标 / 9 对" {
+  shape: text
+  style.font-size: 20
+  style.bold: true
+  style.font-color: "#211b15"
+}
+
+# ── 五个契约对象：shape: sql_table，字段写进列区 ──
+
+tables: "Table（表）" {
+  shape: sql_table
+  class: plain
+  name: string
+  role: string
+  grain: string
+  description: string
+  primary_key: string
+  foreign_keys: "ForeignKey[]"
+  measures: "Measure[]"
+}
+
+columns: "Column（列）" {
+  shape: sql_table
+  class: plain
+  name: string
+  type: string
+  role: string
+  nullable: bool
+  description: string
+  aliases: "string[]"
+  value_domain: ValueDomain
+}
+
+metrics: "Metric（指标）" {
+  shape: sql_table
+  class: plain
+  name: string
+  "label": string
+  description: string
+  formula: string
+  relevant_columns: "string[]"
+  aliases: "string[]"
+  aggregation: string
+  expected_value: float
+  grain: string
+  rejected_values: "RejectedValue[]"
+}
+
+value_domain: "ValueDomain（值域）" {
+  shape: sql_table
+  class: plain
+  kind: string
+  values: "string[]"
+  min: int
+  max: int
+  pattern: string
+  format: string
+}
+
+column_metric: "ColumnMetric（列—指标）" {
+  shape: sql_table
+  class: plain
+  column_id: string {constraint: primary_key}
+  metric_id: string {constraint: primary_key}
+}
+
+# ── 引用箭头（标注基数，内容对齐 classDiagram）──
+
+tables -> columns: "1 *-- 24 · 拥有" {
+  style.stroke-width: 2
+}
+columns -> value_domain: "1 *-- 1 · 约束" {
+  style.stroke-width: 2
+}
+columns -> column_metric: "1 -- 0..* · 参与" {
+  style.stroke-width: 2
+}
+metrics -> column_metric: "1 -- 0..* · 覆盖" {
+  style.stroke-width: 2
+}
+metrics -> columns: "1 ..> 1..* · 引用 relevant_columns" {
+  style.stroke-width: 2
+  style.stroke-dash: 3
+}
+
+# ── 口径说明（黄色便签）：顶层与匿名子结构、三条 note ──
+
+notes: "口径说明（便签）" {
+  class: note
+  direction: down
+  style.border-radius: 8
+
+  n_schema: "SchemaContract（顶层）：version / dataset / expected_tables / expected_fact_rows / date_range / total_amount / total_quantity。声明 1 → 5 Table、1 → 6 Metric。" {
+    class: note
+    shape: text
+  }
+  n_sub: "ForeignKey（匿名子结构）：column / references；Measure：column / aggregation / unit。Table 1 *-- 0..* 声明它们，不是独立数据库表。" {
+    class: note
+    shape: text
+  }
+  n_grain: "Table 的 grain 写明一行代表什么：省 / 客户 / 商品 / 天 / 一单。" {
+    class: note
+    shape: text
+  }
+  n_kind: "ValueDomain.kind 只有五种：enum / range / id / foreign_key / open。" {
+    class: note
+    shape: text
+  }
+  n_cm: "ColumnMetric 是派生表：9 条关系 = 6 个指标 relevant_columns 之和；契约里不单独写，由 BuildPlan.column_metric_pairs() 展开，复合主键 (column_id, metric_id)。" {
+    class: note
+    shape: text
+  }
+  n_dry: "计数证据：build_meta_knowledge --dry-run → 5 表 / 24 列 / 6 指标 / 9 对（contracts/schema.contract.yaml L15–L399）。" {
+    class: note
+    shape: text
+  }
+}
+
+# ── 图例 ──
+
+legend: "图例 · 契约模型（ER）怎么读" {
+  style.fill: "#faf7f0"
+  style.stroke: "#b9ab93"
+  style.border-radius: 8
+  direction: right
+
+  lg1: "sql_table 实体" {
+    shape: sql_table
+    class: plain
+    f1: 字段写在列区
+  }
+  lg1_t: "契约对象（表 / 列 / 指标 / 值域 / 列—指标）" {
+    shape: text
+    class: note
+    style.font-size: 12
+  }
+  lg2: "实线箭头" {
+    class: plain
+    style.stroke-width: 2
+    style.font-size: 12
+  }
+  lg2_t: "组合 / 关联，边上标注基数（如 1 *-- 24 · 拥有）" {
+    shape: text
+    class: note
+    style.font-size: 12
+  }
+  lg3: "虚线箭头" {
+    class: plain
+    style.stroke-width: 2
+    style.stroke-dash: 3
+    style.font-size: 12
+  }
+  lg3_t: "引用 relevant_columns（列—指标派生来源）" {
+    shape: text
+    class: note
+    style.font-size: 12
+  }
+  lg4: "便签" {
+    class: note
+    style.font-size: 12
+  }
+  lg4_t: "口径说明：顶层 SchemaContract、匿名子结构与派生规则" {
+    shape: text
+    class: note
+    style.font-size: 12
+  }
+}

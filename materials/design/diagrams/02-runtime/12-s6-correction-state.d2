@@ -1,0 +1,55 @@
+direction: down
+classes: {
+  plain: { style.fill: "#fdfbf7"; style.stroke: "#6b5d49"; style.font-color: "#211b15"; style.border-radius: 14; style.stroke-width: 2 }
+  ok: { style.fill: "#e7efe8"; style.stroke: "#2f5d46"; style.font-color: "#244636"; style.border-radius: 14; style.stroke-width: 2 }
+  danger: { style.fill: "#f6e8e6"; style.stroke: "#a9362a"; style.font-color: "#7c2a22"; style.border-radius: 14; style.stroke-width: 2 }
+  cancel: { style.fill: "#f2efe9"; style.stroke: "#8a7c66"; style.font-color: "#4a4237"; style.border-radius: 14; style.stroke-width: 2 }
+  term: { style.fill: "#fdfbf7"; style.stroke: "#211b15"; style.stroke-width: 3 }
+  edge: { style.stroke-width: 2; style.font-color: "#4a4237" }
+}
+
+Start: "" { shape: circle; width: 18; height: 18; style.fill: "#211b15"; style.stroke: "#211b15" }
+Init: "初始 · 收到 query" { class: plain }
+Ctx: "上下文 8 阶段" { class: plain }
+Gen: "生成 generate_sql" { class: plain }
+Val: "校验 validate_sql" { class: plain }
+Cor: "校正 correct_sql ×1" { class: plain }
+Run: "执行 run_sql" { class: plain }
+Ok: "result\nrows>0" { class: ok }
+Empty: "空结果\nEMPTY_RESULT" { class: ok }
+Err: "失败终止\nerror" { class: danger }
+Can: "用户取消\nCANCELLED" { class: cancel }
+Term: "◉" { shape: circle; width: 30; height: 30; class: term; style.font-size: 15 }
+
+Start -> Init: "" { class: edge }
+Init -> Ctx: "" { class: edge }
+Ctx -> Gen: "8 阶段全 success" { class: edge }
+Ctx -> Err: "阶段抛异常" { class: edge }
+Ctx -> Can: "检测到取消" { class: edge }
+Gen -> Val: "draft.sql 非空" { class: edge }
+Gen -> Err: "refusal / 异常" { class: edge }
+Val -> Run: "通过" { class: edge }
+Val -> Cor: "可重试且 attempts=0" { class: edge }
+Val -> Err: "不可重试 / 次数用尽" { class: edge }
+Cor -> Val: "重新校验 guard+policy（唯一回退边）" { style.stroke: "#c2410c"; style.stroke-width: 3; style.stroke-dash: 3; style.font-color: "#c2410c" }
+Cor -> Err: "校正失败" { class: edge }
+Run -> Ok: "rows>0" { class: edge }
+Run -> Empty: "rows=0" { class: edge }
+Run -> Err: "执行错误" { class: edge }
+Run -> Can: "执行中被取消" { class: edge }
+Ok -> Term: "" { class: edge }
+Empty -> Term: "" { class: edge }
+Err -> Term: "" { class: edge }
+Can -> Term: "" { class: edge }
+
+legend: "图例 · 状态机怎么读" {
+  style.fill: "#faf7f0"; style.stroke: "#b9ab93"; style.border-radius: 8
+  direction: right
+  lg1: "● 起点" { shape: circle; width: 16; height: 16; style.fill: "#211b15"; style.stroke: "#211b15" }
+  lg2: "圆角框 = 中间状态" { class: plain }
+  lg3: "绿 = 结果/空结果" { class: ok }
+  lg4: "红 = 失败终止" { class: danger }
+  lg5: "灰 = 用户取消" { class: cancel }
+  lg6: "◉ 终态（双圈）" { shape: circle; width: 24; height: 24; class: term; style.font-size: 12 }
+  lg7: "橙色虚线 = 全图唯一回退边" { class: plain; style.stroke: "#c2410c"; style.stroke-dash: 3 }
+}

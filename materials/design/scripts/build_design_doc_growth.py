@@ -163,9 +163,33 @@ def page_spreads(chain: str, left: Path, right: Path, d: dict) -> str:
     return "".join(out)
 
 
-def page_fig(rel: str, cap: str) -> str:
+def rasterize_svg(svg: Path, tmp: Path) -> Path:
+    """D2 的 SVG 靠 <style> 类选择器着色，WeasyPrint 不认——用 Chrome 栅格化成 PNG 再嵌入。
+    ELK 版图可能极宽，用 HTML 包装缩放到 1500px 盒内，2 倍密度截图，避免超大窗口。"""
+    import re
+    head = svg.read_text(encoding="utf-8")[:2000]
+    m_w, m_h = re.search(r'width="([\d.]+)', head), re.search(r'height="([\d.]+)', head)
+    w, h = (float(m_w.group(1)) if m_w else 1500.0), (float(m_h.group(1)) if m_h else 1200.0)
+    scale = min(1500.0 / w, 1500.0 / h)
+    fw, fh = max(int(w * scale), 40), max(int(h * scale), 40)
+    wrap = tmp / (svg.stem + "-wrap.html")
+    wrap.write_text(
+        f'<!doctype html><body style="margin:0;background:#fff">'
+        f'<img src="{svg.resolve().as_uri()}" style="width:{fw}px;height:{fh}px;display:block"></body>',
+        encoding="utf-8")
+    png = tmp / (svg.stem + ".png")
+    subprocess.run(
+        ["google-chrome", "--headless=new", "--disable-gpu", "--hide-scrollbars",
+         "--allow-file-access-from-files", "--force-device-scale-factor=2",
+         f"--window-size={fw},{fh}", f"--screenshot={png}", wrap.as_uri()],
+        check=True, capture_output=True, timeout=120)
+    return png
+
+
+def page_fig(rel: str, cap: str, tmp: Path) -> str:
     p = DIAG / rel
-    return f"""<div class="figwrap"><h2>{html.escape(cap)}</h2><img src="{p.resolve().as_uri()}"></div>
+    img = rasterize_svg(p, tmp)
+    return f"""<div class="figwrap"><h2>{html.escape(cap)}</h2><img src="{img.resolve().as_uri()}"></div>
 <div class="figcap">来源：materials/design/diagrams/{html.escape(rel)}</div><div class="pagebreak"></div>"""
 
 
@@ -247,7 +271,7 @@ def main() -> int:
         if not p.exists():
             print(f"缺图：{p}", file=sys.stderr)
             return 1
-        parts.append(page_fig(rel, cap))
+        parts.append(page_fig(rel, cap, tmp))
         n_pages += 1
     for c in CHAINS:
         parts.append(page_claims(c))

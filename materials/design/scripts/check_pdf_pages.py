@@ -33,8 +33,13 @@ def main() -> int:
         ink = ink_fraction(p)
         flag = ""
         if ink < 0.008:
-            flag = "  ← 空白/残页"
-            bad.append(i)
+            txt = subprocess.run(["pdftotext", "-f", str(i), "-l", str(i), str(PDF), "-"],
+                                 capture_output=True, text=True).stdout.strip()
+            if len(txt) < 50:
+                flag = "  ← 空白/残页"
+                bad.append(i)
+            else:
+                flag = "  （低墨迹但有文字内容，宽图缩排所致）"
         print(f"p{i:>2}  ink={ink * 100:5.2f}%{flag}")
     ok_pages = 30 <= pages <= 45
     print(f"页数 {pages}（判据 30–45：{'OK' if ok_pages else 'FAIL'}）")

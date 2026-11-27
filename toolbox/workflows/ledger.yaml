@@ -1,7 +1,7 @@
 meta:
   host: zhensirong-NMH-WXX9
   repo: /home/zhensirong/VM-Share/DSWS-design-lab
-  updated_at: 2026-11-27T03:21+08:00
+  updated_at: 2026-11-27T09:09+08:00
   render:
     doc: materials/humen-desicions/14-progress-gantt.md
     png: materials/humen-desicions/progress-gantt.png
@@ -652,3 +652,27 @@ tasks:
     override_reason: 主 worktree（continue-iterate）完成，R5+R6 连续零阻断复审；task/dg1 worktree
       未实体化
   reopen_reason: 重钉可命中的证据判据（原判据描述性文字无法被现场核对）
+- id: dg2
+  title: 24 页教程×源码可复现/跟随性测试：断层清单+修复+复验（目标 2）
+  group: design-doc
+  depends_on: []
+  status: doing
+  blocked_reason: null
+  failed_reason: null
+  started_at: 2026-11-27T09:09+08:00
+  ended_at: null
+  approx: false
+  worktree: /home/zhensirong/VM-Share/DSWS-design-lab-dg2
+  branch: task/dg2
+  agent: kimi-code
+  session_id: None
+  provenance: zhensirong-NMH-WXX9@/home/zhensirong/VM-Share/DSWS-design-lab-dg2&kimi-code
+    -s None
+  evidence: []
+  review:
+    verdict: null
+    reviewer: null
+    report: null
+    at: null
+    overridden: false
+    override_reason: null

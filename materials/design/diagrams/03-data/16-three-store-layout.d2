@@ -1,0 +1,244 @@
+# 16 · 一份契约如何落到三存储（region_name / order_amount）
+# 三列管道：schema.contract → BuildPlan → 三存储（MySQL / ES / Qdrant）
+# 粗箭头 = BuildPlan 写往存储的构建方向；逐列标注写什么 / 不写什么。
+
+direction: right
+
+classes: {
+  gate: { style.fill: "#f3ece0"; style.stroke: "#a8926a"; style.font-color: "#4a3f2c"; style.stroke-width: 2 }
+  pass: { style.fill: "#e7efe8"; style.stroke: "#2f5d46"; style.font-color: "#244636"; style.stroke-width: 2 }
+  danger: { style.fill: "#f6e8e6"; style.stroke: "#a9362a"; style.font-color: "#7c2a22"; style.stroke-width: 2 }
+  store: { style.fill: "#e8eef0"; style.stroke: "#3d6270"; style.font-color: "#24414c"; style.stroke-width: 2 }
+  note: { style.fill: "#f7f4ee"; style.stroke: "#b9ab93"; style.font-color: "#6f6557"; style.stroke-width: 2 }
+  plain: { style.fill: "#fdfbf7"; style.stroke: "#6b5d49"; style.font-color: "#211b15"; style.stroke-width: 2 }
+}
+
+title: "16 · 一份契约如何落到三存储（region_name / order_amount）· dry-run 计数 76 / 98 / 22" {
+  shape: text
+  style.font-size: 20
+  style.bold: true
+  style.font-color: "#211b15"
+}
+
+# ── 第 1 列：契约（schema.contract.yaml 逐列展开）──
+
+col_contract: "① 契约 schema.contract.yaml" {
+  class: plain
+  direction: down
+  style.border-radius: 8
+
+  c_head: "逐列展开（rules 全局，示例两列）" {
+    class: note
+    shape: text
+    style.font-size: 12
+  }
+  c1: "dim_region.region_name" {
+    class: plain
+    style.bold: true
+  }
+  c1d: "kind=enum · 5 个值（华南/华东/西南/华北/华中）\nrole=dimension · sync_values=true" {
+    class: note
+    shape: text
+    style.font-size: 12
+  }
+  c2: "fact_order.order_amount" {
+    class: plain
+    style.bold: true
+  }
+  c2d: "kind=range（30.0–9499.0）\nrole=measure · sync_values=false" {
+    class: note
+    shape: text
+    style.font-size: 12
+  }
+}
+
+# ── 第 2 列：BuildPlan（逐列判定写什么 / 不写什么）──
+
+col_plan: "② BuildPlan（plan.py）" {
+  class: gate
+  direction: down
+  style.border-radius: 8
+
+  p_rule: "_should_sync 只放行 dimension + enum/open + 基数阈值；\nenum / open 进 ES，range / 主键 / 外键 / 度量不写 ES" {
+    class: note
+    shape: text
+    style.font-size: 12
+  }
+  p1: "ColumnPlan · region_name" {
+    class: pass
+    style.bold: true
+  }
+  p1d: "写：enum 逐值展开取值文档" {
+    class: pass
+    shape: text
+    style.font-size: 12
+  }
+  p2: "ColumnPlan · order_amount" {
+    class: danger
+    style.bold: true
+  }
+  p2d: "不写：range 不展开取值" {
+    class: danger
+    shape: text
+    style.font-size: 12
+  }
+}
+
+# ── 第 3 列：三存储（MySQL Meta / ES / Qdrant）──
+
+col_stores: "③ 三存储" {
+  direction: down
+  style.fill: "#faf7f0"
+  style.stroke: "#b9ab93"
+  style.border-radius: 8
+
+  s_mysql: "MySQL Meta（meta_store.py）" {
+    shape: cylinder
+    class: store
+  }
+  s_mysql_d: "column_info：每列 1 行结构\nregion_name：examples 只取排序后前 10 条（EXAMPLES_LIMIT=10，本列共 5 条）\norder_amount：value_domain 原样存 JSON · sync_values=0" {
+    class: note
+    shape: text
+    style.font-size: 12
+  }
+  s_es: "ES value_index（es_store.py）" {
+    shape: cylinder
+    class: store
+  }
+  s_es_d: "字段 id / value / column_id\nregion_name：5 篇取值文档（id=dim_region.region_name.华南 这类）\norder_amount：0 篇——range 不进入取值索引" {
+    class: note
+    shape: text
+    style.font-size: 12
+  }
+  s_qd: "Qdrant points（qdrant_store.py）" {
+    shape: cylinder
+    class: store
+  }
+  s_qd_d: "名称/描述/别名各 1 点，去重\nregion_name：5 点（region_name、描述、地区、区域、大区）\norder_amount：5 点（order_amount、描述、订单金额、收入、成交金额）" {
+    class: note
+    shape: text
+    style.font-size: 12
+  }
+}
+
+# ── 粗箭头（3）：契约 → BuildPlan ──
+
+col_contract -> col_plan: "逐列展开" {
+  style.stroke-width: 3
+}
+
+# ── 粗箭头（3）：BuildPlan → 三存储，逐条标注写什么 / 不写什么 ──
+
+p1 -> s_mysql: "写 1 行结构" {
+  style.stroke-width: 3
+}
+p1 -> s_es: "写：enum 每个值 1 篇（5 篇）" {
+  style.stroke-width: 3
+}
+p1 -> s_qd: "写：名称/描述/别名各 1 点（5 点）" {
+  style.stroke-width: 3
+}
+p2 -> s_mysql: "写 1 行结构（sync_values=0）" {
+  style.stroke-width: 3
+}
+p2 -> s_es: "不写：range 不展开（0 篇）" {
+  style.stroke-width: 3
+  style.stroke: "#a9362a"
+  style.stroke-dash: 3
+}
+p2 -> s_qd: "写：名称/描述/别名各 1 点（5 点）" {
+  style.stroke-width: 3
+}
+
+# ── 口径说明 ──
+
+notes: "口径说明（便签）" {
+  class: note
+  direction: down
+  style.border-radius: 8
+
+  n1: "口径：Meta 存结构，ES 存取值，Qdrant 存可检索文本。region_name 与 order_amount 各出 1 Meta 行、0 或 5 ES 文档、5 Qdrant 点。" {
+    class: note
+    shape: text
+    style.font-size: 12
+  }
+  n2: "计数：24 列合计 98 个 column point；6 指标另有 22 个 metric point。dry-run（2026-10-27）→ 76 ES 文档 / 98 column points / 22 metric points。" {
+    class: note
+    shape: text
+    style.font-size: 12
+  }
+  n3: "箭头表示「由 BuildPlan 写往存储」的构建方向；查询时三个存储之间没有数据流动。" {
+    class: note
+    shape: text
+    style.font-size: 12
+  }
+  n4: "region_name 的 5 篇 ES 文档是按本数据集 6 行 dim_region 去重后的结果；换数据集计数会变，但规则不变。" {
+    class: note
+    shape: text
+    style.font-size: 12
+  }
+  n5: "Meta 的 examples 是显式截断（EXAMPLES_LIMIT = 10），不能当全集；完整取值只在 ES。" {
+    class: note
+    shape: text
+    style.font-size: 12
+  }
+}
+
+# ── 图例 ──
+
+legend: "图例 · 派生映射（三列管道）怎么读" {
+  style.fill: "#faf7f0"
+  style.stroke: "#b9ab93"
+  style.border-radius: 8
+  direction: right
+
+  lg1: "契约列" {
+    class: plain
+    style.font-size: 12
+  }
+  lg1_t: "schema.contract.yaml 的列（蓝=契约）" {
+    shape: text
+    class: note
+    style.font-size: 12
+  }
+  lg2: "BuildPlan" {
+    class: gate
+    style.font-size: 12
+  }
+  lg2_t: "逐列判定写什么 / 不写什么（黄=BuildPlan 关卡）" {
+    shape: text
+    class: note
+    style.font-size: 12
+  }
+  lg3: "存储" {
+    shape: cylinder
+    class: store
+    style.font-size: 12
+  }
+  lg3_t: "MySQL / ES / Qdrant（青=三存储）" {
+    shape: text
+    class: note
+    style.font-size: 12
+  }
+  lg4: "粗箭头" {
+    class: pass
+    style.stroke-width: 3
+    style.font-size: 12
+  }
+  lg4_t: "写入路径：BuildPlan 写往存储（构建方向）" {
+    shape: text
+    class: note
+    style.font-size: 12
+  }
+  lg5: "红虚线" {
+    class: danger
+    style.stroke-width: 3
+    style.stroke-dash: 3
+    style.font-size: 12
+  }
+  lg5_t: "不写：range / 主键 / 外键 / 度量不进 ES 取值索引" {
+    shape: text
+    class: note
+    style.font-size: 12
+  }
+}

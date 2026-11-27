@@ -1,0 +1,103 @@
+direction: down
+classes: {
+  gate: { style.fill: "#f3ece0"; style.stroke: "#a8926a"; style.font-color: "#4a3f2c"; style.border-radius: 4 }
+  pass: { style.fill: "#e7efe8"; style.stroke: "#2f5d46"; style.font-color: "#244636"; style.border-radius: 4 }
+  danger: { style.fill: "#f6e8e6"; style.stroke: "#a9362a"; style.font-color: "#7c2a22"; style.border-radius: 4 }
+  app: { style.fill: "#f5f3ff"; style.stroke: "#7c3aed"; style.font-color: "#4c1d95"; style.border-radius: 4 }
+  store: { style.fill: "#e8eef0"; style.stroke: "#3d6270"; style.font-color: "#24414c" }
+  note: { style.fill: "#f7f4ee"; style.stroke: "#b9ab93"; style.font-color: "#6f6557"; style.border-radius: 8 }
+  denyedge: { style.stroke: "#a9362a"; style.stroke-width: 2; style.font-color: "#7c2a22" }
+  passedge: { style.stroke: "#2f5d46"; style.stroke-width: 2; style.font-color: "#244636" }
+  gateedge: { style.stroke: "#a8926a"; style.stroke-width: 2; style.font-color: "#4a3f2c" }
+  appedge: { style.stroke: "#7c3aed"; style.stroke-width: 2; style.font-color: "#4c1d95" }
+}
+
+cmp: "对照 · 旧账号负例 vs 新账号正例" {
+  style.fill: "#fdfbf7"; style.stroke: "#6b5d49"; style.border-radius: 8
+  grid-columns: 2
+
+  neg: "负例 · 旧系统 didilili" {
+    style.fill: "#f6e8e6"; style.stroke: "#a9362a"; style.font-color: "#7c2a22"; style.border-radius: 8
+    direction: down
+    ng: "GRANT ALL PRIVILEGES ON dw.*\nTO 'didilili'@'%'" {
+      shape: code
+      style.fill: "#f6e8e6"; style.stroke: "#a9362a"; style.font-color: "#7c2a22"
+    }
+    ncap: "ALL PRIVILEGES = 可写可删\nINSERT / UPDATE / DELETE / DROP / CREATE / ALTER ..." { class: danger }
+    nout: "遗留越权入口\n新系统明确不复用" { class: danger }
+    ng -> ncap: "越权能力" { class: denyedge }
+    ncap -> nout: "风险" { class: denyedge }
+  }
+
+  pos: "正例 · 新系统 dw_reader" {
+    style.fill: "#e7efe8"; style.stroke: "#2f5d46"; style.font-color: "#244636"; style.border-radius: 8
+    direction: down
+    pg: "GRANT SELECT ON dw.*\nTO 'dw_reader'@'%'" {
+      shape: code
+      style.fill: "#e7efe8"; style.stroke: "#2f5d46"; style.font-color: "#244636"
+    }
+    ponly: "唯一一条授权 · 只读" { class: pass }
+    pden: "dw_reader 明确没有\nINSERT / UPDATE / DELETE / DROP / CREATE / ALTER / GRANT / FILE" { class: danger }
+    pg -> ponly: "授权范围" { class: passedge }
+    ponly -> pden: "被拒能力" { class: denyedge }
+
+    init: "开通 · 一次性初始化（root 执行）" {
+      style.fill: "#f3ece0"; style.stroke: "#a8926a"; style.font-color: "#4a3f2c"; style.border-radius: 8
+      direction: down
+      i1: "DROP USER IF EXISTS 'dw_reader'@'%'" { class: gate; style.font: mono }
+      i2: "CREATE USER ... IDENTIFIED BY '环境变量'\n密码来自 REBUILD_DW_RO_PASSWORD" { class: gate; style.font: mono }
+      i3: "GRANT SELECT ON dw.*\n唯一一条授权" { class: gate; style.font: mono }
+      i4: "FLUSH PRIVILEGES" { class: gate; style.font: mono }
+      i1 -> i2: "清掉旧授权" { class: gateedge }
+      i2 -> i3: "创建账号" { class: gateedge }
+      i3 -> i4: "生效" { class: gateedge }
+    }
+
+    verify: "验证 · 两步" {
+      style.fill: "#e7efe8"; style.stroke: "#2f5d46"; style.font-color: "#244636"; style.border-radius: 8
+      direction: down
+      v1: "SHOW GRANTS 只看到 SELECT 才继续\n扫描 ALL / INSERT / UPDATE / DELETE / DROP / CREATE / ALTER\n/ INDEX / REFERENCES / TRIGGER / EXECUTE / FILE\n/ PROCESS / SUPER / SHUTDOWN / GRANT OPTION" { class: pass; style.font: mono }
+      v2: "UPDATE fact_order ... WHERE 1 = 0" { class: pass; style.font: mono }
+      v3: "期望 MySQL 1142\n权限拒绝" { class: pass }
+      v1 -> v2: "" { class: passedge }
+      v2 -> v3: "被拒绝" { class: passedge }
+    }
+
+    pg -> init: "" { class: passedge }
+  }
+}
+
+concl: "结论条 · 运行时账号分离与数据库底线" {
+  style.fill: "#fdfbf7"; style.stroke: "#6b5d49"; style.border-radius: 8
+  direction: down
+  head: "结论：执行器只用 dw_reader 连 dw（唯一 GRANT SELECT）；建库与写 Meta 用应用账号 didilili；旧 GRANT ALL 是新系统明确不复用的负向入口" { class: note }
+  r1: "S5 执行问数\nReadOnlyExecutor 以 dw_reader 只执行 SELECT" { class: pass }
+  r2: "S2 构建 / Meta 写入\n应用账号 didilili" { class: app }
+  r3: "数据库底线（策略之外）\n绕过策略的 UPDATE / DELETE 期望被 MySQL 1142 拒绝\n无 DDL 权限 · 无 FILE 权限（策略同时禁 LOAD_FILE / INTO OUTFILE）\n密码只来自 REBUILD_DW_RO_PASSWORD，仓库不存秘密" { class: danger }
+  DW: "MySQL dw\n事实与维度表" { shape: cylinder; class: store }
+  META: "MySQL meta_rebuild\n元数据表" { shape: cylinder; class: store }
+  head -> r1: "" { class: passedge }
+  head -> r2: "" { class: appedge }
+  r1 -> DW: "只执行 SELECT" { class: passedge }
+  r2 -> META: "建表与写元数据" { class: appedge }
+}
+
+cmp -> concl: "" { style.opacity: 0 }
+
+pin: "" {
+  near: top-right
+  style.fill: "transparent"; style.stroke: "transparent"
+  legend: "图例 · 只读账号权限模型怎么读" {
+    style.fill: "#faf7f0"; style.stroke: "#b9ab93"; style.border-radius: 8
+    direction: right
+  lg1: "红 = 负例 / 被拒能力与安全底线" { class: danger }
+  lg2: "绿 = 正例 / 验证通过" { class: pass }
+  lg3: "橙 = 一次性初始化（root）" { class: gate }
+  lg4: "紫 = 应用账号（构建 / Meta 写入）" { class: app }
+  lg5: "圆柱 = MySQL 库（dw / meta_rebuild）" { shape: cylinder; class: store }
+  lg6: "代码形状（等宽）= SQL 语句片段" {
+    shape: code
+    style.fill: "#faf7f0"; style.stroke: "#b9ab93"; style.font-color: "#6f6557"
+  }
+  }
+}

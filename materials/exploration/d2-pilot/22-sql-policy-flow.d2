@@ -1,0 +1,54 @@
+direction: down
+classes: {
+  gate: { shape: hexagon; style.fill: "#f3ece0"; style.stroke: "#a8926a"; style.font-color: "#4a3f2c" }
+  entry: { style.fill: "#efe9dc"; style.stroke: "#6b5d49"; style.font-color: "#211b15"; style.stroke-width: 2 }
+  pass: { style.fill: "#e7efe8"; style.stroke: "#2f5d46"; style.font-color: "#244636"; style.border-radius: 4 }
+  store: { style.fill: "#e8eef0"; style.stroke: "#3d6270"; style.font-color: "#24414c" }
+  danger: { style.fill: "#f6e8e6"; style.stroke: "#a9362a"; style.font-color: "#7c2a22"; style.border-radius: 4 }
+  note: { style.fill: "#f7f4ee"; style.stroke: "#b9ab93"; style.font-color: "#6f6557"; style.border-radius: 8 }
+  passedge: { style.stroke: "#2f5d46"; style.stroke-width: 3; style.font-color: "#244636" }
+  denyedge: { style.stroke: "#a9362a"; style.stroke-width: 2; style.font-color: "#7c2a22" }
+}
+
+A: "候选 SQL" { class: entry }
+G1: "① 单语句\nS4 guard + S5 policy" { class: gate }
+G2: "② 只读\n根节点 Select" { class: gate }
+G3: "③ 表白名单\n契约派生 · 库名 dw" { class: gate }
+G4: "④ 列白名单\n限定符解析后比对" { class: gate }
+G5: "⑤ 常量投影\nSELECT 列表" { class: gate }
+G6: "⑥ ORDER BY / LIMIT\n排名意图" { class: gate }
+G7: "S5 收尾\n补 LIMIT ≤ 1000 · 去注释 · 重新序列化" { class: pass }
+P: "执行 decision.sql\n不是原始文本" { class: pass }
+DB: "dw_reader 只读连接" { shape: cylinder; class: store }
+R: "拒绝：不建立连接" { class: danger }
+C: "通道：guard 用具体码\npolicy 用 SQL_REJECTED + reason_code" { class: danger }
+N: "读图顺序 = 六个必答问题\n实际调用：guard 先跑完，policy 再跑一遍\n两关各自独立拒绝，顺序不影响结论" { class: note }
+
+A -> G1: "" { class: passedge }
+G1 -> G2: "通过" { class: passedge }
+G2 -> G3: "通过" { class: passedge }
+G3 -> G4: "通过" { class: passedge }
+G4 -> G5: "通过" { class: passedge }
+G5 -> G6: "通过" { class: passedge }
+G6 -> G7: "通过" { class: passedge }
+G7 -> P: "放行" { class: passedge }
+P -> DB: "" { class: passedge }
+
+G1 -> R: "多条语句" { class: denyedge }
+G2 -> R: "写操作 / 集合运算 / 危险函数" { class: denyedge }
+G3 -> R: "表不在契约白名单" { class: denyedge }
+G4 -> R: "列不在契约白名单" { class: denyedge }
+G5 -> R: "字面量 / NULL 投影" { class: denyedge }
+G6 -> R: "缺 ORDER BY / LIMIT" { class: denyedge }
+R -> C: "" { class: denyedge }
+
+legend: "图例 · 判定流程怎么读" {
+  style.fill: "#faf7f0"; style.stroke: "#b9ab93"; style.border-radius: 8
+  direction: right
+  lg1: "六边形 = 判定关（过/拒）" { class: gate }
+  lg2: "绿框 = 放行/收尾" { class: pass }
+  lg3: "红框 = 拒绝" { class: danger }
+  lg4: "圆柱 = 只读数据库" { shape: cylinder; class: store }
+  lg5: "绿粗线 = 通过路径" { class: note; style.stroke: "#2f5d46"; style.stroke-width: 3 }
+  lg6: "红细线 = 拒绝路径" { class: note; style.stroke: "#a9362a"; style.stroke-width: 2 }
+}

@@ -1,0 +1,116 @@
+direction: down
+classes: {
+  gate: { style.fill: "#f3ece0"; style.stroke: "#a8926a"; style.font-color: "#4a3f2c"; style.stroke-width: 2 }
+  pass: { style.fill: "#e7efe8"; style.stroke: "#2f5d46"; style.font-color: "#244636"; style.stroke-width: 2 }
+  danger: { style.fill: "#f6e8e6"; style.stroke: "#a9362a"; style.font-color: "#7c2a22"; style.stroke-width: 2 }
+  note: { style.fill: "#f7f4ee"; style.stroke: "#b9ab93"; style.font-color: "#6f6557"; style.stroke-width: 2 }
+  plain: { style.fill: "#fdfbf7"; style.stroke: "#6b5d49"; style.font-color: "#211b15"; style.stroke-width: 2 }
+}
+
+intro: "只换两个替身：假模型 + 假数据库（Generator / Executor 替身）+ 取消接口；校验、安全策略、校正闭环、SSE 全是真代码 —— 每一类失败都映射到一个确定的错误码" {
+  class: note
+  style.border-radius: 8
+}
+
+matrix: "失败注入矩阵 · 7 场景 × 6 观察项（夹具 fixtures/failures/scenarios.yaml）" {
+  style.fill: "#fdfbf7"; style.stroke: "#6b5d49"; style.stroke-width: 2; style.border-radius: 8
+  grid-rows: 8
+  grid-columns: 7
+
+  h0: "失败类型" { class: gate }
+  h1: "注入点" { class: gate }
+  h2: "错误码" { class: gate }
+  h3: "class" { class: gate }
+  h4: "可重试" { class: gate }
+  h5: "失败步骤" { class: gate }
+  h6: "界面结果" { class: gate }
+
+  r1c0: "sql_rejected" { class: gate }
+  r1c1: "Generator 返回 UNION 外带" { class: plain }
+  r1c2: "SQL_REJECTED" { class: note }
+  r1c3: "failure" { class: danger }
+  r1c4: "否" { class: plain }
+  r1c5: "validate_sql" { class: plain }
+  r1c6: "红框 + 红叉" { class: danger }
+
+  r2c0: "sql_syntax" { class: gate }
+  r2c1: "Generator 返回括号不配对" { class: plain }
+  r2c2: "SQL_SYNTAX" { class: note }
+  r2c3: "failure" { class: danger }
+  r2c4: "是（1 次）" { class: plain }
+  r2c5: "validate_sql" { class: plain }
+  r2c6: "红框 + 红叉" { class: danger }
+
+  r3c0: "sql_unknown_column" { class: gate }
+  r3c1: "Generator 引用上下文外的列" { class: plain }
+  r3c2: "SQL_UNKNOWN_COLUMN" { class: note }
+  r3c3: "failure" { class: danger }
+  r3c4: "是（1 次）" { class: plain }
+  r3c5: "validate_sql" { class: plain }
+  r3c6: "红框 + 红叉" { class: danger }
+
+  r4c0: "empty_result" { class: gate }
+  r4c1: "Executor 返回 0 行" { class: plain }
+  r4c2: "EMPTY_RESULT" { class: note }
+  r4c3: "empty" { class: pass }
+  r4c4: "否" { class: plain }
+  r4c5: "run_sql" { class: plain }
+  r4c6: "空态卡，不标红" { class: pass }
+
+  r5c0: "timeout" { class: gate }
+  r5c1: "Executor 抛超时" { class: plain }
+  r5c2: "TIMEOUT" { class: note }
+  r5c3: "failure" { class: danger }
+  r5c4: "否" { class: plain }
+  r5c5: "run_sql" { class: plain }
+  r5c6: "红框 + 红叉" { class: danger }
+
+  r6c0: "llm_refusal" { class: gate }
+  r6c1: "Generator 主动拒答" { class: plain }
+  r6c2: "LLM_REFUSAL" { class: note }
+  r6c3: "failure" { class: danger }
+  r6c4: "否" { class: plain }
+  r6c5: "generate_sql" { class: plain }
+  r6c6: "红框 + 红叉" { class: danger }
+
+  r7c0: "取消按钮" { class: gate }
+  r7c1: "POST /api/cancel（慢查询场景）" { class: plain }
+  r7c2: "CANCELLED" { class: note }
+  r7c3: "cancelled" { class: pass }
+  r7c4: "否" { class: plain }
+  r7c5: "步骤边界" { class: plain }
+  r7c6: "取消态，不计完成" { class: pass }
+}
+
+corr: "校正闭环 · max_attempts=1（correct_sql 最多 1 次）" {
+  style.fill: "#fdfbf7"; style.stroke: "#6b5d49"; style.stroke-width: 2; style.border-radius: 8
+  direction: right
+  c1: "SQL_SYNTAX / SQL_UNKNOWN_COLUMN\n可重试 1 次" { class: danger }
+  c2: "correct_sql 校正 ×1" { class: plain }
+  c3: "guard + policy\n重新校验" { class: gate }
+  c4: "ReadOnlyExecutor 执行" { class: plain }
+  c5: "被拒 → 落回 SQL_REJECTED" { class: danger }
+  c6: "根因未变，保留原码" { class: note }
+
+  c1 -> c2: "" { style.stroke-width: 2 }
+  c2 -> c3: "" { style.stroke-width: 2 }
+  c3 -> c4: "通过" { style.stroke-width: 2 }
+  c3 -> c5: "拒绝" { style.stroke-width: 2 }
+  c2 -> c6: "" { style.stroke: "#c2410c"; style.stroke-width: 2; style.stroke-dash: 3 }
+}
+
+redline: "安全红线：SQL_REJECTED 永远不可重试 —— 拿被拒的 SQL 去问模型「改一下」等于给注入开重试口子" {
+  class: danger
+  style.border-radius: 8
+}
+
+legend: "图例 · 失败矩阵怎么读" {
+  style.fill: "#faf7f0"; style.stroke: "#b9ab93"; style.border-radius: 8
+  direction: right
+  lg1: "行 = 失败类型（7 场景）；列 = 观察项 + 界面结果格" { class: plain }
+  lg2: "tan 行头 = 场景夹具" { class: gate }
+  lg3: "米白 = 错误码契约（errors.yaml）" { class: note }
+  lg4: "红 = 失败与安全拒绝（红框 + 红叉）" { class: danger }
+  lg5: "绿 = 合法空态 / 取消（不标红、不计完成）" { class: pass }
+  lg6: "橙色虚线 = 校正后根因未变，保留原码" { class: plain; style.stroke: "#c2410c"; style.stroke-dash: 3 }
+}
